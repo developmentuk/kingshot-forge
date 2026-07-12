@@ -6,6 +6,13 @@ import {
   type ChatTemplateName,
 } from '../data/chatTemplates'
 
+import {
+  clearRecentNames,
+  loadRecentNames,
+  saveRecentName,
+  type RecentName,
+} from '../data/recentNames'
+
 function ChatStudioPage() {
   const [templateName, setTemplateName] =
     useState<ChatTemplateName>('Important')

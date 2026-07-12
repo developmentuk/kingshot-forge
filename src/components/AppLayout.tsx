@@ -23,6 +23,7 @@ function AppLayout() {
             <NavLink to="/chat-studio">Chat</NavLink>
             <NavLink to="/art-studio">Art</NavLink>
             <NavLink to="/characters">Characters</NavLink>
+            <NavLink to="/my-forge">My Forge</NavLink>
             <NavLink to="/roadmap">Roadmap</NavLink>
           </div>
 
@@ -48,9 +49,12 @@ function AppLayout() {
         </div>
 
         <div className="footer__links">
+          <NavLink to="/my-forge">My Forge</NavLink>
           <NavLink to="/roadmap">Roadmap</NavLink>
           <NavLink to="/codex">Codex</NavLink>
-          <NavLink to="/compatibility">Compatibility</NavLink>
+          <NavLink to="/compatibility">
+            Compatibility
+          </NavLink>
 
           <a
             href={feedbackFormUrl}
@@ -82,7 +86,9 @@ function AppLayout() {
 
         <span className="feedback-button__text">
           <strong>Beta Feedback</strong>
-          <small>Report an issue or suggest a feature</small>
+          <small>
+            Report an issue or suggest a feature
+          </small>
         </span>
       </a>
     </div>
