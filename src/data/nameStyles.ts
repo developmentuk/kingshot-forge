@@ -1,0 +1,137 @@
+export type NameStyleName = 'Fantasy' | 'Runic' | 'Elegant' | 'Cute'
+
+export const nameStyleMaps: Record<
+  NameStyleName,
+  Record<string, string>
+> = {
+  Fantasy: {
+    a: 'Ⱥ',
+    b: 'Ƀ',
+    c: 'ᑕ',
+    d: 'Đ',
+    e: 'Σ',
+    f: 'Ғ',
+    g: 'Ǥ',
+    h: 'ᕼ',
+    i: 'ɪ',
+    j: 'ʝ',
+    k: 'ᛕ',
+    l: 'ᒪ',
+    m: 'ᗰ',
+    n: 'Ɲ',
+    o: 'Θ',
+    p: 'ᑭ',
+    q: 'Ɋ',
+    r: 'ᖇ',
+    s: 'Ƨ',
+    t: 'Ƭ',
+    u: 'Ս',
+    v: 'V',
+    w: 'Ш',
+    x: 'Ж',
+    y: 'Ƴ',
+    z: 'Ƶ',
+  },
+
+  Runic: {
+    a: 'ᚨ',
+    b: 'ᛒ',
+    c: 'ᚲ',
+    d: 'ᛞ',
+    e: 'ᛖ',
+    f: 'ᚠ',
+    g: 'ᚷ',
+    h: 'ᚺ',
+    i: 'ᛁ',
+    j: 'ᛃ',
+    k: 'ᚲ',
+    l: 'ᛚ',
+    m: 'ᛗ',
+    n: 'ᚾ',
+    o: 'ᛟ',
+    p: 'ᛈ',
+    q: 'ᛩ',
+    r: 'ᚱ',
+    s: 'ᛋ',
+    t: 'ᛏ',
+    u: 'ᚢ',
+    v: 'ᚡ',
+    w: 'ᚹ',
+    x: 'ᛪ',
+    y: 'ᛦ',
+    z: 'ᛉ',
+  },
+
+  Elegant: {
+    a: 'Ⱥ',
+    b: 'Ƀ',
+    c: 'Ȼ',
+    d: 'Đ',
+    e: 'Ɇ',
+    f: 'Ƒ',
+    g: 'Ǥ',
+    h: 'Ħ',
+    i: 'Ɨ',
+    j: 'Ɉ',
+    k: 'Ҡ',
+    l: 'Ł',
+    m: 'M',
+    n: 'Ƞ',
+    o: 'Ø',
+    p: 'Ƥ',
+    q: 'Ɋ',
+    r: 'Ɍ',
+    s: 'Ş',
+    t: 'Ƭ',
+    u: 'Ʉ',
+    v: 'V',
+    w: 'W',
+    x: 'Ӿ',
+    y: 'Ɏ',
+    z: 'Ƶ',
+  },
+
+  Cute: {
+    a: 'ɑ',
+    b: 'ɓ',
+    c: 'ƈ',
+    d: 'ɖ',
+    e: 'ɛ',
+    f: 'ʄ',
+    g: 'ɠ',
+    h: 'ɦ',
+    i: 'ɨ',
+    j: 'ʝ',
+    k: 'ƙ',
+    l: 'ʟ',
+    m: 'ʍ',
+    n: 'ռ',
+    o: 'օ',
+    p: 'ք',
+    q: 'զ',
+    r: 'ʀ',
+    s: 'ʂ',
+    t: 'ȶ',
+    u: 'ʊ',
+    v: 'ʋ',
+    w: 'ա',
+    x: 'ӿ',
+    y: 'ʏ',
+    z: 'ʐ',
+  },
+}
+
+export function transformName(
+  name: string,
+  style: NameStyleName,
+) {
+  return name
+    .split('')
+    .map((character) => {
+      const replacement =
+        nameStyleMaps[style][character.toLowerCase()]
+
+      return replacement ?? character
+    })
+    .join('')
+}
