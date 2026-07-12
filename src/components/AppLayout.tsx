@@ -1,5 +1,8 @@
 import { NavLink, Outlet } from 'react-router'
 
+const feedbackFormUrl =
+  'https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor'
+
 function AppLayout() {
   return (
     <div className="app-shell">
@@ -50,6 +53,14 @@ function AppLayout() {
           <NavLink to="/compatibility">Compatibility</NavLink>
 
           <a
+            href={feedbackFormUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Beta Feedback
+          </a>
+
+          <a
             className="footer__support"
             href="https://buymeacoffee.com/jrcs1981"
             target="_blank"
@@ -59,6 +70,21 @@ function AppLayout() {
           </a>
         </div>
       </footer>
+
+      <a
+        className="feedback-button"
+        href={feedbackFormUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Give beta feedback"
+      >
+        <span className="feedback-button__icon">💬</span>
+
+        <span className="feedback-button__text">
+          <strong>Beta Feedback</strong>
+          <small>Report an issue or suggest a feature</small>
+        </span>
+      </a>
     </div>
   )
 }
