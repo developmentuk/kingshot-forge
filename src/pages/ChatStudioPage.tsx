@@ -6,13 +6,6 @@ import {
   type ChatTemplateName,
 } from '../data/chatTemplates'
 
-import {
-  clearRecentNames,
-  loadRecentNames,
-  saveRecentName,
-  type RecentName,
-} from '../data/recentNames'
-
 function ChatStudioPage() {
   const [templateName, setTemplateName] =
     useState<ChatTemplateName>('Important')
@@ -35,9 +28,7 @@ function ChatStudioPage() {
   const isNearLimit = output.length >= 450
   const isOverLimit = output.length > 500
 
-  function changeTemplate(
-    newTemplateName: ChatTemplateName,
-  ) {
+  function changeTemplate(newTemplateName: ChatTemplateName) {
     const template = chatTemplates[newTemplateName]
 
     setTemplateName(newTemplateName)
@@ -131,9 +122,7 @@ function ChatStudioPage() {
               type="text"
               value={heading}
               maxLength={100}
-              onChange={(event) =>
-                setHeading(event.target.value)
-              }
+              onChange={(event) => setHeading(event.target.value)}
               placeholder="Enter a heading"
             />
           </div>
@@ -146,9 +135,7 @@ function ChatStudioPage() {
               value={message}
               maxLength={600}
               rows={7}
-              onChange={(event) =>
-                setMessage(event.target.value)
-              }
+              onChange={(event) => setMessage(event.target.value)}
               placeholder="Enter your message"
             />
 
