@@ -99,7 +99,25 @@ const forgeTools: ForgeTool[] = [
   path: '/kvk-tracker',
   action: 'Search KvK results',
   featured: true,
-}
+},
+{
+  title: 'Kingdom Community',
+  description:
+    'Find registered players and community information for a Kingshot kingdom.',
+  icon: '🌍',
+  path: '/kingdom-community',
+  action: 'Explore a community',
+  featured: true,
+},
+{
+  title: 'Alliance Directory',
+  description:
+    'Browse and join active alliances in Kingshot.',
+  icon: '🛡️',
+  path: '/alliance-directory',
+  action: 'View alliances',
+  featured: true,
+},
 ]
 
 function HomePage() {

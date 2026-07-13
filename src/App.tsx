@@ -1,21 +1,24 @@
 import { Route, Routes } from 'react-router'
 import AppLayout from './components/AppLayout'
-import ArtStudioPage from './pages/ArtStudioPage'
-import CharacterLibraryPage from './pages/CharacterLibraryPage'
-import ChatStudioPage from './pages/ChatStudioPage'
-import CodexPage from './pages/CodexPage'
-import CompatibilityPage from './pages/CompatibilityPage'
-import GiftCodesPage from './pages/GiftCodesPage'
-import HomePage from './pages/HomePage'
-import MyForgePage from './pages/MyForgePage'
-import NameStudioPage from './pages/NameStudioPage'
-import PlayerLookupPage from './pages/PlayerLookupPage'
-import RoadmapPage from './pages/RoadmapPage'
-import SupabaseTestPage from './pages/SupabaseTestPage'
 import './App.css'
-import KingdomExplorerPage from './pages/KingdomExplorerPage'
-import KvkTrackerPage from './pages/KvkTrackerPage'
+import HomePage from './pages/HomePage'
+import NameStudioPage from './pages/NameStudioPage'
+import ArtStudioPage from './pages/ArtStudioPage'
+import ChatStudioPage from './pages/ChatStudioPage'
+import CharacterLibraryPage from './pages/CharacterLibraryPage'
+import CompatibilityPage from './pages/CompatibilityPage'
+import CodexPage from './pages/CodexPage'
+import MyForgePage from './pages/MyForgePage'
+import RoadmapPage from './pages/RoadmapPage'
 import ReleaseNotesPage from './pages/ReleaseNotesPage'
+import PlayerLookupPage from './pages/PlayerLookupPage'
+import GiftCodesPage from './pages/GiftCodesPage'
+import KingdomExplorerPage from './pages/KingdomExplorerPage'
+import KingdomCommunityPage from './pages/KingdomCommunityPage'
+import KvkTrackerPage from './pages/KvkTrackerPage'
+import AllianceDirectoryPage from './pages/AllianceDirectoryPage'
+import AllianceCommunityPage from './pages/AllianceCommunityPage'
+import AllianceManagementPage from './pages/AllianceManagementPage'
 
 function App() {
   return (
@@ -29,13 +32,13 @@ function App() {
         />
 
         <Route
-          path="chat-studio"
-          element={<ChatStudioPage />}
+          path="art-studio"
+          element={<ArtStudioPage />}
         />
 
         <Route
-          path="art-studio"
-          element={<ArtStudioPage />}
+          path="chat-studio"
+          element={<ChatStudioPage />}
         />
 
         <Route
@@ -54,13 +57,8 @@ function App() {
         />
 
         <Route
-          path="roadmap"
-          element={<RoadmapPage />}
-        />
-
-        <Route
-          path="my-forge"
-          element={<MyForgePage />}
+          path="player-lookup"
+          element={<PlayerLookupPage />}
         />
 
         <Route
@@ -69,28 +67,48 @@ function App() {
         />
 
         <Route
-          path="player-lookup"
-          element={<PlayerLookupPage />}
-        />
-
-        <Route
-          path="supabase-test"
-          element={<SupabaseTestPage />}
-        />
-
-        <Route
           path="kingdom-explorer"
           element={<KingdomExplorerPage />}
+        />
+
+        <Route
+          path="kingdom-community"
+          element={<KingdomCommunityPage />}
         />
 
         <Route
           path="kvk-tracker"
           element={<KvkTrackerPage />}
         />
+
+        <Route
+          path="my-forge"
+          element={<MyForgePage />}
+        />
+
+        <Route
+          path="roadmap"
+          element={<RoadmapPage />}
+        />
+
+        <Route
+          path="release-notes"
+          element={<ReleaseNotesPage />}
+        />
       </Route>
       <Route
-  path="release-notes"
-  element={<ReleaseNotesPage />}
+  path="alliance-directory"
+  element={<AllianceDirectoryPage />}
+/>
+
+<Route
+  path="alliances/:allianceId"
+  element={<AllianceCommunityPage />}
+/>
+
+<Route
+  path="alliances/:allianceId/manage"
+  element={<AllianceManagementPage />}
 />
     </Routes>
   )

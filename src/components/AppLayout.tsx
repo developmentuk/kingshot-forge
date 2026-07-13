@@ -60,6 +60,18 @@ const companionNavigation: NavigationItem[] = [
     icon: '⚔️',
     path: '/kvk-tracker',
   },
+  {
+  label: 'Kingdom Community',
+  shortLabel: 'Community',
+  icon: '🌍',
+  path: '/kingdom-community',
+},
+{
+  label: 'Alliance Directory',
+  shortLabel: 'Alliances',
+  icon: '🛡️',
+  path: '/alliance-directory',
+},
 ]
 
 const libraryNavigation: NavigationItem[] = [

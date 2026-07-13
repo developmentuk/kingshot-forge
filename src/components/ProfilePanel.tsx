@@ -4,8 +4,86 @@ import {
   type FormEvent,
 } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types/profile'
+
+type ForgeProfile = Profile & {
+  forge_id: string
+}
+
+function formatRole(role: string | null | undefined) {
+  if (!role) {
+    return 'Member'
+  }
+
+  return role
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (character) =>
+      character.toUpperCase(),
+    )
+}
+
+function getVerificationLabel(
+  status:
+    | 'linked'
+    | 'pending'
+    | 'community_verified'
+    | 'officially_verified'
+    | 'rejected'
+    | 'revoked'
+    | undefined,
+) {
+  switch (status) {
+    case 'officially_verified':
+      return 'Officially verified'
+
+    case 'community_verified':
+      return 'Community verified'
+
+    case 'pending':
+      return 'Verification pending'
+
+    case 'rejected':
+      return 'Verification rejected'
+
+    case 'revoked':
+      return 'Verification revoked'
+
+    case 'linked':
+      return 'Linked player'
+
+    default:
+      return 'Not linked'
+  }
+}
+
+function getVerificationClass(
+  status:
+    | 'linked'
+    | 'pending'
+    | 'community_verified'
+    | 'officially_verified'
+    | 'rejected'
+    | 'revoked'
+    | undefined,
+) {
+  switch (status) {
+    case 'officially_verified':
+    case 'community_verified':
+      return 'forge-passport-status forge-passport-status--verified'
+
+    case 'pending':
+      return 'forge-passport-status forge-passport-status--pending'
+
+    case 'rejected':
+    case 'revoked':
+      return 'forge-passport-status forge-passport-status--warning'
+
+    default:
+      return 'forge-passport-status'
+  }
+}
 
 function ProfilePanel() {
   const {
@@ -14,8 +92,13 @@ function ProfilePanel() {
     signInWithGoogle,
   } = useAuth()
 
+  const {
+    playerAccount,
+    loadingPlayerAccount,
+  } = usePlayerIdentity()
+
   const [profile, setProfile] =
-    useState<Profile | null>(null)
+    useState<ForgeProfile | null>(null)
 
   const [displayName, setDisplayName] =
     useState('')
@@ -27,6 +110,9 @@ function ProfilePanel() {
     useState(false)
 
   const [saving, setSaving] =
+    useState(false)
+
+  const [copiedForgeId, setCopiedForgeId] =
     useState(false)
 
   const [message, setMessage] =
@@ -56,6 +142,7 @@ function ProfilePanel() {
         .select(
           `
             id,
+            forge_id,
             display_name,
             avatar_url,
             alliance,
@@ -77,15 +164,19 @@ function ProfilePanel() {
         return
       }
 
-      const loadedProfile = data as Profile
+      const loadedProfile =
+        data as ForgeProfile
 
       setProfile(loadedProfile)
+
       setDisplayName(
         loadedProfile.display_name ?? '',
       )
+
       setAlliance(
         loadedProfile.alliance ?? '',
       )
+
       setLoadingProfile(false)
     }
 
@@ -108,8 +199,6 @@ function ProfilePanel() {
       return
     }
 
-    const userId = user.id
-
     setSaving(true)
     setMessage('')
     setErrorMessage('')
@@ -122,14 +211,17 @@ function ProfilePanel() {
       .update({
         display_name:
           displayName.trim() || null,
+
         alliance:
           alliance.trim() || null,
+
         updated_at: updatedAt,
       })
-      .eq('id', userId)
+      .eq('id', user.id)
       .select(
         `
           id,
+          forge_id,
           display_name,
           avatar_url,
           alliance,
@@ -146,16 +238,20 @@ function ProfilePanel() {
       return
     }
 
-    const updatedProfile = data as Profile
+    const updatedProfile =
+      data as ForgeProfile
 
     setProfile(updatedProfile)
+
     setDisplayName(
       updatedProfile.display_name ?? '',
     )
+
     setAlliance(
       updatedProfile.alliance ?? '',
     )
-    setMessage('Profile saved.')
+
+    setMessage('Forge profile saved.')
     setSaving(false)
   }
 
@@ -173,10 +269,32 @@ function ProfilePanel() {
     }
   }
 
+  async function handleCopyForgeId() {
+    if (!profile?.forge_id) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(
+        profile.forge_id,
+      )
+
+      setCopiedForgeId(true)
+
+      window.setTimeout(() => {
+        setCopiedForgeId(false)
+      }, 1500)
+    } catch {
+      setErrorMessage(
+        'The Forge ID could not be copied automatically.',
+      )
+    }
+  }
+
   if (authLoading) {
     return (
       <section className="profile-panel">
-        <p>Loading account…</p>
+        <p>Loading Forge account…</p>
       </section>
     )
   }
@@ -194,13 +312,14 @@ function ProfilePanel() {
           </p>
 
           <h2>
-            Sign in to sync your Forge
+            Create your player passport
           </h2>
 
           <p>
-            Use Google sign-in to manage your
-            profile, submissions and saved content
-            across devices.
+            Sign in with Google to link your
+            Kingshot identity, join your kingdom
+            community and prepare for future
+            alliance, KvK and transfer features.
           </p>
         </div>
 
@@ -221,127 +340,289 @@ function ProfilePanel() {
     )
   }
 
-  const authDisplayName =
+  const googleDisplayName =
     user.user_metadata.full_name ??
     user.user_metadata.name ??
     user.email ??
     'Kingshot member'
 
+  const visibleName =
+    playerAccount?.player_name ??
+    profile?.display_name ??
+    googleDisplayName
+
   const avatarUrl =
+    playerAccount?.profile_photo ??
     profile?.avatar_url ??
     (user.user_metadata.avatar_url as
       | string
       | undefined)
 
+  const playerLevel =
+    playerAccount?.level_rendered_detailed ??
+    playerAccount?.level_rendered ??
+    (playerAccount?.player_level
+      ? `Level ${playerAccount.player_level}`
+      : 'Not available')
+
+  const memberSince = profile?.created_at
+    ? new Intl.DateTimeFormat('en-GB', {
+        month: 'long',
+        year: 'numeric',
+      }).format(
+        new Date(profile.created_at),
+      )
+    : 'Not available'
+
   return (
-    <section className="profile-panel">
-      <div className="profile-panel__header">
-        <div className="profile-panel__identity">
+    <section className="profile-panel forge-passport">
+      <div className="forge-passport__top">
+        <div className="forge-passport__identity">
           {avatarUrl ? (
             <img
               src={avatarUrl}
-              alt=""
-              className="profile-panel__avatar"
+              alt={`${visibleName} profile`}
+              className="forge-passport__avatar"
             />
           ) : (
-            <span className="profile-panel__avatar profile-panel__avatar--fallback">
-              {authDisplayName
+            <span className="forge-passport__avatar forge-passport__avatar--fallback">
+              {visibleName
                 .charAt(0)
                 .toUpperCase()}
             </span>
           )}
 
-          <div>
+          <div className="forge-passport__identity-content">
             <p className="eyebrow">
-              Forge profile
+              Forge player passport
             </p>
 
-            <h2>
-              {profile?.display_name ||
-                authDisplayName}
-            </h2>
+            <h2>{visibleName}</h2>
 
-            <span className="profile-panel__role">
-              {profile?.role ?? 'member'}
-            </span>
+            <div className="forge-passport__badges">
+              <span className="profile-panel__role">
+                {formatRole(profile?.role)}
+              </span>
+
+              <span
+                className={getVerificationClass(
+                  playerAccount?.verification_status,
+                )}
+              >
+                {getVerificationLabel(
+                  playerAccount?.verification_status,
+                )}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="profile-panel__meta">
-          <span>{user.email}</span>
-
-          {profile?.created_at && (
-            <span>
-              Member since{' '}
-              {new Intl.DateTimeFormat(
-                'en-GB',
-                {
-                  month: 'long',
-                  year: 'numeric',
-                },
-              ).format(
-                new Date(profile.created_at),
-              )}
-            </span>
-          )}
+        <div className="forge-passport__account-status">
+          <span>Google account</span>
+          <strong>Connected</strong>
+          <small>{user.email}</small>
         </div>
       </div>
 
-      {loadingProfile ? (
-        <p>Loading profile…</p>
+      {loadingProfile || loadingPlayerAccount ? (
+        <div className="forge-passport__loading">
+          Loading player passport…
+        </div>
       ) : (
-        <form
-          className="profile-panel__form"
-          onSubmit={handleSave}
-        >
-          <div className="field">
-            <label htmlFor="profile-display-name">
-              Display name
-            </label>
+        <>
+          <div className="forge-passport__id-panel">
+            <div>
+              <span>Permanent Forge ID</span>
 
-            <input
-              id="profile-display-name"
-              type="text"
-              value={displayName}
-              maxLength={40}
-              onChange={(event) =>
-                setDisplayName(
-                  event.target.value,
-                )
+              <strong>
+                {profile?.forge_id ??
+                  'Forge ID unavailable'}
+              </strong>
+
+              <small>
+                Your Forge ID remains the same if
+                your player name, alliance or
+                kingdom changes.
+              </small>
+            </div>
+
+            <button
+              type="button"
+              disabled={!profile?.forge_id}
+              onClick={() =>
+                void handleCopyForgeId()
               }
-              placeholder="How should your name appear?"
-            />
+            >
+              {copiedForgeId
+                ? 'Copied!'
+                : 'Copy ID'}
+            </button>
           </div>
 
-          <div className="field">
-            <label htmlFor="profile-alliance">
-              Alliance
-            </label>
+          <div className="forge-passport__stats">
+            <div>
+              <span>Kingdom</span>
 
-            <input
-              id="profile-alliance"
-              type="text"
-              value={alliance}
-              maxLength={40}
-              onChange={(event) =>
-                setAlliance(
-                  event.target.value,
-                )
-              }
-              placeholder="Example: TLG"
-            />
+              <strong>
+                {playerAccount
+                  ? `Kingdom ${playerAccount.kingdom_id}`
+                  : 'Not linked'}
+              </strong>
+            </div>
+
+            <div>
+              <span>Alliance</span>
+
+              <strong>
+                {profile?.alliance ||
+                  'Not listed'}
+              </strong>
+            </div>
+
+            <div>
+              <span>Player level</span>
+
+              <strong>{playerLevel}</strong>
+            </div>
+
+            <div>
+              <span>Forge role</span>
+
+              <strong>
+                {formatRole(profile?.role)}
+              </strong>
+            </div>
+
+            <div>
+              <span>Player status</span>
+
+              <strong>
+                {getVerificationLabel(
+                  playerAccount?.verification_status,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>Member since</span>
+
+              <strong>{memberSince}</strong>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            className="button button--primary"
-            disabled={saving}
+          <div className="forge-passport__details">
+            <div>
+              <span>Kingshot player ID</span>
+
+              <strong>
+                {playerAccount?.player_id ??
+                  'No player linked'}
+              </strong>
+            </div>
+
+            <div>
+              <span>Profile visibility</span>
+
+              <strong>
+                {playerAccount
+                  ? playerAccount.is_public
+                    ? 'Public'
+                    : 'Private'
+                  : 'Not applicable'}
+              </strong>
+            </div>
+
+            <div>
+              <span>Discord</span>
+
+              <strong>Not connected yet</strong>
+            </div>
+
+            <div>
+              <span>Transfer profile</span>
+
+              <strong>Coming soon</strong>
+            </div>
+          </div>
+
+          <form
+            className="profile-panel__form forge-passport__form"
+            onSubmit={handleSave}
           >
-            {saving
-              ? 'Saving…'
-              : 'Save Profile'}
-          </button>
-        </form>
+            <div className="forge-passport__form-heading">
+              <div>
+                <span>Profile settings</span>
+                <h3>Edit your Forge details</h3>
+              </div>
+
+              <p>
+                Your Kingshot name, avatar, level
+                and kingdom are managed through
+                your linked player account.
+              </p>
+            </div>
+
+            <div className="field">
+              <label htmlFor="profile-display-name">
+                Forge display name
+              </label>
+
+              <input
+                id="profile-display-name"
+                type="text"
+                value={displayName}
+                maxLength={40}
+                onChange={(event) =>
+                  setDisplayName(
+                    event.target.value,
+                  )
+                }
+                placeholder="Optional Forge display name"
+              />
+
+              <span className="field__help">
+                Your linked Kingshot name takes
+                priority wherever your player
+                identity is shown.
+              </span>
+            </div>
+
+            <div className="field">
+              <label htmlFor="profile-alliance">
+                Alliance tag
+              </label>
+
+              <input
+                id="profile-alliance"
+                type="text"
+                value={alliance}
+                maxLength={40}
+                onChange={(event) =>
+                  setAlliance(
+                    event.target.value,
+                  )
+                }
+                placeholder="Example: TLG"
+              />
+
+              <span className="field__help">
+                This is currently self-reported.
+                Verified alliance membership is
+                coming next.
+              </span>
+            </div>
+
+            <button
+              type="submit"
+              className="button button--primary"
+              disabled={saving}
+            >
+              {saving
+                ? 'Saving…'
+                : 'Save Profile'}
+            </button>
+          </form>
+        </>
       )}
 
       {message && (

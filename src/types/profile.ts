@@ -7,6 +7,7 @@ export type UserRole =
 
 export type Profile = {
   id: string
+  forge_id: string
   display_name: string | null
   avatar_url: string | null
   alliance: string | null

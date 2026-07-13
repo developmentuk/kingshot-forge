@@ -7335,3 +7335,1671 @@ h3 {
   }
 }
 
+/* =========================================================
+   KINGDOM COMMUNITY
+   ========================================================= */
+
+.kingdom-community-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #2b394a;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: rgba(18, 26, 37, 0.9);
+}
+
+.kingdom-community-search .button {
+  min-height: 46px;
+  white-space: nowrap;
+}
+
+.kingdom-community-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(207, 75, 75, 0.4);
+  border-radius: 0.9rem;
+  padding: 1rem;
+  color: #ffb4b4;
+  background: rgba(207, 75, 75, 0.08);
+}
+
+.kingdom-community-error p {
+  margin: 0.25rem 0 0;
+  font-size: 0.76rem;
+}
+
+.kingdom-community-state {
+  display: grid;
+  min-height: 240px;
+  place-content: center;
+  justify-items: center;
+  gap: 0.65rem;
+  border: 1px dashed #344255;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: rgba(18, 26, 37, 0.72);
+  text-align: center;
+}
+
+.kingdom-community-state > span {
+  font-size: 2rem;
+}
+
+.kingdom-community-state h2,
+.kingdom-community-state p {
+  margin: 0;
+}
+
+.kingdom-community-state p {
+  max-width: 520px;
+  color: #8996a8;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.kingdom-community-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  border: 1px solid rgba(230, 171, 56, 0.4);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(230, 171, 56, 0.1),
+      transparent 58%
+    ),
+    rgba(18, 26, 37, 0.94);
+}
+
+.kingdom-community-hero__icon {
+  display: grid;
+  width: 96px;
+  height: 96px;
+  place-items: center;
+  border: 2px solid rgba(230, 171, 56, 0.42);
+  border-radius: 1rem;
+  background: #182331;
+  font-size: 2.5rem;
+}
+
+.kingdom-community-hero__title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.kingdom-community-hero__title > div > span {
+  color: #e6ab38;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.kingdom-community-hero h2 {
+  margin: 0.3rem 0 0;
+  font-size: 2rem;
+}
+
+.kingdom-community-hero__main > p {
+  max-width: 760px;
+  margin: 0.8rem 0 1rem;
+  color: #929dad;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.kingdom-community-badge {
+  flex: 0 0 auto;
+  border: 1px solid #445267;
+  border-radius: 999px;
+  padding: 0.4rem 0.65rem;
+  color: #c4ceda;
+  background: #121c28;
+  font-size: 0.64rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.kingdom-community-badge--verified {
+  border-color: rgba(88, 200, 132, 0.45);
+  color: #a6eabb;
+  background: rgba(88, 200, 132, 0.08);
+}
+
+.kingdom-community-hero__stats {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.kingdom-community-hero__stats > div {
+  border: 1px solid #344255;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: #111a26;
+}
+
+.kingdom-community-hero__stats span,
+.kingdom-community-hero__stats strong {
+  display: block;
+}
+
+.kingdom-community-hero__stats span {
+  margin-bottom: 0.2rem;
+  color: #8996a8;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+}
+
+.kingdom-community-hero__stats strong {
+  color: #fff0c8;
+  font-size: 0.85rem;
+}
+
+.kingdom-community-hero__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.kingdom-community-hero__status span {
+  border: 1px solid #344255;
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  color: #aeb9c7;
+  background: #111a26;
+  font-size: 0.65rem;
+}
+
+.kingdom-community-hero__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.kingdom-member-directory {
+  margin-top: 1rem;
+  border: 1px solid #2b394a;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: rgba(18, 26, 37, 0.9);
+}
+
+.kingdom-member-directory__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.kingdom-member-directory__heading h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.45rem;
+}
+
+.kingdom-member-directory__heading > span {
+  color: #8996a8;
+  font-size: 0.72rem;
+}
+
+.kingdom-member-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.kingdom-member-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border: 1px solid #344255;
+  border-radius: 0.85rem;
+  padding: 1rem;
+  background: #111a26;
+}
+
+.kingdom-member-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.kingdom-member-card__identity img,
+.kingdom-member-card__avatar-fallback {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(230, 171, 56, 0.38);
+  border-radius: 0.8rem;
+  background: #192432;
+  object-fit: cover;
+  font-size: 1.35rem;
+}
+
+.kingdom-member-card__identity > div {
+  min-width: 0;
+}
+
+.kingdom-member-card__identity span {
+  color: #e6ab38;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kingdom-member-card__identity h3 {
+  overflow: hidden;
+  margin: 0.2rem 0;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kingdom-member-card__identity p {
+  margin: 0;
+  color: #8996a8;
+  font-size: 0.7rem;
+}
+
+.kingdom-member-card__details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.kingdom-member-card__details > div {
+  border: 1px solid #303d4f;
+  border-radius: 0.7rem;
+  padding: 0.6rem;
+  background: #0c151f;
+}
+
+.kingdom-member-card__details span,
+.kingdom-member-card__details strong {
+  display: block;
+}
+
+.kingdom-member-card__details span {
+  margin-bottom: 0.2rem;
+  color: #7f8b9b;
+  font-size: 0.56rem;
+  text-transform: uppercase;
+}
+
+.kingdom-member-card__details strong {
+  overflow-wrap: anywhere;
+  color: #dce3ec;
+  font-size: 0.68rem;
+}
+
+.kingdom-member-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.85rem;
+}
+
+.kingdom-member-card__footer > span {
+  color: #728094;
+  font-size: 0.58rem;
+  line-height: 1.4;
+}
+
+.kingdom-member-favourite {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #344255;
+  border-radius: 50%;
+  color: #758297;
+  background: #182331;
+  font-size: 1rem;
+}
+
+.kingdom-member-favourite:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 1000px) {
+  .kingdom-member-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .kingdom-community-search {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .kingdom-community-search .button {
+    width: 100%;
+  }
+
+  .kingdom-community-hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .kingdom-community-hero__main {
+    width: 100%;
+  }
+
+  .kingdom-community-hero__title {
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .kingdom-community-hero h2 {
+    font-size: 1.55rem;
+  }
+
+  .kingdom-community-hero__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .kingdom-community-hero__status,
+  .kingdom-community-hero__links {
+    justify-content: center;
+  }
+
+  .kingdom-community-hero__links .button {
+    width: 100%;
+  }
+
+  .kingdom-member-directory {
+    padding: 1rem;
+  }
+
+  .kingdom-member-directory__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .kingdom-member-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   FORGE IDENTITY
+   ========================================================= */
+
+.profile-panel__forge-id {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.85rem;
+  border: 1px solid rgba(230, 171, 56, 0.32);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(230, 171, 56, 0.055);
+}
+
+.profile-panel__forge-id > span {
+  grid-column: 1;
+  color: #8996a8;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-panel__forge-id > strong {
+  grid-column: 1;
+  overflow-wrap: anywhere;
+  color: #ffe0a0;
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+}
+
+.profile-panel__forge-id > button {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  border: 1px solid #435269;
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  color: #f8c45e;
+  background: #111a26;
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.profile-panel__forge-id > button:hover {
+  border-color: #e6ab38;
+}
+
+@media (max-width: 500px) {
+  .profile-panel__forge-id {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profile-panel__forge-id > button {
+    grid-column: 1;
+    grid-row: auto;
+    width: 100%;
+    margin-top: 0.35rem;
+  }
+}
+
+/* =========================================================
+   FORGE PLAYER PASSPORT
+   ========================================================= */
+
+.forge-passport {
+  overflow: hidden;
+  border-color: rgba(230, 171, 56, 0.38);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(230, 171, 56, 0.11),
+      transparent 22rem
+    ),
+    linear-gradient(
+      135deg,
+      rgba(50, 117, 170, 0.06),
+      transparent 55%
+    ),
+    rgba(18, 26, 37, 0.96);
+}
+
+.forge-passport__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.forge-passport__identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 1rem;
+}
+
+.forge-passport__avatar {
+  display: grid;
+  width: 92px;
+  height: 92px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid rgba(230, 171, 56, 0.5);
+  border-radius: 1.1rem;
+  background: #192432;
+  box-shadow:
+    0 0 0 5px rgba(230, 171, 56, 0.04),
+    0 1rem 2.5rem rgba(0, 0, 0, 0.28);
+  object-fit: cover;
+}
+
+.forge-passport__avatar--fallback {
+  color: #171107;
+  background: #e6ab38;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.forge-passport__identity-content {
+  min-width: 0;
+}
+
+.forge-passport__identity-content .eyebrow {
+  margin-bottom: 0.35rem;
+}
+
+.forge-passport__identity-content h2 {
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-size: clamp(1.65rem, 4vw, 2.35rem);
+}
+
+.forge-passport__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.forge-passport-status {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #445267;
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+  color: #c4ceda;
+  background: #121c28;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.forge-passport-status--verified {
+  border-color: rgba(88, 200, 132, 0.45);
+  color: #a6eabb;
+  background: rgba(88, 200, 132, 0.08);
+}
+
+.forge-passport-status--pending {
+  border-color: rgba(230, 171, 56, 0.45);
+  color: #ffe0a0;
+  background: rgba(230, 171, 56, 0.08);
+}
+
+.forge-passport-status--warning {
+  border-color: rgba(207, 75, 75, 0.45);
+  color: #ffb4b4;
+  background: rgba(207, 75, 75, 0.08);
+}
+
+.forge-passport__account-status {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+  gap: 0.2rem;
+  text-align: right;
+}
+
+.forge-passport__account-status span {
+  color: #8996a8;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.forge-passport__account-status strong {
+  color: #a6eabb;
+  font-size: 0.8rem;
+}
+
+.forge-passport__account-status small {
+  max-width: 250px;
+  overflow: hidden;
+  color: #728094;
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forge-passport__loading {
+  margin-top: 1.25rem;
+  border-top: 1px solid #2b394a;
+  padding-top: 1.25rem;
+  color: #8996a8;
+  font-size: 0.8rem;
+}
+
+.forge-passport__id-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  border: 1px solid rgba(230, 171, 56, 0.38);
+  border-radius: 0.85rem;
+  padding: 0.9rem 1rem;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(230, 171, 56, 0.1),
+      transparent
+    ),
+    #111a26;
+}
+
+.forge-passport__id-panel > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.forge-passport__id-panel span {
+  color: #8996a8;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.forge-passport__id-panel strong {
+  overflow-wrap: anywhere;
+  color: #ffe0a0;
+  font-family: "Courier New", monospace;
+  font-size: 1rem;
+}
+
+.forge-passport__id-panel small {
+  color: #728094;
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.forge-passport__id-panel button {
+  flex: 0 0 auto;
+  border: 1px solid #435269;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.8rem;
+  color: #f8c45e;
+  background: #0c151f;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.forge-passport__id-panel button:hover {
+  border-color: #e6ab38;
+}
+
+.forge-passport__id-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.forge-passport__stats {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.forge-passport__stats > div,
+.forge-passport__details > div {
+  border: 1px solid #344255;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: #111a26;
+}
+
+.forge-passport__stats span,
+.forge-passport__stats strong,
+.forge-passport__details span,
+.forge-passport__details strong {
+  display: block;
+}
+
+.forge-passport__stats span,
+.forge-passport__details span {
+  margin-bottom: 0.25rem;
+  color: #7f8b9b;
+  font-size: 0.57rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.forge-passport__stats strong {
+  overflow-wrap: anywhere;
+  color: #fff0c8;
+  font-size: 0.8rem;
+}
+
+.forge-passport__details {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+
+.forge-passport__details strong {
+  overflow-wrap: anywhere;
+  color: #c8d1dc;
+  font-size: 0.72rem;
+}
+
+.forge-passport__form {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    auto;
+  align-items: end;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid #2b394a;
+  padding-top: 1.25rem;
+}
+
+.forge-passport__form-heading {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.forge-passport__form-heading span {
+  color: #e6ab38;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.forge-passport__form-heading h3 {
+  margin: 0.25rem 0 0;
+  font-size: 1.15rem;
+}
+
+.forge-passport__form-heading p {
+  max-width: 520px;
+  margin: 0;
+  color: #8996a8;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.forge-passport__form .button {
+  min-height: 46px;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .forge-passport__details {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .forge-passport__form {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .forge-passport__form .button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .forge-passport__top {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .forge-passport__account-status {
+    justify-items: start;
+    border-top: 1px solid #2b394a;
+    padding-top: 0.8rem;
+    text-align: left;
+  }
+
+  .forge-passport__account-status small {
+    max-width: 100%;
+  }
+
+  .forge-passport__stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .forge-passport__form-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .forge-passport__form-heading p {
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .forge-passport {
+    padding: 1rem;
+  }
+
+  .forge-passport__identity {
+    align-items: flex-start;
+  }
+
+  .forge-passport__avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 0.85rem;
+  }
+
+  .forge-passport__identity-content h2 {
+    font-size: 1.35rem;
+  }
+
+  .forge-passport__id-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .forge-passport__id-panel button {
+    width: 100%;
+  }
+
+  .forge-passport__stats,
+  .forge-passport__details,
+  .forge-passport__form {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-passport__form .button {
+    grid-column: auto;
+  }
+}
+
+/* =========================================================
+   ALLIANCE DIRECTORY
+   ========================================================= */
+
+.alliance-directory-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #2b394a;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: rgba(18, 26, 37, 0.9);
+}
+
+.alliance-directory-search .button {
+  min-height: 46px;
+  white-space: nowrap;
+}
+
+.alliance-directory-error,
+.alliance-community-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  border: 1px solid rgba(207, 75, 75, 0.4);
+  border-radius: 0.9rem;
+  padding: 1rem;
+  color: #ffb4b4;
+  background: rgba(207, 75, 75, 0.08);
+}
+
+.alliance-directory-error p,
+.alliance-community-error p {
+  margin: 0.25rem 0 0;
+  font-size: 0.76rem;
+}
+
+.alliance-directory-state,
+.alliance-community-state {
+  display: grid;
+  min-height: 240px;
+  place-content: center;
+  justify-items: center;
+  gap: 0.65rem;
+  border: 1px dashed #344255;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: rgba(18, 26, 37, 0.72);
+  text-align: center;
+}
+
+.alliance-directory-state > span,
+.alliance-community-state > span {
+  font-size: 2rem;
+}
+
+.alliance-directory-state h2,
+.alliance-directory-state p,
+.alliance-community-state h2,
+.alliance-community-state p {
+  margin: 0;
+}
+
+.alliance-directory-state p,
+.alliance-community-state p {
+  max-width: 520px;
+  color: #8996a8;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.alliance-directory-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #2b394a;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: rgba(18, 26, 37, 0.9);
+}
+
+.alliance-directory-toolbar .field {
+  width: min(100%, 540px);
+}
+
+.alliance-directory-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.alliance-directory-summary strong {
+  color: #e6ab38;
+  font-size: 1.8rem;
+}
+
+.alliance-directory-summary span {
+  color: #8996a8;
+  font-size: 0.75rem;
+}
+
+.alliance-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.alliance-directory-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border: 1px solid #2b394a;
+  border-radius: 1rem;
+  padding: 1.2rem;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(230, 171, 56, 0.055),
+      transparent
+    ),
+    rgba(18, 26, 37, 0.92);
+}
+
+.alliance-directory-card__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.alliance-directory-card__identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.alliance-directory-card__shield {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.85rem;
+  background: rgba(230, 171, 56, 0.1);
+  font-size: 1.4rem;
+}
+
+.alliance-directory-card__identity > div {
+  min-width: 0;
+}
+
+.alliance-directory-card__identity span {
+  color: #e6ab38;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.alliance-directory-card h2 {
+  overflow-wrap: anywhere;
+  margin: 0.25rem 0 0;
+  font-size: 1.2rem;
+}
+
+.alliance-verification-badge {
+  flex: 0 0 auto;
+  border: 1px solid #445267;
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  color: #c4ceda;
+  background: #121c28;
+  font-size: 0.58rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.alliance-verification-badge--forge_verified,
+.alliance-verification-badge--community_verified {
+  border-color: rgba(88, 200, 132, 0.45);
+  color: #a6eabb;
+  background: rgba(88, 200, 132, 0.08);
+}
+
+.alliance-verification-badge--pending {
+  border-color: rgba(230, 171, 56, 0.45);
+  color: #ffe0a0;
+}
+
+.alliance-directory-card__description {
+  min-height: 48px;
+  margin: 0.85rem 0 1rem;
+  color: #8996a8;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.alliance-directory-card__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.alliance-directory-card__stats > div {
+  border: 1px solid #344255;
+  border-radius: 0.7rem;
+  padding: 0.65rem;
+  background: #111a26;
+}
+
+.alliance-directory-card__stats span,
+.alliance-directory-card__stats strong {
+  display: block;
+}
+
+.alliance-directory-card__stats span {
+  margin-bottom: 0.2rem;
+  color: #8996a8;
+  font-size: 0.52rem;
+  text-transform: uppercase;
+}
+
+.alliance-directory-card__stats strong {
+  overflow-wrap: anywhere;
+  color: #fff0c8;
+  font-size: 0.72rem;
+}
+
+.alliance-directory-card__metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.alliance-directory-card__metadata span {
+  border: 1px solid #344255;
+  border-radius: 999px;
+  padding: 0.3rem 0.5rem;
+  color: #9da8b7;
+  background: #111a26;
+  font-size: 0.6rem;
+}
+
+.alliance-directory-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.alliance-directory-card__actions .button {
+  width: 100%;
+}
+
+/* =========================================================
+   ALLIANCE COMMUNITY
+   ========================================================= */
+
+.alliance-community-back {
+  margin-bottom: 1rem;
+}
+
+.alliance-community-back a {
+  color: #e6ab38;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.alliance-community-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  border: 1px solid rgba(230, 171, 56, 0.4);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(230, 171, 56, 0.1),
+      transparent 20rem
+    ),
+    rgba(18, 26, 37, 0.95);
+}
+
+.alliance-community-hero__shield {
+  display: grid;
+  width: 102px;
+  height: 102px;
+  place-items: center;
+  border: 2px solid rgba(230, 171, 56, 0.42);
+  border-radius: 1rem;
+  background: #182331;
+  font-size: 2.6rem;
+}
+
+.alliance-community-hero__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.alliance-community-hero__heading > div > span {
+  color: #e6ab38;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.alliance-community-hero h1 {
+  margin: 0.3rem 0 0;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1;
+}
+
+.alliance-community-hero__main > p {
+  max-width: 760px;
+  margin: 0.85rem 0 1rem;
+  color: #929dad;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.alliance-community-hero__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.alliance-community-hero__stats > div {
+  border: 1px solid #344255;
+  border-radius: 0.75rem;
+  padding: 0.7rem;
+  background: #111a26;
+}
+
+.alliance-community-hero__stats span,
+.alliance-community-hero__stats strong {
+  display: block;
+}
+
+.alliance-community-hero__stats span {
+  margin-bottom: 0.2rem;
+  color: #8996a8;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+}
+
+.alliance-community-hero__stats strong {
+  color: #fff0c8;
+  font-size: 0.78rem;
+}
+
+.alliance-community-hero__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.alliance-community-hero__tags span {
+  border: 1px solid #344255;
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  color: #aeb9c7;
+  background: #111a26;
+  font-size: 0.62rem;
+}
+
+.alliance-community-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+}
+
+.alliance-member-directory {
+  margin-top: 1rem;
+  border: 1px solid #2b394a;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: rgba(18, 26, 37, 0.9);
+}
+
+.alliance-member-directory__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.alliance-member-directory__heading h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.45rem;
+}
+
+.alliance-member-directory__heading > span {
+  color: #8996a8;
+  font-size: 0.72rem;
+}
+
+.alliance-member-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.alliance-member-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border: 1px solid #344255;
+  border-radius: 0.85rem;
+  padding: 1rem;
+  background: #111a26;
+}
+
+.alliance-member-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.alliance-member-card__identity img,
+.alliance-member-card__avatar-fallback {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(230, 171, 56, 0.38);
+  border-radius: 0.8rem;
+  background: #192432;
+  object-fit: cover;
+  font-size: 1.35rem;
+}
+
+.alliance-member-card__identity > div {
+  min-width: 0;
+}
+
+.alliance-member-card__identity span {
+  color: #e6ab38;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.alliance-member-card__identity h3 {
+  overflow: hidden;
+  margin: 0.2rem 0;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alliance-member-card__identity p {
+  margin: 0;
+  color: #8996a8;
+  font-size: 0.7rem;
+}
+
+.alliance-member-card__details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.alliance-member-card__details > div {
+  border: 1px solid #303d4f;
+  border-radius: 0.7rem;
+  padding: 0.6rem;
+  background: #0c151f;
+}
+
+.alliance-member-card__details span,
+.alliance-member-card__details strong {
+  display: block;
+}
+
+.alliance-member-card__details span {
+  margin-bottom: 0.2rem;
+  color: #7f8b9b;
+  font-size: 0.54rem;
+  text-transform: uppercase;
+}
+
+.alliance-member-card__details strong {
+  overflow-wrap: anywhere;
+  color: #dce3ec;
+  font-size: 0.67rem;
+}
+
+.alliance-member-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-top: auto;
+  padding-top: 0.85rem;
+}
+
+.alliance-member-role {
+  border: 1px solid #344255;
+  border-radius: 999px;
+  padding: 0.3rem 0.5rem;
+  color: #aeb9c7;
+  background: #182331;
+  font-size: 0.58rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.alliance-member-role--leader,
+.alliance-member-role--r4 {
+  border-color: rgba(230, 171, 56, 0.45);
+  color: #ffe0a0;
+}
+
+.alliance-member-card__footer button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #344255;
+  border-radius: 50%;
+  color: #758297;
+  background: #182331;
+  font-size: 1rem;
+}
+
+@media (max-width: 1000px) {
+  .alliance-directory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-member-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 750px) {
+  .alliance-directory-search {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .alliance-directory-search .button {
+    width: 100%;
+  }
+
+  .alliance-directory-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .alliance-directory-toolbar .field {
+    width: 100%;
+  }
+
+  .alliance-directory-card__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .alliance-community-hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .alliance-community-hero__main {
+    width: 100%;
+  }
+
+  .alliance-community-hero__heading {
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .alliance-community-hero__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .alliance-community-hero__tags,
+  .alliance-community-hero__actions {
+    justify-content: center;
+  }
+
+  .alliance-community-hero__actions .button {
+    width: 100%;
+  }
+
+  .alliance-member-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-member-directory__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  .alliance-directory-card__heading {
+    flex-direction: column;
+  }
+
+  .alliance-directory-card__stats,
+  .alliance-community-hero__stats,
+  .alliance-member-card__details,
+  .alliance-directory-card__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   ALLIANCE MEMBERSHIP
+   ========================================================= */
+
+.alliance-membership-panel {
+  margin-top: 1rem;
+  border: 1px solid #2b394a;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: rgba(18, 26, 37, 0.92);
+}
+
+.alliance-membership-panel__heading h2 {
+  margin: 0.25rem 0 1rem;
+}
+
+.alliance-membership-state {
+  display: grid;
+  gap: 0.45rem;
+  border: 1px solid #344255;
+  border-radius: 0.8rem;
+  padding: 1rem;
+  background: #111a26;
+}
+
+.alliance-membership-state p {
+  margin: 0;
+  color: #8996a8;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.alliance-membership-state--success {
+  border-color: rgba(88, 200, 132, 0.4);
+}
+
+.alliance-membership-state--pending {
+  border-color: rgba(230, 171, 56, 0.4);
+}
+
+.alliance-membership-request {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+}
+
+.alliance-membership-request .button {
+  min-height: 46px;
+  white-space: nowrap;
+}
+
+.alliance-request-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.alliance-request-card {
+  border: 1px solid #344255;
+  border-radius: 1rem;
+  padding: 1.2rem;
+  background: #111a26;
+}
+
+.alliance-request-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.alliance-request-card__identity img,
+.alliance-request-card__identity > span {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(230, 171, 56, 0.4);
+  border-radius: 0.85rem;
+  background: #192432;
+  object-fit: cover;
+}
+
+.alliance-request-card__identity small {
+  color: #e6ab38;
+  font-size: 0.62rem;
+}
+
+.alliance-request-card__identity h2 {
+  margin: 0.2rem 0;
+}
+
+.alliance-request-card__identity p {
+  margin: 0;
+  color: #8996a8;
+  font-size: 0.72rem;
+}
+
+.alliance-request-card__message {
+  margin-top: 1rem;
+  border: 1px solid #303d4f;
+  border-radius: 0.75rem;
+  padding: 0.8rem;
+  background: #0c151f;
+}
+
+.alliance-request-card__message span {
+  color: #8996a8;
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.alliance-request-card__message p {
+  margin: 0.35rem 0 0;
+  color: #c8d1dc;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.alliance-request-card__role {
+  margin-top: 1rem;
+}
+
+.alliance-request-card__role label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #c4ceda;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.alliance-request-card__role select {
+  width: 100%;
+}
+
+.alliance-request-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 700px) {
+  .alliance-membership-request {
+    grid-template-columns: 1fr;
+  }
+
+  .alliance-membership-request .button {
+    width: 100%;
+  }
+
+  .alliance-request-card__actions {
+    grid-template-columns: 1fr;
+  }
+}
