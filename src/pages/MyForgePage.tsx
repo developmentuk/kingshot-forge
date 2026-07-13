@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { artTemplates } from '../data/artTemplates'
 import { nameVariants } from '../data/nameVariants'
+import ProfilePanel from '../components/ProfilePanel'
 import {
   clearRecentNames,
   loadRecentNames,
@@ -186,7 +187,7 @@ function MyForgePage() {
           recently copied names.
         </p>
       </div>
-
+<ProfilePanel />
       <div className="my-forge-summary">
         <div>
           <strong>{favouriteNameStyles.length}</strong>
