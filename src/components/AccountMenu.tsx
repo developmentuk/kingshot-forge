@@ -1,5 +1,22 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { usePlayerIdentity } from '../context/PlayerIdentityContext'
+
+function getVerificationLabel(status: string) {
+  switch (status) {
+    case 'officially_verified':
+      return 'Officially verified'
+
+    case 'community_verified':
+      return 'Community verified'
+
+    case 'pending':
+      return 'Verification pending'
+
+    default:
+      return 'Linked player'
+  }
+}
 
 function AccountMenu() {
   const {
@@ -8,6 +25,11 @@ function AccountMenu() {
     signInWithGoogle,
     signOut,
   } = useAuth()
+
+  const {
+    playerAccount,
+    loadingPlayerAccount,
+  } = usePlayerIdentity()
 
   const [errorMessage, setErrorMessage] = useState('')
   const [working, setWorking] = useState(false)
@@ -24,6 +46,7 @@ function AccountMenu() {
           ? error.message
           : 'Google sign-in failed.',
       )
+
       setWorking(false)
     }
   }
@@ -45,7 +68,7 @@ function AccountMenu() {
     }
   }
 
-  if (loading) {
+  if (loading || loadingPlayerAccount) {
     return (
       <div className="account-menu account-menu--loading">
         Loading…
@@ -74,14 +97,21 @@ function AccountMenu() {
     )
   }
 
-  const displayName =
+  const googleDisplayName =
     user.user_metadata.full_name ??
     user.user_metadata.name ??
     user.email ??
     'Member'
 
+  const displayName =
+    playerAccount?.player_name ??
+    googleDisplayName
+
   const avatarUrl =
-    user.user_metadata.avatar_url as string | undefined
+    playerAccount?.profile_photo ??
+    (user.user_metadata.avatar_url as
+      | string
+      | undefined)
 
   return (
     <div className="account-menu account-menu--signed-in">
@@ -100,7 +130,22 @@ function AccountMenu() {
 
         <div>
           <strong>{displayName}</strong>
-          <small>{user.email}</small>
+
+          {playerAccount ? (
+            <>
+              <small>
+                Kingdom {playerAccount.kingdom_id}
+              </small>
+
+              <small className="account-menu__verification">
+                {getVerificationLabel(
+                  playerAccount.verification_status,
+                )}
+              </small>
+            </>
+          ) : (
+            <small>{user.email}</small>
+          )}
         </div>
       </div>
 

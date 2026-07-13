@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { useAuth } from '../context/AuthContext'
 import { artTemplates } from '../data/artTemplates'
 import { nameVariants } from '../data/nameVariants'
+import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 
 type ForgeTool = {
   title: string
@@ -104,11 +105,17 @@ const forgeTools: ForgeTool[] = [
 function HomePage() {
   const { user, loading } = useAuth()
 
+const {
+  playerAccount,
+  loadingPlayerAccount,
+} = usePlayerIdentity()
+
   const displayName =
-    user?.user_metadata.full_name ??
-    user?.user_metadata.name ??
-    user?.email?.split('@')[0] ??
-    'Forger'
+  playerAccount?.player_name ??
+  user?.user_metadata.full_name ??
+  user?.user_metadata.name ??
+  user?.email?.split('@')[0] ??
+  'Forger'
 
   const testedArtworkCount = artTemplates.filter(
     (template) => template.testedInKingshot,
@@ -129,15 +136,40 @@ function HomePage() {
           </p>
 
           <h1>
-            {user && !loading
-              ? `Welcome back, ${displayName}.`
-              : 'Forge your Kingshot identity.'}
+            {user && !loading && !loadingPlayerAccount
+  ? `Welcome back, ${displayName}.`
+  : 'Forge your Kingshot identity.'}
           </h1>
 
           <p className="forge-hub-hero__description">
             Create player names, chat messages and copy-ready
             artwork using characters tested inside Kingshot.
           </p>
+
+          {playerAccount && (
+  <div className="forge-hub-player-identity">
+    {playerAccount.profile_photo && (
+      <img
+        src={playerAccount.profile_photo}
+        alt=""
+      />
+    )}
+
+    <div>
+      <strong>{playerAccount.player_name}</strong>
+
+      <span>
+        Kingdom {playerAccount.kingdom_id}
+        {' · '}
+        {playerAccount.level_rendered_detailed ||
+          playerAccount.level_rendered ||
+          (playerAccount.player_level
+            ? `Level ${playerAccount.player_level}`
+            : 'Level unavailable')}
+      </span>
+    </div>
+  </div>
+)}
 
           <div className="forge-hub-hero__actions">
             <Link
@@ -173,6 +205,52 @@ function HomePage() {
           </Link>
         </div>
       </header>
+
+      <section className="home-release-banner">
+  <div className="home-release-banner__content">
+    <div className="home-release-banner__icon">
+      🚀
+    </div>
+
+    <div>
+      <div className="home-release-banner__meta">
+        <span>New release</span>
+        <strong>Version 0.4.0</strong>
+      </div>
+
+      <h2>The Forge is live</h2>
+
+      <p>
+        Player profiles, live gift codes, Player Lookup,
+        Kingdom Explorer, KvK history and a stronger mobile
+        experience are now available.
+      </p>
+
+      <div className="home-release-banner__tags">
+        <span>Player identities</span>
+        <span>Gift Codes</span>
+        <span>Kingdom Explorer</span>
+        <span>KvK Tracker</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="home-release-banner__actions">
+    <Link
+      className="button button--primary"
+      to="/release-notes"
+    >
+      See what’s new
+    </Link>
+
+    <Link
+      className="button button--secondary"
+      to="/roadmap"
+    >
+      View roadmap
+    </Link>
+  </div>
+</section>
 
       <section className="forge-hub-section">
         <div className="forge-hub-section__heading">

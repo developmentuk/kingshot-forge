@@ -15,6 +15,7 @@ import SupabaseTestPage from './pages/SupabaseTestPage'
 import './App.css'
 import KingdomExplorerPage from './pages/KingdomExplorerPage'
 import KvkTrackerPage from './pages/KvkTrackerPage'
+import ReleaseNotesPage from './pages/ReleaseNotesPage'
 
 function App() {
   return (
@@ -87,6 +88,10 @@ function App() {
           element={<KvkTrackerPage />}
         />
       </Route>
+      <Route
+  path="release-notes"
+  element={<ReleaseNotesPage />}
+/>
     </Routes>
   )
 }

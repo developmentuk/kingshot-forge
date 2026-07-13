@@ -1,88 +1,89 @@
 import { useEffect, useState } from 'react'
 import {
+  Link,
   NavLink,
   Outlet,
   useLocation,
 } from 'react-router'
 import AccountMenu from './AccountMenu'
 
-
-const feedbackFormUrl =
-  'https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor'
-
 type NavigationItem = {
   label: string
-  shortLabel?: string
+  shortLabel: string
   icon: string
   path: string
-  end?: boolean
 }
 
 const forgeNavigation: NavigationItem[] = [
   {
-    label: 'Name Forge',
+    label: 'Name Studio',
     shortLabel: 'Names',
-    icon: '👑',
+    icon: '✨',
     path: '/name-studio',
   },
   {
-    label: 'Chat Forge',
+    label: 'Art Studio',
+    shortLabel: 'Art',
+    icon: '🎨',
+    path: '/art-studio',
+  },
+  {
+    label: 'Chat Studio',
     shortLabel: 'Chat',
     icon: '💬',
     path: '/chat-studio',
   },
+]
+
+const companionNavigation: NavigationItem[] = [
   {
-    label: 'Art Forge',
-    shortLabel: 'Art',
-    icon: '🎨',
-    path: '/art-studio',
+    label: 'Player Lookup',
+    shortLabel: 'Players',
+    icon: '👤',
+    path: '/player-lookup',
+  },
+  {
+    label: 'Gift Codes',
+    shortLabel: 'Codes',
+    icon: '🎁',
+    path: '/gift-codes',
+  },
+  {
+    label: 'Kingdom Explorer',
+    shortLabel: 'Kingdoms',
+    icon: '🏰',
+    path: '/kingdom-explorer',
+  },
+  {
+    label: 'KvK Tracker',
+    shortLabel: 'KvK',
+    icon: '⚔️',
+    path: '/kvk-tracker',
   },
 ]
 
 const libraryNavigation: NavigationItem[] = [
   {
     label: 'Character Library',
-    shortLabel: 'Library',
-    icon: '📚',
+    shortLabel: 'Characters',
+    icon: '🔤',
     path: '/characters',
   },
   {
-    label: 'Compatibility Lab',
-    icon: '🧪',
+    label: 'Compatibility',
+    shortLabel: 'Compatibility',
+    icon: '✅',
     path: '/compatibility',
   },
   {
-    label: 'Forge Codex',
-    icon: '📖',
+    label: 'Codex',
+    shortLabel: 'Codex',
+    icon: '📚',
     path: '/codex',
   },
-  {
-  label: 'Gift Codes',
-  shortLabel: 'Codes',
-  icon: '🎁',
-  path: '/gift-codes',
-},
-{
-  label: 'Player Lookup',
-  shortLabel: 'Players',
-  icon: '👤',
-  path: '/player-lookup',
-},
-{
-  label: 'Kingdom Explorer',
-  shortLabel: 'Kingdoms',
-  icon: '🏰',
-  path: '/kingdom-explorer',
-},
-{
-  label: 'Kvk Tracker',
-  shortLabel: 'Kvk',
-  icon: '⚔️',
-  path: '/kvk-tracker',
-}
 ]
 
-const communityNavigation: NavigationItem[] = [
+const platformNavigation: NavigationItem[] = [
   {
     label: 'My Forge',
     shortLabel: 'My Forge',
@@ -91,36 +92,160 @@ const communityNavigation: NavigationItem[] = [
   },
   {
     label: 'Roadmap',
+    shortLabel: 'Roadmap',
     icon: '🗺️',
     path: '/roadmap',
   },
+  {
+    label: 'Release Notes',
+    shortLabel: 'Updates',
+    icon: '🚀',
+    path: '/release-notes',
+  },
 ]
 
+const mobileNavigation: NavigationItem[] = [
+  {
+    label: 'Home',
+    shortLabel: 'Home',
+    icon: '🏠',
+    path: '/',
+  },
+  {
+    label: 'Player Lookup',
+    shortLabel: 'Players',
+    icon: '👤',
+    path: '/player-lookup',
+  },
+  {
+    label: 'KvK Tracker',
+    shortLabel: 'KvK',
+    icon: '⚔️',
+    path: '/kvk-tracker',
+  },
+  {
+    label: 'Gift Codes',
+    shortLabel: 'Codes',
+    icon: '🎁',
+    path: '/gift-codes',
+  },
+  {
+    label: 'My Forge',
+    shortLabel: 'My Forge',
+    icon: '⭐',
+    path: '/my-forge',
+  },
+]
+
+const feedbackUrl =
+  'https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor'
+
+function NavigationLink({
+  item,
+  onNavigate,
+}: {
+  item: NavigationItem
+  onNavigate?: () => void
+}) {
+  return (
+    <NavLink
+      to={item.path}
+      end={item.path === '/'}
+      className={({ isActive }) =>
+        isActive
+          ? 'app-navigation__link app-navigation__link--active'
+          : 'app-navigation__link'
+      }
+      onClick={onNavigate}
+    >
+      <span
+        className="app-navigation__icon"
+        aria-hidden="true"
+      >
+        {item.icon}
+      </span>
+
+      <span>{item.label}</span>
+    </NavLink>
+  )
+}
+
+function NavigationGroup({
+  title,
+  items,
+  onNavigate,
+}: {
+  title: string
+  items: NavigationItem[]
+  onNavigate?: () => void
+}) {
+  return (
+    <section className="app-navigation__group">
+      <p className="app-navigation__group-title">
+        {title}
+      </p>
+
+      <div className="app-navigation__group-links">
+        {items.map((item) => (
+          <NavigationLink
+            key={item.path}
+            item={item}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function MobileBottomLink({
+  item,
+}: {
+  item: NavigationItem
+}) {
+  return (
+    <NavLink
+      to={item.path}
+      end={item.path === '/'}
+      className={({ isActive }) =>
+        isActive
+          ? 'mobile-bottom-navigation__link mobile-bottom-navigation__link--active'
+          : 'mobile-bottom-navigation__link'
+      }
+    >
+      <span aria-hidden="true">{item.icon}</span>
+      <small>{item.shortLabel}</small>
+    </NavLink>
+  )
+}
+
 function AppLayout() {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [navigationOpen, setNavigationOpen] =
+    useState(false)
+
   const location = useLocation()
 
   useEffect(() => {
-    setMenuOpen(false)
+    setNavigationOpen(false)
   }, [location.pathname])
 
   useEffect(() => {
-    document.body.classList.toggle(
-      'mobile-menu-is-open',
-      menuOpen,
-    )
+    if (!navigationOpen) {
+      document.body.style.overflow = ''
+      return
+    }
+
+    document.body.style.overflow = 'hidden'
 
     return () => {
-      document.body.classList.remove(
-        'mobile-menu-is-open',
-      )
+      document.body.style.overflow = ''
     }
-  }, [menuOpen])
+  }, [navigationOpen])
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setMenuOpen(false)
+        setNavigationOpen(false)
       }
     }
 
@@ -134,368 +259,213 @@ function AppLayout() {
     }
   }, [])
 
+  function closeNavigation() {
+    setNavigationOpen(false)
+  }
+
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <nav
-          className="navigation"
-          aria-label="Main navigation"
-        >
-          <NavLink className="brand" to="/">
+      <header className="app-header">
+        <div className="app-header__inner">
+          <button
+            type="button"
+            className="app-header__menu-button"
+            aria-label="Open navigation"
+            aria-expanded={navigationOpen}
+            aria-controls="primary-navigation"
+            onClick={() =>
+              setNavigationOpen((current) => !current)
+            }
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
+          <Link
+            to="/"
+            className="app-brand"
+            onClick={closeNavigation}
+          >
             <span
-              className="brand__icon"
+              className="app-brand__mark"
               aria-hidden="true"
             >
               ⚒️
             </span>
 
-            <span className="brand__text">
-              <strong>Kingshot</strong>
-              <small>Forge</small>
+            <span className="app-brand__text">
+              <strong>Kingshot Forge</strong>
+              <small>Community Companion</small>
             </span>
-          </NavLink>
+          </Link>
 
-          <div className="navigation__links">
-            <NavLink to="/" end>
-              Home
-            </NavLink>
+          <div className="app-header__account">
+            <AccountMenu />
+          </div>
+        </div>
+      </header>
 
-            <NavLink to="/name-studio">
-              Names
-            </NavLink>
+      <div className="app-shell__body">
+        <aside
+          id="primary-navigation"
+          className={
+            navigationOpen
+              ? 'app-sidebar app-sidebar--open'
+              : 'app-sidebar'
+          }
+        >
+          <div className="app-sidebar__mobile-header">
+            <Link
+              to="/"
+              className="app-brand"
+              onClick={closeNavigation}
+            >
+              <span
+                className="app-brand__mark"
+                aria-hidden="true"
+              >
+                ⚒️
+              </span>
 
-            <NavLink to="/chat-studio">
-              Chat
-            </NavLink>
+              <span className="app-brand__text">
+                <strong>Kingshot Forge</strong>
+                <small>Community Beta</small>
+              </span>
+            </Link>
 
-            <NavLink to="/art-studio">
-              Art
-            </NavLink>
-
-            <NavLink to="/characters">
-              Characters
-            </NavLink>
-
-            <NavLink to="/my-forge">
-              My Forge
-            </NavLink>
-
-            <NavLink to="/roadmap">
-              Roadmap
-            </NavLink>
+            <button
+              type="button"
+              className="app-sidebar__close"
+              aria-label="Close navigation"
+              onClick={closeNavigation}
+            >
+              ×
+            </button>
           </div>
 
-          <div className="navigation__actions">
-            <div className="navigation__account">
-              <AccountMenu />
-            </div>
+          <nav
+            className="app-navigation"
+            aria-label="Primary navigation"
+          >
+            <NavigationGroup
+              title="Forge tools"
+              items={forgeNavigation}
+              onNavigate={closeNavigation}
+            />
 
+            <NavigationGroup
+              title="Kingshot companion"
+              items={companionNavigation}
+              onNavigate={closeNavigation}
+            />
+
+            <NavigationGroup
+              title="Library"
+              items={libraryNavigation}
+              onNavigate={closeNavigation}
+            />
+
+            <NavigationGroup
+              title="Community and updates"
+              items={platformNavigation}
+              onNavigate={closeNavigation}
+            />
+          </nav>
+
+          <div className="app-sidebar__footer">
             <a
-              className="button button--coffee navigation__support"
-              href="https://buymeacoffee.com/jrcs1981"
+              className="app-sidebar__feedback"
+              href={feedbackUrl}
               target="_blank"
               rel="noreferrer"
             >
-              ☕ Support
+              <span aria-hidden="true">💡</span>
+              Send feedback
             </a>
-          </div>
 
+            <Link
+              className="app-version-link"
+              to="/release-notes"
+              onClick={closeNavigation}
+            >
+              Community Beta · v0.4.0
+            </Link>
+          </div>
+        </aside>
+
+        {navigationOpen && (
           <button
             type="button"
-            className="mobile-menu-button"
-            aria-expanded={menuOpen}
-            aria-controls="mobile-navigation"
-            aria-label={
-              menuOpen
-                ? 'Close navigation menu'
-                : 'Open navigation menu'
-            }
-            onClick={() =>
-              setMenuOpen((current) => !current)
-            }
-          >
-            <span aria-hidden="true">
-              {menuOpen ? '×' : '☰'}
-            </span>
-          </button>
-        </nav>
-      </header>
+            className="app-sidebar-backdrop"
+            aria-label="Close navigation"
+            onClick={closeNavigation}
+          />
+        )}
 
-      <div
-        className={
-          menuOpen
-            ? 'mobile-navigation-backdrop mobile-navigation-backdrop--open'
-            : 'mobile-navigation-backdrop'
-        }
-        onClick={() => setMenuOpen(false)}
-        aria-hidden="true"
-      />
+        <main className="app-main">
+          <Outlet />
+        </main>
+      </div>
 
-      <aside
-        id="mobile-navigation"
-        className={
-          menuOpen
-            ? 'mobile-navigation mobile-navigation--open'
-            : 'mobile-navigation'
-        }
-        aria-hidden={!menuOpen}
-      >
-        <div className="mobile-navigation__header">
+      <footer className="app-footer">
+        <div className="app-footer__inner">
           <div>
-            <span className="eyebrow">
-              Kingshot Forge
-            </span>
+            <strong>Kingshot Forge</strong>
 
-            <strong>Community toolkit</strong>
+            <p>
+              An unofficial community companion for
+              Kingshot players.
+            </p>
           </div>
 
-          <button
-            type="button"
-            className="mobile-navigation__close"
-            onClick={() => setMenuOpen(false)}
-            aria-label="Close navigation menu"
-          >
-            ×
-          </button>
-        </div>
+          <div className="app-footer__links">
+            <Link to="/roadmap">Roadmap</Link>
 
-        <div className="mobile-navigation__account">
-          <AccountMenu />
-        </div>
+            <Link to="/release-notes">
+              Release Notes
+            </Link>
 
-        <nav
-          className="mobile-navigation__content"
-          aria-label="Mobile navigation"
-        >
-          <MobileNavigationLink
-            item={{
-              label: 'Home',
-              icon: '🏠',
-              path: '/',
-              end: true,
-            }}
-          />
+            <a
+              href={feedbackUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Feedback
+            </a>
 
-          <MobileNavigationGroup
-            title="Forge"
-            items={forgeNavigation}
-          />
-
-          <MobileNavigationGroup
-            title="Library"
-            items={libraryNavigation}
-          />
-
-          <MobileNavigationGroup
-            title="Community"
-            items={communityNavigation}
-          />
-        </nav>
-
-        <div className="mobile-navigation__footer">
-          <a
-            className="button button--coffee"
-            href="https://buymeacoffee.com/jrcs1981"
-            target="_blank"
-            rel="noreferrer"
-          >
-            ☕ Support Kingshot Forge
-          </a>
-
-          <a
-            className="button button--secondary"
-            href={feedbackFormUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            💬 Beta Feedback
-          </a>
-        </div>
-      </aside>
-
-      <main className="page-content">
-        <Outlet />
-      </main>
-
-      <footer className="footer">
-        <div>
-          <strong>Kingshot Forge</strong>
-          <p>Community-made and unofficial.</p>
-        </div>
-
-        <div className="footer__links">
-          <NavLink to="/my-forge">
-            My Forge
-          </NavLink>
-
-          <NavLink to="/roadmap">
-            Roadmap
-          </NavLink>
-
-          <NavLink to="/codex">
-            Codex
-          </NavLink>
-
-          <NavLink to="/compatibility">
-            Compatibility
-          </NavLink>
-
-          <a
-            href={feedbackFormUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Beta Feedback
-          </a>
-
-          <a
-            className="footer__support"
-            href="https://buymeacoffee.com/jrcs1981"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Support the project
-          </a>
+            <Link
+              className="app-version-link"
+              to="/release-notes"
+            >
+              Community Beta · v0.4.0
+            </Link>
+          </div>
         </div>
       </footer>
 
       <nav
         className="mobile-bottom-navigation"
-        aria-label="Quick navigation"
+        aria-label="Mobile navigation"
       >
-        <MobileBottomLink
-          item={{
-            label: 'Home',
-            icon: '🏠',
-            path: '/',
-            end: true,
-          }}
-        />
-
-        <MobileBottomLink
-          item={forgeNavigation[0]}
-        />
-
-        <MobileBottomLink
-          item={forgeNavigation[2]}
-        />
-
-       <MobileBottomLink
-  item={{
-    label: 'Gift Codes',
-    shortLabel: 'Codes',
-    icon: '🎁',
-    path: '/gift-codes',
-  }}
-/>
-
-        <MobileBottomLink
-          item={communityNavigation[0]}
-        />
-      </nav>
-
-      <a
-        className="feedback-button"
-        href={feedbackFormUrl}
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Give beta feedback"
-      >
-        <span className="feedback-button__icon">
-          💬
-        </span>
-
-        <span className="feedback-button__text">
-          <strong>Beta Feedback</strong>
-          <small>
-            Report an issue or suggest a feature
-          </small>
-        </span>
-      </a>
-    </div>
-  )
-}
-
-type MobileNavigationGroupProps = {
-  title: string
-  items: NavigationItem[]
-}
-
-function MobileNavigationGroup({
-  title,
-  items,
-}: MobileNavigationGroupProps) {
-  return (
-    <section className="mobile-navigation__group">
-      <h2>{title}</h2>
-
-      <div className="mobile-navigation__links">
-        {items.map((item) => (
-          <MobileNavigationLink
+        {mobileNavigation.map((item) => (
+          <MobileBottomLink
             key={item.path}
             item={item}
           />
         ))}
-      </div>
-    </section>
-  )
-}
+      </nav>
 
-type NavigationLinkProps = {
-  item: NavigationItem
-}
-
-function MobileNavigationLink({
-  item,
-}: NavigationLinkProps) {
-  return (
-    <NavLink
-      to={item.path}
-      end={item.end}
-      className={({ isActive }) =>
-        isActive
-          ? 'mobile-navigation__link mobile-navigation__link--active'
-          : 'mobile-navigation__link'
-      }
-    >
-      <span
-        className="mobile-navigation__link-icon"
-        aria-hidden="true"
+      <a
+        className="floating-feedback-button"
+        href={feedbackUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Send Kingshot Forge feedback"
       >
-        {item.icon}
-      </span>
-
-      <span>{item.label}</span>
-
-      <span
-        className="mobile-navigation__link-arrow"
-        aria-hidden="true"
-      >
-        →
-      </span>
-    </NavLink>
-  )
-}
-
-function MobileBottomLink({
-  item,
-}: NavigationLinkProps) {
-  return (
-    <NavLink
-      to={item.path}
-      end={item.end}
-      className={({ isActive }) =>
-        isActive
-          ? 'mobile-bottom-navigation__link mobile-bottom-navigation__link--active'
-          : 'mobile-bottom-navigation__link'
-      }
-    >
-      <span aria-hidden="true">{item.icon}</span>
-
-      <small>
-        {item.shortLabel ?? item.label}
-      </small>
-    </NavLink>
+        💡
+      </a>
+    </div>
   )
 }
 

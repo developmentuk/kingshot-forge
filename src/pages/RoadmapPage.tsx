@@ -1,232 +1,329 @@
-type RoadmapStatus = 'Live' | 'In development' | 'Planned' | 'Future'
+import { Link } from 'react-router'
 
-type RoadmapItem = {
-  title: string
-  description: string
+type RoadmapStatus =
+  | 'live'
+  | 'development'
+  | 'planned'
+  | 'future'
+
+type RoadmapRelease = {
+  version: string
+  name: string
   status: RoadmapStatus
+  progress: number
+  description: string
   features: string[]
+  priority?: string
 }
 
-const roadmapItems: RoadmapItem[] = [
+const roadmapReleases: RoadmapRelease[] = [
   {
-    title: 'Name Forge',
+    version: '0.4',
+    name: 'The Forge',
+    status: 'live',
+    progress: 100,
     description:
-      'Create distinctive Kingshot-compatible usernames using tested scripts and decorations.',
-    status: 'Live',
+      'The foundation release that transformed Kingshot Forge into a live community companion platform.',
     features: [
-      'Fantasy, Runic, Elegant and Cute styles',
-      'Decorative wrappers',
-      'Character counter',
-      'Copy to clipboard',
+      'Google sign-in and Forge profiles',
+      'Linked Kingshot player identity',
+      'Kingshot avatar and player details',
+      'Player Lookup',
+      'Active Gift Codes',
+      'Kingdom Explorer',
+      'KvK match history',
+      'Supabase backend',
+      'Improved mobile experience',
+      'Community artwork foundation',
     ],
   },
   {
-    title: 'Chat Forge',
+    version: '0.5',
+    name: 'Forge Core',
+    status: 'development',
+    progress: 15,
+    priority: 'Current development sprint',
     description:
-      'Build announcements, rally alerts and event messages ready to paste into Kingshot.',
-    status: 'Live',
+      'A structured game-data engine powering calculators, planners, confidence ratings and future automation.',
     features: [
-      'Event templates',
-      'Live preview',
-      'Emoji picker',
-      '500-character warning',
+      'KingshotPro dataset integration',
+      'Dataset versioning and update history',
+      'Source attribution and confidence ratings',
+      'Reusable calculator framework',
+      'Data import and validation tools',
+      'Foundation for event reminders',
+      'KvK preparation scoring data',
+      'Truegold, gear, troop and building datasets',
     ],
   },
   {
-    title: 'Character Library',
+    version: '0.6',
+    name: 'KvK Command Centre',
+    status: 'planned',
+    progress: 0,
+    priority: 'Top priority',
     description:
-      'Browse the scripts, symbols and drawing characters tested inside Kingshot.',
-    status: 'Live',
+      'A complete KvK planning and live coordination suite for players, alliances and kingdoms.',
     features: [
-      'Hundreds of characters',
-      'Search and category filters',
-      'Copy individual characters',
-      'Copy complete character groups',
+      'KvK preparation calculator',
+      'Five-day preparation planner',
+      'Personal score projections',
+      'Alliance and kingdom scoreboards',
+      'Live score updates',
+      'Resource and item planning',
+      'KvK saving checklist',
+      'Battle-day information',
+      'Push reminders and event notifications',
+      'Historical KvK results',
     ],
   },
   {
-    title: 'Name Forge v2',
+    version: '0.7',
+    name: 'Transfer Hub',
+    status: 'planned',
+    progress: 0,
+    priority: 'Top priority',
     description:
-      'Generate multiple versions of a name at once instead of producing only one result.',
-    status: 'In development',
+      'A dedicated system for managing player recruitment, state transfers, alliance vacancies and invitation passes.',
     features: [
-      'Three or more variations per style',
-      'Royal, Dark, Viking and Warrior styles',
-      'Readability controls',
-      'Random name generation',
+      'Kingdom transfer profiles',
+      'Player transfer applications',
+      'Alliance recruitment listings',
+      'Kingdom recruitment pages',
+      'Transfer eligibility tracking',
+      'Ordinary and special invitation management',
+      'Pass allocation and waiting lists',
+      'Officer notes and application status',
+      'Verified alliance and kingdom representatives',
+      'Discord server and channel links',
+      'Transfer history and membership changes',
     ],
   },
   {
-    title: 'Art Forge',
+    version: '0.8',
+    name: 'Alliance and Kingdom Communities',
+    status: 'planned',
+    progress: 0,
     description:
-      'Browse copy-ready Kingshot artwork created from compatible text, emoji and Unicode.',
-    status: 'Planned',
+      'Connected community spaces built around verified players, alliances and kingdoms.',
     features: [
-      'Cats and animals',
-      'Castles and dragons',
-      'Battle scenes',
-      'Funny chat artwork',
+      'Kingdom member directories',
+      'Alliance member directories',
+      'Favourite players, alliances and kingdoms',
+      'Alliance leadership roles',
+      'Kingdom administration roles',
+      'Alliance pages and branding',
+      'Kingdom pages and recruitment information',
+      'Discord integration',
+      'Shared alliance art and chat templates',
+      'Community announcements',
     ],
   },
   {
-    title: 'Flag Forge',
+    version: '0.9',
+    name: 'Command Centre',
+    status: 'future',
+    progress: 0,
     description:
-      'Generate static and waving emoji flags designed for Kingshot chat.',
-    status: 'Planned',
+      'Progression calculators and planning tools powered by structured, confidence-rated game data.',
     features: [
-      'Country picker',
-      'Static and waving styles',
-      'Different sizes',
-      'Cat and mascot variations',
+      'Hero database and lineup planner',
+      'Hero XP calculator',
+      'Hero shard calculator',
+      'Troop training calculator',
+      'Building upgrade planner',
+      'Truegold planner',
+      'War Academy planner',
+      'Governor Gear planner',
+      'Governor Charm planner',
+      'VIP calculator',
+      'Masters database',
     ],
   },
   {
-    title: 'Compatibility Lab',
+    version: '1.0',
+    name: 'The Ultimate Kingshot Companion',
+    status: 'future',
+    progress: 0,
     description:
-      'Search our testing records to see whether a character works in Kingshot.',
-    status: 'Planned',
+      'A unified Kingshot community platform bringing together players, alliances, kingdoms, live data, calculators and planning tools.',
     features: [
-      'Chat-tested status',
-      'Player-name testing',
-      'Supported and unsupported sets',
-      'Community test submissions',
-    ],
-  },
-  {
-    title: 'Community Forge',
-    description:
-      'Allow players to submit and share names, templates and chat art.',
-    status: 'Future',
-    features: [
+      'Personalised player dashboard',
+      'Verified player communities',
+      'KvK Command Centre',
+      'Transfer Hub',
+      'Alliance and kingdom workspaces',
+      'Live events and scoreboards',
       'Community submissions',
-      'Moderated content',
-      'Favourites',
-      'Popular creations',
-    ],
-  },
-  {
-    title: 'AI Forge',
-    description:
-      'Describe what you need and generate a compatible name, banner or artwork design.',
-    status: 'Future',
-    features: [
-      'Natural-language requests',
-      'Name suggestions',
-      'Custom banners',
-      'Kingshot-compatible artwork',
+      'Progression planners',
+      'Push notifications',
+      'Installable mobile web app',
     ],
   },
 ]
 
+function getStatusLabel(status: RoadmapStatus) {
+  switch (status) {
+    case 'live':
+      return 'Live now'
+
+    case 'development':
+      return 'In development'
+
+    case 'planned':
+      return 'Planned'
+
+    default:
+      return 'Future release'
+  }
+}
+
 function RoadmapPage() {
   return (
-    <section className="section page-section">
-      <div className="section-heading">
-        <p className="eyebrow">Development Roadmap</p>
-
-        <h1 className="page-title">What we are forging next</h1>
-
-        <p>
-          Kingshot Forge will continue growing with new name styles,
-          chat templates, artwork and community-tested characters.
-        </p>
-      </div>
-
-      <div className="roadmap-summary">
+    <section className="section page-section product-roadmap">
+      <header className="product-roadmap__hero">
         <div>
-          <strong>
-            {
-              roadmapItems.filter((item) => item.status === 'Live')
-                .length
-            }
-          </strong>
-          <span>Live tools</span>
+          <p className="eyebrow">Product roadmap</p>
+
+          <h1 className="page-title">
+            Building the ultimate Kingshot companion
+          </h1>
+
+          <p>
+            Kingshot Forge is growing from a collection of
+            creation tools into a connected community platform
+            for players, alliances and kingdoms.
+          </p>
         </div>
 
+        <div className="product-roadmap__hero-actions">
+          <Link
+            className="button button--primary"
+            to="/release-notes"
+          >
+            Read release notes
+          </Link>
+
+          <Link
+            className="button button--secondary"
+            to="/my-forge"
+          >
+            Open My Forge
+          </Link>
+        </div>
+      </header>
+
+      <section className="roadmap-priority-panel">
         <div>
-          <strong>
-            {
-              roadmapItems.filter(
-                (item) => item.status === 'In development',
-              ).length
-            }
-          </strong>
-          <span>In development</span>
+          <span className="roadmap-priority-panel__icon">
+            ⚔️
+          </span>
+
+          <div>
+            <p className="eyebrow">Current priorities</p>
+
+            <h2>KvK and Transfers</h2>
+
+            <p>
+              The next major development focus is helping
+              kingdoms prepare for KvK, coordinate live scores
+              and manage the difficult transfer process more
+              effectively.
+            </p>
+          </div>
         </div>
 
-        <div>
-          <strong>
-            {
-              roadmapItems.filter(
-                (item) => item.status === 'Planned',
-              ).length
-            }
-          </strong>
-          <span>Planned tools</span>
+        <div className="roadmap-priority-panel__tags">
+          <span>KvK planning</span>
+          <span>Live scores</span>
+          <span>Transfers</span>
+          <span>Alliance recruitment</span>
+          <span>Push reminders</span>
         </div>
+      </section>
 
-        <div>
-          <strong>
-            {
-              roadmapItems.filter(
-                (item) => item.status === 'Future',
-              ).length
-            }
-          </strong>
-          <span>Future ideas</span>
-        </div>
-      </div>
+      <div className="product-roadmap__timeline">
+        {roadmapReleases.map((release) => (
+          <article
+            className={`roadmap-release roadmap-release--${release.status}`}
+            key={release.version}
+          >
+            <div className="roadmap-release__header">
+              <div className="roadmap-release__version">
+                <span>Version {release.version}</span>
+                <h2>{release.name}</h2>
+              </div>
 
-      <div className="roadmap-grid">
-        {roadmapItems.map((item) => (
-          <article className="roadmap-card" key={item.title}>
-            <div className="roadmap-card__top">
-              <h2>{item.title}</h2>
+              <div className="roadmap-release__status-wrap">
+                {release.priority && (
+                  <span className="roadmap-release__priority">
+                    {release.priority}
+                  </span>
+                )}
 
-              <span
-                className={`roadmap-status roadmap-status--${item.status
-                  .toLowerCase()
-                  .replaceAll(' ', '-')}`}
-              >
-                {item.status}
-              </span>
+                <span
+                  className={`roadmap-release__status roadmap-release__status--${release.status}`}
+                >
+                  {getStatusLabel(release.status)}
+                </span>
+              </div>
             </div>
 
-            <p>{item.description}</p>
+            <p className="roadmap-release__description">
+              {release.description}
+            </p>
 
-            <ul>
-              {item.features.map((feature) => (
-                <li key={feature}>
-                  <span>✓</span>
-                  {feature}
-                </li>
+            <div className="roadmap-release__progress">
+              <div className="roadmap-release__progress-heading">
+                <span>Release progress</span>
+                <strong>{release.progress}%</strong>
+              </div>
+
+              <div className="roadmap-release__progress-track">
+                <span
+                  style={{
+                    width: `${release.progress}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="roadmap-release__features">
+              {release.features.map((feature) => (
+                <div key={feature}>
+                  <span aria-hidden="true">
+                    {release.status === 'live' ? '✓' : '→'}
+                  </span>
+
+                  <span>{feature}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </article>
         ))}
       </div>
 
-      <div className="roadmap-support">
+      <section className="roadmap-community-note">
         <div>
-          <p className="eyebrow">Support Development</p>
+          <p className="eyebrow">Community-led development</p>
 
-          <h2>Help us keep forging</h2>
+          <h2>Help shape what comes next</h2>
 
           <p>
-            Support helps fund further Kingshot testing, new templates
-            and future tools.
+            The roadmap will continue to evolve through player
+            feedback, testing and community priorities.
           </p>
         </div>
 
         <a
-          className="button button--coffee"
-          href="https://buymeacoffee.com/jrcs1981"
+          className="button button--secondary"
+          href="https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor"
           target="_blank"
           rel="noreferrer"
         >
-          ☕ Buy Me a Coffee
+          Send feedback
         </a>
-      </div>
+      </section>
     </section>
   )
 }

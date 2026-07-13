@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import LinkedPlayerPanel from '../components/LinkedPlayerPanel'
 import { artTemplates } from '../data/artTemplates'
 import { nameVariants } from '../data/nameVariants'
 import ProfilePanel from '../components/ProfilePanel'
@@ -188,6 +189,7 @@ function MyForgePage() {
         </p>
       </div>
 <ProfilePanel />
+<LinkedPlayerPanel />
       <div className="my-forge-summary">
         <div>
           <strong>{favouriteNameStyles.length}</strong>
