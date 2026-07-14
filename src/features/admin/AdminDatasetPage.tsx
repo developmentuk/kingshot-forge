@@ -10,134 +10,19 @@ import {
 import { getAdminDataset } from "./adminDatasets";
 import { DatasetRecordPanel } from "./DatasetRecordPanel";
 import { DatasetTable } from "./DatasetTable";
+import { getDatasetAdapter } from "./datasetAdapterRegistry";
+import {
+  fetchDataset,
+  type DatasetKey,
+} from "./dataEngineApi";
 import {
   getDatasetBrowserDefinition,
 } from "./datasetBrowserData";
-
-import {
-  fetchDataset,
-  type DatasetLoadResult,
-} from "./dataEngineApi";
 
 import type {
   DatasetBrowserDefinition,
   DatasetTableRow,
 } from "./datasetBrowserTypes";
-
-function toTitleCase(value: unknown): string {
-  return String(value ?? "")
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (character) =>
-      character.toUpperCase(),
-    );
-}
-
-function createRecordId(
-  name: string,
-  index: number,
-): string {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return slug || `hero-${index + 1}`;
-}
-function toCellValue(
-  value: unknown,
-): string | number | boolean | null {
-  if (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  ) {
-    return value;
-  }
-
-  return null;
-}
-function createHeroBrowserDefinition(
-  result: DatasetLoadResult,
-): DatasetBrowserDefinition {
-  const rows: DatasetTableRow[] =
-    result.records.map(
-  (record: unknown, index: number) => {
-      const hero =
-        record as Record<string, unknown>;
-
-      const name =
-        typeof hero.name === "string"
-          ? hero.name
-          : `Hero ${index + 1}`;
-
-return {
-  id: createRecordId(name, index),
-  values: {
-    name,
-    generation: toCellValue(hero.gen),
-    rarity: toTitleCase(hero.rarity),
-    troop: toTitleCase(hero.troop),
-    rally: toCellValue(hero.rally),
-    garrison: toCellValue(hero.garrison),
-    bear: toCellValue(hero.bear),
-    joiner: toCellValue(hero.joiner),
-    f2p: toCellValue(hero.f2p),
-  },
-};
-    });
-
-  return {
-    datasetId: "heroes",
-    columns: [
-      {
-        key: "name",
-        label: "Name",
-        sortable: true,
-      },
-      {
-        key: "generation",
-        label: "Generation",
-        sortable: true,
-      },
-      {
-        key: "rarity",
-        label: "Rarity",
-        sortable: true,
-      },
-      {
-        key: "troop",
-        label: "Troop",
-        sortable: true,
-      },
-      {
-        key: "rally",
-        label: "Rally",
-        sortable: true,
-      },
-      {
-        key: "garrison",
-        label: "Garrison",
-        sortable: true,
-      },
-      {
-        key: "bear",
-        label: "Bear",
-        sortable: true,
-      },
-      {
-        key: "joiner",
-        label: "Joiner",
-        sortable: true,
-      },
-      {
-        key: "f2p",
-        label: "F2P",
-        sortable: true,
-      },
-    ],
-    rows,
-  };
-}
 
 export function AdminDatasetPage() {
   const { datasetId } =
@@ -163,43 +48,43 @@ export function AdminDatasetPage() {
     ? getAdminDataset(datasetId)
     : undefined;
 
+  const adapter = datasetId
+    ? getDatasetAdapter(datasetId)
+    : undefined;
+
   const fallbackBrowserDefinition = datasetId
     ? getDatasetBrowserDefinition(datasetId)
     : undefined;
 
   const browserDefinition =
-    datasetId === "heroes"
-      ? liveBrowserDefinition ??
-        fallbackBrowserDefinition
-      : fallbackBrowserDefinition;
+    liveBrowserDefinition ??
+    fallbackBrowserDefinition;
 
   useEffect(() => {
     setSelectedRow(null);
+    setLiveBrowserDefinition(null);
+    setDatasetError(null);
 
-    if (datasetId !== "heroes") {
-      setLiveBrowserDefinition(null);
-      setDatasetError(null);
+    if (!datasetId || !adapter) {
       setDatasetLoading(false);
-
       return;
     }
 
     const controller = new AbortController();
 
     setDatasetLoading(true);
-    setDatasetError(null);
 
     fetchDataset(
-      "heroes",
+      datasetId as DatasetKey,
       controller.signal,
     )
-      .then((result: DatasetLoadResult) => {
+      .then((result) => {
         if (controller.signal.aborted) {
           return;
         }
 
         setLiveBrowserDefinition(
-          createHeroBrowserDefinition(result),
+          adapter.createBrowserDefinition(result),
         );
       })
       .catch((error: unknown) => {
@@ -213,7 +98,7 @@ export function AdminDatasetPage() {
         setDatasetError(
           error instanceof Error
             ? error.message
-            : "Unable to load the Heroes dataset.",
+            : `Unable to load the ${datasetId} dataset.`,
         );
       })
       .finally(() => {
@@ -225,7 +110,7 @@ export function AdminDatasetPage() {
     return () => {
       controller.abort();
     };
-  }, [datasetId]);
+  }, [datasetId, adapter]);
 
   if (!dataset) {
     return (
@@ -276,39 +161,37 @@ export function AdminDatasetPage() {
         </div>
       </section>
 
-      {datasetId === "heroes" &&
-        datasetLoading && (
-          <section className="admin-placeholder-panel">
-            <div className="admin-placeholder-panel__body">
-              <h2>
-                Loading live Heroes dataset…
-              </h2>
+      {adapter && datasetLoading && (
+        <section className="admin-placeholder-panel">
+          <div className="admin-placeholder-panel__body">
+            <h2>
+              Loading live {dataset.name} dataset…
+            </h2>
 
+            <p>
+              Fetching and normalising the current
+              Kingshot data.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {adapter && datasetError && (
+        <section className="admin-placeholder-panel">
+          <div className="admin-placeholder-panel__body">
+            <h2>Live dataset unavailable</h2>
+
+            <p>{datasetError}</p>
+
+            {fallbackBrowserDefinition && (
               <p>
-                Fetching and normalising the current
-                Kingshot hero data.
+                Temporary browser data is being shown
+                as a fallback.
               </p>
-            </div>
-          </section>
-        )}
-
-      {datasetId === "heroes" &&
-        datasetError && (
-          <section className="admin-placeholder-panel">
-            <div className="admin-placeholder-panel__body">
-              <h2>
-                Live dataset unavailable
-              </h2>
-
-              <p>{datasetError}</p>
-
-              <p>
-                The temporary browser data is being
-                shown as a fallback.
-              </p>
-            </div>
-          </section>
-        )}
+            )}
+          </div>
+        </section>
+      )}
 
       {browserDefinition ? (
         <>
@@ -359,13 +242,13 @@ export function AdminDatasetPage() {
 
           <div className="admin-placeholder-panel__body">
             <h2>
-              Browser definition not yet available
+              Dataset adapter not yet available
             </h2>
 
             <p>
-              This dataset is registered in the
-              admin area, but its table columns and
-              rows have not yet been connected.
+              This dataset is registered in the admin
+              area, but its live table adapter has not
+              yet been created.
             </p>
           </div>
         </section>

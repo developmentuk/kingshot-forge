@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
 
 function ReleaseNotesPage() {
   return (
@@ -8,13 +8,15 @@ function ReleaseNotesPage() {
           <p className="eyebrow">Release notes</p>
 
           <h1 className="page-title">
-            Kingshot Forge v0.4.0
+            Kingshot Forge v0.5.0
           </h1>
 
           <p>
-            The Forge release introduces live Kingshot data,
-            player identities, community accounts and a much
-            stronger mobile experience.
+            Forge Admin introduces the first live version of the
+            Kingshot Data Engine, including reusable dataset
+            browsers, live Heroes and Events data, source metadata
+            and the foundation of a complete Kingshot content
+            management system.
           </p>
         </div>
 
@@ -30,7 +32,7 @@ function ReleaseNotesPage() {
               Latest release
             </span>
 
-            <h2>v0.4.0 — The Forge</h2>
+            <h2>v0.5.0 — Forge Admin</h2>
 
             <p>Released July 2026</p>
           </div>
@@ -48,16 +50,17 @@ function ReleaseNotesPage() {
             <h3>Added</h3>
 
             <ul>
-              <li>Google authentication</li>
-              <li>Forge user profiles</li>
-              <li>Linked Kingshot player accounts</li>
-              <li>Kingshot player avatar and identity</li>
-              <li>Player Lookup</li>
-              <li>Active Gift Codes</li>
-              <li>Kingdom Explorer</li>
-              <li>KvK match tracker</li>
-              <li>Supabase database integration</li>
-              <li>Role and permissions foundation</li>
+              <li>Forge Admin dashboard</li>
+              <li>Live Kingshot Data Engine</li>
+              <li>Reusable dataset browser</li>
+              <li>Live Heroes dataset with 27 records</li>
+              <li>Live recurring Events dataset</li>
+              <li>Dataset record detail viewer</li>
+              <li>Dataset adapter framework</li>
+              <li>Frontend dataset adapter registry</li>
+              <li>Data Engine dataset API endpoint</li>
+              <li>Events importer and normalisation pipeline</li>
+              <li>Tier badges with explanatory tooltips</li>
             </ul>
           </section>
 
@@ -65,13 +68,16 @@ function ReleaseNotesPage() {
             <h3>Improved</h3>
 
             <ul>
-              <li>Mobile navigation and responsive layouts</li>
-              <li>Homepage dashboard</li>
-              <li>Name Forge mobile layout</li>
-              <li>Art and Chat Forge usability</li>
-              <li>My Forge account experience</li>
-              <li>Navigation across API-powered pages</li>
-              <li>Community artwork support</li>
+              <li>Admin navigation and route handling</li>
+              <li>Responsive admin layouts</li>
+              <li>Dataset search</li>
+              <li>Sortable table columns</li>
+              <li>Pagination controls</li>
+              <li>Record totals and status displays</li>
+              <li>Source metadata handling</li>
+              <li>Dataset field normalisation</li>
+              <li>Error states and demo-data fallback</li>
+              <li>React Router configuration consistency</li>
             </ul>
           </section>
 
@@ -79,12 +85,15 @@ function ReleaseNotesPage() {
             <h3>Platform foundation</h3>
 
             <ul>
-              <li>Supabase Edge Functions</li>
-              <li>KingShot.net API integration</li>
-              <li>Profile and player account tables</li>
-              <li>Public and private player visibility</li>
-              <li>Verification-status framework</li>
-              <li>Community submissions groundwork</li>
+              <li>Generic importer architecture</li>
+              <li>Normalised dataset model</li>
+              <li>Duplicate record-key validation</li>
+              <li>Reusable Data Engine client</li>
+              <li>Dataset-specific presentation adapters</li>
+              <li>Extensible dataset registry</li>
+              <li>Live source fetching and hashing</li>
+              <li>Source provenance and confidence metadata</li>
+              <li>Foundation for editing and publishing workflows</li>
             </ul>
           </section>
 
@@ -92,12 +101,45 @@ function ReleaseNotesPage() {
             <h3>Coming next</h3>
 
             <ul>
-              <li>KingshotPro data integration</li>
-              <li>KvK preparation calculator</li>
-              <li>Live event scoreboards</li>
-              <li>Transfer application management</li>
-              <li>Kingdom and alliance directories</li>
-              <li>Push notifications</li>
+              <li>Record editing</li>
+              <li>Import Manager</li>
+              <li>Dataset version history</li>
+              <li>Visual change comparison</li>
+              <li>Global dataset search</li>
+              <li>Buildings dataset</li>
+              <li>Governor Gear dataset</li>
+              <li>Troops dataset</li>
+              <li>Truegold dataset</li>
+              <li>VIP and War Academy datasets</li>
+            </ul>
+          </section>
+        </div>
+      </article>
+
+      <article className="release-entry">
+        <div className="release-entry__heading">
+          <div>
+            <h2>v0.4.0 — The Forge</h2>
+
+            <p>Previous community platform milestone</p>
+          </div>
+        </div>
+
+        <div className="release-entry__sections">
+          <section>
+            <h3>Highlights</h3>
+
+            <ul>
+              <li>Google authentication</li>
+              <li>Forge user profiles</li>
+              <li>Linked Kingshot player accounts</li>
+              <li>Player Lookup</li>
+              <li>Active Gift Codes</li>
+              <li>Kingdom Explorer</li>
+              <li>KvK match tracker</li>
+              <li>Supabase database integration</li>
+              <li>Role and permissions foundation</li>
+              <li>Improved mobile experience</li>
             </ul>
           </section>
         </div>
@@ -107,6 +149,7 @@ function ReleaseNotesPage() {
         <div className="release-entry__heading">
           <div>
             <h2>v0.3.0 — Community Foundation</h2>
+
             <p>Previous beta milestone</p>
           </div>
         </div>
@@ -130,6 +173,7 @@ function ReleaseNotesPage() {
         <div className="release-entry__heading">
           <div>
             <h2>v0.2.0 — Public Beta</h2>
+
             <p>First public development release</p>
           </div>
         </div>
@@ -150,7 +194,7 @@ function ReleaseNotesPage() {
         </div>
       </article>
     </section>
-  )
+  );
 }
 
-export default ReleaseNotesPage
+export default ReleaseNotesPage;

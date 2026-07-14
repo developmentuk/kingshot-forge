@@ -4,6 +4,7 @@ import type {
   DatasetTableColumn,
   DatasetTableRow,
 } from "./datasetBrowserTypes";
+import { TierBadge } from "./TierBadge";
 
 type SortDirection = "ascending" | "descending";
 
@@ -65,6 +66,30 @@ export function DatasetTable({
     null,
   );
   const [currentPage, setCurrentPage] = useState(1);
+
+const tierColumnKeys = new Set([
+  "rally",
+  "garrison",
+  "bear",
+  "joiner",
+]);
+
+function renderCellValue(
+  columnKey: string,
+  value: DatasetCellValue,
+) {
+  const formattedValue =
+    formatCellValue(value);
+
+  if (
+    tierColumnKeys.has(columnKey) &&
+    typeof value === "string"
+  ) {
+    return <TierBadge value={value} />;
+  }
+
+  return formattedValue;
+}
 
   const processedRows = useMemo(() => {
     const normalisedSearchTerm = searchTerm
@@ -211,9 +236,10 @@ export function DatasetTable({
                 <tr key={row.id}>
                   {columns.map((column) => (
                     <td key={column.key}>
-                      {formatCellValue(
-                        row.values[column.key],
-                      )}
+                     {renderCellValue(
+  column.key,
+  row.values[column.key],
+)}
                     </td>
                   ))}
 

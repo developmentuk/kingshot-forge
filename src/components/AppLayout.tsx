@@ -440,7 +440,7 @@ function AppLayout() {
               to="/release-notes"
               onClick={closeNavigation}
             >
-              Community Beta · v0.4.0
+              Community Beta · v0.5.0
             </Link>
           </div>
         </aside>
@@ -489,7 +489,7 @@ function AppLayout() {
               className="app-version-link"
               to="/release-notes"
             >
-              Community Beta · v0.4.0
+              Community Beta · v0.5.0
             </Link>
           </div>
         </div>

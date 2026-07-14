@@ -5,6 +5,9 @@ import type {
 import {
   heroesImporter,
 } from './importers/heroes/index.js'
+import {
+  eventsImporter,
+} from "./importers/events/index.js";
 
 type RegisteredImporter =
   DatasetImporter<unknown, unknown>
@@ -60,4 +63,5 @@ export function listRegisteredDatasets(): DatasetKey[] {
       first.localeCompare(second),
     )
 }
-registerDataset(heroesImporter)
+registerDataset(heroesImporter);
+registerDataset(eventsImporter);
