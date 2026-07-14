@@ -1,0 +1,66 @@
+.dashboard-card{
+    background:linear-gradient(180deg,#1c2432,#141a24);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:20px;
+    padding:22px;
+    margin-bottom:24px;
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,.35),
+    inset 0 1px rgba(255,255,255,.04);
+
+    transition:.25s;
+}
+
+.dashboard-card:hover{
+    transform:translateY(-3px);
+    border-color:#4fa3ff55;
+}
+
+.dashboard-card-header{
+    margin-bottom:18px;
+}
+
+.dashboard-card-title{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.dashboard-card-icon{
+    font-size:34px;
+}
+
+.dashboard-card h2{
+    margin:0;
+    color:white;
+    font-size:1.2rem;
+}
+
+.dashboard-card-subtitle{
+    margin-top:4px;
+    color:#9ba7ba;
+    font-size:.9rem;
+}
+
+.dashboard-card-body{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+}
+
+.accent-gold{
+    border-left:4px solid #f4b942;
+}
+
+.accent-blue{
+    border-left:4px solid #53a8ff;
+}
+
+.accent-green{
+    border-left:4px solid #42d392;
+}
+
+.accent-purple{
+    border-left:4px solid #b47cff;
+}

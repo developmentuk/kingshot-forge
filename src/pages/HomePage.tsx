@@ -118,6 +118,15 @@ const forgeTools: ForgeTool[] = [
   action: 'View alliances',
   featured: true,
 },
+{
+  title: 'Transfer Hub',
+  description:
+    'Create your transfer profile and connect with recruiting kingdoms and alliances.',
+  icon: '🎫',
+  path: '/transfer-profile',
+  action: 'Create transfer profile',
+  featured: true,
+},
 ]
 
 function HomePage() {

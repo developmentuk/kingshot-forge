@@ -19,6 +19,12 @@ import KvkTrackerPage from './pages/KvkTrackerPage'
 import AllianceDirectoryPage from './pages/AllianceDirectoryPage'
 import AllianceCommunityPage from './pages/AllianceCommunityPage'
 import AllianceManagementPage from './pages/AllianceManagementPage'
+import TransferProfilePage from './pages/TransferProfilePage'
+import TransferHubPage from './pages/TransferHubPage'
+import PlayerProfilePage from './pages/PlayerProfilePage'
+import PlayerProfileEditorPage from './pages/PlayerProfileEditorPage'
+import HeroShowcaseEditorPage from './pages/HeroShowcaseEditorPage'
+import HeroCollectionPage from './pages/HeroCollectionPage'
 
 function App() {
   return (
@@ -26,92 +32,34 @@ function App() {
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
 
-        <Route
-          path="name-studio"
-          element={<NameStudioPage />}
-        />
+        <Route path="name-studio" element={<NameStudioPage />} />
+        <Route path="art-studio" element={<ArtStudioPage />} />
+        <Route path="chat-studio" element={<ChatStudioPage />} />
+        <Route path="characters" element={<CharacterLibraryPage />} />
+        <Route path="compatibility" element={<CompatibilityPage />} />
+        <Route path="codex" element={<CodexPage />} />
 
-        <Route
-          path="art-studio"
-          element={<ArtStudioPage />}
-        />
+        <Route path="player-lookup" element={<PlayerLookupPage />} />
+        <Route path="gift-codes" element={<GiftCodesPage />} />
+        <Route path="kingdom-explorer" element={<KingdomExplorerPage />} />
+        <Route path="kingdom-community" element={<KingdomCommunityPage />} />
+        <Route path="kvk-tracker" element={<KvkTrackerPage />} />
 
-        <Route
-          path="chat-studio"
-          element={<ChatStudioPage />}
-        />
+        <Route path="alliance-directory" element={<AllianceDirectoryPage />} />
+        <Route path="alliances/:allianceId" element={<AllianceCommunityPage />} />
+        <Route path="alliances/:allianceId/manage" element={<AllianceManagementPage />} />
 
-        <Route
-          path="characters"
-          element={<CharacterLibraryPage />}
-        />
-
-        <Route
-          path="compatibility"
-          element={<CompatibilityPage />}
-        />
-
-        <Route
-          path="codex"
-          element={<CodexPage />}
-        />
-
-        <Route
-          path="player-lookup"
-          element={<PlayerLookupPage />}
-        />
-
-        <Route
-          path="gift-codes"
-          element={<GiftCodesPage />}
-        />
-
-        <Route
-          path="kingdom-explorer"
-          element={<KingdomExplorerPage />}
-        />
-
-        <Route
-          path="kingdom-community"
-          element={<KingdomCommunityPage />}
-        />
-
-        <Route
-          path="kvk-tracker"
-          element={<KvkTrackerPage />}
-        />
-
-        <Route
-          path="my-forge"
-          element={<MyForgePage />}
-        />
-
-        <Route
-          path="roadmap"
-          element={<RoadmapPage />}
-        />
-
-        <Route
-          path="release-notes"
-          element={<ReleaseNotesPage />}
-        />
+        <Route path="my-forge" element={<MyForgePage />} />
+        <Route path="roadmap" element={<RoadmapPage />} />
+        <Route path="release-notes" element={<ReleaseNotesPage />} />
+        <Route path="transfer-profile" element={<TransferProfilePage />} />
+        <Route path="transfer-hub" element={<TransferHubPage />} />
+        <Route path="player/:forgeId" element={<PlayerProfilePage />} />
+        <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
+        <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
+        <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
       </Route>
-      <Route
-  path="alliance-directory"
-  element={<AllianceDirectoryPage />}
-/>
-
-<Route
-  path="alliances/:allianceId"
-  element={<AllianceCommunityPage />}
-/>
-
-<Route
-  path="alliances/:allianceId/manage"
-  element={<AllianceManagementPage />}
-/>
     </Routes>
   )
 }
-
 export default App

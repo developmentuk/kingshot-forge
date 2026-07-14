@@ -55,23 +55,62 @@ const companionNavigation: NavigationItem[] = [
     path: '/kingdom-explorer',
   },
   {
+    label: 'Kingdom Community',
+    shortLabel: 'Community',
+    icon: '🌍',
+    path: '/kingdom-community',
+  },
+  {
+    label: 'Alliance Directory',
+    shortLabel: 'Alliances',
+    icon: '🛡️',
+    path: '/alliance-directory',
+  },
+  {
     label: 'KvK Tracker',
     shortLabel: 'KvK',
     icon: '⚔️',
     path: '/kvk-tracker',
   },
   {
-  label: 'Kingdom Community',
-  shortLabel: 'Community',
-  icon: '🌍',
-  path: '/kingdom-community',
-},
-{
-  label: 'Alliance Directory',
-  shortLabel: 'Alliances',
-  icon: '🛡️',
-  path: '/alliance-directory',
-},
+    label: 'Transfer Hub',
+    shortLabel: 'Hub',
+    icon: '🌐',
+    path: '/transfer-hub',
+  },
+]
+
+const myForgeNavigation: NavigationItem[] = [
+  {
+    label: 'Dashboard',
+    shortLabel: 'Dashboard',
+    icon: '⭐',
+    path: '/my-forge',
+  },
+  {
+    label: 'My Profile',
+    shortLabel: 'Profile',
+    icon: '🪪',
+    path: '/my-forge/profile',
+  },
+  {
+    label: 'Hero Collection',
+    shortLabel: 'Heroes',
+    icon: '🦸',
+    path: '/my-forge/hero-collection',
+  },
+  {
+    label: 'Hero Showcase',
+    shortLabel: 'Showcase',
+    icon: '🏆',
+    path: '/my-forge/heroes',
+  },
+  {
+    label: 'Transfer Profile',
+    shortLabel: 'Transfer',
+    icon: '🎫',
+    path: '/transfer-profile',
+  },
 ]
 
 const libraryNavigation: NavigationItem[] = [
@@ -96,12 +135,6 @@ const libraryNavigation: NavigationItem[] = [
 ]
 
 const platformNavigation: NavigationItem[] = [
-  {
-    label: 'My Forge',
-    shortLabel: 'My Forge',
-    icon: '⭐',
-    path: '/my-forge',
-  },
   {
     label: 'Roadmap',
     shortLabel: 'Roadmap',
@@ -363,6 +396,12 @@ function AppLayout() {
             <NavigationGroup
               title="Forge tools"
               items={forgeNavigation}
+              onNavigate={closeNavigation}
+            />
+
+            <NavigationGroup
+              title="My Forge"
+              items={myForgeNavigation}
               onNavigate={closeNavigation}
             />
 
