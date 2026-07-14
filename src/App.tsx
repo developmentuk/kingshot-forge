@@ -25,6 +25,8 @@ import PlayerProfilePage from './pages/PlayerProfilePage'
 import PlayerProfileEditorPage from './pages/PlayerProfileEditorPage'
 import HeroShowcaseEditorPage from './pages/HeroShowcaseEditorPage'
 import HeroCollectionPage from './pages/HeroCollectionPage'
+import { DataEngineDiagnosticsPage } from './pages/admin/DataEngineDiagnosticsPage'
+
 
 function App() {
   return (
@@ -58,6 +60,7 @@ function App() {
         <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
+        <Route path="admin/data-engine" element={<DataEngineDiagnosticsPage />} />
       </Route>
     </Routes>
   )
