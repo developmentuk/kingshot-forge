@@ -7,7 +7,7 @@ import {
 import {
   Link,
   useSearchParams,
-} from 'react-router'
+} from 'react-router-dom'
 import { getAlliancesByKingdom } from '../services/communityService'
 import type { AllianceRecord } from '../types/community'
 

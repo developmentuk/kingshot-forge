@@ -1,32 +1,35 @@
-import { Route, Routes } from 'react-router'
-import AppLayout from './components/AppLayout'
-import './App.css'
-import HomePage from './pages/HomePage'
-import NameStudioPage from './pages/NameStudioPage'
-import ArtStudioPage from './pages/ArtStudioPage'
-import ChatStudioPage from './pages/ChatStudioPage'
-import CharacterLibraryPage from './pages/CharacterLibraryPage'
-import CompatibilityPage from './pages/CompatibilityPage'
-import CodexPage from './pages/CodexPage'
-import MyForgePage from './pages/MyForgePage'
-import RoadmapPage from './pages/RoadmapPage'
-import ReleaseNotesPage from './pages/ReleaseNotesPage'
-import PlayerLookupPage from './pages/PlayerLookupPage'
-import GiftCodesPage from './pages/GiftCodesPage'
-import KingdomExplorerPage from './pages/KingdomExplorerPage'
-import KingdomCommunityPage from './pages/KingdomCommunityPage'
-import KvkTrackerPage from './pages/KvkTrackerPage'
-import AllianceDirectoryPage from './pages/AllianceDirectoryPage'
-import AllianceCommunityPage from './pages/AllianceCommunityPage'
-import AllianceManagementPage from './pages/AllianceManagementPage'
-import TransferProfilePage from './pages/TransferProfilePage'
-import TransferHubPage from './pages/TransferHubPage'
-import PlayerProfilePage from './pages/PlayerProfilePage'
-import PlayerProfileEditorPage from './pages/PlayerProfileEditorPage'
-import HeroShowcaseEditorPage from './pages/HeroShowcaseEditorPage'
-import HeroCollectionPage from './pages/HeroCollectionPage'
-import { DataEngineDiagnosticsPage } from './pages/admin/DataEngineDiagnosticsPage'
+import { Route, Routes } from "react-router-dom";
+import AppLayout from "./components/AppLayout";
+import "./App.css";
 
+import HomePage from "./pages/HomePage";
+import NameStudioPage from "./pages/NameStudioPage";
+import ArtStudioPage from "./pages/ArtStudioPage";
+import ChatStudioPage from "./pages/ChatStudioPage";
+import CharacterLibraryPage from "./pages/CharacterLibraryPage";
+import CompatibilityPage from "./pages/CompatibilityPage";
+import CodexPage from "./pages/CodexPage";
+import MyForgePage from "./pages/MyForgePage";
+import RoadmapPage from "./pages/RoadmapPage";
+import ReleaseNotesPage from "./pages/ReleaseNotesPage";
+import PlayerLookupPage from "./pages/PlayerLookupPage";
+import GiftCodesPage from "./pages/GiftCodesPage";
+import KingdomExplorerPage from "./pages/KingdomExplorerPage";
+import KingdomCommunityPage from "./pages/KingdomCommunityPage";
+import KvkTrackerPage from "./pages/KvkTrackerPage";
+import AllianceDirectoryPage from "./pages/AllianceDirectoryPage";
+import AllianceCommunityPage from "./pages/AllianceCommunityPage";
+import AllianceManagementPage from "./pages/AllianceManagementPage";
+import TransferProfilePage from "./pages/TransferProfilePage";
+import TransferHubPage from "./pages/TransferHubPage";
+import PlayerProfilePage from "./pages/PlayerProfilePage";
+import PlayerProfileEditorPage from "./pages/PlayerProfileEditorPage";
+import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
+import HeroCollectionPage from "./pages/HeroCollectionPage";
+
+import { DataEngineDiagnosticsPage } from "./pages/admin/DataEngineDiagnosticsPage";
+import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
+import { AdminDatasetPage } from "./features/admin/AdminDatasetPage";
 
 function App() {
   return (
@@ -47,9 +50,20 @@ function App() {
         <Route path="kingdom-community" element={<KingdomCommunityPage />} />
         <Route path="kvk-tracker" element={<KvkTrackerPage />} />
 
-        <Route path="alliance-directory" element={<AllianceDirectoryPage />} />
-        <Route path="alliances/:allianceId" element={<AllianceCommunityPage />} />
-        <Route path="alliances/:allianceId/manage" element={<AllianceManagementPage />} />
+        <Route
+          path="alliance-directory"
+          element={<AllianceDirectoryPage />}
+        />
+
+        <Route
+          path="alliances/:allianceId"
+          element={<AllianceCommunityPage />}
+        />
+
+        <Route
+          path="alliances/:allianceId/manage"
+          element={<AllianceManagementPage />}
+        />
 
         <Route path="my-forge" element={<MyForgePage />} />
         <Route path="roadmap" element={<RoadmapPage />} />
@@ -57,12 +71,39 @@ function App() {
         <Route path="transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />
         <Route path="player/:forgeId" element={<PlayerProfilePage />} />
-        <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
-        <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
-        <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
-        <Route path="admin/data-engine" element={<DataEngineDiagnosticsPage />} />
+
+        <Route
+          path="my-forge/profile"
+          element={<PlayerProfileEditorPage />}
+        />
+
+        <Route
+          path="my-forge/heroes"
+          element={<HeroShowcaseEditorPage />}
+        />
+
+        <Route
+          path="my-forge/hero-collection"
+          element={<HeroCollectionPage />}
+        />
+
+        <Route
+          path="admin/data-engine"
+          element={<DataEngineDiagnosticsPage />}
+        />
+
+        <Route
+          path="admin"
+          element={<AdminDashboardPage />}
+        />
+
+        <Route
+          path="admin/data/:datasetId"
+          element={<AdminDatasetPage />}
+        />
       </Route>
     </Routes>
-  )
+  );
 }
-export default App
+
+export default App;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import LinkedPlayerPanel from '../components/LinkedPlayerPanel'
 import ProfilePanel from '../components/ProfilePanel'
 import DashboardCard from '../components/dashboard/DashboardCard'

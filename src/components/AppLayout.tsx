@@ -4,7 +4,7 @@ import {
   NavLink,
   Outlet,
   useLocation,
-} from 'react-router'
+} from 'react-router-dom'
 import AccountMenu from './AccountMenu'
 
 type NavigationItem = {
