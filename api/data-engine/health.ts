@@ -1,42 +1,67 @@
-import { getServerEnvironmentStatus } from '../../server/database/environment'
+import type {
+  VercelRequest,
+  VercelResponse,
+} from '@vercel/node'
 
-export default function handler(request: Request): Response {
-  if (request.method !== 'GET') {
-    return Response.json(
-      {
+export default function handler(
+  request: VercelRequest,
+  response: VercelResponse,
+): void {
+  try {
+    if (request.method !== 'GET') {
+      response.setHeader('Allow', 'GET')
+
+      response.status(405).json({
         status: 'error',
         message: 'Method not allowed',
-      },
-      {
-        status: 405,
-        headers: {
-          Allow: 'GET',
-        },
-      },
+      })
+
+      return
+    }
+
+    const supabaseUrlConfigured = Boolean(
+      process.env.SUPABASE_URL?.trim(),
     )
-  }
 
-  const environment = getServerEnvironmentStatus()
+    const supabaseServerKeyConfigured = Boolean(
+      process.env.SUPABASE_SECRET_KEY?.trim() ||
+        process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
+    )
 
-  const healthy =
-    environment.supabaseUrlConfigured &&
-    environment.supabaseServerKeyConfigured
+    const healthy =
+      supabaseUrlConfigured &&
+      supabaseServerKeyConfigured
 
-  return Response.json(
-    {
-      status: healthy ? 'ok' : 'configuration-error',
+    response.setHeader(
+      'Cache-Control',
+      'no-store, max-age=0',
+    )
+
+    response.status(healthy ? 200 : 503).json({
+      status: healthy
+        ? 'ok'
+        : 'configuration-error',
+
       service: 'Forge Data Engine',
-      environment: {
-        supabaseUrlConfigured:
-          environment.supabaseUrlConfigured,
 
-        supabaseServerKeyConfigured:
-          environment.supabaseServerKeyConfigured,
+      environment: {
+        supabaseUrlConfigured,
+        supabaseServerKeyConfigured,
       },
+
       timestamp: new Date().toISOString(),
-    },
-    {
-      status: healthy ? 200 : 503,
-    },
-  )
+    })
+  } catch (error) {
+    console.error(
+      'Forge Data Engine health check failed:',
+      error,
+    )
+
+    response.status(500).json({
+      status: 'error',
+      service: 'Forge Data Engine',
+      message: 'Health check failed',
+      timestamp: new Date().toISOString(),
+    })
+  }
 }
