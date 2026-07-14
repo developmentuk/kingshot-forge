@@ -1,8 +1,8 @@
-import { getSupabaseAdmin, } from '../../../database/supabaseAdmin'
+import { getSupabaseAdmin, } from '../../../database/supabaseAdmin.js'
 
-import { fetchJsonSource, } from '../../sourceFetcher'
+import { fetchJsonSource, } from '../../sourceFetcher.js'
 
-import { heroesImporter, } from './index'
+import { heroesImporter, } from './index.js'
 
 import type { NormalisedHeroRecord, } from './types'
 

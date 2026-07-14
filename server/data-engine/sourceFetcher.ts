@@ -4,7 +4,7 @@ import type {
 
 import {
   createPayloadHash,
-} from './hashing'
+} from './hashing.js'
 
 export interface FetchJsonSourceOptions {
   timeoutMs?: number

@@ -5,7 +5,7 @@ import type {
 
 import {
   importHeroesDataset,
-} from '../../server/data-engine/importers/heroes/import'
+} from '../../server/data-engine/importers/heroes/import.js'
 
 function readImportSecret(): string {
   const secret =

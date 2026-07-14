@@ -9,7 +9,7 @@ import type {
 
 import {
   previewDataset,
-} from '../../server/data-engine/runner'
+} from '../../server/data-engine/runner.js'
 
 const SUPPORTED_DATASETS =
   new Set<DatasetKey>([

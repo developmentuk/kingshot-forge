@@ -7,11 +7,11 @@ import type {
 
 import {
   fetchJsonSource,
-} from './sourceFetcher'
+} from './sourceFetcher.js'
 
 import {
   getDatasetImporter,
-} from './registry'
+} from './registry.js'
 
 export interface DatasetPreviewResult {
   dataset: DatasetKey

@@ -4,7 +4,7 @@ import type {
 } from '../../shared/data-engine/types'
 import {
   heroesImporter,
-} from './importers/heroes'
+} from './importers/heroes/index.js'
 
 type RegisteredImporter =
   DatasetImporter<unknown, unknown>
