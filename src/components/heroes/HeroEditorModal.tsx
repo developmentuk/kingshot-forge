@@ -186,7 +186,7 @@ function HeroEditorModal({
         toNullableNumber(starLevel),
       heroPower:
         toNullableNumber(heroPower),
-
+      awakeningLevel: null,
       skill1Level:
         toNullableNumber(skill1Level),
       skill2Level:

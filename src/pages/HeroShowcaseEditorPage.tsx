@@ -296,7 +296,12 @@ export default function HeroShowcaseEditorPage() {
             heroPower:
               existingPlayerHero?.hero_power ??
               null,
-
+skill1Level: null,
+skill2Level: null,
+skill3Level: null,
+skill4Level: null,
+exclusiveGearLevel: null,
+widgetLevel: null,
             isOwned: true,
             isShowcase: true,
             displayOrder: index + 1,

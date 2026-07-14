@@ -49,7 +49,7 @@ function normaliseJoinedHero(
     hero_level: row.hero_level,
     star_level: row.star_level,
    hero_power: row.hero_power,
-
+awakening_level: row.awakening_level,
 skill_1_level: row.skill_1_level,
 skill_2_level: row.skill_2_level,
 skill_3_level: row.skill_3_level,

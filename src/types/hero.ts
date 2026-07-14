@@ -60,7 +60,7 @@ export interface PlayerHero {
 hero_level: number | null
 star_level: number | null
 hero_power: number | null
-
+awakening_level: number | null
 skill_1_level: number | null
 skill_2_level: number | null
 skill_3_level: number | null
@@ -89,7 +89,7 @@ export interface HeroEditorValues {
   heroLevel: number | null
 starLevel: number | null
 heroPower: number | null
-
+awakeningLevel: number | null
 skill1Level: number | null
 skill2Level: number | null
 skill3Level: number | null
