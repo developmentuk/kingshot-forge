@@ -4,6 +4,7 @@ import type {
   HeroEditorValues,
   PlayerHeroWithHero,
 } from "../types/hero";
+import { getActiveHeroes } from "../repositories/heroRepository";
 
 interface PlayerHeroRow {
   id: string;
@@ -70,23 +71,7 @@ is_owned: row.is_owned,
 }
 
 export async function getHeroCatalogue(): Promise<Hero[]> {
-  const { data, error } = await supabase
-    .from("heroes")
-    .select("*")
-    .eq("is_active", true)
-    .order("generation", {
-      ascending: true,
-      nullsFirst: false,
-    })
-    .order("name", { ascending: true });
-
-  if (error) {
-    throw new Error(
-      `Unable to load the hero catalogue: ${error.message}`,
-    );
-  }
-
-  return (data ?? []) as Hero[];
+  return getActiveHeroes();
 }
 
 export async function getPlayerHeroes(
