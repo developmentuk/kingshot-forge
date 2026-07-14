@@ -1,8 +1,22 @@
 import { getServerEnvironmentStatus } from '../../server/database/environment'
 
-export function GET(): Response {
-  const environment =
-    getServerEnvironmentStatus()
+export default function handler(request: Request): Response {
+  if (request.method !== 'GET') {
+    return Response.json(
+      {
+        status: 'error',
+        message: 'Method not allowed',
+      },
+      {
+        status: 405,
+        headers: {
+          Allow: 'GET',
+        },
+      },
+    )
+  }
+
+  const environment = getServerEnvironmentStatus()
 
   const healthy =
     environment.supabaseUrlConfigured &&
@@ -10,12 +24,8 @@ export function GET(): Response {
 
   return Response.json(
     {
-      status: healthy
-        ? 'ok'
-        : 'configuration-error',
-
+      status: healthy ? 'ok' : 'configuration-error',
       service: 'Forge Data Engine',
-
       environment: {
         supabaseUrlConfigured:
           environment.supabaseUrlConfigured,
@@ -23,7 +33,6 @@ export function GET(): Response {
         supabaseServerKeyConfigured:
           environment.supabaseServerKeyConfigured,
       },
-
       timestamp: new Date().toISOString(),
     },
     {
