@@ -3,6 +3,7 @@ import {
   adminDatasets,
   type AdminDatasetStatus,
 } from "./adminDatasets";
+import { getDatasetStats } from "./adminDatasetStats";
 
 function getStatusLabel(status: AdminDatasetStatus): string {
   switch (status) {
@@ -104,12 +105,12 @@ export function AdminDashboardPage() {
             <dl className="admin-dataset-card__meta">
               <div>
                 <dt>Records</dt>
-                <dd>—</dd>
+                <dd>{getDatasetStats(dataset.id).records}</dd>
               </div>
 
               <div>
                 <dt>Last imported</dt>
-                <dd>Never</dd>
+                <dd>{getDatasetStats(dataset.id).lastImported}</dd>
               </div>
             </dl>
 
