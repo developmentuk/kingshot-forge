@@ -13,6 +13,7 @@ export type DatasetPublicationTransition =
   | 'publish'
   | 'archive'
   | 'restore'
+  | 'rollback'
 
 export interface DatasetPublicationEvent {
   transition: DatasetPublicationTransition
