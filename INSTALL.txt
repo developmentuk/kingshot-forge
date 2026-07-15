@@ -1,13 +1,14 @@
-PM2B Pack 10 correction
+PM2B Pack 10A1 — Installation
 
 Install with PowerShell:
 
 Expand-Archive `
-  -Path "$env:USERPROFILE\Downloads\pm2b-pack-10-correction.zip" `
+  -Path "$env:USERPROFILE\Downloads\pm2b-pack-10a1-runtime-api.zip" `
   -DestinationPath "C:\Users\Clark\Projects\kingshot-text-lab" `
   -Force
 
-This corrects the editorial contracts path in the validation script.
-
 Then run:
+
 npm run check
+
+Do not commit until the command passes.
