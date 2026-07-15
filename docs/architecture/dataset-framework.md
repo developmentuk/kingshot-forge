@@ -36,4 +36,6 @@ The framework may describe datasets, records, fields, validation, permissions an
 
 ## Migration status
 
-CS-003A introduces contracts and the registry foundation only. Existing admin and Data Engine registries remain authoritative until CS-003B provides compatibility adapters and controlled integration.
+CS-003B connects the platform registry to the existing admin catalogue and adapter registry through a compatibility layer. Dataset identity is shared with the server Data Engine through `shared/data-engine/datasets.ts`.
+
+The compatibility layer deliberately preserves the existing admin and Data Engine APIs. Record schemas, validation, persistence and publishing services will migrate in later change sets.

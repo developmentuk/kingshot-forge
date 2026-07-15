@@ -1,32 +1,44 @@
-# React + TypeScript + Vite
+# Forge Platform CS-003B
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Dataset Registry Integration
 
-Currently, two official plugins are available:
+This change set connects the platform-neutral Dataset Registry introduced in CS-003A to the existing admin catalogue, editor adapter registry and server Data Engine identity catalogue.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Files
 
-## React Compiler
+- `shared/data-engine/datasets.ts` — canonical cross-layer dataset IDs
+- `shared/data-engine/types.ts` — imports and re-exports the shared DatasetKey
+- `server/data-engine/registry.ts` — verifies every declared dataset has an importer
+- `src/features/admin/dataEngineApi.ts` — removes the duplicated client DatasetKey union
+- `src/features/admin/datasetDefinitions.ts` — feature-owned platform registrations
+- `src/features/admin/adminDatasets.ts` — compatibility projection for the existing admin UI
+- `src/features/admin/datasetAdapterRegistry.ts` — validates editor adapters against registered capabilities
+- `docs/architecture/dataset-framework.md` — updates migration status
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Apply
 
-## Expanding the Oxlint configuration
+Extract into the repository root while on:
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+`feature/cs-003b-dataset-registry-integration`
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+Then run:
+
+```powershell
+npm run build
+npm run lint
+git status
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Commit after verification:
+
+```powershell
+git add .
+git commit -m "CS-003B integrate dataset registries"
+git push
+```
+
+## Verification performed
+
+TypeScript compilation completed with zero errors using `tsc -b`.
+
+The full Vite build could not run in the Linux verification workspace because the source snapshot contained Windows-specific optional native dependencies. Run `npm run build` in the normal Windows development environment before committing.
