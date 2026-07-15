@@ -1,6 +1,7 @@
 import {
   useEffect,
   useState,
+  type ReactNode,
 } from "react";
 
 import {
@@ -25,17 +26,15 @@ import {
 interface RecordEditorPanelProps {
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
-
   isOpen?: boolean;
-
   onClose: () => void;
-
   onSave?: (
     record: RecordEditorRecord,
   ) =>
     | Promise<RecordEditorRecord | void>
     | RecordEditorRecord
     | void;
+  supplementalContent?: ReactNode;
 }
 
 export function RecordEditorPanel({
@@ -44,16 +43,14 @@ export function RecordEditorPanel({
   isOpen = true,
   onClose,
   onSave,
+  supplementalContent,
 }: RecordEditorPanelProps) {
   const [isSaving, setIsSaving] =
     useState(false);
-
   const [saveError, setSaveError] =
     useState<string | null>(null);
-
   const [saveMessage, setSaveMessage] =
     useState<string | null>(null);
-
   const [saveValidation, setSaveValidation] =
     useState<RecordEditorValidationResult | null>(null);
 
@@ -89,7 +86,6 @@ export function RecordEditorPanel({
       event: BeforeUnloadEvent,
     ) {
       event.preventDefault();
-
       event.returnValue = "";
     }
 
@@ -111,20 +107,17 @@ export function RecordEditorPanel({
   }
 
   function confirmDiscardChanges():
-    boolean {
-    if (!isDirty) {
-      return true;
-    }
-
-    return window.confirm(
-      "You have unsaved changes. Discard them?",
+  boolean {
+    return (
+      !isDirty ||
+      window.confirm(
+        "You have unsaved changes. Discard them?",
+      )
     );
   }
 
   function handleClose() {
-    if (
-      !confirmDiscardChanges()
-    ) {
+    if (!confirmDiscardChanges()) {
       return;
     }
 
@@ -135,9 +128,7 @@ export function RecordEditorPanel({
   }
 
   function handleCancel() {
-    if (
-      !confirmDiscardChanges()
-    ) {
+    if (!confirmDiscardChanges()) {
       return;
     }
 
@@ -176,27 +167,28 @@ export function RecordEditorPanel({
           workingRecord,
         );
 
-      setSaveValidation(platformValidation);
+      setSaveValidation(
+        platformValidation,
+      );
 
       if (!platformValidation.isValid) {
         return;
       }
+
       const savedRecord =
         await onSave?.(
           workingRecord,
         );
 
       if (savedRecord) {
-        commitChanges(
-          savedRecord,
-        );
+        commitChanges(savedRecord);
       } else {
         commitChanges();
       }
 
       setSaveMessage(
         onSave
-          ? "Record saved successfully."
+          ? "Draft saved successfully."
           : "Changes accepted locally. Server saving is not connected yet.",
       );
     } catch (error: unknown) {
@@ -226,10 +218,8 @@ export function RecordEditorPanel({
             <p className="record-editor-panel-eyebrow">
               Record Editor
             </p>
-
             <h2 id="record-editor-panel-heading">
-              Edit{" "}
-              {schema.singularLabel}
+              Edit {schema.singularLabel}
             </h2>
           </div>
 
@@ -249,10 +239,7 @@ export function RecordEditorPanel({
             className="record-editor-save-message record-editor-save-message--error"
             role="alert"
           >
-            <strong>
-              Save failed
-            </strong>
-
+            <strong>Save failed</strong>
             <p>{saveError}</p>
           </div>
         )}
@@ -269,24 +256,25 @@ export function RecordEditorPanel({
         <div className="record-editor-panel-content">
           <RecordEditorForm
             schema={schema}
-            record={
-              workingRecord
-            }
+            record={workingRecord}
             validation={
-              saveValidation ?? validation
+              saveValidation ??
+              validation
             }
             isDirty={isDirty}
             isSaving={isSaving}
             onChange={
               handleFieldChange
             }
-            onSave={
-              handleSave
-            }
-            onCancel={
-              handleCancel
-            }
+            onSave={handleSave}
+            onCancel={handleCancel}
           />
+
+          {supplementalContent && (
+            <div className="record-editor-editorial-content">
+              {supplementalContent}
+            </div>
+          )}
         </div>
       </section>
     </div>

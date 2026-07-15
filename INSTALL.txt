@@ -1,9 +1,9 @@
-PM2B Pack 10A1 — Installation
+PM2B Pack 10A2 — Installation
 
 Install with PowerShell:
 
 Expand-Archive `
-  -Path "$env:USERPROFILE\Downloads\pm2b-pack-10a1-runtime-api.zip" `
+  -Path "$env:USERPROFILE\Downloads\pm2b-pack-10a2-editor-connection.zip" `
   -DestinationPath "C:\Users\Clark\Projects\kingshot-text-lab" `
   -Force
 

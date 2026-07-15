@@ -1,4 +1,8 @@
 export {
+  ConnectedEditorialRecordEditor,
+} from "./ConnectedEditorialRecordEditor";
+
+export {
   EditorialAdminWorkspace,
 } from "./EditorialAdminWorkspace";
 
