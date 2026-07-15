@@ -142,10 +142,9 @@ export function AdminDatasetDetailPage() {
     liveBrowserDefinition ??
     fallbackBrowserDefinition;
 
-  const canEditRecords = Boolean(
+  const supportsRecordEditing = Boolean(
     adapter?.createEditorRecord &&
-    editorSchema &&
-    liveDatasetResult,
+    editorSchema,
   );
 
   useEffect(() => {
@@ -246,7 +245,7 @@ export function AdminDatasetDetailPage() {
 
     if (!liveDatasetResult) {
       setEditorError(
-        "The live dataset must finish loading before records can be edited.",
+        "The live dataset has not been loaded into the editor yet. Refresh this page and try again.",
       );
       return;
     }
@@ -367,7 +366,7 @@ export function AdminDatasetDetailPage() {
             pageSize={10}
             onViewRow={handleViewRow}
             onEditRow={
-              canEditRecords
+              supportsRecordEditing
                 ? handleEditRow
                 : undefined
             }
