@@ -1,36 +1,15 @@
-# Forge Platform CS-003C
+# CS-003D Build Fix
 
-## Dataset Service Integration
+This pack fixes TypeScript TS1294 errors caused by constructor parameter properties while `erasableSyntaxOnly` is enabled.
 
-This change set introduces the shared Dataset Service and moves the existing admin catalogue onto that service without changing record loading, editor behaviour or publishing.
-
-## Files
+Replace these complete files:
 
 - `src/platform/datasets/services/DatasetService.ts`
-- `src/platform/datasets/services/index.ts`
-- `src/platform/datasets/index.ts`
-- `src/features/admin/adminDatasetService.ts`
-- `src/features/admin/adminDatasets.ts`
-- `docs/architecture/dataset-framework.md`
-
-## Apply
-
-Extract into the repository root while on:
-
-`feature/cs-003c-dataset-service-integration`
+- `src/platform/datasets/validation/DatasetValidationService.ts`
 
 Then run:
 
 ```powershell
 npm run build
 npm run lint
-git status
-```
-
-Commit after verification:
-
-```powershell
-git add .
-git commit -m "CS-003C add dataset service integration"
-git push
 ```
