@@ -1,17 +1,11 @@
-export type DatasetKey =
-  | "heroes"
-  | "hero-xp"
-  | "shards"
-  | "gear"
-  | "charm"
-  | "troops"
-  | "buildings"
-  | "truegold"
-  | "war-academy"
-  | "vip"
-  | "events"
-  | "masters"
-  | "kvk";
+import type {
+  DatasetKey,
+} from "../../../shared/data-engine/datasets";
+
+export type {
+  DatasetKey,
+} from "../../../shared/data-engine/datasets";
+
 
 export interface DatasetSourceMetadata {
   dataset?: string;

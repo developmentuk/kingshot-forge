@@ -1,3 +1,7 @@
+import {
+  DATASET_KEYS,
+} from '../../shared/data-engine/datasets.js'
+
 import type {
   DatasetImporter,
   DatasetKey,
@@ -123,3 +127,11 @@ registerDataset(heroXpImporter)
 registerDataset(shardsImporter)
 registerDataset(mastersImporter)
 registerDataset(kvkImporter)
+
+for (const datasetKey of DATASET_KEYS) {
+  if (!hasDatasetImporter(datasetKey)) {
+    throw new Error(
+      `Dataset "${datasetKey}" is declared in the shared catalogue but has no importer.`,
+    )
+  }
+}
