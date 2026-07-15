@@ -14,7 +14,7 @@ A rejected or returned record moves back to `draft`. Published content is never 
 
 ## Pack 01: Draft and version foundation
 
-PM2B Pack 01 introduces:
+PM2B Pack 01 introduced:
 
 - immutable editorial record versions;
 - a current-record head pointer;
@@ -24,17 +24,38 @@ PM2B Pack 01 introduces:
 - optimistic concurrency through `expectedVersion`;
 - draft creation and save operations.
 
-The in-memory repository is a reference implementation for development and contract verification. Production persistence will be supplied by a server-side repository adapter.
+## Pack 02: Review and approval workflow
+
+PM2B Pack 02 adds controlled transitions:
+
+```text
+draft → in_review
+in_review → draft
+in_review → approved
+```
+
+Both rejection and return-for-changes move the record back to draft, but create distinct audit actions.
+
+Every transition:
+
+1. loads the current head;
+2. verifies `expectedVersion`;
+3. checks that the transition is legal;
+4. creates a new immutable version;
+5. advances the head;
+6. appends an audit event.
+
+Invalid state changes throw `EditorialTransitionError`. Concurrent edits throw `EditorialConcurrencyError`.
 
 ## Concurrency
 
-Every save supplies the version the editor originally loaded:
+Every mutation supplies the version the caller originally loaded:
 
 ```text
-expectedVersion = currentVersion at edit start
+expectedVersion = currentVersion at operation start
 ```
 
-The repository compares this with the current stored version. A mismatch raises `EditorialConcurrencyError` and no version, head or audit event is written.
+The repository compares this with the current stored version. A mismatch writes nothing.
 
 ## Invariants
 
@@ -42,5 +63,6 @@ The repository compares this with the current stored version. A mismatch raises 
 - Version numbers increase by one for each record.
 - The head points to one current version.
 - Every mutation creates an audit event.
-- Client-side route guards are not an authorisation boundary.
-- Production persistence and workflow transitions remain server-side responsibilities.
+- Workflow state changes are explicit and validated.
+- Production authorisation remains a server-side responsibility.
+- Published content is never edited in place.
