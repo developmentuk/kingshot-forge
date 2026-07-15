@@ -10,11 +10,17 @@ import {
 import type {
   RecordEditorRecord,
   RecordEditorSchema,
+  RecordEditorValidationResult,
+  RecordEditorValue,
 } from "./recordEditorSchema";
 
 import {
   useRecordEditor,
 } from "./useRecordEditor";
+
+import {
+  validateRecordEditorRecordForSave,
+} from "./recordEditorPlatformValidation";
 
 interface RecordEditorPanelProps {
   schema: RecordEditorSchema;
@@ -48,6 +54,9 @@ export function RecordEditorPanel({
   const [saveMessage, setSaveMessage] =
     useState<string | null>(null);
 
+  const [saveValidation, setSaveValidation] =
+    useState<RecordEditorValidationResult | null>(null);
+
   const {
     workingRecord,
     validation,
@@ -65,6 +74,7 @@ export function RecordEditorPanel({
     replaceRecord(record);
     setSaveError(null);
     setSaveMessage(null);
+    setSaveValidation(null);
   }, [
     record,
     replaceRecord,
@@ -138,6 +148,14 @@ export function RecordEditorPanel({
     );
   }
 
+  function handleFieldChange(
+    fieldKey: string,
+    value: RecordEditorValue,
+  ) {
+    setSaveValidation(null);
+    updateField(fieldKey, value);
+  }
+
   async function handleSave() {
     if (
       isSaving ||
@@ -152,6 +170,17 @@ export function RecordEditorPanel({
     setSaveMessage(null);
 
     try {
+      const platformValidation =
+        await validateRecordEditorRecordForSave(
+          schema,
+          workingRecord,
+        );
+
+      setSaveValidation(platformValidation);
+
+      if (!platformValidation.isValid) {
+        return;
+      }
       const savedRecord =
         await onSave?.(
           workingRecord,
@@ -244,12 +273,12 @@ export function RecordEditorPanel({
               workingRecord
             }
             validation={
-              validation
+              saveValidation ?? validation
             }
             isDirty={isDirty}
             isSaving={isSaving}
             onChange={
-              updateField
+              handleFieldChange
             }
             onSave={
               handleSave
