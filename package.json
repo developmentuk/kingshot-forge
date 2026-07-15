@@ -8,8 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "fix:nodenext": "node scripts/fix-nodenext-imports.mjs --write",
+    "validate:nodenext": "node scripts/fix-nodenext-imports.mjs",
     "validate:pm2b": "node scripts/validate-pm2b.mjs",
-    "check": "npm run validate:pm2b && npm run lint && npm run build"
+    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
