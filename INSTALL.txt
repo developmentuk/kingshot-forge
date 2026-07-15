@@ -1,0 +1,13 @@
+PM2B Pack 08 — Installation
+
+Use PowerShell from any directory:
+
+Expand-Archive `
+  -Path "$env:USERPROFILE\Downloads\pm2b-pack-08-admin-ui.zip" `
+  -DestinationPath "C:\Users\Clark\Projects\kingshot-text-lab" `
+  -Force
+
+Then run from the repository:
+
+npm run build
+npm run lint
