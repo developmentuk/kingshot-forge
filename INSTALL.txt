@@ -1,13 +1,14 @@
-PM2B Pack 08 — Installation
+PM2B Pack 09 correction
 
-Use PowerShell from any directory:
+Install with PowerShell:
 
 Expand-Archive `
-  -Path "$env:USERPROFILE\Downloads\pm2b-pack-08-admin-ui.zip" `
+  -Path "$env:USERPROFILE\Downloads\pm2b-pack-09-correction.zip" `
   -DestinationPath "C:\Users\Clark\Projects\kingshot-text-lab" `
   -Force
 
-Then run from the repository:
+This replaces the three Supabase repository files with syntax compatible with erasableSyntaxOnly.
 
+Then run:
 npm run build
 npm run lint

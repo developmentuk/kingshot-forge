@@ -1,4 +1,5 @@
 export * from './datasets'
 export * from './editorial'
 export * from './permissions'
+export * from './persistence'
 export * from './publishing'
