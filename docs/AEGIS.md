@@ -33,9 +33,10 @@ Use the connected Supabase tools for project hrvdhjscwitqpwjhnjkm. Begin read-on
 - Local repository: `C:\Users\Clark\Projects\kingshot-text-lab`
 - Supabase project ref: `hrvdhjscwitqpwjhnjkm`
 - Google Analytics measurement ID: `G-8L3HYETN51`
-- GitHub is the canonical source for code.
+- GitHub is the canonical and single source of truth for code.
 - Supabase is the canonical source for persistent platform data.
 - The current branch and latest commit must be inspected at the start of every session; never assume this file's branch status is still current.
+- Do not request local ZIP snapshots while GitHub is available. Use repository files and the active branch directly unless Clark explicitly requests another workflow.
 
 ## Tool boundaries
 
@@ -85,11 +86,24 @@ Do not treat these as newly introduced defects unless their count or scope chang
 1. Inspect the current branch and clean/dirty state.
 2. Pull/fetch before beginning work.
 3. Work on a focused feature branch.
-4. Make coherent commits with descriptive messages.
-5. Run validation before committing.
-6. Push and verify the exact commit deployed by Vercel.
-7. Do not infer deployment freshness from bundle hash names; compare commit SHAs.
-8. Merge to `main` only after runtime verification.
+4. Inspect and modify repository files directly through GitHub when the connector is available.
+5. Make coherent commits with descriptive messages.
+6. Run validation before committing.
+7. Push and verify the exact commit deployed by Vercel.
+8. Do not infer deployment freshness from bundle hash names; compare commit SHAs.
+9. Merge to `main` only after runtime verification.
+
+## Debugging standard
+
+When runtime behaviour differs from the expected implementation:
+
+1. Verify the exact deployed commit SHA.
+2. Trace the router to the rendered component.
+3. Trace state and capability checks through each layer.
+4. Identify the first point where runtime behaviour diverges from repository source.
+5. Do not assume cache, deployment, authentication or permissions are responsible without evidence.
+6. Only change code after the failure point is identified.
+7. Complete and validate the current workflow before expanding the platform.
 
 ## Architecture principles
 
@@ -102,6 +116,8 @@ Do not treat these as newly introduced defects unless their count or scope chang
 - Supabase service-role access must remain server-side only.
 - Prefer vertical, end-to-end slices over disconnected layers.
 - Validate Vercel's server-function compilation, not only the local Vite client build.
+- OAuth must preserve the deployment origin. Production and Vercel preview deployments must return to the origin that initiated sign-in.
+- Supabase Authentication redirect URLs must explicitly allow the production domain and supported Vercel preview domains; otherwise Supabase falls back to its configured Site URL.
 
 ## Current milestone
 
@@ -124,35 +140,34 @@ PM2B platform layers have been added, including:
 
 ### Current blocking issue
 
-The client Vite build succeeds, but Vercel's server-function TypeScript compilation reports many errors under Node16/NodeNext resolution.
+Vercel client and server-function compilation now succeeds at branch commit `427bcb38fd571899a33aa7b506abf7134de7a9ad`.
 
-Primary error classes:
+The active blocker is preview authentication:
 
-- `TS2834` / `TS2835`: server-reachable relative imports and barrel exports lack explicit `.js` extensions.
-- `TS2305`: editorial runtime imports appear missing because affected barrel modules fail to resolve correctly.
-- follow-on `TS2339` errors in server error handling caused by unresolved error-class types.
+- `src/context/AuthContext.tsx` correctly sets the Google OAuth `redirectTo` value from `window.location.origin`.
+- Supabase rejects an unlisted Vercel preview redirect and falls back to the configured Site URL.
+- Authentication therefore returns to the default Vercel deployment instead of the PM2B preview deployment.
+- The session is origin-scoped, so the authenticated default deployment and unauthenticated preview deployment cannot share it.
+- Heroes Edit cannot be validated until the relevant preview URL is added to Supabase Authentication redirect URLs.
 
-The latest known branch head during creation of this file was:
+The current work branch is:
 
 ```text
 feature/pm2b-editorial-workflow
-6df03ba
 ```
 
-This is historical context only. Always inspect the live branch head.
+Always inspect its live head before making changes.
 
 ### Stabilisation order
 
-1. Reproduce Vercel's server compilation locally or with a dedicated server TypeScript check.
-2. Correct ESM/NodeNext import paths for all server-reachable modules.
-3. Restore platform barrel exports and eliminate `TS2305` follow-on errors.
-4. Validate Vercel Functions compile successfully.
-5. Verify `/api/editorial/record` authentication and response.
-6. Verify `/api/editorial/action` draft creation.
-7. Confirm Heroes Edit opens and saves a first draft.
-8. Test review, approval, queue, publish, archive, restore and rollback.
-9. Complete `docs/testing/PM2B-END-TO-END-CHECKLIST.md`.
-10. Update Roadmap and Release Notes, merge, tag and deploy.
+1. Add the production and supported preview callback patterns to Supabase Authentication redirect URLs.
+2. Confirm Google sign-in returns to the same PM2B preview origin.
+3. Verify `/api/editorial/record` authentication and response.
+4. Verify `/api/editorial/action` draft creation.
+5. Confirm Heroes Edit opens and saves a first draft.
+6. Test review, approval, queue, publish, archive, restore and rollback.
+7. Complete `docs/testing/PM2B-END-TO-END-CHECKLIST.md`.
+8. Update Roadmap and Release Notes, merge, tag and deploy.
 
 Do not add new product features until this sequence passes.
 
@@ -172,6 +187,7 @@ scripts/validate-pm2b.mjs
 src/platform/
 server/editorial/
 api/editorial/
+src/context/AuthContext.tsx
 supabase/migrations/20260715210000_pm2b_editorial_persistence.sql
 ```
 
@@ -179,8 +195,10 @@ supabase/migrations/20260715210000_pm2b_editorial_persistence.sql
 
 - Live Data Engine datasets are served through `/api/data-engine/dataset?dataset=<key>`.
 - Heroes live dataset retrieval has been verified.
-- Heroes has a registered dataset adapter and Record Editor schema on the PM2B branch.
-- Edit-button behaviour must not be considered fixed until the latest commit is deployed and the server runtime is compiling.
+- `/admin/data/:datasetId` renders `AdminDatasetDetailPage`.
+- Heroes declares the editing capability, has a registered dataset adapter and has a registered Record Editor schema on the PM2B branch.
+- `DatasetTable` disables Edit only when no edit handler is supplied.
+- Edit-button behaviour must be tested on an authenticated PM2B preview origin before it can be considered fixed or broken.
 
 ## Release discipline
 
@@ -206,6 +224,7 @@ Update `docs/AEGIS.md` whenever any of these change:
 - standard validation commands;
 - architecture or security rules;
 - release workflow;
-- key integrations.
+- key integrations;
+- established collaboration or debugging workflow.
 
 Keep this file operational and concise. Detailed implementation history belongs in change-set, architecture and release documents.
