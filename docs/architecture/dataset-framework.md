@@ -57,3 +57,9 @@ CS-003B connected the platform registry to the existing admin catalogue and adap
 CS-003C introduced the shared Dataset Service and migrated admin catalogue lookup onto it.
 
 CS-003D introduces the shared validation service. Existing Record Editor validation remains unchanged until a later compatibility change set connects editor schemas to platform field definitions.
+
+## Record Editor validation integration
+
+CS-003E adds a compatibility bridge between the existing Record Editor schemas and the platform Dataset Validation Service. Interactive field validation remains available while editing, and every save attempt now passes through the shared platform validation boundary before the persistence callback can run.
+
+The bridge is temporary. Dataset registrations will ultimately own complete field schemas, allowing the Record Editor to consume platform definitions directly without translating its legacy schema format.
