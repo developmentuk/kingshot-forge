@@ -1,8 +1,10 @@
-import {
-  getAdminDatasetRegistration,
-  listAdminDatasetRegistrations,
-  type AdminDatasetStatus,
+import type {
+  AdminDatasetRegistration,
+  AdminDatasetStatus,
 } from "./datasetDefinitions";
+import {
+  adminDatasetService,
+} from "./adminDatasetService";
 
 export type {
   AdminDatasetStatus,
@@ -16,29 +18,9 @@ export interface AdminDatasetDefinition {
   status: AdminDatasetStatus;
 }
 
-export const adminDatasets: AdminDatasetDefinition[] =
-  listAdminDatasetRegistrations().map(
-    (registration) => ({
-      id: registration.id,
-      name: registration.title,
-      description: registration.description,
-      route:
-        registration.route ??
-        `/admin/data/${registration.id}`,
-      status: registration.admin.status,
-    }),
-  );
-
-export function getAdminDataset(
-  datasetId: string,
-): AdminDatasetDefinition | undefined {
-  const registration =
-    getAdminDatasetRegistration(datasetId);
-
-  if (!registration) {
-    return undefined;
-  }
-
+function toAdminDatasetDefinition(
+  registration: AdminDatasetRegistration,
+): AdminDatasetDefinition {
   return {
     id: registration.id,
     name: registration.title,
@@ -48,4 +30,27 @@ export function getAdminDataset(
       `/admin/data/${registration.id}`,
     status: registration.admin.status,
   };
+}
+
+export const adminDatasets: AdminDatasetDefinition[] =
+  adminDatasetService
+    .list({ category: "game-data" })
+    .map(
+      (definition) =>
+        toAdminDatasetDefinition(
+          definition as AdminDatasetRegistration,
+        ),
+    );
+
+export function getAdminDataset(
+  datasetId: string,
+): AdminDatasetDefinition | undefined {
+  const registration =
+    adminDatasetService.get(datasetId) as
+      | AdminDatasetRegistration
+      | undefined;
+
+  return registration
+    ? toAdminDatasetDefinition(registration)
+    : undefined;
 }
