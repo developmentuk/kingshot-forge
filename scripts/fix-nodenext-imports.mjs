@@ -1,11 +1,12 @@
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { access, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
 const roots = ["api", "server", "src/platform"];
 const writeChanges = process.argv.includes("--write");
-const sourceExtensions = new Set([".ts", ".tsx", ".mts", ".cts"]);
-const explicitExtensions = new Set([
+const sourceExtensions = [".ts", ".tsx", ".mts", ".cts"];
+const sourceExtensionSet = new Set(sourceExtensions);
+const explicitRuntimeExtensions = new Set([
   ".js",
   ".mjs",
   ".cjs",
@@ -21,6 +22,15 @@ const explicitExtensions = new Set([
   ".webp",
 ]);
 
+async function exists(filePath) {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function collectSourceFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -33,7 +43,7 @@ async function collectSourceFiles(directory) {
       continue;
     }
 
-    if (sourceExtensions.has(path.extname(entry.name))) {
+    if (sourceExtensionSet.has(path.extname(entry.name))) {
       files.push(fullPath);
     }
   }
@@ -41,31 +51,88 @@ async function collectSourceFiles(directory) {
   return files;
 }
 
-function needsJsExtension(specifier) {
-  if (!specifier.startsWith(".")) {
-    return false;
-  }
-
-  const cleanSpecifier = specifier.split(/[?#]/, 1)[0];
-  return !explicitExtensions.has(path.posix.extname(cleanSpecifier));
+function splitSpecifier(specifier) {
+  const match = specifier.match(/^([^?#]*)([?#].*)?$/);
+  return {
+    pathname: match?.[1] ?? specifier,
+    suffix: match?.[2] ?? "",
+  };
 }
 
-function normaliseRelativeImports(source) {
-  const patterns = [
-    /(\bfrom\s*["'])(\.{1,2}\/[^"']+)(["'])/g,
-    /(\bimport\s*\(\s*["'])(\.{1,2}\/[^"']+)(["']\s*\))/g,
-    /(\bexport\s+\*\s+from\s*["'])(\.{1,2}\/[^"']+)(["'])/g,
-  ];
+async function resolveRuntimeSpecifier(importerPath, specifier) {
+  if (!specifier.startsWith(".")) {
+    return specifier;
+  }
 
+  const { pathname, suffix } = splitSpecifier(specifier);
+  const runtimeExtension = path.posix.extname(pathname);
+
+  if (
+    explicitRuntimeExtensions.has(runtimeExtension) &&
+    runtimeExtension !== ".js"
+  ) {
+    return specifier;
+  }
+
+  const withoutRuntimeExtension = pathname.endsWith(".js")
+    ? pathname.slice(0, -3)
+    : pathname;
+  const importerDirectory = path.dirname(importerPath);
+  const absoluteBase = path.resolve(importerDirectory, withoutRuntimeExtension);
+
+  for (const extension of sourceExtensions) {
+    if (await exists(`${absoluteBase}${extension}`)) {
+      return `${withoutRuntimeExtension}.js${suffix}`;
+    }
+  }
+
+  for (const extension of sourceExtensions) {
+    if (await exists(path.join(absoluteBase, `index${extension}`))) {
+      return `${withoutRuntimeExtension}/index.js${suffix}`;
+    }
+  }
+
+  return specifier;
+}
+
+const importPatterns = [
+  /(\bfrom\s*["'])(\.{1,2}\/[^"']+)(["'])/g,
+  /(\bimport\s*\(\s*["'])(\.{1,2}\/[^"']+)(["']\s*\))/g,
+  /(\bexport\s+\*\s+from\s*["'])(\.{1,2}\/[^"']+)(["'])/g,
+];
+
+async function replaceAsync(source, pattern, replacer) {
+  const matches = [...source.matchAll(pattern)];
+
+  if (matches.length === 0) {
+    return source;
+  }
+
+  let output = "";
+  let cursor = 0;
+
+  for (const match of matches) {
+    const index = match.index ?? 0;
+    output += source.slice(cursor, index);
+    output += await replacer(match);
+    cursor = index + match[0].length;
+  }
+
+  output += source.slice(cursor);
+  return output;
+}
+
+async function normaliseRelativeImports(filePath, source) {
   let output = source;
 
-  for (const pattern of patterns) {
-    output = output.replace(pattern, (match, prefix, specifier, suffix) => {
-      if (!needsJsExtension(specifier)) {
-        return match;
-      }
-
-      return `${prefix}${specifier}.js${suffix}`;
+  for (const pattern of importPatterns) {
+    output = await replaceAsync(output, pattern, async (match) => {
+      const [, prefix, specifier, suffix] = match;
+      const resolvedSpecifier = await resolveRuntimeSpecifier(
+        filePath,
+        specifier,
+      );
+      return `${prefix}${resolvedSpecifier}${suffix}`;
     });
   }
 
@@ -88,38 +155,62 @@ const files = (
 ).flat();
 
 const changedFiles = [];
+const unresolvedImports = [];
 
 for (const file of files) {
   const source = await readFile(file, "utf8");
-  const normalised = normaliseRelativeImports(source);
+  const normalised = await normaliseRelativeImports(file, source);
 
-  if (normalised === source) {
-    continue;
+  if (normalised !== source) {
+    changedFiles.push(file.replaceAll(path.sep, "/"));
+
+    if (writeChanges) {
+      await writeFile(file, normalised, "utf8");
+    }
   }
 
-  changedFiles.push(file.replaceAll(path.sep, "/"));
+  const sourceToValidate = writeChanges ? normalised : source;
 
-  if (writeChanges) {
-    await writeFile(file, normalised, "utf8");
+  for (const pattern of importPatterns) {
+    for (const match of sourceToValidate.matchAll(pattern)) {
+      const specifier = match[2];
+      const resolvedSpecifier = await resolveRuntimeSpecifier(file, specifier);
+
+      if (resolvedSpecifier !== specifier) {
+        unresolvedImports.push({
+          file: file.replaceAll(path.sep, "/"),
+          specifier,
+          expected: resolvedSpecifier,
+        });
+      }
+    }
   }
 }
 
-if (changedFiles.length === 0) {
+if (writeChanges) {
+  if (changedFiles.length === 0) {
+    console.log("NodeNext imports were already normalised.");
+  } else {
+    console.log(`Updated ${changedFiles.length} file(s):`);
+    for (const file of changedFiles) {
+      console.log(`- ${file}`);
+    }
+  }
+  process.exit(0);
+}
+
+if (unresolvedImports.length === 0) {
   console.log("NodeNext import validation passed.");
   process.exit(0);
 }
 
-if (writeChanges) {
-  console.log(`Updated ${changedFiles.length} file(s):`);
-  for (const file of changedFiles) {
-    console.log(`- ${file}`);
-  }
-  process.exit(0);
+console.error("Relative imports do not match their runtime targets:");
+for (const issue of unresolvedImports) {
+  console.error(
+    `- ${issue.file}: ${issue.specifier} -> ${issue.expected}`,
+  );
 }
-
-console.error("Relative imports without explicit runtime extensions were found:");
-for (const file of changedFiles) {
-  console.error(`- ${file}`);
-}
-console.error("Run npm run fix:nodenext, review the diff, then rerun npm run check.");
+console.error(
+  "Run npm run fix:nodenext, review the diff, then rerun npm run check.",
+);
 process.exit(1);
