@@ -1,0 +1,253 @@
+import type {
+  RecordEditorSchema,
+} from "./recordEditorSchema";
+
+export const heroesRecordEditorSchema:
+RecordEditorSchema = {
+  datasetId: "heroes",
+  singularLabel: "Hero",
+  pluralLabel: "Heroes",
+  idField: "slug",
+  titleField: "name",
+  allowCreate: false,
+  allowDuplicate: false,
+  allowDelete: false,
+
+  sections: [
+    {
+      id: "identity",
+      title: "Identity",
+      order: 10,
+    },
+    {
+      id: "classification",
+      title: "Classification",
+      order: 20,
+    },
+    {
+      id: "rankings",
+      title: "Rankings",
+      order: 30,
+    },
+    {
+      id: "availability",
+      title: "Availability",
+      order: 40,
+    },
+    {
+      id: "content",
+      title: "Content",
+      order: 50,
+    },
+    {
+      id: "source",
+      title: "Source",
+      order: 60,
+      collapsedByDefault: true,
+    },
+  ],
+
+  fields: [
+    {
+      key: "name",
+      label: "Name",
+      type: "text",
+      section: "identity",
+      order: 10,
+      required: true,
+      validation: {
+        required: true,
+        minLength: 2,
+        maxLength: 80,
+      },
+    },
+    {
+      key: "slug",
+      label: "Slug",
+      type: "readonly",
+      section: "identity",
+      order: 20,
+      readOnly: true,
+    },
+    {
+      key: "generation",
+      label: "Generation",
+      type: "number",
+      section: "classification",
+      order: 10,
+      required: true,
+      validation: {
+        required: true,
+        integer: true,
+        min: 1,
+      },
+    },
+    {
+      key: "troop_type",
+      label: "Troop type",
+      type: "select",
+      section: "classification",
+      order: 20,
+      required: true,
+      options: [
+        {
+          label: "Infantry",
+          value: "infantry",
+        },
+        {
+          label: "Cavalry",
+          value: "cavalry",
+        },
+        {
+          label: "Archer",
+          value: "archer",
+        },
+      ],
+    },
+    {
+      key: "rarity",
+      label: "Rarity",
+      type: "select",
+      section: "classification",
+      order: 30,
+      required: true,
+      options: [
+        {
+          label: "Legendary",
+          value: "legendary",
+        },
+        {
+          label: "Epic",
+          value: "epic",
+        },
+        {
+          label: "Rare",
+          value: "rare",
+        },
+      ],
+    },
+    {
+      key: "rally_tier",
+      label: "Rally tier",
+      type: "text",
+      section: "rankings",
+      order: 10,
+    },
+    {
+      key: "garrison_tier",
+      label: "Garrison tier",
+      type: "text",
+      section: "rankings",
+      order: 20,
+    },
+    {
+      key: "bear_tier",
+      label: "Bear tier",
+      type: "text",
+      section: "rankings",
+      order: 30,
+    },
+    {
+      key: "joiner_tier",
+      label: "Joiner tier",
+      type: "text",
+      section: "rankings",
+      order: 40,
+    },
+    {
+      key: "is_f2p",
+      label: "Free-to-play",
+      type: "boolean",
+      section: "availability",
+      order: 10,
+    },
+    {
+      key: "is_vip",
+      label: "VIP",
+      type: "boolean",
+      section: "availability",
+      order: 20,
+    },
+    {
+      key: "is_active",
+      label: "Active",
+      type: "boolean",
+      section: "availability",
+      order: 30,
+    },
+    {
+      key: "best_use",
+      label: "Best use",
+      type: "textarea",
+      section: "content",
+      order: 10,
+      validation: {
+        maxLength: 500,
+      },
+    },
+    {
+      key: "description",
+      label: "Description",
+      type: "textarea",
+      section: "content",
+      order: 20,
+      validation: {
+        maxLength: 2000,
+      },
+    },
+    {
+      key: "tags",
+      label: "Tags",
+      type: "json",
+      section: "content",
+      order: 30,
+    },
+    {
+      key: "portrait_url",
+      label: "Portrait URL",
+      type: "url",
+      section: "content",
+      order: 40,
+    },
+    {
+      key: "source_name",
+      label: "Source name",
+      type: "readonly",
+      section: "source",
+      order: 10,
+      readOnly: true,
+    },
+    {
+      key: "source_url",
+      label: "Source URL",
+      type: "readonly",
+      section: "source",
+      order: 20,
+      readOnly: true,
+    },
+    {
+      key: "source_updated_at",
+      label: "Source updated",
+      type: "readonly",
+      section: "source",
+      order: 30,
+      readOnly: true,
+    },
+    {
+      key: "source_verified",
+      label: "Source verified",
+      type: "readonly",
+      section: "source",
+      order: 40,
+      readOnly: true,
+    },
+    {
+      key: "source_accuracy_score",
+      label: "Source accuracy score",
+      type: "readonly",
+      section: "source",
+      order: 50,
+      readOnly: true,
+    },
+  ],
+};

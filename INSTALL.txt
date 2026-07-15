@@ -1,14 +1,12 @@
-PM2B Pack 10A2 — Installation
+PM2B Pack 10A2 Heroes Editor correction
 
 Install with PowerShell:
 
 Expand-Archive `
-  -Path "$env:USERPROFILE\Downloads\pm2b-pack-10a2-editor-connection.zip" `
+  -Path "$env:USERPROFILE\Downloads\pm2b-pack-10a2-heroes-editor-fix.zip" `
   -DestinationPath "C:\Users\Clark\Projects\kingshot-text-lab" `
   -Force
 
 Then run:
 
 npm run check
-
-Do not commit until the command passes.
