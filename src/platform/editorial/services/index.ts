@@ -16,3 +16,17 @@ export type {
   EditorialTransitionResult,
   EditorialWorkflowServiceOptions,
 } from './EditorialWorkflowService'
+
+export {
+  EditorialDiffService,
+  EditorialHistoryService,
+} from '../history'
+export type {
+  EditorialDiffKind,
+  EditorialFieldDiff,
+  EditorialHistoryEntry,
+  EditorialHistoryFilter,
+  EditorialHistoryResult,
+  EditorialRollbackPreview,
+  EditorialVersionComparison,
+} from '../history'

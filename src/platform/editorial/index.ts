@@ -1,3 +1,4 @@
 export * from './contracts'
+export * from './history'
 export * from './repositories'
 export * from './services'
