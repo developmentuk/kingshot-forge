@@ -2,31 +2,24 @@
 
 ## Purpose
 
-The Dataset Framework provides the platform-neutral contracts used by the CMS, Data Engine integration, validation, publishing, search and version history.
+The Dataset Framework provides the platform-neutral contracts and services used by the CMS, Data Engine integration, validation, publishing, search and version history.
 
 ## Package structure
 
 ```text
 src/platform/datasets/
 ├── contracts/
-│   ├── adapter.ts
-│   ├── dataset.ts
-│   ├── field.ts
-│   ├── permissions.ts
-│   ├── publishing.ts
-│   ├── record.ts
-│   ├── validation.ts
-│   └── value.ts
 ├── registry/
-│   └── DatasetRegistry.ts
 ├── services/
 │   └── DatasetService.ts
+├── validation/
+│   └── DatasetValidationService.ts
 └── index.ts
 ```
 
 ## Responsibilities
 
-The framework may describe and query datasets, records, fields, validation, permissions and publishing policy. It must not contain game-specific data, page components, network access or database implementation.
+The framework may describe datasets, records, fields, validation, permissions and publishing policy. It must not contain game-specific data, page components, network access or database implementation.
 
 ## Registration rules
 
@@ -38,21 +31,29 @@ The framework may describe and query datasets, records, fields, validation, perm
 
 ## Dataset Service
 
-`DatasetService` is the platform entry point for dataset discovery. It consumes a `DatasetDefinitionSource`, allowing the current in-memory registry and future persistent catalogues to use the same service contract.
+`DatasetService` is the platform entry point for discovering definitions and querying them by category, capability or tag. It does not load or persist records.
 
-The service supports:
+## Validation Service
 
-- optional and required lookup;
-- existence checks;
-- category filtering;
-- capability filtering;
-- tag filtering;
-- capability checks for a single dataset.
+`DatasetValidationService` validates a `DatasetRecordDraft` against its registered definition. It performs:
 
-The service does not load dataset records, call APIs or persist changes. Those responsibilities belong to later record, validation and publishing services.
+- dataset identity checks;
+- required-field checks;
+- primitive field-type checks;
+- numeric minimum, maximum and integer checks;
+- text length and regular-expression checks;
+- select and multiselect option checks;
+- field-level custom validation;
+- dataset-level asynchronous validation.
+
+A validation result is valid when it contains no issues with `error` severity. Warnings and information issues do not block the result.
+
+Validation is deliberately independent from React, Supabase and HTTP. Persistence and publishing services will call this service before accepting state transitions.
 
 ## Migration status
 
-CS-003B connected the platform registry to the existing admin catalogue and adapter registry through a compatibility layer. Dataset identity is shared with the server Data Engine through `shared/data-engine/datasets.ts`.
+CS-003B connected the platform registry to the existing admin catalogue and adapter registry. Dataset identity is shared with the server Data Engine through `shared/data-engine/datasets.ts`.
 
-CS-003C introduces `DatasetService` and moves admin catalogue discovery onto the service while preserving the existing admin API. Record loading, schema validation, persistence and publishing remain scheduled for later change sets.
+CS-003C introduced the shared Dataset Service and migrated admin catalogue lookup onto it.
+
+CS-003D introduces the shared validation service. Existing Record Editor validation remains unchanged until a later compatibility change set connects editor schemas to platform field definitions.

@@ -18,9 +18,11 @@ export interface DatasetQuery {
 }
 
 export class DatasetService {
-  constructor(
-    private readonly source: DatasetDefinitionSource,
-  ) {}
+  private readonly source: DatasetDefinitionSource
+
+  constructor(source: DatasetDefinitionSource) {
+    this.source = source
+  }
 
   get(datasetId: string): DatasetDefinition | undefined {
     return this.source.get(datasetId)
