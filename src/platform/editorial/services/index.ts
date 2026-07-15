@@ -6,10 +6,12 @@ export type {
 } from './EditorialDraftService'
 
 export {
+  EditorialRollbackError,
   EditorialTransitionError,
   EditorialWorkflowService,
 } from './EditorialWorkflowService'
 export type {
+  EditorialRollbackInput,
   EditorialTransitionInput,
   EditorialTransitionResult,
   EditorialWorkflowServiceOptions,
