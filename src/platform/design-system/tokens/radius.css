@@ -1,0 +1,9 @@
+:root {
+  --forge-radius-none: 0;
+  --forge-radius-xs: 0.25rem;
+  --forge-radius-sm: 0.5rem;
+  --forge-radius-md: 0.75rem;
+  --forge-radius-lg: 1rem;
+  --forge-radius-xl: 1.5rem;
+  --forge-radius-pill: 999px;
+}

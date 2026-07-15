@@ -1,0 +1,8 @@
+:root {
+  --forge-shadow-xs: 0 1px 2px rgb(0 0 0 / 24%);
+  --forge-shadow-sm: 0 4px 12px rgb(0 0 0 / 22%);
+  --forge-shadow-md: 0 12px 32px rgb(0 0 0 / 30%);
+  --forge-shadow-lg: 0 24px 64px rgb(0 0 0 / 42%);
+  --forge-shadow-glow-cyan: 0 0 28px rgb(38 212 241 / 18%);
+  --forge-shadow-glow-orange: 0 0 28px rgb(255 138 61 / 18%);
+}

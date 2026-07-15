@@ -1,0 +1,50 @@
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--forge-colour-focus);
+  outline-offset: 3px;
+  box-shadow: var(--forge-focus-ring);
+}
+
+.forge-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.forge-skip-link {
+  position: fixed;
+  top: var(--forge-space-3);
+  left: var(--forge-space-3);
+  z-index: var(--forge-z-skip-link);
+  padding: var(--forge-space-3) var(--forge-space-4);
+  transform: translateY(-200%);
+  border-radius: var(--forge-radius-sm);
+  background: var(--forge-colour-action-secondary);
+  color: var(--forge-colour-text-inverse);
+  font-weight: var(--forge-font-weight-bold);
+  transition: transform var(--forge-transition-interactive);
+}
+
+.forge-skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

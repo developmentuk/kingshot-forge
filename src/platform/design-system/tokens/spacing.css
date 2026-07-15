@@ -1,0 +1,19 @@
+:root {
+  --forge-space-0: 0;
+  --forge-space-1: 0.25rem;
+  --forge-space-2: 0.5rem;
+  --forge-space-3: 0.75rem;
+  --forge-space-4: 1rem;
+  --forge-space-5: 1.25rem;
+  --forge-space-6: 1.5rem;
+  --forge-space-8: 2rem;
+  --forge-space-10: 2.5rem;
+  --forge-space-12: 3rem;
+  --forge-space-16: 4rem;
+  --forge-space-20: 5rem;
+  --forge-space-24: 6rem;
+
+  --forge-page-gutter: clamp(1rem, 3vw, 2rem);
+  --forge-content-max: 90rem;
+  --forge-content-readable: 72ch;
+}

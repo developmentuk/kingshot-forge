@@ -1,0 +1,62 @@
+.forge-button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--forge-space-2);
+  padding: var(--forge-space-3) var(--forge-space-5);
+  border: 1px solid transparent;
+  border-radius: var(--forge-radius-md);
+  background: var(--forge-colour-action-primary);
+  color: var(--forge-colour-text-inverse);
+  font-weight: var(--forge-font-weight-bold);
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform var(--forge-transition-interactive),
+    background-color var(--forge-transition-interactive),
+    border-color var(--forge-transition-interactive),
+    opacity var(--forge-transition-interactive);
+}
+
+.forge-button:hover:not(:disabled) {
+  background: var(--forge-colour-action-primary-hover);
+  transform: translateY(-1px);
+}
+
+.forge-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.forge-button:disabled,
+.forge-button[aria-disabled="true"] {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.forge-button--secondary {
+  border-color: var(--forge-colour-border-default);
+  background: var(--forge-colour-bg-raised);
+  color: var(--forge-colour-text-primary);
+}
+
+.forge-button--secondary:hover:not(:disabled) {
+  border-color: var(--forge-colour-action-secondary);
+  background: var(--forge-colour-bg-surface);
+}
+
+.forge-button--ghost {
+  background: transparent;
+  color: var(--forge-colour-text-secondary);
+}
+
+.forge-button--danger {
+  background: var(--forge-colour-status-danger);
+}
+
+.forge-button--sm {
+  min-height: 2.25rem;
+  padding: var(--forge-space-2) var(--forge-space-3);
+  font-size: var(--forge-font-size-sm);
+}

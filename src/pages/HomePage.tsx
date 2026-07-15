@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { artTemplates } from '../data/artTemplates'
 import { nameVariants } from '../data/nameVariants'
 import { usePlayerIdentity } from '../context/PlayerIdentityContext'
+import { useRole } from '../context/RoleContext'
 
 type ForgeTool = {
   title: string
@@ -153,6 +154,23 @@ const {
       template.source === 'Alliance Submission' ||
       template.source === 'Community Submission',
   ).length
+
+
+
+const {
+  role,
+  permissions,
+  loadingRole,
+} = useRole()
+
+console.log({
+  role,
+  permissions,
+  loadingRole,
+})
+
+
+
 
   return (
     <section className="forge-hub">

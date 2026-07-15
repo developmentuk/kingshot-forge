@@ -1,7 +1,1 @@
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  overflow-x: hidden;
-}
+@import "./platform/design-system/index.css";

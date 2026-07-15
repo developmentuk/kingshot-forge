@@ -1,0 +1,21 @@
+.forge-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--forge-z-overlay);
+  display: grid;
+  place-items: center;
+  padding: var(--forge-page-gutter);
+  background: var(--forge-colour-bg-overlay);
+  backdrop-filter: blur(8px);
+}
+
+.forge-dialog {
+  z-index: var(--forge-z-modal);
+  width: min(100%, 42rem);
+  max-height: min(90vh, 56rem);
+  overflow: auto;
+  border: 1px solid var(--forge-colour-border-default);
+  border-radius: var(--forge-radius-xl);
+  background: var(--forge-colour-bg-raised);
+  box-shadow: var(--forge-shadow-lg);
+}

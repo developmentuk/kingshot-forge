@@ -1,0 +1,9 @@
+:root {
+  --forge-z-base: 0;
+  --forge-z-sticky: 100;
+  --forge-z-dropdown: 300;
+  --forge-z-overlay: 500;
+  --forge-z-modal: 700;
+  --forge-z-toast: 900;
+  --forge-z-skip-link: 1000;
+}

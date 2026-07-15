@@ -1,0 +1,18 @@
+.forge-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--forge-space-3);
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border: 1px solid var(--forge-colour-border-subtle);
+  border-radius: var(--forge-radius-lg);
+  background: var(--forge-colour-bg-surface);
+}
+
+.forge-toolbar__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--forge-space-2);
+}

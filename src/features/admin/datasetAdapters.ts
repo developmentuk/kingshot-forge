@@ -9,12 +9,21 @@ import type {
   DatasetTableRow,
 } from "./datasetBrowserTypes";
 
+import type {
+  RecordEditorRecord,
+} from "./recordEditor/recordEditorSchema";
+
 export interface DatasetAdapter {
   datasetId: DatasetKey;
 
   createBrowserDefinition(
     result: DatasetLoadResult,
   ): DatasetBrowserDefinition;
+
+  createEditorRecord?: (
+    result: DatasetLoadResult,
+    rowId: string,
+  ) => RecordEditorRecord | null;
 }
 
 export function toCellValue(
@@ -66,4 +75,60 @@ export function createRowsFromRecords(
       index,
     ),
   );
+}
+
+export function isRecordObject(
+  value: unknown,
+): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
+}
+
+export function readStringValue(
+  value: unknown,
+): string | null {
+  if (
+    typeof value !== "string"
+  ) {
+    return null;
+  }
+
+  const trimmedValue =
+    value.trim();
+
+  return trimmedValue.length > 0
+    ? trimmedValue
+    : null;
+}
+
+export function readNumberValue(
+  value: unknown,
+): number | null {
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  ) {
+    return value;
+  }
+
+  if (
+    typeof value === "string" &&
+    value.trim().length > 0
+  ) {
+    const parsedValue =
+      Number(value);
+
+    if (
+      Number.isFinite(
+        parsedValue,
+      )
+    ) {
+      return parsedValue;
+    }
+  }
+
+  return null;
 }

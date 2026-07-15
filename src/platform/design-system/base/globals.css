@@ -1,0 +1,32 @@
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--forge-colour-bg-canvas);
+  color: var(--forge-colour-text-primary);
+  font-family: var(--forge-font-sans);
+  font-size: var(--forge-font-size-md);
+  line-height: var(--forge-line-height-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgb(38 212 241 / 30%);
+  color: var(--forge-colour-text-primary);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}

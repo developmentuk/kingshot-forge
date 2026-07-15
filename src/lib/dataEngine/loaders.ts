@@ -6,20 +6,20 @@ import type {
 } from "./types";
 import { DataEngineError } from "./types";
 
-const DATASET_ENDPOINTS: Record<DatasetKey, string> = {
-  heroes: "/api/data-engine/heroes",
-  heroXp: "/api/data-engine/hero-xp",
-  shards: "/api/data-engine/shards",
-  troops: "/api/data-engine/troops",
-  buildings: "/api/data-engine/buildings",
-  truegold: "/api/data-engine/truegold",
-  gear: "/api/data-engine/gear",
-  charm: "/api/data-engine/charm",
-  vip: "/api/data-engine/vip",
-  events: "/api/data-engine/events",
-  masters: "/api/data-engine/masters",
-  warAcademy: "/api/data-engine/war-academy",
-  kvk: "/api/data-engine/kvk",
+const DATASET_QUERY_KEYS: Record<DatasetKey, string> = {
+  heroes: "heroes",
+  heroXp: "hero-xp",
+  shards: "shards",
+  troops: "troops",
+  buildings: "buildings",
+  truegold: "truegold",
+  gear: "gear",
+  charm: "charm",
+  vip: "vip",
+  events: "events",
+  masters: "masters",
+  warAcademy: "war-academy",
+  kvk: "kvk",
 };
 
 interface RawDatasetResponse {
@@ -27,21 +27,65 @@ interface RawDatasetResponse {
   dataset?: string;
   source?: DatasetSource;
   data?: unknown;
+  payload?: unknown;
   meta?: DatasetMeta;
+  metadata?: DatasetMeta;
   _meta?: DatasetMeta;
+  fetchedAt?: string;
   loadedAt?: string;
   message?: string;
-  error?: string;
+  error?: unknown;
   [key: string]: unknown;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+function isRecord(
+  value: unknown,
+): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null
+  );
 }
 
-function extractDatasetData(response: RawDatasetResponse): unknown {
-  if ("data" in response && response.data !== undefined) {
+function normaliseErrorMessage(
+  value: unknown,
+  fallback: string,
+): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value instanceof Error) {
+    return value.message;
+  }
+
+  if (isRecord(value)) {
+    const possibleMessage =
+      value.message ?? value.error ?? value.detail;
+
+    if (typeof possibleMessage === "string") {
+      return possibleMessage;
+    }
+
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return fallback;
+    }
+  }
+
+  return fallback;
+}
+
+function extractDatasetData(
+  response: RawDatasetResponse,
+): unknown {
+  if (response.data !== undefined) {
     return response.data;
+  }
+
+  if (response.payload !== undefined) {
+    return response.payload;
   }
 
   const {
@@ -49,7 +93,9 @@ function extractDatasetData(response: RawDatasetResponse): unknown {
     dataset: _dataset,
     source: _source,
     meta: _meta,
+    metadata: _metadata,
     _meta: _documentMeta,
+    fetchedAt: _fetchedAt,
     loadedAt: _loadedAt,
     message: _message,
     error: _error,
@@ -66,6 +112,10 @@ function extractDatasetMeta(
     return response.meta as DatasetMeta;
   }
 
+  if (isRecord(response.metadata)) {
+    return response.metadata as DatasetMeta;
+  }
+
   if (isRecord(response._meta)) {
     return response._meta as DatasetMeta;
   }
@@ -73,11 +123,35 @@ function extractDatasetMeta(
   return null;
 }
 
-export async function loadDataset<TData = unknown>(
+async function readResponseBody(
+  response: Response,
+): Promise<RawDatasetResponse> {
+  const contentType =
+    response.headers.get("content-type") ?? "";
+
+  if (!contentType.includes("application/json")) {
+    const text = await response.text();
+
+    throw new Error(
+      text ||
+        `The server returned ${response.status} ${response.statusText}.`,
+    );
+  }
+
+  return (await response.json()) as RawDatasetResponse;
+}
+
+export async function loadDataset<
+  TData = unknown,
+>(
   key: DatasetKey,
   signal?: AbortSignal,
 ): Promise<DatasetLoaderResult<TData>> {
-  const endpoint = DATASET_ENDPOINTS[key];
+  const dataset = DATASET_QUERY_KEYS[key];
+
+  const endpoint =
+    `/api/data-engine/preview?dataset=` +
+    encodeURIComponent(dataset);
 
   try {
     const response = await fetch(endpoint, {
@@ -89,30 +163,40 @@ export async function loadDataset<TData = unknown>(
       signal,
     });
 
-    const body = (await response.json()) as RawDatasetResponse;
+    const body = await readResponseBody(response);
 
     if (!response.ok) {
-      const message =
-        body.message ??
-        body.error ??
-        `Request failed with status ${response.status}.`;
-
-      throw new DataEngineError(key, message);
-    }
-
-    if (body.status === "error" || body.status === "fail") {
       throw new DataEngineError(
         key,
-        body.message ?? body.error ?? "The dataset request failed.",
+        normaliseErrorMessage(
+          body.message ?? body.error,
+          `Request failed with status ${response.status}.`,
+        ),
+      );
+    }
+
+    if (
+      body.status === "error" ||
+      body.status === "fail"
+    ) {
+      throw new DataEngineError(
+        key,
+        normaliseErrorMessage(
+          body.message ?? body.error,
+          `The ${dataset} dataset request failed.`,
+        ),
       );
     }
 
     const data = extractDatasetData(body) as TData;
 
-    if (data === undefined || data === null) {
+    if (
+      data === undefined ||
+      data === null
+    ) {
       throw new DataEngineError(
         key,
-        `The ${key} endpoint returned no dataset data.`,
+        `The ${dataset} preview returned no dataset data.`,
       );
     }
 
@@ -121,29 +205,45 @@ export async function loadDataset<TData = unknown>(
       data,
       meta: extractDatasetMeta(body),
       source: body.source ?? "remote",
-      loadedAt: body.loadedAt ?? new Date().toISOString(),
+      loadedAt:
+        body.loadedAt ??
+        body.fetchedAt ??
+        new Date().toISOString(),
     };
   } catch (error) {
     if (error instanceof DataEngineError) {
       throw error;
     }
 
-    if (error instanceof DOMException && error.name === "AbortError") {
+    if (
+      error instanceof DOMException &&
+      error.name === "AbortError"
+    ) {
       throw new DataEngineError(
         key,
-        `Loading the ${key} dataset was cancelled.`,
+        `Loading the ${dataset} dataset was cancelled.`,
         error,
       );
     }
 
     throw new DataEngineError(
       key,
-      `Unable to load the ${key} dataset.`,
+      normaliseErrorMessage(
+        error,
+        `Unable to load the ${dataset} dataset.`,
+      ),
       error,
     );
   }
 }
 
-export function getDatasetEndpoint(key: DatasetKey): string {
-  return DATASET_ENDPOINTS[key];
+export function getDatasetEndpoint(
+  key: DatasetKey,
+): string {
+  const dataset = DATASET_QUERY_KEYS[key];
+
+  return (
+    `/api/data-engine/preview?dataset=` +
+    encodeURIComponent(dataset)
+  );
 }

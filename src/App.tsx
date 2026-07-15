@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import "./App.css";
+import "./features/admin/recordEditor/recordEditor.css";
 
 import HomePage from "./pages/HomePage";
 import NameStudioPage from "./pages/NameStudioPage";
@@ -28,8 +29,20 @@ import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
 import HeroCollectionPage from "./pages/HeroCollectionPage";
 
 import { DataEngineDiagnosticsPage } from "./pages/admin/DataEngineDiagnosticsPage";
-import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
-import { AdminDatasetPage } from "./features/admin/AdminDatasetPage";
+
+import {
+  AdminDashboardPage,
+} from "./features/admin/AdminDashboardPage";
+
+import {
+  AdminDatasetsPage,
+} from "./features/admin/AdminDatasetsPage";
+
+import {
+  AdminDatasetDetailPage,
+} from "./features/admin/AdminDatasetDetailPage";
+
+import ProtectedRoute from "./components/admin/ProtectedRoute";
 
 function App() {
   return (
@@ -37,18 +50,60 @@ function App() {
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
 
-        <Route path="name-studio" element={<NameStudioPage />} />
-        <Route path="art-studio" element={<ArtStudioPage />} />
-        <Route path="chat-studio" element={<ChatStudioPage />} />
-        <Route path="characters" element={<CharacterLibraryPage />} />
-        <Route path="compatibility" element={<CompatibilityPage />} />
-        <Route path="codex" element={<CodexPage />} />
+        <Route
+          path="name-studio"
+          element={<NameStudioPage />}
+        />
 
-        <Route path="player-lookup" element={<PlayerLookupPage />} />
-        <Route path="gift-codes" element={<GiftCodesPage />} />
-        <Route path="kingdom-explorer" element={<KingdomExplorerPage />} />
-        <Route path="kingdom-community" element={<KingdomCommunityPage />} />
-        <Route path="kvk-tracker" element={<KvkTrackerPage />} />
+        <Route
+          path="art-studio"
+          element={<ArtStudioPage />}
+        />
+
+        <Route
+          path="chat-studio"
+          element={<ChatStudioPage />}
+        />
+
+        <Route
+          path="characters"
+          element={<CharacterLibraryPage />}
+        />
+
+        <Route
+          path="compatibility"
+          element={<CompatibilityPage />}
+        />
+
+        <Route
+          path="codex"
+          element={<CodexPage />}
+        />
+
+        <Route
+          path="player-lookup"
+          element={<PlayerLookupPage />}
+        />
+
+        <Route
+          path="gift-codes"
+          element={<GiftCodesPage />}
+        />
+
+        <Route
+          path="kingdom-explorer"
+          element={<KingdomExplorerPage />}
+        />
+
+        <Route
+          path="kingdom-community"
+          element={<KingdomCommunityPage />}
+        />
+
+        <Route
+          path="kvk-tracker"
+          element={<KvkTrackerPage />}
+        />
 
         <Route
           path="alliance-directory"
@@ -65,12 +120,35 @@ function App() {
           element={<AllianceManagementPage />}
         />
 
-        <Route path="my-forge" element={<MyForgePage />} />
-        <Route path="roadmap" element={<RoadmapPage />} />
-        <Route path="release-notes" element={<ReleaseNotesPage />} />
-        <Route path="transfer-profile" element={<TransferProfilePage />} />
-        <Route path="transfer-hub" element={<TransferHubPage />} />
-        <Route path="player/:forgeId" element={<PlayerProfilePage />} />
+        <Route
+          path="my-forge"
+          element={<MyForgePage />}
+        />
+
+        <Route
+          path="roadmap"
+          element={<RoadmapPage />}
+        />
+
+        <Route
+          path="release-notes"
+          element={<ReleaseNotesPage />}
+        />
+
+        <Route
+          path="transfer-profile"
+          element={<TransferProfilePage />}
+        />
+
+        <Route
+          path="transfer-hub"
+          element={<TransferHubPage />}
+        />
+
+        <Route
+          path="player/:forgeId"
+          element={<PlayerProfilePage />}
+        />
 
         <Route
           path="my-forge/profile"
@@ -87,19 +165,140 @@ function App() {
           element={<HeroCollectionPage />}
         />
 
-        <Route
-          path="admin/data-engine"
-          element={<DataEngineDiagnosticsPage />}
-        />
+        {/* =====================================
+            Forge Admin CMS
+        ====================================== */}
 
         <Route
           path="admin"
-          element={<AdminDashboardPage />}
+          element={
+            <ProtectedRoute permission="cms.view">
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
         />
 
         <Route
-          path="admin/data/:datasetId"
-          element={<AdminDatasetPage />}
+          path="admin/datasets"
+          element={
+            <ProtectedRoute permission="cms.view">
+              <AdminDatasetsPage />
+            </ProtectedRoute>
+          }
+        />
+
+<Route
+  path="admin/data/:datasetId"
+  element={
+    <ProtectedRoute permission="cms.view">
+      <AdminDatasetDetailPage />
+    </ProtectedRoute>
+  }
+/>
+
+        <Route
+          path="admin/data-engine"
+          element={
+            <ProtectedRoute permission="cms.view">
+              <DataEngineDiagnosticsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="admin/imports"
+          element={
+            <ProtectedRoute permission="cms.import.run">
+              <main className="admin-page">
+                <section className="admin-placeholder-panel">
+                  <div className="admin-placeholder-panel__body">
+                    <p className="admin-page__eyebrow">
+                      Forge Admin CMS
+                    </p>
+
+                    <h1>Import Manager</h1>
+
+                    <p>
+                      Import management will be added later
+                      in Sprint 6.
+                    </p>
+                  </div>
+                </section>
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="admin/history"
+          element={
+            <ProtectedRoute permission="cms.history.view">
+              <main className="admin-page">
+                <section className="admin-placeholder-panel">
+                  <div className="admin-placeholder-panel__body">
+                    <p className="admin-page__eyebrow">
+                      Forge Admin CMS
+                    </p>
+
+                    <h1>Version History</h1>
+
+                    <p>
+                      Dataset and record history will be
+                      added later in Sprint 6.
+                    </p>
+                  </div>
+                </section>
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="admin/search"
+          element={
+            <ProtectedRoute permission="cms.view">
+              <main className="admin-page">
+                <section className="admin-placeholder-panel">
+                  <div className="admin-placeholder-panel__body">
+                    <p className="admin-page__eyebrow">
+                      Forge Admin CMS
+                    </p>
+
+                    <h1>Global Search</h1>
+
+                    <p>
+                      Search across every Forge dataset from
+                      one place.
+                    </p>
+                  </div>
+                </section>
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="admin/publish"
+          element={
+            <ProtectedRoute permission="cms.publish">
+              <main className="admin-page">
+                <section className="admin-placeholder-panel">
+                  <div className="admin-placeholder-panel__body">
+                    <p className="admin-page__eyebrow">
+                      Forge Admin CMS
+                    </p>
+
+                    <h1>Publish Centre</h1>
+
+                    <p>
+                      Validation and publishing tools will
+                      be added later in Sprint 6.
+                    </p>
+                  </div>
+                </section>
+              </main>
+            </ProtectedRoute>
+          }
         />
       </Route>
     </Routes>

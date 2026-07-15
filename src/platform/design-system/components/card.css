@@ -1,0 +1,30 @@
+.forge-card {
+  border: 1px solid var(--forge-colour-border-subtle);
+  border-radius: var(--forge-radius-lg);
+  background: var(--forge-colour-bg-surface);
+  box-shadow: var(--forge-shadow-sm);
+}
+
+.forge-card__header,
+.forge-card__body,
+.forge-card__footer {
+  padding: var(--forge-space-5);
+}
+
+.forge-card__header + .forge-card__body,
+.forge-card__body + .forge-card__footer {
+  border-top: 1px solid var(--forge-colour-border-subtle);
+}
+
+.forge-card--interactive {
+  transition:
+    transform var(--forge-transition-interactive),
+    border-color var(--forge-transition-interactive),
+    box-shadow var(--forge-transition-interactive);
+}
+
+.forge-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: var(--forge-colour-border-default);
+  box-shadow: var(--forge-shadow-md);
+}

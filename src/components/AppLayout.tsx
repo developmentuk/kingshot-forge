@@ -5,7 +5,10 @@ import {
   Outlet,
   useLocation,
 } from 'react-router-dom'
+
 import AccountMenu from './AccountMenu'
+import { useAuth } from '../context/AuthContext'
+import { useRole } from '../context/RoleContext'
 
 type NavigationItem = {
   label: string
@@ -149,6 +152,51 @@ const platformNavigation: NavigationItem[] = [
   },
 ]
 
+const adminNavigation: NavigationItem[] = [
+  {
+    label: 'Dashboard',
+    shortLabel: 'Dashboard',
+    icon: '🛠️',
+    path: '/admin',
+  },
+  {
+    label: 'Datasets',
+    shortLabel: 'Data',
+    icon: '🗄️',
+    path: '/admin/datasets',
+  },
+  {
+    label: 'Import Manager',
+    shortLabel: 'Import',
+    icon: '📥',
+    path: '/admin/imports',
+  },
+  {
+    label: 'Global Search',
+    shortLabel: 'Search',
+    icon: '🔍',
+    path: '/admin/search',
+  },
+  {
+    label: 'Version History',
+    shortLabel: 'History',
+    icon: '🕒',
+    path: '/admin/history',
+  },
+  {
+    label: 'Publish',
+    shortLabel: 'Publish',
+    icon: '🚀',
+    path: '/admin/publish',
+  },
+  {
+    label: 'Data Engine',
+    shortLabel: 'Engine',
+    icon: '⚙️',
+    path: '/admin/data-engine',
+  },
+]
+
 const mobileNavigation: NavigationItem[] = [
   {
     label: 'Home',
@@ -195,7 +243,7 @@ function NavigationLink({
   return (
     <NavLink
       to={item.path}
-      end={item.path === '/'}
+      end={item.path === '/' || item.path === '/admin'}
       className={({ isActive }) =>
         isActive
           ? 'app-navigation__link app-navigation__link--active'
@@ -268,7 +316,32 @@ function AppLayout() {
   const [navigationOpen, setNavigationOpen] =
     useState(false)
 
+  const { user } = useAuth()
+
+  const {
+    canViewCms,
+    hasPermission,
+    loadingRole,
+  } = useRole()
+
   const location = useLocation()
+
+  const visibleAdminNavigation =
+    adminNavigation.filter((item) => {
+      switch (item.path) {
+        case '/admin/imports':
+          return hasPermission('cms.import.run')
+
+        case '/admin/publish':
+          return hasPermission('cms.publish')
+
+        case '/admin/history':
+          return hasPermission('cms.history.view')
+
+        default:
+          return canViewCms
+      }
+    })
 
   useEffect(() => {
     setNavigationOpen(false)
@@ -294,7 +367,10 @@ function AppLayout() {
       }
     }
 
-    window.addEventListener('keydown', handleEscape)
+    window.addEventListener(
+      'keydown',
+      handleEscape,
+    )
 
     return () => {
       window.removeEventListener(
@@ -319,7 +395,9 @@ function AppLayout() {
             aria-expanded={navigationOpen}
             aria-controls="primary-navigation"
             onClick={() =>
-              setNavigationOpen((current) => !current)
+              setNavigationOpen(
+                (current) => !current,
+              )
             }
           >
             <span />
@@ -422,6 +500,17 @@ function AppLayout() {
               items={platformNavigation}
               onNavigate={closeNavigation}
             />
+
+            {user &&
+              !loadingRole &&
+              canViewCms &&
+              visibleAdminNavigation.length > 0 && (
+                <NavigationGroup
+                  title="Forge Admin"
+                  items={visibleAdminNavigation}
+                  onNavigate={closeNavigation}
+                />
+              )}
           </nav>
 
           <div className="app-sidebar__footer">

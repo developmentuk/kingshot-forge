@@ -1,0 +1,79 @@
+:root,
+[data-forge-theme="dark"] {
+  color-scheme: dark;
+
+  --forge-colour-neutral-0: #ffffff;
+  --forge-colour-neutral-50: #f5f7fa;
+  --forge-colour-neutral-100: #e8edf2;
+  --forge-colour-neutral-200: #cbd4de;
+  --forge-colour-neutral-300: #aab8c6;
+  --forge-colour-neutral-400: #7f91a3;
+  --forge-colour-neutral-500: #607487;
+  --forge-colour-neutral-600: #44566a;
+  --forge-colour-neutral-700: #303e4e;
+  --forge-colour-neutral-800: #202a36;
+  --forge-colour-neutral-850: #18212b;
+  --forge-colour-neutral-900: #111820;
+  --forge-colour-neutral-950: #090d12;
+
+  --forge-colour-cyan-300: #66e7ff;
+  --forge-colour-cyan-400: #26d4f1;
+  --forge-colour-cyan-500: #00b9d8;
+  --forge-colour-orange-300: #ffb073;
+  --forge-colour-orange-400: #ff8a3d;
+  --forge-colour-orange-500: #f36a1f;
+  --forge-colour-violet-300: #c4a6ff;
+  --forge-colour-violet-400: #a67cff;
+  --forge-colour-violet-500: #8658e8;
+  --forge-colour-green-400: #4dd69d;
+  --forge-colour-amber-400: #f2bd55;
+  --forge-colour-red-400: #ff6b78;
+  --forge-colour-blue-400: #6ca8ff;
+
+  --forge-colour-bg-canvas: var(--forge-colour-neutral-950);
+  --forge-colour-bg-subtle: var(--forge-colour-neutral-900);
+  --forge-colour-bg-surface: var(--forge-colour-neutral-850);
+  --forge-colour-bg-raised: var(--forge-colour-neutral-800);
+  --forge-colour-bg-overlay: rgb(9 13 18 / 82%);
+
+  --forge-colour-text-primary: var(--forge-colour-neutral-50);
+  --forge-colour-text-secondary: var(--forge-colour-neutral-300);
+  --forge-colour-text-muted: var(--forge-colour-neutral-400);
+  --forge-colour-text-inverse: var(--forge-colour-neutral-950);
+
+  --forge-colour-border-subtle: rgb(203 212 222 / 12%);
+  --forge-colour-border-default: rgb(203 212 222 / 22%);
+  --forge-colour-border-strong: rgb(203 212 222 / 38%);
+
+  --forge-colour-action-primary: var(--forge-colour-orange-400);
+  --forge-colour-action-primary-hover: var(--forge-colour-orange-300);
+  --forge-colour-action-secondary: var(--forge-colour-cyan-400);
+  --forge-colour-action-secondary-hover: var(--forge-colour-cyan-300);
+
+  --forge-colour-status-success: var(--forge-colour-green-400);
+  --forge-colour-status-warning: var(--forge-colour-amber-400);
+  --forge-colour-status-danger: var(--forge-colour-red-400);
+  --forge-colour-status-info: var(--forge-colour-blue-400);
+
+  --forge-colour-focus: var(--forge-colour-cyan-300);
+  --forge-focus-ring: 0 0 0 3px rgb(102 231 255 / 32%);
+}
+
+[data-forge-theme="light"] {
+  color-scheme: light;
+
+  --forge-colour-bg-canvas: #f4f7fa;
+  --forge-colour-bg-subtle: #edf2f6;
+  --forge-colour-bg-surface: #ffffff;
+  --forge-colour-bg-raised: #ffffff;
+  --forge-colour-bg-overlay: rgb(17 24 32 / 55%);
+
+  --forge-colour-text-primary: #111820;
+  --forge-colour-text-secondary: #303e4e;
+  --forge-colour-text-muted: #607487;
+  --forge-colour-text-inverse: #ffffff;
+
+  --forge-colour-border-subtle: rgb(48 62 78 / 12%);
+  --forge-colour-border-default: rgb(48 62 78 / 22%);
+  --forge-colour-border-strong: rgb(48 62 78 / 38%);
+}

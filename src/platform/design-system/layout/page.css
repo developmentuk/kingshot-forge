@@ -1,0 +1,13 @@
+.forge-page {
+  width: min(100%, var(--forge-content-max));
+  margin-inline: auto;
+  padding: var(--forge-page-gutter);
+}
+
+.forge-page--readable {
+  width: min(100%, var(--forge-content-readable));
+}
+
+.forge-section {
+  padding-block: var(--forge-space-8);
+}

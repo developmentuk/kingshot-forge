@@ -1,0 +1,16 @@
+:root {
+  --forge-duration-fast: 120ms;
+  --forge-duration-normal: 200ms;
+  --forge-duration-slow: 320ms;
+  --forge-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --forge-easing-emphasised: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --forge-transition-interactive: var(--forge-duration-fast) var(--forge-easing-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --forge-duration-fast: 0ms;
+    --forge-duration-normal: 0ms;
+    --forge-duration-slow: 0ms;
+  }
+}

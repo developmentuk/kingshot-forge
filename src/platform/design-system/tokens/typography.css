@@ -1,0 +1,26 @@
+:root {
+  --forge-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --forge-font-display: "Rajdhani", "Arial Narrow", var(--forge-font-sans);
+  --forge-font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  --forge-font-size-xs: 0.75rem;
+  --forge-font-size-sm: 0.875rem;
+  --forge-font-size-md: 1rem;
+  --forge-font-size-lg: 1.125rem;
+  --forge-font-size-xl: 1.25rem;
+  --forge-font-size-2xl: 1.5rem;
+  --forge-font-size-3xl: clamp(1.75rem, 3vw, 2.25rem);
+  --forge-font-size-4xl: clamp(2.25rem, 5vw, 3.5rem);
+
+  --forge-line-height-tight: 1.15;
+  --forge-line-height-heading: 1.25;
+  --forge-line-height-body: 1.6;
+
+  --forge-font-weight-regular: 400;
+  --forge-font-weight-medium: 500;
+  --forge-font-weight-semibold: 600;
+  --forge-font-weight-bold: 700;
+
+  --forge-letter-spacing-tight: -0.02em;
+  --forge-letter-spacing-wide: 0.08em;
+}

@@ -1,128 +1,207 @@
-import { Link } from "react-router-dom";
-import {
-  adminDatasets,
-  type AdminDatasetStatus,
-} from "./adminDatasets";
-import { getDatasetStats } from "./adminDatasetStats";
-
-function getStatusLabel(status: AdminDatasetStatus): string {
-  switch (status) {
-    case "ready":
-      return "Ready";
-    case "warning":
-      return "Warning";
-    case "error":
-      return "Error";
-    case "not-imported":
-      return "Not imported";
-  }
-}
-
-function getStatusClassName(status: AdminDatasetStatus): string {
-  return `admin-dataset-status admin-dataset-status--${status}`;
-}
+import { Link } from 'react-router-dom'
+import { adminDatasets } from './adminDatasets'
+import { getDatasetStats } from './adminDatasetStats'
+import { useRole } from '../../context/RoleContext'
 
 export function AdminDashboardPage() {
-  const readyCount = adminDatasets.filter(
-    (dataset) => dataset.status === "ready",
-  ).length;
+  const {
+    role,
+    canEditRecords,
+    canPublish,
+    hasPermission,
+  } = useRole()
 
-  const pendingCount = adminDatasets.filter(
-    (dataset) => dataset.status === "not-imported",
-  ).length;
+  const readyDatasets = adminDatasets.filter(
+    (dataset) => dataset.status === 'ready',
+  ).length
+
+  const pendingDatasets = adminDatasets.filter(
+    (dataset) => dataset.status === 'not-imported',
+  ).length
+
+  const totalRecords = adminDatasets.reduce(
+    (total, dataset) => {
+      const records = getDatasetStats(dataset.id).records
+
+      return (
+        total +
+        (typeof records === 'number' ? records : 0)
+      )
+    },
+    0,
+  )
 
   return (
     <main className="admin-page">
-      <section className="admin-page__header">
+      <section className="admin-dashboard-hero">
         <div>
-          <p className="admin-page__eyebrow">Data Engine Admin</p>
+          <p className="admin-page__eyebrow">
+            Forge Admin CMS
+          </p>
 
-          <h1>Dataset Management</h1>
+          <h1>Dashboard</h1>
 
           <p className="admin-page__intro">
-            Review dataset availability, open individual datasets and monitor
-            their current import status.
+            Monitor Kingshot datasets, imports, publishing
+            and platform health from one place.
           </p>
         </div>
 
-        <div className="admin-summary">
-          <article className="admin-summary__card">
-            <span className="admin-summary__value">
-              {adminDatasets.length}
-            </span>
-
-            <span className="admin-summary__label">
-              Total datasets
-            </span>
-          </article>
-
-          <article className="admin-summary__card">
-            <span className="admin-summary__value">
-              {readyCount}
-            </span>
-
-            <span className="admin-summary__label">
-              Ready
-            </span>
-          </article>
-
-          <article className="admin-summary__card">
-            <span className="admin-summary__value">
-              {pendingCount}
-            </span>
-
-            <span className="admin-summary__label">
-              Awaiting import
-            </span>
-          </article>
+        <div className="admin-dashboard-role">
+          <span>Signed-in role</span>
+          <strong>
+            {role.replaceAll('_', ' ')}
+          </strong>
         </div>
       </section>
 
-      <section className="admin-dataset-grid">
-        {adminDatasets.map((dataset) => (
-          <article
-            key={dataset.id}
-            className="admin-dataset-card"
-          >
-            <div className="admin-dataset-card__top">
-              <div>
-                <p className="admin-dataset-card__id">
-                  {dataset.id}
-                </p>
+      <section className="admin-dashboard-stats">
+        <article>
+          <span>Total datasets</span>
+          <strong>{adminDatasets.length}</strong>
+        </article>
 
-                <h2>{dataset.name}</h2>
-              </div>
+        <article>
+          <span>Ready</span>
+          <strong>{readyDatasets}</strong>
+        </article>
 
-              <span className={getStatusClassName(dataset.status)}>
-                {getStatusLabel(dataset.status)}
-              </span>
-            </div>
+        <article>
+          <span>Awaiting import</span>
+          <strong>{pendingDatasets}</strong>
+        </article>
 
-            <p className="admin-dataset-card__description">
-              {dataset.description}
+        <article>
+          <span>Known records</span>
+          <strong>{totalRecords}</strong>
+        </article>
+      </section>
+
+      <section className="admin-dashboard-grid">
+        <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">
+            🗄️
+          </span>
+
+          <div>
+            <h2>Datasets</h2>
+
+            <p>
+              Browse every registered dataset and inspect
+              its records and import status.
             </p>
+          </div>
 
-            <dl className="admin-dataset-card__meta">
-              <div>
-                <dt>Records</dt>
-                <dd>{getDatasetStats(dataset.id).records}</dd>
-              </div>
+          <Link
+            to="/admin/datasets"
+            className="button button--primary"
+          >
+            Open datasets
+          </Link>
+        </article>
 
-              <div>
-                <dt>Last imported</dt>
-                <dd>{getDatasetStats(dataset.id).lastImported}</dd>
-              </div>
-            </dl>
+        <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">
+            📥
+          </span>
 
+          <div>
+            <h2>Import Manager</h2>
+
+            <p>
+              Refresh remote sources and review import
+              results.
+            </p>
+          </div>
+
+          {hasPermission('cms.import.run') ? (
             <Link
-              to={dataset.route}
-              className="admin-dataset-card__link"
+              to="/admin/imports"
+              className="button button--secondary"
             >
-              Open dataset
+              Open imports
             </Link>
-          </article>
-        ))}
+          ) : (
+            <span className="admin-dashboard-card__restricted">
+              Permission required
+            </span>
+          )}
+        </article>
+
+        <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">
+            ⚙️
+          </span>
+
+          <div>
+            <h2>Data Engine</h2>
+
+            <p>
+              Check dataset availability, update times and
+              loading errors.
+            </p>
+          </div>
+
+          <Link
+            to="/admin/data-engine"
+            className="button button--secondary"
+          >
+            View diagnostics
+          </Link>
+        </article>
+
+        <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">
+            🚀
+          </span>
+
+          <div>
+            <h2>Publish Centre</h2>
+
+            <p>
+              Validate and publish approved dataset changes.
+            </p>
+          </div>
+
+          {canPublish ? (
+            <Link
+              to="/admin/publish"
+              className="button button--secondary"
+            >
+              Open publishing
+            </Link>
+          ) : (
+            <span className="admin-dashboard-card__restricted">
+              Permission required
+            </span>
+          )}
+        </article>
+      </section>
+
+      <section className="admin-dashboard-access">
+        <div>
+          <span>Record editing</span>
+          <strong>
+            {canEditRecords ? 'Available' : 'Read only'}
+          </strong>
+        </div>
+
+        <div>
+          <span>Publishing</span>
+          <strong>
+            {canPublish ? 'Available' : 'Restricted'}
+          </strong>
+        </div>
+
+        <div>
+          <span>Import tools</span>
+          <strong>
+            {hasPermission('cms.import.run')
+              ? 'Available'
+              : 'Restricted'}
+          </strong>
+        </div>
       </section>
     </main>
-  );
+  )
 }

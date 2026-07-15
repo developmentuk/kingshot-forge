@@ -7,12 +7,16 @@ import type {
 } from "./datasetAdapters";
 
 import {
-  heroesDatasetAdapter,
-} from "./heroesDatasetAdapter";
+  buildingsDatasetAdapter,
+} from "./buildingsDatasetAdapter";
 
 import {
   eventsDatasetAdapter,
 } from "./eventsDatasetAdapter";
+
+import {
+  heroesDatasetAdapter,
+} from "./heroesDatasetAdapter";
 
 const datasetAdapters = new Map<
   DatasetKey,
@@ -25,6 +29,10 @@ const datasetAdapters = new Map<
   [
     eventsDatasetAdapter.datasetId,
     eventsDatasetAdapter,
+  ],
+  [
+    buildingsDatasetAdapter.datasetId,
+    buildingsDatasetAdapter,
   ],
 ]);
 
@@ -46,8 +54,12 @@ export function hasDatasetAdapter(
 
 export function listDatasetAdapters():
   DatasetKey[] {
-  return [...datasetAdapters.keys()].sort(
+  return [
+    ...datasetAdapters.keys(),
+  ].sort(
     (first, second) =>
-      first.localeCompare(second),
+      first.localeCompare(
+        second,
+      ),
   );
 }

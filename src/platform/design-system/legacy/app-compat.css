@@ -1,0 +1,11 @@
+/*
+ * Compatibility aliases for the current application stylesheet.
+ *
+ * These aliases let existing App.css rules and the new design-system tokens
+ * coexist while components are migrated incrementally. Do not add new aliases
+ * unless they are required by an approved migration change set.
+ */
+:root {
+  --color-accent: var(--forge-colour-action-secondary);
+  --color-text-muted: var(--forge-colour-text-muted);
+}

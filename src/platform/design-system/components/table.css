@@ -1,0 +1,33 @@
+.forge-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--forge-colour-border-subtle);
+  border-radius: var(--forge-radius-lg);
+}
+
+.forge-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--forge-colour-bg-surface);
+}
+
+.forge-table th,
+.forge-table td {
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border-bottom: 1px solid var(--forge-colour-border-subtle);
+  text-align: left;
+  vertical-align: top;
+}
+
+.forge-table th {
+  background: var(--forge-colour-bg-subtle);
+  color: var(--forge-colour-text-secondary);
+  font-size: var(--forge-font-size-xs);
+  font-weight: var(--forge-font-weight-bold);
+  letter-spacing: var(--forge-letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.forge-table tbody tr:last-child td {
+  border-bottom: 0;
+}

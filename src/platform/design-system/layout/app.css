@@ -1,0 +1,9 @@
+.forge-app-shell {
+  min-height: 100vh;
+  background: var(--forge-colour-bg-canvas);
+  color: var(--forge-colour-text-primary);
+}
+
+.forge-main {
+  min-width: 0;
+}

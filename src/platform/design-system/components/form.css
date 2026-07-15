@@ -1,0 +1,61 @@
+.forge-field {
+  display: grid;
+  gap: var(--forge-space-2);
+}
+
+.forge-label {
+  color: var(--forge-colour-text-secondary);
+  font-size: var(--forge-font-size-sm);
+  font-weight: var(--forge-font-weight-semibold);
+}
+
+.forge-input,
+.forge-select,
+.forge-textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--forge-space-3) var(--forge-space-4);
+  border: 1px solid var(--forge-colour-border-default);
+  border-radius: var(--forge-radius-md);
+  background: var(--forge-colour-bg-subtle);
+  color: var(--forge-colour-text-primary);
+  transition:
+    border-color var(--forge-transition-interactive),
+    background-color var(--forge-transition-interactive),
+    box-shadow var(--forge-transition-interactive);
+}
+
+.forge-textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.forge-input::placeholder,
+.forge-textarea::placeholder {
+  color: var(--forge-colour-text-muted);
+}
+
+.forge-input:hover,
+.forge-select:hover,
+.forge-textarea:hover {
+  border-color: var(--forge-colour-border-strong);
+}
+
+.forge-input[aria-invalid="true"],
+.forge-select[aria-invalid="true"],
+.forge-textarea[aria-invalid="true"] {
+  border-color: var(--forge-colour-status-danger);
+}
+
+.forge-field__hint,
+.forge-field__error {
+  font-size: var(--forge-font-size-sm);
+}
+
+.forge-field__hint {
+  color: var(--forge-colour-text-muted);
+}
+
+.forge-field__error {
+  color: var(--forge-colour-status-danger);
+}

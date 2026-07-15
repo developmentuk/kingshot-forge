@@ -1,0 +1,238 @@
+/* =========================================================
+   BUILDINGS COST EDITOR
+   ========================================================= */
+
+.record-editor-field--full-width {
+  grid-column: 1 / -1;
+}
+
+.record-editor-special-field-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.record-editor-special-field-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #dce3ec;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.building-costs-editor {
+  overflow: hidden;
+  border: 1px solid #344255;
+  border-radius: 0.85rem;
+  background: #09111b;
+}
+
+.building-costs-editor--error {
+  border-color: rgba(
+    222,
+    91,
+    91,
+    0.8
+  );
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      222,
+      91,
+      91,
+      0.1
+    );
+}
+
+.building-costs-editor__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #2b394a;
+  padding: 0.85rem;
+  background: #111a26;
+}
+
+.building-costs-editor__toolbar > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.building-costs-editor__toolbar strong {
+  color: #f7f2e8;
+  font-size: 0.78rem;
+}
+
+.building-costs-editor__toolbar span {
+  color: #7f8b9b;
+  font-size: 0.64rem;
+}
+
+.building-costs-editor__toolbar button,
+.building-costs-editor__empty button {
+  min-height: 38px;
+  border: 1px solid #e6ab38;
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  color: #171107;
+  background: #e6ab38;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.building-costs-editor__toolbar button:hover:not(:disabled),
+.building-costs-editor__empty button:hover:not(:disabled) {
+  background: #f0bd57;
+}
+
+.building-costs-editor button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.building-costs-editor__scroll {
+  max-height: 520px;
+  overflow: auto;
+  scrollbar-color:
+    #3a485a
+    #09111b;
+}
+
+.building-costs-editor__table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.building-costs-editor__table th,
+.building-costs-editor__table td {
+  border-bottom: 1px solid #243142;
+  padding: 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.building-costs-editor__table th {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  color: #9ca8b7;
+  background: #101923;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.building-costs-editor__table tbody tr:hover {
+  background:
+    rgba(
+      230,
+      171,
+      56,
+      0.04
+    );
+}
+
+.building-costs-editor__table input {
+  width: 112px;
+  min-height: 38px;
+  border: 1px solid #344255;
+  border-radius: 0.58rem;
+  padding: 0.55rem 0.6rem;
+  color: #f7f2e8;
+  background: #070d14;
+  font: inherit;
+  font-size: 0.7rem;
+}
+
+.building-costs-editor__table input:focus {
+  border-color: #e6ab38;
+  outline: none;
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      230,
+      171,
+      56,
+      0.12
+    );
+}
+
+.building-costs-editor__table td small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #687587;
+  font-size: 0.58rem;
+  white-space: nowrap;
+}
+
+.building-costs-editor__actions {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 88px;
+}
+
+.building-costs-editor__actions button {
+  border: 1px solid #3a485a;
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.55rem;
+  color: #c7d0db;
+  background: #172230;
+  font: inherit;
+  font-size: 0.6rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.building-costs-editor__actions button:hover:not(:disabled) {
+  border-color: #e6ab38;
+  color: #ffe0a0;
+}
+
+.building-costs-editor__actions button:last-child:hover:not(:disabled) {
+  border-color: #d96c6c;
+  color: #ffc1c1;
+}
+
+.building-costs-editor__empty {
+  display: grid;
+  min-height: 210px;
+  place-content: center;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.building-costs-editor__empty strong {
+  color: #f7f2e8;
+  font-size: 0.85rem;
+}
+
+.building-costs-editor__empty p {
+  max-width: 360px;
+  margin: 0;
+  color: #7f8b9b;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .building-costs-editor__toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .building-costs-editor__toolbar button {
+    width: 100%;
+  }
+
+  .building-costs-editor__scroll {
+    max-height: 430px;
+  }
+}

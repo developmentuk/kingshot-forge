@@ -1,0 +1,33 @@
+/*
+ * Forge Design System
+ *
+ * Imported before legacy application styles. New platform and feature work
+ * should consume semantic tokens and shared primitives from this directory.
+ */
+@import "./tokens/colours.css";
+@import "./tokens/spacing.css";
+@import "./tokens/typography.css";
+@import "./tokens/radius.css";
+@import "./tokens/shadows.css";
+@import "./tokens/motion.css";
+@import "./tokens/z-index.css";
+
+@import "./base/reset.css";
+@import "./base/globals.css";
+@import "./base/accessibility.css";
+
+@import "./layout/app.css";
+@import "./layout/page.css";
+@import "./layout/grid.css";
+@import "./layout/stack.css";
+
+@import "./components/button.css";
+@import "./components/card.css";
+@import "./components/form.css";
+@import "./components/table.css";
+@import "./components/badge.css";
+@import "./components/dialog.css";
+@import "./components/navigation.css";
+@import "./components/toolbar.css";
+
+@import "./legacy/app-compat.css";
