@@ -1,10 +1,10 @@
 import type {
   ScheduledPublication,
   ScheduledPublicationFilter,
-} from '../contracts'
+} from '../contracts.js'
 import type {
   ScheduledPublicationRepository,
-} from './ScheduledPublicationRepository'
+} from './ScheduledPublicationRepository.js'
 
 function matchesFilter(
   schedule: ScheduledPublication,

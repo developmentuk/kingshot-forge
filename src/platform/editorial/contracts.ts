@@ -2,7 +2,7 @@ import type {
   DatasetPublicationStatus,
   DatasetRecordSource,
   DatasetRecordValues,
-} from '../datasets'
+} from '../datasets/index.js'
 
 export type EditorialAction =
   | 'draft_created'

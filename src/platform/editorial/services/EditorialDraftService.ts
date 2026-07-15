@@ -1,16 +1,16 @@
 import type {
   DatasetRecordValues,
-} from '../../datasets'
+} from '../../datasets/index.js'
 import type {
   EditorialAuditEvent,
   EditorialDraftInput,
   EditorialDraftSaveResult,
   EditorialRecordHead,
   EditorialRecordVersion,
-} from '../contracts'
+} from '../contracts.js'
 import type {
   EditorialRepository,
-} from '../repositories/EditorialRepository'
+} from '../repositories/EditorialRepository.js'
 
 export interface EditorialDraftServiceOptions {
   now?: () => string

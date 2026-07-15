@@ -1,14 +1,14 @@
 export {
   PublicationQueueService,
-} from './PublicationQueueService'
+} from './PublicationQueueService.js'
 
 export {
   createEditorialPublicationExecutor,
-} from './createEditorialPublicationExecutor'
+} from './createEditorialPublicationExecutor.js'
 
 export {
   PublicationQueueError,
-} from './contracts'
+} from './contracts.js'
 
 export type {
   EnqueuePublicationInput,
@@ -19,7 +19,7 @@ export type {
   PublicationQueueItem,
   PublicationQueueServiceOptions,
   PublicationQueueStatus,
-} from './contracts'
+} from './contracts.js'
 
-export * from './repositories'
-export * from './scheduling'
+export * from './repositories/index.js'
+export * from './scheduling/index.js'

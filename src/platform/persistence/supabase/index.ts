@@ -1,11 +1,11 @@
 export {
   SupabaseEditorialRepository,
-} from "./SupabaseEditorialRepository";
+} from "./SupabaseEditorialRepository.js";
 
 export {
   SupabasePublicationQueueRepository,
-} from "./SupabasePublicationQueueRepository";
+} from "./SupabasePublicationQueueRepository.js";
 
 export {
   SupabaseScheduledPublicationRepository,
-} from "./SupabaseScheduledPublicationRepository";
+} from "./SupabaseScheduledPublicationRepository.js";

@@ -1,4 +1,4 @@
-import type { DatasetDefinition } from '../contracts'
+import type { DatasetDefinition } from '../contracts/index.js'
 
 export class DatasetRegistry {
   private readonly definitions = new Map<string, DatasetDefinition>()

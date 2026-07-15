@@ -1,7 +1,7 @@
 import type {
   PublicationQueueFilter,
   PublicationQueueItem,
-} from '../contracts'
+} from '../contracts.js'
 
 export interface PublicationQueueRepository {
   get(itemId: string):

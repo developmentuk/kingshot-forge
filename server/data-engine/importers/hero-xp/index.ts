@@ -2,13 +2,13 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from '../../../../shared/data-engine/types'
+} from '../../../../shared/data-engine/types.js'
 
 import type {
   HeroXpLevelSourceRecord,
   HeroXpSourcePayload,
   NormalisedHeroXpRecord,
-} from './types'
+} from './types.js'
 
 const HERO_XP_SOURCE_URL =
   'https://kingshotpro.com/data/hero-xp.json'

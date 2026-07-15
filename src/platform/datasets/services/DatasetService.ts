@@ -2,7 +2,7 @@ import type {
   DatasetCapabilityFlags,
   DatasetCategory,
   DatasetDefinition,
-} from '../contracts'
+} from '../contracts/index.js'
 
 export interface DatasetDefinitionSource {
   get(datasetId: string): DatasetDefinition | undefined

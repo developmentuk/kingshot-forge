@@ -1,25 +1,25 @@
 import type {
   DatasetPublicationStatus,
-} from '../../datasets'
+} from '../../datasets/index.js'
 import type {
   EditorialAction,
   EditorialAuditEvent,
   EditorialRecordHead,
   EditorialRecordVersion,
-} from '../contracts'
+} from '../contracts.js'
 import type {
   EditorialRepository,
-} from '../repositories'
+} from '../repositories/index.js'
 import type {
   EditorialHistoryEntry,
   EditorialHistoryFilter,
   EditorialHistoryResult,
   EditorialRollbackPreview,
   EditorialVersionComparison,
-} from './contracts'
+} from './contracts.js'
 import {
   EditorialDiffService,
-} from './EditorialDiffService'
+} from './EditorialDiffService.js'
 
 function requireText(
   value: string,

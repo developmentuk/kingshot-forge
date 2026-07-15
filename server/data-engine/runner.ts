@@ -3,7 +3,7 @@ import type {
   DatasetSourceMetadata,
   NormalisedDataset,
   SourceFetchResult,
-} from '../../shared/data-engine/types'
+} from '../../shared/data-engine/types.js'
 
 import {
   fetchJsonSource,

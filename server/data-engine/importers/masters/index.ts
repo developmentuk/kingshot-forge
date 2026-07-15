@@ -2,13 +2,13 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from '../../../../shared/data-engine/types'
+} from '../../../../shared/data-engine/types.js'
 
 import type {
   MasterSourceRecord,
   MastersSourcePayload,
   NormalisedMasterRecord,
-} from './types'
+} from './types.js'
 
 const MASTERS_SOURCE_URL =
   'https://kingshotpro.com/data/masters.json'

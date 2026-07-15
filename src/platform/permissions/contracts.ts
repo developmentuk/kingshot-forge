@@ -2,7 +2,7 @@ import type {
   DatasetDefinition,
   DatasetPermissionAction,
   DatasetPermissionContext,
-} from '../datasets'
+} from '../datasets/index.js'
 
 export interface PermissionDecision {
   allowed: boolean

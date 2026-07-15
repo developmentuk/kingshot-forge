@@ -1,10 +1,10 @@
 import type {
   PublicationQueueFilter,
   PublicationQueueItem,
-} from '../contracts'
+} from '../contracts.js'
 import type {
   PublicationQueueRepository,
-} from './PublicationQueueRepository'
+} from './PublicationQueueRepository.js'
 
 function matchesFilter(
   item: PublicationQueueItem,

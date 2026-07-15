@@ -5,7 +5,7 @@ import {
 import type {
   DatasetImporter,
   DatasetKey,
-} from '../../shared/data-engine/types'
+} from '../../shared/data-engine/types.js'
 
 import {
   heroesImporter,

@@ -1,5 +1,5 @@
-import type { DatasetRecord, DatasetRecordDraft } from './record'
-import type { DatasetRecordValues } from './value'
+import type { DatasetRecord, DatasetRecordDraft } from './record.js'
+import type { DatasetRecordValues } from './value.js'
 
 export interface DatasetAdapter<
   TSource = unknown,

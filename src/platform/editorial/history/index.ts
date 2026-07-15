@@ -1,10 +1,10 @@
 export {
   EditorialDiffService,
-} from './EditorialDiffService'
+} from './EditorialDiffService.js'
 
 export {
   EditorialHistoryService,
-} from './EditorialHistoryService'
+} from './EditorialHistoryService.js'
 
 export type {
   EditorialDiffKind,
@@ -14,4 +14,4 @@ export type {
   EditorialHistoryResult,
   EditorialRollbackPreview,
   EditorialVersionComparison,
-} from './contracts'
+} from './contracts.js'

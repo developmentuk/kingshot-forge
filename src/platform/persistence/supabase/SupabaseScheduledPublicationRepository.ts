@@ -6,13 +6,13 @@ import type {
   ScheduledPublication,
   ScheduledPublicationFilter,
   ScheduledPublicationRepository,
-} from "../../index";
+} from "../../index.js";
 
 import {
   mapScheduleRow,
   toScheduleRow,
   type ScheduledPublicationRow,
-} from "./mappers";
+} from "./mappers.js";
 
 export class SupabaseScheduledPublicationRepository
 implements ScheduledPublicationRepository {

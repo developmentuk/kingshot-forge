@@ -1,13 +1,13 @@
 import type {
   DatasetPublicationStatus,
   DatasetValue,
-} from '../../datasets'
+} from '../../datasets/index.js'
 import type {
   EditorialAction,
   EditorialAuditEvent,
   EditorialRecordHead,
   EditorialRecordVersion,
-} from '../contracts'
+} from '../contracts.js'
 
 export type EditorialDiffKind =
   | 'added'

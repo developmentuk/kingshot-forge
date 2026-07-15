@@ -1,17 +1,17 @@
 import type {
   DatasetDefinition,
   DatasetPermissionAction,
-} from '../datasets'
+} from '../datasets/index.js'
 import type {
   EditorialAction,
-} from '../editorial'
+} from '../editorial/index.js'
 import {
   DatasetPermissionService,
-} from './DatasetPermissionService'
+} from './DatasetPermissionService.js'
 import type {
   DatasetPermissionRequest,
   PermissionDecision,
-} from './contracts'
+} from './contracts.js'
 
 export type EditorialPermissionOperation =
   | 'create_draft'

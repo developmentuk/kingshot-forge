@@ -1,27 +1,27 @@
 export {
   DatasetPermissionService,
-} from './DatasetPermissionService'
+} from './DatasetPermissionService.js'
 
 export {
   EditorialPermissionService,
-} from './EditorialPermissionService'
+} from './EditorialPermissionService.js'
 
 export {
   standardEditorialPermissionPolicy,
-} from './defaultPolicies'
+} from './defaultPolicies.js'
 
 export {
   createPermissionContext,
   DatasetPermissionDeniedError,
-} from './contracts'
+} from './contracts.js'
 
 export type {
   DatasetPermissionRequest,
   DatasetPermissionServiceOptions,
   PermissionDecision,
-} from './contracts'
+} from './contracts.js'
 
 export type {
   EditorialPermissionOperation,
   EditorialPermissionRequest,
-} from './EditorialPermissionService'
+} from './EditorialPermissionService.js'

@@ -1,10 +1,10 @@
 export {
   ScheduledPublishingService,
-} from './ScheduledPublishingService'
+} from './ScheduledPublishingService.js'
 
 export {
   ScheduledPublicationError,
-} from './contracts'
+} from './contracts.js'
 
 export type {
   ScheduledPublication,
@@ -13,6 +13,6 @@ export type {
   ScheduledPublicationStatus,
   ScheduledPublishingServiceOptions,
   SchedulePublicationInput,
-} from './contracts'
+} from './contracts.js'
 
-export * from './repositories'
+export * from './repositories/index.js'

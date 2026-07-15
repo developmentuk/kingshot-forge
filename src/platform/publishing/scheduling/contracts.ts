@@ -1,7 +1,7 @@
 import type {
   EnqueuePublicationInput,
   PublicationQueueItem,
-} from '../contracts'
+} from '../contracts.js'
 
 export type ScheduledPublicationStatus =
   | 'scheduled'

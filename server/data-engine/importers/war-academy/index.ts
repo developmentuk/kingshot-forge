@@ -2,14 +2,14 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from '../../../../shared/data-engine/types'
+} from '../../../../shared/data-engine/types.js'
 
 import type {
   NormalisedWarAcademyRecord,
   WarAcademyLevelSourceRecord,
   WarAcademySourcePayload,
   WarAcademyTechnologySourceRecord,
-} from './types'
+} from './types.js'
 
 const WAR_ACADEMY_SOURCE_URL =
   'https://kingshotpro.com/data/war-academy.json'

@@ -1,6 +1,6 @@
 import type {
   DatasetPermissionPolicy,
-} from '../datasets'
+} from '../datasets/index.js'
 
 export const standardEditorialPermissionPolicy:
   DatasetPermissionPolicy = {

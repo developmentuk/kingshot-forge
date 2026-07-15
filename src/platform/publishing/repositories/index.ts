@@ -1,7 +1,7 @@
 export {
   InMemoryPublicationQueueRepository,
-} from './InMemoryPublicationQueueRepository'
+} from './InMemoryPublicationQueueRepository.js'
 
 export type {
   PublicationQueueRepository,
-} from './PublicationQueueRepository'
+} from './PublicationQueueRepository.js'

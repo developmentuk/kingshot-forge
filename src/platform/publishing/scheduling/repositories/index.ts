@@ -1,7 +1,7 @@
 export {
   InMemoryScheduledPublicationRepository,
-} from './InMemoryScheduledPublicationRepository'
+} from './InMemoryScheduledPublicationRepository.js'
 
 export type {
   ScheduledPublicationRepository,
-} from './ScheduledPublicationRepository'
+} from './ScheduledPublicationRepository.js'

@@ -1,4 +1,4 @@
-import type { DatasetRecordValues, DatasetValue } from './value'
+import type { DatasetRecordValues, DatasetValue } from './value.js'
 
 export type DatasetFieldType =
   | 'text'

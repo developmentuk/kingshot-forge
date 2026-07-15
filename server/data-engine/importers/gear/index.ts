@@ -2,7 +2,7 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from '../../../../shared/data-engine/types'
+} from '../../../../shared/data-engine/types.js'
 
 import type {
   GearBonusesSourceRecord,
@@ -10,7 +10,7 @@ import type {
   GearSourcePayload,
   GearUpgradeStepSourceRecord,
   NormalisedGearRecord,
-} from './types'
+} from './types.js'
 
 const GEAR_SOURCE_URL =
   'https://kingshotpro.com/data/gear.json'

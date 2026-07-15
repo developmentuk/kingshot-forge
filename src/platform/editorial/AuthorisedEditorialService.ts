@@ -1,7 +1,7 @@
 import type {
   DatasetDefinition,
   DatasetRecordValues,
-} from '../datasets'
+} from '../datasets/index.js'
 import type {
   EditorialHistoryFilter,
   EditorialHistoryResult,
@@ -11,16 +11,16 @@ import type {
   EditorialTransitionResult,
   EditorialDraftInput,
   EditorialDraftSaveResult,
-} from './index'
+} from './index.js'
 import {
   EditorialDraftService,
   EditorialHistoryService,
   EditorialWorkflowService,
-} from './services'
+} from './services/index.js'
 import {
   EditorialPermissionService,
   type EditorialPermissionOperation,
-} from '../permissions'
+} from '../permissions/index.js'
 
 export interface EditorialActor {
   userId: string | null

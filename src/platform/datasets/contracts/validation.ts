@@ -1,4 +1,4 @@
-import type { DatasetRecordDraft } from './record'
+import type { DatasetRecordDraft } from './record.js'
 
 export type DatasetValidationSeverity = 'error' | 'warning' | 'information'
 

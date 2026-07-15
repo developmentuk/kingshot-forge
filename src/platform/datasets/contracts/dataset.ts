@@ -1,9 +1,9 @@
-import type { DatasetAdapter } from './adapter'
-import type { DatasetFieldDefinition, DatasetFieldSection } from './field'
-import type { DatasetPermissionPolicy } from './permissions'
-import type { DatasetPublishingPolicy } from './publishing'
-import type { DatasetRecordValidator } from './validation'
-import type { DatasetRecordValues } from './value'
+import type { DatasetAdapter } from './adapter.js'
+import type { DatasetFieldDefinition, DatasetFieldSection } from './field.js'
+import type { DatasetPermissionPolicy } from './permissions.js'
+import type { DatasetPublishingPolicy } from './publishing.js'
+import type { DatasetRecordValidator } from './validation.js'
+import type { DatasetRecordValues } from './value.js'
 
 export type DatasetCategory =
   | 'game-data'

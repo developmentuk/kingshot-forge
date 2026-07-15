@@ -6,13 +6,13 @@ import type {
   PublicationQueueFilter,
   PublicationQueueItem,
   PublicationQueueRepository,
-} from "../../index";
+} from "../../index.js";
 
 import {
   mapQueueRow,
   toQueueRow,
   type PublicationQueueRow,
-} from "./mappers";
+} from "./mappers.js";
 
 export class SupabasePublicationQueueRepository
 implements PublicationQueueRepository {

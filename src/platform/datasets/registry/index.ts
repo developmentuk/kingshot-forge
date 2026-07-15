@@ -1,1 +1,1 @@
-export { DatasetRegistry } from './DatasetRegistry'
+export { DatasetRegistry } from './DatasetRegistry.js'

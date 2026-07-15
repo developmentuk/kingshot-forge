@@ -7,7 +7,7 @@ import type {
   EditorialRecordHead,
   EditorialRecordVersion,
   EditorialRepository,
-} from "../../index";
+} from "../../index.js";
 
 import {
   mapAuditRow,
@@ -18,7 +18,7 @@ import {
   type EditorialAuditRow,
   type EditorialHeadRow,
   type EditorialVersionRow,
-} from "./mappers";
+} from "./mappers.js";
 
 function requireData<T>(
   data: T | null,

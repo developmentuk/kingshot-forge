@@ -1,10 +1,10 @@
 import type {
   EditorialTransitionResult,
   EditorialWorkflowService,
-} from '../editorial'
+} from '../editorial/index.js'
 import type {
   PublicationExecutor,
-} from './contracts'
+} from './contracts.js'
 
 export function createEditorialPublicationExecutor(
   workflowService: EditorialWorkflowService,

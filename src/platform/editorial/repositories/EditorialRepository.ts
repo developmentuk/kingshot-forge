@@ -2,7 +2,7 @@ import type {
   EditorialAuditEvent,
   EditorialRecordHead,
   EditorialRecordVersion,
-} from '../contracts'
+} from '../contracts.js'
 
 export interface EditorialRepository {
   getHead(

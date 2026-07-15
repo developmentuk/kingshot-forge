@@ -1,1 +1,1 @@
-export { DatasetValidationService } from './DatasetValidationService'
+export { DatasetValidationService } from './DatasetValidationService.js'

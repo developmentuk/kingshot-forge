@@ -1,19 +1,19 @@
 import {
   PublicationQueueService,
-} from '../PublicationQueueService'
+} from '../PublicationQueueService.js'
 import type {
   ScheduledPublication,
   ScheduledPublicationFilter,
   ScheduledPublicationRunResult,
   SchedulePublicationInput,
   ScheduledPublishingServiceOptions,
-} from './contracts'
+} from './contracts.js'
 import {
   ScheduledPublicationError,
-} from './contracts'
+} from './contracts.js'
 import type {
   ScheduledPublicationRepository,
-} from './repositories'
+} from './repositories/index.js'
 
 function defaultNow(): string {
   return new Date().toISOString()

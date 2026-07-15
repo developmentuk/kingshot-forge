@@ -1,5 +1,5 @@
-import type { DatasetRecordValues } from './value'
-import type { DatasetPublicationStatus } from './publishing'
+import type { DatasetRecordValues } from './value.js'
+import type { DatasetPublicationStatus } from './publishing.js'
 
 export interface DatasetRecordSource {
   name?: string

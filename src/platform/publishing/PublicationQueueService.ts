@@ -5,13 +5,13 @@ import type {
   PublicationQueueFilter,
   PublicationQueueItem,
   PublicationQueueServiceOptions,
-} from './contracts'
+} from './contracts.js'
 import {
   PublicationQueueError,
-} from './contracts'
+} from './contracts.js'
 import type {
   PublicationQueueRepository,
-} from './repositories'
+} from './repositories/index.js'
 
 function defaultNow(): string {
   return new Date().toISOString()

@@ -6,11 +6,11 @@ import type {
   DatasetValidationIssue,
   DatasetValidationResult,
   DatasetValue,
-} from '../contracts'
+} from '../contracts/index.js'
 
 import type {
   DatasetDefinitionSource,
-} from '../services/DatasetService'
+} from '../services/DatasetService.js'
 
 function isEmptyValue(value: DatasetValue | undefined): boolean {
   return (

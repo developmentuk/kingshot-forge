@@ -1,14 +1,14 @@
 import type {
   DatasetPermissionAction,
   DatasetPermissionRule,
-} from '../datasets'
+} from '../datasets/index.js'
 import {
   createPermissionContext,
   DatasetPermissionDeniedError,
   type DatasetPermissionRequest,
   type DatasetPermissionServiceOptions,
   type PermissionDecision,
-} from './contracts'
+} from './contracts.js'
 
 const defaultOptions: Required<
   DatasetPermissionServiceOptions

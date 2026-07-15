@@ -1,19 +1,19 @@
 import type {
   DatasetPublicationStatus,
   DatasetRecordValues,
-} from '../../datasets'
+} from '../../datasets/index.js'
 import type {
   EditorialAction,
   EditorialAuditEvent,
   EditorialRecordHead,
   EditorialRecordVersion,
-} from '../contracts'
+} from '../contracts.js'
 import {
   EditorialConcurrencyError,
-} from '../contracts'
+} from '../contracts.js'
 import type {
   EditorialRepository,
-} from '../repositories/EditorialRepository'
+} from '../repositories/EditorialRepository.js'
 
 export interface EditorialTransitionInput {
   datasetId: string

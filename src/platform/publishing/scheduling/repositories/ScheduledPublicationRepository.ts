@@ -1,7 +1,7 @@
 import type {
   ScheduledPublication,
   ScheduledPublicationFilter,
-} from '../contracts'
+} from '../contracts.js'
 
 export interface ScheduledPublicationRepository {
   get(

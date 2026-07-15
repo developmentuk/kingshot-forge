@@ -1,26 +1,26 @@
 export {
   EditorialDraftService,
-} from './EditorialDraftService'
+} from './EditorialDraftService.js'
 export type {
   EditorialDraftServiceOptions,
-} from './EditorialDraftService'
+} from './EditorialDraftService.js'
 
 export {
   EditorialRollbackError,
   EditorialTransitionError,
   EditorialWorkflowService,
-} from './EditorialWorkflowService'
+} from './EditorialWorkflowService.js'
 export type {
   EditorialRollbackInput,
   EditorialTransitionInput,
   EditorialTransitionResult,
   EditorialWorkflowServiceOptions,
-} from './EditorialWorkflowService'
+} from './EditorialWorkflowService.js'
 
 export {
   EditorialDiffService,
   EditorialHistoryService,
-} from '../history'
+} from '../history/index.js'
 export type {
   EditorialDiffKind,
   EditorialFieldDiff,
@@ -29,4 +29,4 @@ export type {
   EditorialHistoryResult,
   EditorialRollbackPreview,
   EditorialVersionComparison,
-} from '../history'
+} from '../history/index.js'

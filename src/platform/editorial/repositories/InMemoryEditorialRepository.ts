@@ -2,13 +2,13 @@ import type {
   EditorialAuditEvent,
   EditorialRecordHead,
   EditorialRecordVersion,
-} from '../contracts'
+} from '../contracts.js'
 import {
   EditorialConcurrencyError,
-} from '../contracts'
+} from '../contracts.js'
 import type {
   EditorialRepository,
-} from './EditorialRepository'
+} from './EditorialRepository.js'
 
 function getRecordKey(
   datasetId: string,

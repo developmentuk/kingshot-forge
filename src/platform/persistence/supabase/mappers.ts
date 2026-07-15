@@ -9,7 +9,7 @@ import type {
   PublicationQueueStatus,
   ScheduledPublication,
   ScheduledPublicationStatus,
-} from "../../index";
+} from "../../index.js";
 
 export interface EditorialHeadRow {
   dataset_id: string;

@@ -1,14 +1,14 @@
 import type {
   DatasetRecordValues,
   DatasetValue,
-} from '../../datasets'
+} from '../../datasets/index.js'
 import type {
   EditorialRecordVersion,
-} from '../contracts'
+} from '../contracts.js'
 import type {
   EditorialFieldDiff,
   EditorialVersionComparison,
-} from './contracts'
+} from './contracts.js'
 
 function isRecord(
   value: DatasetValue | undefined,
