@@ -19,12 +19,14 @@ src/platform/datasets/
 │   └── value.ts
 ├── registry/
 │   └── DatasetRegistry.ts
+├── services/
+│   └── DatasetService.ts
 └── index.ts
 ```
 
 ## Responsibilities
 
-The framework may describe datasets, records, fields, validation, permissions and publishing policy. It must not contain game-specific data, page components, network access or database implementation.
+The framework may describe and query datasets, records, fields, validation, permissions and publishing policy. It must not contain game-specific data, page components, network access or database implementation.
 
 ## Registration rules
 
@@ -34,8 +36,23 @@ The framework may describe datasets, records, fields, validation, permissions an
 - Platform-managed record metadata must not be duplicated in dataset values.
 - A dataset registration should declare capabilities explicitly.
 
+## Dataset Service
+
+`DatasetService` is the platform entry point for dataset discovery. It consumes a `DatasetDefinitionSource`, allowing the current in-memory registry and future persistent catalogues to use the same service contract.
+
+The service supports:
+
+- optional and required lookup;
+- existence checks;
+- category filtering;
+- capability filtering;
+- tag filtering;
+- capability checks for a single dataset.
+
+The service does not load dataset records, call APIs or persist changes. Those responsibilities belong to later record, validation and publishing services.
+
 ## Migration status
 
-CS-003B connects the platform registry to the existing admin catalogue and adapter registry through a compatibility layer. Dataset identity is shared with the server Data Engine through `shared/data-engine/datasets.ts`.
+CS-003B connected the platform registry to the existing admin catalogue and adapter registry through a compatibility layer. Dataset identity is shared with the server Data Engine through `shared/data-engine/datasets.ts`.
 
-The compatibility layer deliberately preserves the existing admin and Data Engine APIs. Record schemas, validation, persistence and publishing services will migrate in later change sets.
+CS-003C introduces `DatasetService` and moves admin catalogue discovery onto the service while preserving the existing admin API. Record loading, schema validation, persistence and publishing remain scheduled for later change sets.
