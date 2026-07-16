@@ -1,43 +1,26 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
-import {
-  Link,
-  useParams,
-} from 'react-router-dom'
-import {
-  getHeroCatalogue,
-} from '../services/heroService'
-import type {
-  Hero,
-  HeroTier,
-} from '../types/hero'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { getHeroCatalogue } from '../services/heroService'
+import type { Hero, HeroTier } from '../types/hero'
 import './HeroCompanionPage.css'
+import './HeroCompanionEnhancements.css'
+
+const feedbackUrl =
+  'https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor'
 
 function formatLabel(value: string | null) {
-  if (!value) {
-    return 'Not available'
-  }
+  if (!value) return 'Not available'
 
   return value
     .replace(/_/g, ' ')
-    .replace(/\b\w/g, (character) =>
-      character.toUpperCase(),
-    )
+    .replace(/\b\w/g, (character) => character.toUpperCase())
 }
 
 function formatDate(value: string | null) {
-  if (!value) {
-    return 'Not recorded'
-  }
+  if (!value) return 'Not recorded'
 
   const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
+  if (Number.isNaN(date.getTime())) return value
 
   return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
@@ -68,10 +51,7 @@ function HeroPortrait({
       }`}
     >
       {hero.portrait_url ? (
-        <img
-          src={hero.portrait_url}
-          alt={`${hero.name} portrait`}
-        />
+        <img src={hero.portrait_url} alt={`${hero.name} portrait`} />
       ) : (
         <span aria-hidden="true">⚔️</span>
       )}
@@ -90,9 +70,11 @@ function RatingCard({
 }) {
   return (
     <article className={tierClassName(value)}>
-      <div>
+      <div className="hero-companion-rating__header">
         <span>{label}</span>
-        <strong>{value || '—'}</strong>
+        <strong className="hero-companion-rating__grade">
+          {value || '—'}
+        </strong>
       </div>
       <p>{description}</p>
     </article>
@@ -117,15 +99,11 @@ function EmptyGuideSection({
   )
 }
 
-function HeroCompanionDetail({
-  hero,
-}: {
-  hero: Hero
-}) {
+function HeroCompanionDetail({ hero }: { hero: Hero }) {
   const availability = [
     hero.is_f2p === true ? 'Free-to-play accessible' : null,
     hero.is_vip === true ? 'VIP hero' : null,
-  ].filter(Boolean)
+  ].filter((item): item is string => Boolean(item))
 
   return (
     <main className="hero-companion-page hero-companion-page--detail">
@@ -173,7 +151,6 @@ function HeroCompanionDetail({
             This recommendation reflects the currently published Forge assessment.
           </p>
         </article>
-
         <article>
           <span>Troop type</span>
           <strong>{formatLabel(hero.troop_type)}</strong>
@@ -192,14 +169,15 @@ function HeroCompanionDetail({
         </article>
       </section>
 
-      <section className="hero-companion-section">
-        <div className="hero-companion-section__heading">
+      <section className="hero-companion-section hero-companion-section--ratings">
+        <div className="hero-companion-section__heading hero-companion-ratings-heading">
           <div>
-            <p className="eyebrow">Performance</p>
+            <p className="eyebrow">Forge assessment</p>
             <h2>Hero ratings</h2>
           </div>
           <p>
-            Forge ratings summarise the hero’s recommended use across core battle roles.
+            See at a glance where {hero.name} performs best across the main
+            battle roles.
           </p>
         </div>
 
@@ -328,6 +306,26 @@ function HeroCompanionDetail({
               </a>
             )}
           </section>
+
+          <section className="hero-companion-panel hero-companion-feedback">
+            <span className="hero-companion-feedback__icon" aria-hidden="true">
+              💡
+            </span>
+            <p className="eyebrow">Help improve Forge</p>
+            <h2>Something not right?</h2>
+            <p>
+              Request an update or report an issue with {hero.name}’s data.
+              Please include the hero name and the detail that needs checking.
+            </p>
+            <a
+              href={feedbackUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="hero-companion-feedback__button"
+            >
+              Report an issue
+            </a>
+          </section>
         </aside>
       </section>
     </main>
@@ -335,9 +333,7 @@ function HeroCompanionDetail({
 }
 
 export default function HeroCompanionPage() {
-  const { heroId } = useParams<{
-    heroId?: string
-  }>()
+  const { heroId } = useParams<{ heroId?: string }>()
   const [heroes, setHeroes] = useState<Hero[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -352,10 +348,7 @@ export default function HeroCompanionPage() {
 
       try {
         const catalogue = await getHeroCatalogue()
-
-        if (!cancelled) {
-          setHeroes(catalogue)
-        }
+        if (!cancelled) setHeroes(catalogue)
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -365,14 +358,11 @@ export default function HeroCompanionPage() {
           )
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
+        if (!cancelled) setLoading(false)
       }
     }
 
     void loadHeroes()
-
     return () => {
       cancelled = true
     }
@@ -381,19 +371,14 @@ export default function HeroCompanionPage() {
   const selectedHero = useMemo(
     () =>
       heroes.find(
-        (hero) =>
-          hero.slug === heroId ||
-          hero.id === heroId,
+        (hero) => hero.slug === heroId || hero.id === heroId,
       ),
     [heroId, heroes],
   )
 
   const filteredHeroes = useMemo(() => {
     const query = search.trim().toLowerCase()
-
-    if (!query) {
-      return heroes
-    }
+    if (!query) return heroes
 
     return heroes.filter((hero) =>
       [
@@ -429,9 +414,7 @@ export default function HeroCompanionPage() {
     ) : (
       <main className="hero-companion-page">
         <h1>Hero not found</h1>
-        <Link to="/companion/heroes">
-          Return to Hero Companion
-        </Link>
+        <Link to="/companion/heroes">Return to Hero Companion</Link>
       </main>
     )
   }
