@@ -1251,3 +1251,304 @@
     opacity: 1;
   }
 }
+
+/* =========================================================
+   RELEASE GATE 3 — ADMIN DATASET EXPERIENCE
+   Truthful capability states and resilient dataset browsing.
+   ========================================================= */
+
+.admin-dataset-status--editor-ready {
+  color: #8be6b0;
+  border: 1px solid rgba(58, 189, 118, 0.3);
+  background: rgba(58, 189, 118, 0.12);
+}
+
+.admin-dataset-status--browse-only {
+  color: #9fc7ff;
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  background: rgba(96, 165, 250, 0.12);
+}
+
+.admin-dataset-status--registered {
+  color: #c4cbd5;
+  border: 1px solid rgba(174, 185, 199, 0.24);
+  background: rgba(174, 185, 199, 0.08);
+}
+
+.admin-dataset-card__status-description {
+  margin: 0 0 1rem;
+  color: #c7d0dc;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.admin-dataset-capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-dataset-capabilities li {
+  padding: 0.3rem 0.55rem;
+  color: #b9edca;
+  border: 1px solid rgba(88, 200, 132, 0.25);
+  border-radius: 999px;
+  background: rgba(88, 200, 132, 0.08);
+  font-size: 0.66rem;
+  font-weight: 750;
+}
+
+.admin-dataset-capabilities .admin-dataset-capabilities__unavailable {
+  color: #b8c1cd;
+  border-color: rgba(174, 185, 199, 0.2);
+  background: rgba(174, 185, 199, 0.06);
+}
+
+.admin-dataset-card__source {
+  margin: auto 0 0.8rem;
+  color: #8996a8;
+  font-size: 0.7rem;
+}
+
+.admin-dataset-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-dataset-experience {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 1.2fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.2rem;
+  border: 1px solid #2b394a;
+  border-radius: 1rem;
+  background: rgba(14, 22, 32, 0.96);
+}
+
+.admin-dataset-experience h2 {
+  margin: 0;
+  color: #f7f2e8;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.admin-dataset-experience > div > p:last-child {
+  margin: 0.5rem 0 0;
+  color: #8996a8;
+  font-size: 0.75rem;
+}
+
+.admin-dataset-experience__capabilities,
+.admin-dataset-source-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.admin-dataset-experience__capabilities > div,
+.admin-dataset-source-summary > div {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-dataset-experience__capabilities dt,
+.admin-dataset-source-summary dt {
+  color: #8996a8;
+  font-size: 0.68rem;
+}
+
+.admin-dataset-experience__capabilities dd,
+.admin-dataset-source-summary dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+  color: #e3e9f1;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.admin-dataset-source-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+
+.admin-state-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.15rem;
+  border: 1px solid #344255;
+  border-radius: 1rem;
+  background: #0c151f;
+}
+
+.admin-state-panel h2,
+.admin-state-panel p {
+  margin: 0;
+}
+
+.admin-state-panel h2 {
+  color: #f7f2e8;
+  font-size: 1rem;
+}
+
+.admin-state-panel p {
+  margin-top: 0.4rem;
+  color: #9ca8b7;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.admin-state-panel button,
+.dataset-table-create,
+.dataset-table-empty button {
+  min-height: 40px;
+  padding: 0.55rem 0.8rem;
+  color: #171107;
+  border: 1px solid #e6ab38;
+  border-radius: 0.7rem;
+  background: #e6ab38;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-state-panel button:hover,
+.dataset-table-create:hover,
+.dataset-table-empty button:hover {
+  border-color: #f1c05e;
+  background: #f1c05e;
+}
+
+.admin-state-panel--error {
+  border-color: rgba(239, 104, 104, 0.35);
+  background: rgba(105, 31, 31, 0.12);
+}
+
+.admin-state-panel--loading {
+  justify-content: flex-start;
+}
+
+.admin-state-panel__spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 auto;
+  border: 2px solid rgba(230, 171, 56, 0.25);
+  border-top-color: #e6ab38;
+  border-radius: 50%;
+  animation: admin-dataset-spin 800ms linear infinite;
+}
+
+.dataset-table-create {
+  margin-left: auto;
+}
+
+.dataset-table-empty p {
+  margin: 0;
+}
+
+.dataset-table-empty button {
+  margin-top: 0.8rem;
+  min-height: 36px;
+}
+
+.dataset-table-scroll {
+  overscroll-behavior-inline: contain;
+}
+
+@media (max-width: 900px) {
+  .admin-dataset-experience {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-dataset-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-dataset-experience,
+  .admin-state-panel {
+    border-radius: 0.9rem;
+  }
+
+  .admin-dataset-experience__capabilities,
+  .admin-dataset-source-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-state-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-state-panel--loading {
+    align-items: flex-start;
+  }
+
+  .admin-state-panel button,
+  .dataset-table-create {
+    width: 100%;
+  }
+
+  .dataset-table-create {
+    margin-left: 0;
+  }
+
+  .dataset-table {
+    min-width: 720px;
+  }
+
+  .dataset-table th:first-child,
+  .dataset-table td:first-child,
+  .dataset-table th:last-child,
+  .dataset-table td:last-child {
+    position: sticky;
+    z-index: 1;
+    background: #111a26;
+  }
+
+  .dataset-table th:first-child,
+  .dataset-table td:first-child {
+    left: 0;
+  }
+
+  .dataset-table th:last-child,
+  .dataset-table td:last-child {
+    right: 0;
+  }
+
+  .dataset-table td:first-child,
+  .dataset-table td:last-child {
+    background: #0e1620;
+  }
+
+  .dataset-table-actions button {
+    min-height: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-state-panel__spinner {
+    animation: none;
+  }
+}
+
+@keyframes admin-dataset-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

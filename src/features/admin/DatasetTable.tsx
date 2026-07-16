@@ -32,6 +32,9 @@ interface DatasetTableProps {
 
   searchPlaceholder?: string;
   pageSize?: number;
+  emptyMessage?: string;
+
+  onCreateRow?: () => void;
 
   onViewRow?: (
     row: DatasetTableRow,
@@ -122,6 +125,8 @@ export function DatasetTable({
   searchPlaceholder =
     "Search records...",
   pageSize = 10,
+  emptyMessage = "No records are available from this dataset source.",
+  onCreateRow,
   onViewRow,
   onEditRow,
 }: DatasetTableProps) {
@@ -225,6 +230,10 @@ export function DatasetTable({
         pageSize,
     );
 
+  const hasRowActions = Boolean(
+    onViewRow || onEditRow,
+  );
+
   function handleSearchChange(
     event:
       ChangeEvent<HTMLInputElement>,
@@ -294,6 +303,16 @@ export function DatasetTable({
             ? "record"
             : "records"}
         </p>
+
+        {onCreateRow && (
+          <button
+            type="button"
+            className="dataset-table-create"
+            onClick={onCreateRow}
+          >
+            Create record
+          </button>
+        )}
       </div>
 
       <div className="dataset-table-scroll">
@@ -351,7 +370,9 @@ export function DatasetTable({
                 },
               )}
 
-              <th>Actions</th>
+              {hasRowActions && (
+                <th>Actions</th>
+              )}
             </tr>
           </thead>
 
@@ -378,51 +399,33 @@ export function DatasetTable({
                       ),
                     )}
 
+                    {hasRowActions && (
                     <td>
                       <div className="dataset-table-actions">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onViewRow?.(
-                              row,
-                            )
-                          }
-                          disabled={
-                            !onViewRow
-                          }
-                        >
-                          View
-                        </button>
+                        {onViewRow && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onViewRow(row)
+                            }
+                          >
+                            View
+                          </button>
+                        )}
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onEditRow?.(
-                              row,
-                            )
-                          }
-                          disabled={
-                            !onEditRow
-                          }
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled
-                        >
-                          Duplicate
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled
-                        >
-                          Delete
-                        </button>
+                        {onEditRow && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onEditRow(row)
+                            }
+                          >
+                            Edit
+                          </button>
+                        )}
                       </div>
                     </td>
+                    )}
                   </tr>
                 ),
               )
@@ -431,12 +434,27 @@ export function DatasetTable({
                 <td
                   colSpan={
                     columns.length +
-                    1
+                    (hasRowActions ? 1 : 0)
                   }
                   className="dataset-table-empty"
                 >
-                  No records match
-                  your search.
+                  <p>
+                    {rows.length === 0
+                      ? emptyMessage
+                      : "No records match your search."}
+                  </p>
+
+                  {rows.length > 0 && searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setCurrentPage(1);
+                      }}
+                    >
+                      Clear search
+                    </button>
+                  )}
                 </td>
               </tr>
             )}

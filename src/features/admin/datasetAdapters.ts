@@ -132,3 +132,49 @@ export function readNumberValue(
 
   return null;
 }
+
+export function readRecordId(
+  record: Record<string, unknown>,
+  index: number,
+  preferredKeys: readonly string[],
+  fallbackPrefix: string,
+): string {
+  for (const key of preferredKeys) {
+    const value =
+      readStringValue(record[key]);
+
+    if (value) {
+      return value;
+    }
+
+    const numericValue =
+      readNumberValue(record[key]);
+
+    if (numericValue !== null) {
+      return String(numericValue);
+    }
+  }
+
+  return `${fallbackPrefix}-${index + 1}`;
+}
+
+export function joinCellValues(
+  value: unknown,
+): string | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const values = value
+    .map((item) =>
+      typeof item === "string" ||
+      typeof item === "number"
+        ? String(item).trim()
+        : "",
+    )
+    .filter(Boolean);
+
+  return values.length > 0
+    ? values.join(", ")
+    : null;
+}

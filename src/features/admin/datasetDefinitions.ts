@@ -9,15 +9,8 @@ import type {
   DatasetKey,
 } from "./dataEngineApi";
 
-export type AdminDatasetStatus =
-  | "ready"
-  | "warning"
-  | "error"
-  | "not-imported";
-
 export interface AdminDatasetMetadata {
   order: number;
-  status: AdminDatasetStatus;
 }
 
 export interface AdminDatasetRegistration
@@ -42,11 +35,12 @@ const registrations: AdminDatasetRegistration[] = [
       browsing: true,
       editing: true,
       importing: true,
+      publishing: true,
       search: true,
+      versionHistory: true,
     },
     admin: {
       order: 10,
-      status: "ready",
     },
   },
   {
@@ -63,13 +57,15 @@ const registrations: AdminDatasetRegistration[] = [
     fields: [],
     capabilities: {
       browsing: true,
+      creation: true,
       editing: true,
       importing: false,
+      publishing: true,
       search: true,
+      versionHistory: true,
     },
     admin: {
       order: 15,
-      status: "ready",
     },
   },
   {
@@ -88,10 +84,10 @@ const registrations: AdminDatasetRegistration[] = [
       editing: true,
       importing: true,
       search: true,
+      versionHistory: true,
     },
     admin: {
       order: 20,
-      status: "not-imported",
     },
   },
   {
@@ -112,7 +108,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 30,
-      status: "not-imported",
     },
   },
   {
@@ -133,7 +128,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 40,
-      status: "not-imported",
     },
   },
   {
@@ -154,7 +148,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 50,
-      status: "not-imported",
     },
   },
   {
@@ -175,7 +168,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 60,
-      status: "not-imported",
     },
   },
   {
@@ -196,7 +188,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 70,
-      status: "not-imported",
     },
   },
   {
@@ -217,7 +208,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 80,
-      status: "not-imported",
     },
   },
   {
@@ -238,7 +228,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 90,
-      status: "not-imported",
     },
   },
   {
@@ -259,7 +248,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 100,
-      status: "not-imported",
     },
   },
   {
@@ -280,7 +268,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 110,
-      status: "not-imported",
     },
   },
   {
@@ -301,7 +288,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 120,
-      status: "not-imported",
     },
   },
   {
@@ -322,7 +308,6 @@ const registrations: AdminDatasetRegistration[] = [
     },
     admin: {
       order: 130,
-      status: "not-imported",
     },
   },
 ];

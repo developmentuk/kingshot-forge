@@ -37,7 +37,13 @@ export function DatasetRecordPanel({
             Record details
           </p>
 
-          <h2>{formatValue(row.values.name ?? row.id)}</h2>
+          <h2>
+            {formatValue(
+              row.values.name ??
+              row.values[columns[0]?.key] ??
+              row.id,
+            )}
+          </h2>
         </div>
 
         <button

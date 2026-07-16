@@ -3,23 +3,19 @@ import {
   adminDatasets,
   type AdminDatasetStatus,
 } from "./adminDatasets";
-import { getDatasetStats } from "./adminDatasetStats";
 
 function getStatusLabel(
   status: AdminDatasetStatus,
 ): string {
   switch (status) {
-    case "ready":
-      return "Ready";
+    case "editor-ready":
+      return "Editor ready";
 
-    case "warning":
-      return "Warning";
+    case "browse-only":
+      return "Browse only";
 
-    case "error":
-      return "Error";
-
-    case "not-imported":
-      return "Not imported";
+    case "registered":
+      return "Registered";
   }
 }
 
@@ -33,13 +29,13 @@ function getStatusClassName(
 }
 
 export function AdminDatasetsPage() {
-  const readyCount = adminDatasets.filter(
-    (dataset) => dataset.status === "ready",
+  const editorReadyCount = adminDatasets.filter(
+    (dataset) => dataset.status === "editor-ready",
   ).length;
 
-  const pendingCount = adminDatasets.filter(
+  const browseOnlyCount = adminDatasets.filter(
     (dataset) =>
-      dataset.status === "not-imported",
+      dataset.status === "browse-only",
   ).length;
 
   return (
@@ -53,9 +49,9 @@ export function AdminDatasetsPage() {
           <h1>Datasets</h1>
 
           <p className="admin-page__intro">
-            Review dataset availability, open individual
-            datasets and monitor their current import
-            status.
+            Every registered dataset has a truthful Admin
+            experience. Browse live records where supported,
+            and see clearly when editing is not yet available.
           </p>
         </div>
 
@@ -72,35 +68,32 @@ export function AdminDatasetsPage() {
 
           <article className="admin-summary__card">
             <span className="admin-summary__value">
-              {readyCount}
+              {editorReadyCount}
             </span>
 
             <span className="admin-summary__label">
-              Ready
+              Editor ready
             </span>
           </article>
 
           <article className="admin-summary__card">
             <span className="admin-summary__value">
-              {pendingCount}
+              {browseOnlyCount}
             </span>
 
             <span className="admin-summary__label">
-              Awaiting import
+              Browse only
             </span>
           </article>
         </div>
       </section>
 
       <section className="admin-dataset-grid">
-        {adminDatasets.map((dataset) => {
-          const stats = getDatasetStats(dataset.id);
-
-          return (
-            <article
-              key={dataset.id}
-              className="admin-dataset-card"
-            >
+        {adminDatasets.map((dataset) => (
+          <article
+            key={dataset.id}
+            className="admin-dataset-card"
+          >
               <div className="admin-dataset-card__top">
                 <div>
                   <p className="admin-dataset-card__id">
@@ -123,27 +116,55 @@ export function AdminDatasetsPage() {
                 {dataset.description}
               </p>
 
-              <dl className="admin-dataset-card__meta">
-                <div>
-                  <dt>Records</dt>
-                  <dd>{stats.records}</dd>
-                </div>
+              <p className="admin-dataset-card__status-description">
+                {dataset.statusDescription}
+              </p>
 
-                <div>
-                  <dt>Last imported</dt>
-                  <dd>{stats.lastImported}</dd>
-                </div>
-              </dl>
+              <ul
+                className="admin-dataset-capabilities"
+                aria-label={`${dataset.name} capabilities`}
+              >
+                {dataset.capabilities.browsing ? (
+                  <li>Browser</li>
+                ) : (
+                  <li className="admin-dataset-capabilities__unavailable">
+                    No browser
+                  </li>
+                )}
+                {dataset.capabilities.search && (
+                  <li>Search</li>
+                )}
+                {dataset.capabilities.editing ? (
+                  <li>Record Editor</li>
+                ) : (
+                  <li className="admin-dataset-capabilities__unavailable">
+                    No Record Editor
+                  </li>
+                )}
+                {dataset.capabilities.creation && (
+                  <li>Create records</li>
+                )}
+                {dataset.capabilities.publishing ? (
+                  <li>Live publishing</li>
+                ) : dataset.capabilities.editing ? (
+                  <li className="admin-dataset-capabilities__unavailable">
+                    No live publishing
+                  </li>
+                ) : null}
+              </ul>
+
+              <p className="admin-dataset-card__source">
+                {dataset.sourceDescription}
+              </p>
 
               <Link
                 to={dataset.route}
                 className="admin-dataset-card__link"
               >
-                Open dataset
+                {dataset.actionLabel}
               </Link>
-            </article>
-          );
-        })}
+          </article>
+        ))}
       </section>
     </main>
   );
