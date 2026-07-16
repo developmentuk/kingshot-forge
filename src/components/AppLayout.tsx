@@ -4,6 +4,7 @@ import AccountMenu from './AccountMenu'
 import FeedbackDialog from './FeedbackDialog'
 import { useAuth } from '../context/AuthContext'
 import { useRole } from '../context/RoleContext'
+import { RELEASE_DISPLAY, SHORT_COMMIT_SHA } from '../config/release'
 
 type NavigationItem = {
   label: string
@@ -233,8 +234,13 @@ function AppLayout() {
               <span aria-hidden="true">💡</span>
               Send feedback
             </button>
-            <Link className="app-version-link" to="/release-notes" onClick={closeNavigation}>
-              Community Beta · v0.5.0
+            <Link
+              className="app-version-link"
+              to="/release-notes"
+              onClick={closeNavigation}
+              title={`Commit ${SHORT_COMMIT_SHA}`}
+            >
+              {RELEASE_DISPLAY}
             </Link>
           </div>
         </aside>
@@ -256,7 +262,9 @@ function AppLayout() {
             <Link to="/roadmap">Roadmap</Link>
             <Link to="/release-notes">Release Notes</Link>
             <button type="button" onClick={() => setFeedbackOpen(true)}>Feedback</button>
-            <Link className="app-version-link" to="/release-notes">Community Beta · v0.5.0</Link>
+            <Link className="app-version-link" to="/release-notes" title={`Commit ${SHORT_COMMIT_SHA}`}>
+              {RELEASE_DISPLAY}
+            </Link>
           </div>
         </div>
       </footer>
