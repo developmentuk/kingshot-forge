@@ -6,6 +6,9 @@ import type {
 interface PublicationOperationsPanelProps {
   queueItems: PublicationQueueItem[];
   schedules: ScheduledPublication[];
+  onProcessQueueItem?: (
+    itemId: string,
+  ) => void;
   onRetryQueueItem?: (
     itemId: string,
   ) => void;
@@ -34,6 +37,7 @@ function formatDate(
 export function PublicationOperationsPanel({
   queueItems,
   schedules,
+  onProcessQueueItem,
   onRetryQueueItem,
   onCancelQueueItem,
   onCancelSchedule,
@@ -85,6 +89,20 @@ export function PublicationOperationsPanel({
                   )}
 
                   <div className="editorial-admin-actions">
+                    {item.status === "pending" && (
+                      <button
+                        type="button"
+                        className="button button--small"
+                        onClick={() =>
+                          onProcessQueueItem?.(
+                            item.id,
+                          )
+                        }
+                      >
+                        Process now
+                      </button>
+                    )}
+
                     {item.status === "failed" && (
                       <button
                         type="button"
