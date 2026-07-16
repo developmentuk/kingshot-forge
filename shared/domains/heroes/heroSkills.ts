@@ -1,20 +1,14 @@
 export const HERO_SKILL_DATASET_ID = 'hero-skills' as const
 
 export const HERO_SKILL_CATEGORIES = [
+  'conquest',
   'expedition',
-  'exploration',
-  'exclusive-gear',
-  'passive',
-  'other',
+  'talent',
+  'exclusive_gear',
 ] as const
 
 export type HeroSkillCategory =
   (typeof HERO_SKILL_CATEGORIES)[number]
-
-export interface HeroSkillLevelEffect {
-  level: number
-  effect: string
-}
 
 export interface HeroSkillSource {
   name: string | null
@@ -24,18 +18,24 @@ export interface HeroSkillSource {
   note: string | null
 }
 
+/**
+ * Canonical editorial and published representation of a Hero Skill.
+ *
+ * `heroSlug` is the stable cross-layer relationship used by datasets and the
+ * editorial platform. The live Supabase projection resolves it to
+ * `hero_skills.hero_id` when publishing.
+ */
 export interface HeroSkillRecord {
   id: string
   heroSlug: string
-  position: number
   name: string
   category: HeroSkillCategory
-  summary: string | null
-  effect: string | null
-  levelEffects: HeroSkillLevelEffect[]
-  upgradePriority: number | null
-  upgradeGuidance: string | null
+  skillType: string | null
+  description: string | null
   iconUrl: string | null
+  slotIndex: number
+  displayOrder: number
+  maxLevel: number
   isActive: boolean
   source: HeroSkillSource
 }
@@ -53,6 +53,10 @@ function isNonEmptyString(value: unknown): value is string {
 
 function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string'
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) >= 1
 }
 
 function isHeroSkillCategory(value: unknown): value is HeroSkillCategory {
@@ -90,13 +94,6 @@ export function validateHeroSkillRecord(
     })
   }
 
-  if (!Number.isInteger(record.position) || (record.position ?? 0) < 1) {
-    issues.push({
-      path: 'position',
-      message: 'Position must be a positive integer.',
-    })
-  }
-
   if (!isNonEmptyString(record.name)) {
     issues.push({ path: 'name', message: 'Name is required.' })
   }
@@ -108,93 +105,75 @@ export function validateHeroSkillRecord(
     })
   }
 
-  if (!isNullableString(record.summary)) {
-    issues.push({ path: 'summary', message: 'Summary must be text or null.' })
-  }
-
-  if (!isNullableString(record.effect)) {
-    issues.push({ path: 'effect', message: 'Effect must be text or null.' })
-  }
-
-  if (!Array.isArray(record.levelEffects)) {
+  if (!isNullableString(record.skillType)) {
     issues.push({
-      path: 'levelEffects',
-      message: 'Level effects must be an array.',
-    })
-  } else {
-    const levels = new Set<number>()
-
-    record.levelEffects.forEach((item, index) => {
-      if (!item || typeof item !== 'object' || Array.isArray(item)) {
-        issues.push({
-          path: `levelEffects.${index}`,
-          message: 'Level effect must be an object.',
-        })
-        return
-      }
-
-      const effect = item as Partial<HeroSkillLevelEffect>
-
-      if (!Number.isInteger(effect.level) || (effect.level ?? 0) < 1) {
-        issues.push({
-          path: `levelEffects.${index}.level`,
-          message: 'Level must be a positive integer.',
-        })
-      } else if (levels.has(effect.level)) {
-        issues.push({
-          path: `levelEffects.${index}.level`,
-          message: `Level ${effect.level} is duplicated.`,
-        })
-      } else {
-        levels.add(effect.level)
-      }
-
-      if (!isNonEmptyString(effect.effect)) {
-        issues.push({
-          path: `levelEffects.${index}.effect`,
-          message: 'Level effect text is required.',
-        })
-      }
+      path: 'skillType',
+      message: 'Skill type must be text or null.',
     })
   }
 
-  if (
-    record.upgradePriority !== null &&
-    (!Number.isInteger(record.upgradePriority) ||
-      (record.upgradePriority ?? 0) < 1)
-  ) {
+  if (!isNullableString(record.description)) {
     issues.push({
-      path: 'upgradePriority',
-      message: 'Upgrade priority must be a positive integer or null.',
-    })
-  }
-
-  if (!isNullableString(record.upgradeGuidance)) {
-    issues.push({
-      path: 'upgradeGuidance',
-      message: 'Upgrade guidance must be text or null.',
+      path: 'description',
+      message: 'Description must be text or null.',
     })
   }
 
   if (!isNullableString(record.iconUrl)) {
-    issues.push({ path: 'iconUrl', message: 'Icon URL must be text or null.' })
+    issues.push({
+      path: 'iconUrl',
+      message: 'Icon URL must be text or null.',
+    })
+  }
+
+  if (!isPositiveInteger(record.slotIndex)) {
+    issues.push({
+      path: 'slotIndex',
+      message: 'Slot index must be a positive integer.',
+    })
+  }
+
+  if (!isPositiveInteger(record.displayOrder)) {
+    issues.push({
+      path: 'displayOrder',
+      message: 'Display order must be a positive integer.',
+    })
+  }
+
+  if (!isPositiveInteger(record.maxLevel)) {
+    issues.push({
+      path: 'maxLevel',
+      message: 'Maximum level must be a positive integer.',
+    })
   }
 
   if (typeof record.isActive !== 'boolean') {
-    issues.push({ path: 'isActive', message: 'Active state must be boolean.' })
+    issues.push({
+      path: 'isActive',
+      message: 'Active state must be boolean.',
+    })
   }
 
   if (!record.source || typeof record.source !== 'object') {
-    issues.push({ path: 'source', message: 'Source metadata is required.' })
+    issues.push({
+      path: 'source',
+      message: 'Source metadata is required.',
+    })
   } else {
     const source = record.source as Partial<HeroSkillSource>
 
     if (!isNullableString(source.name)) {
-      issues.push({ path: 'source.name', message: 'Source name must be text or null.' })
+      issues.push({
+        path: 'source.name',
+        message: 'Source name must be text or null.',
+      })
     }
 
     if (!isNullableString(source.url)) {
-      issues.push({ path: 'source.url', message: 'Source URL must be text or null.' })
+      issues.push({
+        path: 'source.url',
+        message: 'Source URL must be text or null.',
+      })
     }
 
     if (!isNullableString(source.verifiedAt)) {
@@ -217,7 +196,10 @@ export function validateHeroSkillRecord(
     }
 
     if (!isNullableString(source.note)) {
-      issues.push({ path: 'source.note', message: 'Source note must be text or null.' })
+      issues.push({
+        path: 'source.note',
+        message: 'Source note must be text or null.',
+      })
     }
   }
 
@@ -229,7 +211,8 @@ export function validateHeroSkillCollection(
 ): HeroSkillValidationIssue[] {
   const issues: HeroSkillValidationIssue[] = []
   const ids = new Set<string>()
-  const heroPositions = new Set<string>()
+  const heroSlots = new Set<string>()
+  const heroDisplayOrders = new Set<string>()
 
   records.forEach((record, index) => {
     for (const issue of validateHeroSkillRecord(record)) {
@@ -247,14 +230,23 @@ export function validateHeroSkillCollection(
     }
     ids.add(record.id)
 
-    const positionKey = `${record.heroSlug}:${record.position}`
-    if (heroPositions.has(positionKey)) {
+    const slotKey = `${record.heroSlug}:${record.slotIndex}`
+    if (heroSlots.has(slotKey)) {
       issues.push({
-        path: `records.${index}.position`,
-        message: `Hero "${record.heroSlug}" has more than one skill in position ${record.position}.`,
+        path: `records.${index}.slotIndex`,
+        message: `Hero "${record.heroSlug}" has more than one skill in slot ${record.slotIndex}.`,
       })
     }
-    heroPositions.add(positionKey)
+    heroSlots.add(slotKey)
+
+    const orderKey = `${record.heroSlug}:${record.displayOrder}`
+    if (heroDisplayOrders.has(orderKey)) {
+      issues.push({
+        path: `records.${index}.displayOrder`,
+        message: `Hero "${record.heroSlug}" has more than one skill at display order ${record.displayOrder}.`,
+      })
+    }
+    heroDisplayOrders.add(orderKey)
   })
 
   return issues
@@ -267,8 +259,11 @@ export function sortHeroSkills(
     const heroOrder = first.heroSlug.localeCompare(second.heroSlug)
     if (heroOrder !== 0) return heroOrder
 
-    const positionOrder = first.position - second.position
-    if (positionOrder !== 0) return positionOrder
+    const displayOrder = first.displayOrder - second.displayOrder
+    if (displayOrder !== 0) return displayOrder
+
+    const slotOrder = first.slotIndex - second.slotIndex
+    if (slotOrder !== 0) return slotOrder
 
     return first.id.localeCompare(second.id)
   })
