@@ -44,7 +44,7 @@ const roadmapReleases: RoadmapRelease[] = [
     progress: 14,
     priority: "Sprint 9.2 in development",
     description:
-      "Complete Domain 0 Editorial Intelligence and Domain 1 Editorial Platform before Player Domain development continues.",
+      "Complete Domain 0 Editorial Intelligence and Domain 1 Editorial Platform before product-domain development continues.",
     features: [
       "Project Constitution",
       "Complete registered-dataset audit",
@@ -57,37 +57,59 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
-    version: "0.7.x",
+    version: "0.8.0",
     name: "Player Domain Complete",
     status: "planned",
     progress: 0,
     description:
-      "Verified player identity, public profiles, linked game data and personalised Forge experiences.",
+      "Complete verified player identity and linked account foundations required by personal and operational Forge services.",
     features: [
       "Verified player profiles",
       "Linked Kingshot identity",
       "Kingdom and alliance history",
       "Personal dashboard and favourites",
       "Canonical-data-powered progression views",
+      "Consent and account controls for future automated services",
     ],
   },
   {
-    version: "0.8",
-    name: "Alliance and Kingdom Domains",
+    version: "0.8.5",
+    name: "Gift Centre",
+    status: "planned",
+    progress: 0,
+    priority: "Accelerated community priority",
+    description:
+      "The first Forge Operations vertical slice: discover, verify and safely redeem gift codes for consented linked player accounts.",
+    features: [
+      "Governed gift-code registry",
+      "Code discovery, validation and expiry state",
+      "Explicit linked-player redemption consent",
+      "Server-side auto redeem",
+      "Normalised success and failure outcomes",
+      "Player redemption history",
+      "Rate limits, safe retries and audit trail",
+      "Notification foundations",
+      "Original concepts and engineering inspiration credited to Sir Flux",
+    ],
+  },
+  {
+    version: "0.9.0",
+    name: "Alliance and Kingdom Foundations",
     status: "planned",
     progress: 0,
     description:
-      "Complete communities, membership, leadership, administration and shared operational surfaces.",
+      "Complete communities, membership, leadership and operational scoping before shared KvK workflows are introduced.",
     features: [
       "Alliance and kingdom pages",
       "Membership and leadership roles",
       "Verified representatives",
       "Community announcements",
       "Shared resources and Discord links",
+      "Operations permissions and audit boundaries",
     ],
   },
   {
-    version: "0.9",
+    version: "0.9.5",
     name: "Transfer Hub",
     status: "planned",
     progress: 0,
@@ -102,19 +124,35 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
-    version: "1.0",
-    name: "The Ultimate Kingshot Companion",
+    version: "1.0.0",
+    name: "KvK and Event Operations",
     status: "future",
     progress: 0,
     description:
-      "A unified platform for players, alliances and kingdoms, powered by canonical game knowledge and complete community workflows.",
+      "Native Forge coordination tools adapted and expanded from community-proven operational concepts contributed by Sir Flux.",
     features: [
-      "KvK and event operations",
-      "Progression and planning tools",
-      "Alliance and kingdom workspaces",
-      "Transfer Hub",
-      "Community creation and submissions",
-      "Notifications and installable mobile experience",
+      "KvK preparation campaigns and canonical scoring",
+      "Resource and speed-up pledges",
+      "Alliance and kingdom readiness summaries",
+      "Battle-segment attendance and war room",
+      "Royal buff scheduling",
+      "Coordinated rally timing",
+      "Discord integration, reminders and operational history",
+    ],
+  },
+  {
+    version: "1.1.0",
+    name: "Progression, Intelligence and Planning",
+    status: "future",
+    progress: 0,
+    description:
+      "Explainable calculators, forecasts and recommendations powered by published canonical and authorised operational data.",
+    features: [
+      "Building, troop and research planning",
+      "Gear, charm and VIP progression",
+      "Event preparation forecasts",
+      "Alliance and kingdom readiness intelligence",
+      "Explainable recommendations",
     ],
   },
 ];
@@ -141,7 +179,8 @@ function RoadmapPage() {
           <h1 className="page-title">Build each domain completely</h1>
           <p>
             Release {APP_VERSION} completes the Editorial Intelligence and Editorial
-            Platform domains before Player Domain development continues.
+            Platform domains. Player identity follows, then Gift Centre is accelerated
+            as the first native Forge Operations release.
           </p>
         </div>
         <div className="product-roadmap__hero-actions">
@@ -158,8 +197,9 @@ function RoadmapPage() {
             <h2>Release {APP_VERSION} — Editorial Platform Completion</h2>
             <p>
               Sprint 9.2 completes dataset parity, verification, canonical evidence,
-              live health metrics and measurable domain readiness using the existing
-              Forge platform architecture.
+              live health metrics and measurable domain readiness. The donated Sir Flux
+              operations concepts are now documented and scheduled without interrupting
+              the active milestone-first release.
             </p>
           </div>
         </div>
@@ -167,8 +207,8 @@ function RoadmapPage() {
           <span>Editorial Intelligence</span>
           <span>Editorial Platform</span>
           <span>Verification Centre</span>
-          <span>Dataset health</span>
-          <span>Mobile first</span>
+          <span>Gift Centre next</span>
+          <span>Sir Flux credited</span>
         </div>
       </section>
 
@@ -200,8 +240,8 @@ function RoadmapPage() {
       <section className="roadmap-community-note">
         <div>
           <p className="eyebrow">Community-led development</p>
-          <h2>Help shape what comes next</h2>
-          <p>Priorities can evolve through evidence and community feedback, but the active domain will be completed before Forge expands again.</p>
+          <h2>Built with community contributions</h2>
+          <p>Forge adapts approved community concepts natively, protects its shared architecture and gives visible credit to contributors such as Sir Flux.</p>
         </div>
         <a className="button button--secondary" href="https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor" target="_blank" rel="noreferrer">Send feedback</a>
       </section>
