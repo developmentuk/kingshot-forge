@@ -8,9 +8,12 @@ import {
   getSupabaseAdmin,
 } from '../database/supabaseAdmin.js'
 
-interface HeroSkillRow {
+interface PublishedHeroSkillRow {
   id: string
+  editorial_key: string
   hero_id: string
+  hero_slug: string
+  hero_name: string
   name: string
   category: string
   skill_type: string | null
@@ -19,28 +22,14 @@ interface HeroSkillRow {
   display_order: number
   slot_index: number
   max_level: number
-  created_at: string
+  source_updated_at: string | null
+  source_verified: string | null
+  source_accuracy_score: number | null
+  source_name: string | null
+  source_url: string | null
+  published_version: number
+  published_at: string
   updated_at: string
-  hero:
-    | {
-        slug: string
-        name: string
-      }
-    | Array<{
-        slug: string
-        name: string
-      }>
-    | null
-}
-
-function normaliseJoinedHero(
-  value: HeroSkillRow['hero'],
-): { slug: string; name: string } | null {
-  if (Array.isArray(value)) {
-    return value[0] ?? null
-  }
-
-  return value
 }
 
 export async function loadCanonicalHeroSkillsDataset():
@@ -48,56 +37,44 @@ Promise<DatasetLoadResult> {
   const supabase = getSupabaseAdmin()
 
   const { data, error } = await supabase
-    .from('hero_skills')
-    .select(`
-      id,
-      hero_id,
-      name,
-      category,
-      skill_type,
-      description,
-      icon_url,
-      display_order,
-      slot_index,
-      max_level,
-      created_at,
-      updated_at,
-      hero:heroes!hero_skills_hero_id_fkey (
-        slug,
-        name
-      )
-    `)
-    .order('hero_id', { ascending: true })
+    .from('published_hero_skills')
+    .select('*')
+    .order('hero_slug', { ascending: true })
     .order('display_order', { ascending: true })
     .order('slot_index', { ascending: true })
+    .order('editorial_key', { ascending: true })
 
   if (error) {
     throw new Error(
-      `Unable to load canonical Hero Skills: ${error.message}`,
+      `Unable to load published canonical Hero Skills: ${error.message}`,
     )
   }
 
-  const records = ((data ?? []) as unknown as HeroSkillRow[])
-    .map((row) => {
-      const hero = normaliseJoinedHero(row.hero)
-
-      return {
-        id: row.id,
-        hero_id: row.hero_id,
-        hero_slug: hero?.slug ?? null,
-        hero_name: hero?.name ?? null,
-        name: row.name,
-        category: row.category,
-        skill_type: row.skill_type,
-        description: row.description,
-        icon_url: row.icon_url,
-        display_order: row.display_order,
-        slot_index: row.slot_index,
-        max_level: row.max_level,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-      }
-    })
+  const records = ((data ?? []) as PublishedHeroSkillRow[])
+    .map((row) => ({
+      id: row.editorial_key,
+      live_id: row.id,
+      hero_id: row.hero_id,
+      hero_slug: row.hero_slug,
+      hero_name: row.hero_name,
+      name: row.name,
+      category: row.category,
+      skill_type: row.skill_type,
+      description: row.description,
+      icon_url: row.icon_url,
+      display_order: row.display_order,
+      slot_index: row.slot_index,
+      max_level: row.max_level,
+      is_active: true,
+      source_updated_at: row.source_updated_at,
+      source_verified: row.source_verified,
+      source_accuracy_score: row.source_accuracy_score,
+      source_name: row.source_name,
+      source_url: row.source_url,
+      published_version: row.published_version,
+      published_at: row.published_at,
+      updated_at: row.updated_at,
+    }))
 
   const fetchedAt = new Date().toISOString()
   const serialised = JSON.stringify(records)
@@ -107,16 +84,16 @@ Promise<DatasetLoadResult> {
 
   return {
     dataset: 'hero-skills',
-    sourceUrl: 'supabase://public/hero_skills',
+    sourceUrl: 'supabase://public/published_hero_skills',
     fetchedAt,
     httpStatus: 200,
     payloadHash,
     metadata: {
       dataset: 'hero-skills',
-      title: 'Canonical Hero Skills',
+      title: 'Published Canonical Hero Skills',
       description:
-        'Published Hero Skill definitions linked to canonical Heroes.',
-      canonical: 'supabase://public/hero_skills',
+        'Reviewed and published Hero Skill definitions linked to canonical Heroes.',
+      canonical: 'supabase://public/published_hero_skills',
       updated: records.reduce<string | null>(
         (latest, record) =>
           !latest || record.updated_at > latest
@@ -127,6 +104,8 @@ Promise<DatasetLoadResult> {
       provenance: {
         storage: 'Supabase',
         table: 'public.hero_skills',
+        projection: 'public.published_hero_skills',
+        visibility: 'published-only',
       },
     },
     recordCount: records.length,
