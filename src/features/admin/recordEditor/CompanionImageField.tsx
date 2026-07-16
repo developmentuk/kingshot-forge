@@ -12,6 +12,8 @@ import type {
   RecordEditorValue,
 } from "./recordEditorSchema";
 
+import "./CompanionImageField.css";
+
 interface CompanionImageFieldProps {
   id: string;
   value: RecordEditorValue;
