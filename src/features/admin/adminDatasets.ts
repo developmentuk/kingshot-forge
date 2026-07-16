@@ -5,6 +5,9 @@ import type {
 import {
   adminDatasetService,
 } from "./adminDatasetService";
+import {
+  hasDatasetAdapter,
+} from "./datasetAdapterRegistry";
 
 export type {
   AdminDatasetStatus,
@@ -18,6 +21,18 @@ export interface AdminDatasetDefinition {
   status: AdminDatasetStatus;
 }
 
+function getRuntimeStatus(
+  registration: AdminDatasetRegistration,
+): AdminDatasetStatus {
+  if (hasDatasetAdapter(registration.id)) {
+    return registration.id === "hero-skills"
+      ? "warning"
+      : "ready";
+  }
+
+  return registration.admin.status;
+}
+
 function toAdminDatasetDefinition(
   registration: AdminDatasetRegistration,
 ): AdminDatasetDefinition {
@@ -28,7 +43,7 @@ function toAdminDatasetDefinition(
     route:
       registration.route ??
       `/admin/data/${registration.id}`,
-    status: registration.admin.status,
+    status: getRuntimeStatus(registration),
   };
 }
 
