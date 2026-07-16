@@ -1,10 +1,6 @@
 import { Link } from "react-router-dom";
 
-type RoadmapStatus =
-  | "live"
-  | "development"
-  | "planned"
-  | "future";
+type RoadmapStatus = "live" | "development" | "planned" | "future";
 
 type RoadmapRelease = {
   version: string;
@@ -18,135 +14,91 @@ type RoadmapRelease = {
 
 const roadmapReleases: RoadmapRelease[] = [
   {
-    version: "0.4",
-    name: "The Forge",
+    version: "Foundation",
+    name: "Forge Platform Foundation",
     status: "live",
     progress: 100,
+    priority: "Completed July 2026",
     description:
-      "The foundation release that transformed Kingshot Forge into a live community companion platform.",
+      "The shared platform foundation for trustworthy data, governed editing, publishing, permissions and production delivery is complete.",
     features: [
-      "Google sign-in and Forge profiles",
-      "Linked Kingshot player identity",
-      "Kingshot avatar and player details",
-      "Player Lookup",
-      "Active Gift Codes",
-      "Kingdom Explorer",
-      "KvK match history",
-      "Supabase backend",
-      "Improved mobile experience",
-      "Community artwork foundation",
+      "Authentication and Forge roles",
+      "Supabase persistence and server-side security",
+      "Kingshot Data Engine and dataset contracts",
+      "Reusable dataset adapters and validation",
+      "Structured Record Editor",
+      "Draft, review and approval workflow",
+      "Immutable version history and comparison",
+      "Publication queue and scheduled publishing foundations",
+      "Archive, restore and rollback",
+      "Audit events and optimistic concurrency",
+      "Governance, testing and release standards",
+      "Publish once, consume everywhere architecture",
     ],
   },
   {
-    version: "0.5",
-    name: "Forge Admin",
-    status: "live",
-    progress: 100,
-    priority: "Latest release",
-    description:
-      "The first live release of Forge Admin, introducing the Kingshot Data Engine, reusable dataset browsers and the foundation of a complete content management system.",
-    features: [
-      "Forge Admin dashboard",
-      "Live Data Engine",
-      "Reusable dataset browser",
-      "Live Heroes dataset",
-      "Live recurring Events dataset",
-      "Search, sorting and pagination",
-      "Record detail viewer",
-      "Dataset adapter framework",
-      "Dataset API endpoint",
-      "Source provenance and confidence metadata",
-      "Tier badges and tooltips",
-      "Importer and validation foundations",
-    ],
-  },
-  {
-    version: "0.6",
-    name: "Forge Admin CMS",
+    version: "0.6.0",
+    name: "Hero Domain Complete",
     status: "development",
-    progress: 10,
-    priority: "Current development sprint",
+    progress: 5,
+    priority: "Current release",
     description:
-      "Forge Admin evolves from a dataset browser into a full content management system with editing, imports, history, comparison and expanded live datasets.",
+      "The Hero Domain becomes the complete reference implementation for canonical content, editorial publishing, public consumption and player-owned progression.",
     features: [
-      "Record editing",
-      "Structured edit forms",
-      "Import Manager",
-      "Dataset validation reports",
-      "Version history and rollback",
-      "Visual change comparison",
-      "Global dataset search",
-      "Live dataset health dashboard",
-      "Buildings dataset",
-      "Governor Gear dataset",
-      "Troops dataset",
-      "Truegold dataset",
-      "VIP dataset",
-      "War Academy dataset",
-      "Publishing workflow",
+      "Sprint 8.1: canonical Hero Skills",
+      "Structured skill editing and validation",
+      "Skill publication through the existing workflow",
+      "Published skills consumed by Hero experiences",
+      "Hero progression and star-up",
+      "Hero gear and exclusive gear",
+      "Player Hero collection and progression",
+      "Public Hero experience",
+      "Domain-wide end-to-end validation",
     ],
   },
   {
     version: "0.7",
-    name: "KvK Command Centre",
+    name: "Player Domain Complete",
     status: "planned",
     progress: 0,
-    priority: "Top priority",
     description:
-      "A complete KvK planning and live coordination suite for players, alliances and kingdoms.",
+      "Verified player identity, public profiles, linked game data and personalised Forge experiences.",
     features: [
-      "KvK preparation calculator",
-      "Five-day preparation planner",
-      "Personal score projections",
-      "Alliance and kingdom scoreboards",
-      "Live score updates",
-      "Resource and item planning",
-      "KvK saving checklist",
-      "Battle-day information",
-      "Push reminders and event notifications",
-      "Historical KvK results",
+      "Verified player profiles",
+      "Linked Kingshot identity",
+      "Kingdom and alliance history",
+      "Personal dashboard and favourites",
+      "Canonical-data-powered progression views",
     ],
   },
   {
     version: "0.8",
-    name: "Transfer Hub",
+    name: "Alliance and Kingdom Domains",
     status: "planned",
     progress: 0,
-    priority: "Top priority",
     description:
-      "A dedicated system for managing player recruitment, state transfers, alliance vacancies and invitation passes.",
+      "Complete communities, membership, leadership, administration and shared operational surfaces.",
     features: [
-      "Kingdom transfer profiles",
-      "Player transfer applications",
-      "Alliance recruitment listings",
-      "Kingdom recruitment pages",
-      "Transfer eligibility tracking",
-      "Ordinary and special invitation management",
-      "Pass allocation and waiting lists",
-      "Officer notes and application status",
-      "Verified alliance and kingdom representatives",
-      "Discord server and channel links",
-      "Transfer history and membership changes",
+      "Alliance and kingdom pages",
+      "Membership and leadership roles",
+      "Verified representatives",
+      "Community announcements",
+      "Shared resources and Discord links",
     ],
   },
   {
     version: "0.9",
-    name: "Alliance and Kingdom Communities",
+    name: "Transfer Hub",
     status: "planned",
     progress: 0,
     description:
-      "Connected community spaces built around verified players, alliances and kingdoms.",
+      "Recruitment, transfer applications, eligibility, invitations, passes and movement history.",
     features: [
-      "Kingdom member directories",
-      "Alliance member directories",
-      "Favourite players, alliances and kingdoms",
-      "Alliance leadership roles",
-      "Kingdom administration roles",
-      "Alliance pages and branding",
-      "Kingdom pages and recruitment information",
-      "Discord integration",
-      "Shared alliance art and chat templates",
-      "Community announcements",
+      "Player transfer profiles",
+      "Alliance and kingdom recruitment",
+      "Eligibility tracking",
+      "Invitation and pass management",
+      "Transfer workflow and history",
     ],
   },
   {
@@ -155,18 +107,14 @@ const roadmapReleases: RoadmapRelease[] = [
     status: "future",
     progress: 0,
     description:
-      "A unified Kingshot community platform bringing together players, alliances, kingdoms, live data, calculators and planning tools.",
+      "A unified platform for players, alliances and kingdoms, powered by canonical game knowledge and complete community workflows.",
     features: [
-      "Personalised player dashboard",
-      "Verified player communities",
-      "KvK Command Centre",
-      "Transfer Hub",
+      "KvK and event operations",
+      "Progression and planning tools",
       "Alliance and kingdom workspaces",
-      "Live events and scoreboards",
-      "Community submissions",
-      "Progression planners",
-      "Push notifications",
-      "Installable mobile web app",
+      "Transfer Hub",
+      "Community creation and submissions",
+      "Notifications and installable mobile experience",
     ],
   },
 ];
@@ -174,14 +122,11 @@ const roadmapReleases: RoadmapRelease[] = [
 function getStatusLabel(status: RoadmapStatus) {
   switch (status) {
     case "live":
-      return "Live now";
-
+      return "Complete";
     case "development":
       return "In development";
-
     case "planned":
       return "Planned";
-
     default:
       return "Future release";
   }
@@ -193,31 +138,19 @@ function RoadmapPage() {
       <header className="product-roadmap__hero">
         <div>
           <p className="eyebrow">Product roadmap</p>
-
-          <h1 className="page-title">
-            Building the ultimate Kingshot companion
-          </h1>
-
+          <h1 className="page-title">Build each domain completely</h1>
           <p>
-            Kingshot Forge is growing into a connected
-            community platform powered by live game data,
-            planning tools and a full administrative content
-            system.
+            The Forge Platform Foundation is complete. Development now moves
+            one epic, one sprint and one release at a time, beginning with the
+            complete Hero Domain in Release 0.6.0.
           </p>
         </div>
 
         <div className="product-roadmap__hero-actions">
-          <Link
-            className="button button--primary"
-            to="/release-notes"
-          >
+          <Link className="button button--primary" to="/release-notes">
             Read release notes
           </Link>
-
-          <Link
-            className="button button--secondary"
-            to="/my-forge"
-          >
+          <Link className="button button--secondary" to="/my-forge">
             Open My Forge
           </Link>
         </div>
@@ -225,32 +158,24 @@ function RoadmapPage() {
 
       <section className="roadmap-priority-panel">
         <div>
-          <span className="roadmap-priority-panel__icon">
-            ⚙️
-          </span>
-
+          <span className="roadmap-priority-panel__icon">⚒️</span>
           <div>
-            <p className="eyebrow">
-              Current development priority
-            </p>
-
-            <h2>Forge Admin CMS</h2>
-
+            <p className="eyebrow">Current development priority</p>
+            <h2>Release 0.6.0 — Hero Domain Complete</h2>
             <p>
-              The current focus is expanding Forge Admin into
-              a complete content management system with record
-              editing, dataset imports, version history,
-              validation and additional live Kingshot datasets.
+              Sprint 8.1 focuses exclusively on Hero Skills as a complete
+              canonical vertical slice, using the existing editorial and
+              publishing platform without redesigning the architecture.
             </p>
           </div>
         </div>
 
         <div className="roadmap-priority-panel__tags">
-          <span>Record editing</span>
-          <span>Import Manager</span>
-          <span>Version history</span>
-          <span>Global search</span>
-          <span>Dataset expansion</span>
+          <span>Hero Skills</span>
+          <span>Canonical content</span>
+          <span>Structured editing</span>
+          <span>Publishing</span>
+          <span>Public consumption</span>
         </div>
       </section>
 
@@ -262,7 +187,7 @@ function RoadmapPage() {
           >
             <div className="roadmap-release__header">
               <div className="roadmap-release__version">
-                <span>Version {release.version}</span>
+                <span>{release.version === "Foundation" ? "Phase" : "Version"} {release.version}</span>
                 <h2>{release.name}</h2>
               </div>
 
@@ -272,7 +197,6 @@ function RoadmapPage() {
                     {release.priority}
                   </span>
                 )}
-
                 <span
                   className={`roadmap-release__status roadmap-release__status--${release.status}`}
                 >
@@ -290,13 +214,8 @@ function RoadmapPage() {
                 <span>Release progress</span>
                 <strong>{release.progress}%</strong>
               </div>
-
               <div className="roadmap-release__progress-track">
-                <span
-                  style={{
-                    width: `${release.progress}%`,
-                  }}
-                />
+                <span style={{ width: `${release.progress}%` }} />
               </div>
             </div>
 
@@ -304,11 +223,8 @@ function RoadmapPage() {
               {release.features.map((feature) => (
                 <div key={feature}>
                   <span aria-hidden="true">
-                    {release.status === "live"
-                      ? "✓"
-                      : "→"}
+                    {release.status === "live" ? "✓" : "→"}
                   </span>
-
                   <span>{feature}</span>
                 </div>
               ))}
@@ -319,19 +235,13 @@ function RoadmapPage() {
 
       <section className="roadmap-community-note">
         <div>
-          <p className="eyebrow">
-            Community-led development
-          </p>
-
+          <p className="eyebrow">Community-led development</p>
           <h2>Help shape what comes next</h2>
-
           <p>
-            The roadmap will continue to evolve through
-            player feedback, testing and community
-            priorities.
+            Priorities can evolve through evidence and community feedback, but
+            the active domain will be completed before Forge expands again.
           </p>
         </div>
-
         <a
           className="button button--secondary"
           href="https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor"
