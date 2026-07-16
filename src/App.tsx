@@ -3,7 +3,7 @@ import AppLayout from "./components/AppLayout";
 import "./App.css";
 import "./features/admin/recordEditor/recordEditor.css";
 import "./styles/playerDomain.css";
-// Load Hero Collection overrides after the shared Player Domain styles.
+// Keep Hero Collection polish last so it overrides the legacy Hero card rules.
 import "./styles/heroCollectionPolish.css";
 
 import HomePage from "./pages/HomePage";
