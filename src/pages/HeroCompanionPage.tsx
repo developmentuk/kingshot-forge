@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import FeedbackDialog from '../components/FeedbackDialog'
+import PublishedHeroSkills from '../components/heroes/PublishedHeroSkills'
 import { getHeroCatalogue } from '../services/heroService'
 import type { Hero, HeroTier } from '../types/hero'
 import './HeroCompanionPage.css'
@@ -150,10 +151,17 @@ function HeroCompanionDetail({ hero }: { hero: Hero }) {
 
           <section className="hero-companion-panel">
             <div className="hero-companion-section__heading">
+              <div><p className="eyebrow">Published content</p><h2>Skills</h2></div>
+              <p>Only reviewed and published canonical skills are shown here.</p>
+            </div>
+            <PublishedHeroSkills heroSlug={hero.slug} heroName={hero.name} />
+          </section>
+
+          <section className="hero-companion-panel">
+            <div className="hero-companion-section__heading">
               <div><p className="eyebrow">Guide content</p><h2>Progression and strategy</h2></div>
             </div>
             <div className="hero-companion-guide-grid">
-              <EmptyGuideSection title="Skills" description="Skill names, effects and upgrade priorities will appear here once connected to the published Hero Skills data." />
               <EmptyGuideSection title="Widget" description="Widget effects and recommended progression will appear here when published." />
               <EmptyGuideSection title="Hero pairings" description="Recommended hero combinations will be added through reviewed Companion content." />
               <EmptyGuideSection title="Formation guidance" description="Battle-role and formation recommendations will appear here when verified." />
