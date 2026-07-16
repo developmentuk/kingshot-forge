@@ -40,20 +40,19 @@ const roadmapReleases: RoadmapRelease[] = [
     version: "0.6.0",
     name: "Hero Domain Complete",
     status: "development",
-    progress: 5,
-    priority: "Current release",
+    progress: 90,
+    priority: "Ready for runtime validation",
     description:
-      "The Hero Domain becomes the complete reference implementation for canonical content, editorial publishing, public consumption and player-owned progression.",
+      "The Hero Domain is now implemented as the complete reference experience for canonical Hero content, governed publication and published public guidance.",
     features: [
-      "Sprint 8.1: canonical Hero Skills",
-      "Structured skill editing and validation",
-      "Skill publication through the existing workflow",
-      "Published skills consumed by Hero experiences",
-      "Hero progression and star-up",
-      "Hero gear and exclusive gear",
-      "Player Hero collection and progression",
-      "Public Hero experience",
-      "Domain-wide end-to-end validation",
+      "Sprint 8.1: canonical Hero Skills vertical slice",
+      "Published Hero catalogue and Hero Skill consumption",
+      "Hero strengths, weaknesses and best-use guidance",
+      "Hero synergies and recommended formation roles",
+      "Widget and Exclusive Gear guidance",
+      "Hero progression recommendations",
+      "Complete responsive Hero Companion experience",
+      "Final runtime, deployment and product-owner validation",
     ],
   },
   {
@@ -124,7 +123,7 @@ function getStatusLabel(status: RoadmapStatus) {
     case "live":
       return "Complete";
     case "development":
-      return "In development";
+      return "In validation";
     case "planned":
       return "Planned";
     default:
@@ -140,19 +139,14 @@ function RoadmapPage() {
           <p className="eyebrow">Product roadmap</p>
           <h1 className="page-title">Build each domain completely</h1>
           <p>
-            The Forge Platform Foundation is complete. Development now moves
-            one epic, one sprint and one release at a time, beginning with the
-            complete Hero Domain in Release 0.6.0.
+            The Forge Platform Foundation is complete. Release 0.6.0 now moves
+            through final Hero Domain runtime validation before Forge begins the
+            next domain.
           </p>
         </div>
-
         <div className="product-roadmap__hero-actions">
-          <Link className="button button--primary" to="/release-notes">
-            Read release notes
-          </Link>
-          <Link className="button button--secondary" to="/my-forge">
-            Open My Forge
-          </Link>
+          <Link className="button button--primary" to="/release-notes">Read release notes</Link>
+          <Link className="button button--secondary" to="/companion/heroes">Open Hero Companion</Link>
         </div>
       </header>
 
@@ -163,71 +157,41 @@ function RoadmapPage() {
             <p className="eyebrow">Current development priority</p>
             <h2>Release 0.6.0 — Hero Domain Complete</h2>
             <p>
-              Sprint 8.1 focuses exclusively on Hero Skills as a complete
-              canonical vertical slice, using the existing editorial and
-              publishing platform without redesigning the architecture.
+              Sprint 8.2 completes Hero guidance, formations, synergies,
+              progression, Widget and Exclusive Gear recommendations, mobile
+              behaviour and final UI polish using published datasets only.
             </p>
           </div>
         </div>
-
         <div className="roadmap-priority-panel__tags">
-          <span>Hero Skills</span>
-          <span>Canonical content</span>
-          <span>Structured editing</span>
-          <span>Publishing</span>
-          <span>Public consumption</span>
+          <span>Hero Companion</span>
+          <span>Published content</span>
+          <span>Progression guidance</span>
+          <span>Mobile complete</span>
+          <span>Runtime validation</span>
         </div>
       </section>
 
       <div className="product-roadmap__timeline">
         {roadmapReleases.map((release) => (
-          <article
-            className={`roadmap-release roadmap-release--${release.status}`}
-            key={release.version}
-          >
+          <article className={`roadmap-release roadmap-release--${release.status}`} key={release.version}>
             <div className="roadmap-release__header">
               <div className="roadmap-release__version">
                 <span>{release.version === "Foundation" ? "Phase" : "Version"} {release.version}</span>
                 <h2>{release.name}</h2>
               </div>
-
               <div className="roadmap-release__status-wrap">
-                {release.priority && (
-                  <span className="roadmap-release__priority">
-                    {release.priority}
-                  </span>
-                )}
-                <span
-                  className={`roadmap-release__status roadmap-release__status--${release.status}`}
-                >
-                  {getStatusLabel(release.status)}
-                </span>
+                {release.priority && <span className="roadmap-release__priority">{release.priority}</span>}
+                <span className={`roadmap-release__status roadmap-release__status--${release.status}`}>{getStatusLabel(release.status)}</span>
               </div>
             </div>
-
-            <p className="roadmap-release__description">
-              {release.description}
-            </p>
-
+            <p className="roadmap-release__description">{release.description}</p>
             <div className="roadmap-release__progress">
-              <div className="roadmap-release__progress-heading">
-                <span>Release progress</span>
-                <strong>{release.progress}%</strong>
-              </div>
-              <div className="roadmap-release__progress-track">
-                <span style={{ width: `${release.progress}%` }} />
-              </div>
+              <div className="roadmap-release__progress-heading"><span>Release progress</span><strong>{release.progress}%</strong></div>
+              <div className="roadmap-release__progress-track"><span style={{ width: `${release.progress}%` }} /></div>
             </div>
-
             <div className="roadmap-release__features">
-              {release.features.map((feature) => (
-                <div key={feature}>
-                  <span aria-hidden="true">
-                    {release.status === "live" ? "✓" : "→"}
-                  </span>
-                  <span>{feature}</span>
-                </div>
-              ))}
+              {release.features.map((feature) => <div key={feature}><span aria-hidden="true">{release.status === "live" ? "✓" : "→"}</span><span>{feature}</span></div>)}
             </div>
           </article>
         ))}
@@ -237,19 +201,9 @@ function RoadmapPage() {
         <div>
           <p className="eyebrow">Community-led development</p>
           <h2>Help shape what comes next</h2>
-          <p>
-            Priorities can evolve through evidence and community feedback, but
-            the active domain will be completed before Forge expands again.
-          </p>
+          <p>Priorities can evolve through evidence and community feedback, but the active domain will be completed before Forge expands again.</p>
         </div>
-        <a
-          className="button button--secondary"
-          href="https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Send feedback
-        </a>
+        <a className="button button--secondary" href="https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor" target="_blank" rel="noreferrer">Send feedback</a>
       </section>
     </section>
   );
