@@ -1,0 +1,85 @@
+.hero-companion-skills {
+  display: grid;
+  gap: 16px;
+}
+
+.hero-companion-skill-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(34, 211, 238, 0.24);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(9, 15, 29, 0.94));
+}
+
+.hero-companion-skill-card__icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(245, 158, 11, 0.42);
+  border-radius: 15px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fde68a;
+  font-size: 1.5rem;
+}
+
+.hero-companion-skill-card__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-companion-skill-card__content h3 {
+  margin: 8px 0 4px;
+  font-size: 1.22rem;
+}
+
+.hero-companion-skill-card__content > p {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.hero-companion-skill-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.hero-companion-skill-card__meta span,
+.hero-companion-skill-card__type {
+  color: #67e8f9;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-companion-skills-state {
+  padding: 18px;
+  border: 1px dashed rgba(148, 163, 184, 0.32);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.hero-companion-skills-state p {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+}
+
+@media (max-width: 620px) {
+  .hero-companion-skill-card {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .hero-companion-skill-card__icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+}
