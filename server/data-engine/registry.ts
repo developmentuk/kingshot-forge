@@ -1,5 +1,5 @@
 import {
-  DATASET_KEYS,
+  IMPORTABLE_DATASET_KEYS,
 } from '../../shared/data-engine/datasets.js'
 
 import type {
@@ -94,7 +94,7 @@ export function getDatasetImporter(
 
   if (!importer) {
     throw new Error(
-      `Dataset "${key}" is not registered.`,
+      `Dataset "${key}" is not registered as an imported dataset.`,
     )
   }
 
@@ -128,10 +128,10 @@ registerDataset(shardsImporter)
 registerDataset(mastersImporter)
 registerDataset(kvkImporter)
 
-for (const datasetKey of DATASET_KEYS) {
+for (const datasetKey of IMPORTABLE_DATASET_KEYS) {
   if (!hasDatasetImporter(datasetKey)) {
     throw new Error(
-      `Dataset "${datasetKey}" is declared in the shared catalogue but has no importer.`,
+      `Dataset "${datasetKey}" is declared importable but has no importer.`,
     )
   }
 }
