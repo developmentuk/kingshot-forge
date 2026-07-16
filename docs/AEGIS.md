@@ -111,6 +111,7 @@ Known warnings are non-blocking only when documented and unchanged in count or s
 - Do not merge to `main` before runtime verification.
 - Do not mark deferred or partially tested work complete.
 - Update Roadmap and Release Notes before release acceptance.
+- Use `docs/RC_CHECKLIST.md` as the canonical release-readiness record.
 
 ## Current phase
 
@@ -123,7 +124,7 @@ The Foundation Phase established authentication, roles, Supabase persistence, th
 Active sprint:
 
 ```text
-Sprint 8.2 — Hero Domain Completion
+Sprint 9 — Final Editorial Platform Validation
 ```
 
 Current working branch:
@@ -132,16 +133,19 @@ Current working branch:
 release/0.6.0-hero-domain
 ```
 
-Sprint 8.1 established Hero Skills as a complete canonical vertical slice. Sprint 8.2 completes the public Hero experience around the published Hero catalogue and published Hero Skills.
+Sprint 8.1 established Hero Skills as a complete canonical vertical slice. Sprint 8.2 completed the planned public Hero experience around the published Hero catalogue and published Hero Skills. Sprint 9 is the release-engineering pass that validates the editorial platform, Hero Domain, permissions, production behaviour, responsive layouts and release documentation before an RC tag is permitted.
 
-## Sprint 8.2 guardrails
+## Sprint 9 guardrails
 
 - Do not redesign the architecture.
-- Reuse published datasets only.
+- Reuse published datasets only on public surfaces.
 - Do not read editorial drafts from public Hero surfaces.
-- Derive recommendations only from published Hero facts and published skills; do not invent unpublished costs, values or breakpoints.
+- Validate declared dataset capabilities against the implemented adapters, schemas, services and published projections.
+- Resolve or explicitly defer placeholder Admin routes before release acceptance.
 - Keep player-owned progression separate from canonical Hero guidance.
-- Complete desktop and mobile states, validation and documentation before release acceptance.
+- Complete desktop, tablet and mobile validation before release acceptance.
+- Run `npm run check` from a clean checkout before release-oriented sign-off.
+- Record verified results and blockers in `docs/RC_CHECKLIST.md`.
 - Runtime validation and deployment smoke testing remain required before merge to `main` and tagging `v0.6.0`.
 
 ## Updating this file
