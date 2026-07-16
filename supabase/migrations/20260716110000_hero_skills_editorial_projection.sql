@@ -12,6 +12,14 @@ alter table public.hero_skills
   add column if not exists published_by text;
 
 alter table public.hero_skills
+  alter column editorial_key set not null;
+
+alter table public.hero_skills
+  drop constraint if exists hero_skills_editorial_key_key;
+alter table public.hero_skills
+  add constraint hero_skills_editorial_key_key unique (editorial_key);
+
+alter table public.hero_skills
   drop constraint if exists hero_skills_source_accuracy_score_check;
 alter table public.hero_skills
   add constraint hero_skills_source_accuracy_score_check
@@ -31,10 +39,6 @@ alter table public.hero_skills
   drop constraint if exists hero_skills_max_level_check;
 alter table public.hero_skills
   add constraint hero_skills_max_level_check check (max_level > 0);
-
-create unique index if not exists hero_skills_editorial_key_uidx
-  on public.hero_skills (editorial_key)
-  where editorial_key is not null;
 
 create unique index if not exists hero_skills_active_hero_slot_uidx
   on public.hero_skills (hero_id, slot_index)
