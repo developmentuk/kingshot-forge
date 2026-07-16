@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type {
   Hero,
   PlayerHeroWithHero,
@@ -62,6 +63,8 @@ function HeroCard({
 }: HeroCardProps) {
   const isOwned =
     playerHero?.is_owned ?? false
+  const companionPath =
+    `/companion/heroes/${hero.slug || hero.id}`
 
   return (
     <article
@@ -121,7 +124,6 @@ function HeroCard({
 
           <div className="hero-game-card__identity">
             <p>{formatLabel(hero.rarity)}</p>
-
             <h2>{hero.name}</h2>
           </div>
         </div>
@@ -143,16 +145,13 @@ function HeroCard({
           <div className="hero-game-card__stats">
             <div>
               <span>Level</span>
-
               <strong>
-                {playerHero?.hero_level ??
-                  '—'}
+                {playerHero?.hero_level ?? '—'}
               </strong>
             </div>
 
             <div>
               <span>Power</span>
-
               <strong>
                 {playerHero?.hero_power
                   ? playerHero.hero_power.toLocaleString()
@@ -165,7 +164,6 @@ function HeroCard({
             <span>
               {formatLabel(hero.troop_type)}
             </span>
-
             <strong>
               {isOwned
                 ? 'Edit progression'
@@ -174,6 +172,13 @@ function HeroCard({
           </div>
         </div>
       </button>
+
+      <Link
+        to={companionPath}
+        className="hero-game-card__companion-link"
+      >
+        Open Companion guide
+      </Link>
     </article>
   )
 }
