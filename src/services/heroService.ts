@@ -2,9 +2,15 @@ import { supabase } from '../lib/supabase'
 import type {
   Hero,
   HeroEditorValues,
+  HeroGearPosition,
   PlayerHeroWithHero,
 } from '../types/hero'
 import { getActiveHeroes } from '../repositories/heroRepository'
+
+interface PlayerHeroGearRow {
+  position: HeroGearPosition
+  gear_level: number | null
+}
 
 interface PlayerHeroRow {
   id: string
@@ -20,7 +26,6 @@ interface PlayerHeroRow {
   skill_4_level: number | null
   skill_5_level: number | null
   skill_6_level: number | null
-  exclusive_gear_level: number | null
   widget_level: number | null
   is_owned: boolean
   is_showcase: boolean
@@ -29,6 +34,14 @@ interface PlayerHeroRow {
   created_at: string
   updated_at: string
   hero: Hero | Hero[] | null
+  gear: PlayerHeroGearRow[] | null
+}
+
+function getGearLevel(
+  gear: PlayerHeroGearRow[] | null,
+  position: HeroGearPosition,
+) {
+  return gear?.find((item) => item.position === position)?.gear_level ?? null
 }
 
 function normaliseJoinedHero(
@@ -56,7 +69,10 @@ function normaliseJoinedHero(
     skill_4_level: row.skill_4_level,
     skill_5_level: row.skill_5_level,
     skill_6_level: row.skill_6_level,
-    exclusive_gear_level: row.exclusive_gear_level,
+    gear_top_left_level: getGearLevel(row.gear, 'top_left'),
+    gear_top_right_level: getGearLevel(row.gear, 'top_right'),
+    gear_bottom_left_level: getGearLevel(row.gear, 'bottom_left'),
+    gear_bottom_right_level: getGearLevel(row.gear, 'bottom_right'),
     widget_level: row.widget_level,
     is_owned: row.is_owned,
     is_showcase: row.is_showcase,
@@ -91,7 +107,6 @@ export async function getPlayerHeroes(
       skill_4_level,
       skill_5_level,
       skill_6_level,
-      exclusive_gear_level,
       widget_level,
       is_owned,
       is_showcase,
@@ -99,6 +114,10 @@ export async function getPlayerHeroes(
       notes,
       created_at,
       updated_at,
+      gear:player_hero_gear (
+        position,
+        gear_level
+      ),
       hero:heroes (
         id,
         name,
@@ -169,7 +188,7 @@ export async function savePlayerHero(
     ? values.displayOrder
     : null
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('player_heroes')
     .upsert(
       {
@@ -185,8 +204,6 @@ export async function savePlayerHero(
         skill_4_level: values.skill4Level,
         skill_5_level: values.skill5Level,
         skill_6_level: values.skill6Level,
-        exclusive_gear_level:
-          values.exclusiveGearLevel,
         widget_level: values.widgetLevel,
         is_owned: values.isOwned,
         is_showcase: values.isShowcase,
@@ -197,10 +214,36 @@ export async function savePlayerHero(
         onConflict: 'player_account_id,hero_id',
       },
     )
+    .select('id')
+    .single()
 
-  if (error) {
+  if (error || !data) {
     throw new Error(
-      `Unable to save the hero: ${error.message}`,
+      `Unable to save the hero: ${error?.message ?? 'No record returned.'}`,
+    )
+  }
+
+  const gearRows = [
+    ['top_left', values.gearTopLeftLevel],
+    ['top_right', values.gearTopRightLevel],
+    ['bottom_left', values.gearBottomLeftLevel],
+    ['bottom_right', values.gearBottomRightLevel],
+  ].map(([position, gearLevel]) => ({
+    player_hero_id: data.id,
+    position,
+    gear_level: gearLevel,
+    enhancement_level: null,
+  }))
+
+  const { error: gearError } = await supabase
+    .from('player_hero_gear')
+    .upsert(gearRows, {
+      onConflict: 'player_hero_id,position',
+    })
+
+  if (gearError) {
+    throw new Error(
+      `Hero saved, but gear levels could not be saved: ${gearError.message}`,
     )
   }
 }
