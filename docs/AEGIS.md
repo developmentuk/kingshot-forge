@@ -35,16 +35,15 @@ Use the connected Supabase tools for project hrvdhjscwitqpwjhnjkm. Begin read-on
 - Google Analytics measurement ID: `G-8L3HYETN51`
 - GitHub is the canonical and single source of truth for code.
 - Supabase is the canonical source for persistent platform data.
-- The current branch and latest commit must be inspected at the start of every session; never assume this file's branch status is still current.
-- Do not request local ZIP snapshots while GitHub is available. Use repository files and the active branch directly unless Clark explicitly requests another workflow.
+- Inspect the current branch and latest commit at the start of every session.
+- Do not request local ZIP snapshots while GitHub is available unless Clark explicitly requests that workflow.
 
 ## Tool boundaries
 
-- The GitHub connector in ChatGPT can inspect and, when permission is available, modify the repository directly.
-- Supabase tools in ChatGPT can inspect or modify the configured project when connected and authorised.
-- VS Code MCP is local to Clark's VS Code session. A ChatGPT conversation cannot operate the local VS Code MCP server directly.
-- A new chat may require Clark to mention `@GitHub` once so the connector is brought into that session. The repository itself does not need reconnecting or reinstalling.
-- Never ask Clark to reinstall MCP merely because a new chat started. First attempt to use the installed connector/tool.
+- Use the GitHub connector to inspect and modify repository files directly when available.
+- Use connected Supabase tools for project inspection and authorised database changes.
+- VS Code MCP is local to Clark's VS Code session and cannot be operated from a separate ChatGPT conversation.
+- Never ask Clark to reinstall MCP merely because a new chat started; first attempt to use the installed connector.
 - Never expose service-role keys, access tokens, OAuth URLs or secrets in chat, documentation or commits.
 
 ## Stack
@@ -59,7 +58,7 @@ Use the connected Supabase tools for project hrvdhjscwitqpwjhnjkm. Begin read-on
 
 ## Standard validation
 
-Run before committing:
+Run before release-oriented commits:
 
 ```powershell
 npm run check
@@ -88,9 +87,9 @@ Do not treat these as newly introduced defects unless their count or scope chang
 3. Work on a focused feature branch.
 4. Inspect and modify repository files directly through GitHub when the connector is available.
 5. Make coherent commits with descriptive messages.
-6. Run validation before committing.
+6. Run validation before release-oriented commits.
 7. Push and verify the exact commit deployed by Vercel.
-8. Do not infer deployment freshness from bundle hash names; compare commit SHAs.
+8. Compare commit SHAs rather than inferring freshness from bundle names.
 9. Merge to `main` only after runtime verification.
 
 ## Debugging standard
@@ -115,42 +114,18 @@ When runtime behaviour differs from the expected implementation:
 - Every editorial mutation appends an audit event.
 - Supabase service-role access must remain server-side only.
 - Prefer vertical, end-to-end slices over disconnected layers.
-- Validate Vercel's server-function compilation, not only the local Vite client build.
-- OAuth must preserve the deployment origin. Production and Vercel preview deployments must return to the origin that initiated sign-in.
-- Supabase Authentication redirect URLs must explicitly allow the production domain and supported Vercel preview domains; otherwise Supabase falls back to its configured Site URL.
+- Validate Vercel server-function compilation, not only the local Vite client build.
+- OAuth must preserve the deployment origin.
+- Supabase Authentication redirect URLs must explicitly allow production and supported preview callbacks.
+- Preview Vercel functions require `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the Preview environment.
+- Unsaved editor changes must not be replaced by background refreshes or tab-focus events.
+- Optimistic concurrency conflicts must preserve the user's unsaved working copy.
 
 ## Current milestone
 
-### Platform Milestone 2B — Editorial Workflow Stabilisation
+### Platform Milestone 2B — Editorial Workflow Validation
 
-PM2B platform layers have been added, including:
-
-- dataset contracts and registries;
-- draft, review and approval workflows;
-- publication lifecycle;
-- version history and diff services;
-- role and permission services;
-- publication queue;
-- scheduled publishing;
-- admin editorial UI components;
-- Supabase persistence and migration;
-- authenticated editorial API scaffolding;
-- Record Editor connection;
-- PM2B validation and release checklist.
-
-### Current blocking issue
-
-Vercel client and server-function compilation now succeeds at branch commit `427bcb38fd571899a33aa7b506abf7134de7a9ad`.
-
-The active blocker is preview authentication:
-
-- `src/context/AuthContext.tsx` correctly sets the Google OAuth `redirectTo` value from `window.location.origin`.
-- Supabase rejects an unlisted Vercel preview redirect and falls back to the configured Site URL.
-- Authentication therefore returns to the default Vercel deployment instead of the PM2B preview deployment.
-- The session is origin-scoped, so the authenticated default deployment and unauthenticated preview deployment cannot share it.
-- Heroes Edit cannot be validated until the relevant preview URL is added to Supabase Authentication redirect URLs.
-
-The current work branch is:
+Current branch:
 
 ```text
 feature/pm2b-editorial-workflow
@@ -158,18 +133,59 @@ feature/pm2b-editorial-workflow
 
 Always inspect its live head before making changes.
 
-### Stabilisation order
+### Runtime validation completed
 
-1. Add the production and supported preview callback patterns to Supabase Authentication redirect URLs.
-2. Confirm Google sign-in returns to the same PM2B preview origin.
-3. Verify `/api/editorial/record` authentication and response.
-4. Verify `/api/editorial/action` draft creation.
-5. Confirm Heroes Edit opens and saves a first draft.
-6. Test review, approval, queue, publish, archive, restore and rollback.
-7. Complete `docs/testing/PM2B-END-TO-END-CHECKLIST.md`.
-8. Update Roadmap and Release Notes, merge, tag and deploy.
+The following owner-role Heroes workflow has passed against the authenticated Vercel preview and Supabase project:
 
-Do not add new product features until this sequence passes.
+1. Preview OAuth returns to the initiating preview deployment.
+2. Heroes Edit opens with owner permissions.
+3. First draft saves and creates immutable version history.
+4. Submit for review advances to `in_review`.
+5. Approve advances to `approved`.
+6. Publish creates a pending queue item.
+7. Manual **Process now** invokes `process_queue` and publishes successfully.
+8. Archive creates a new immutable archived version.
+9. Restore creates a new immutable published version.
+10. Compare correctly reports identical historical values where applicable.
+11. Rollback creates a new immutable version rather than overwriting history.
+12. Unsaved changes survive browser-tab switching.
+13. Stale saves are rejected by Supabase optimistic concurrency, confirmed by `expected 11, actual 12`.
+
+### Runtime changes made during validation
+
+- Added deployment-aware preview authentication configuration guidance.
+- Added Preview environment requirements for server-side Supabase access.
+- Added **Process now** to pending publication queue items.
+- Prevented dirty forms from being reset by refreshed record props.
+
+### Remaining PM2B release gates
+
+PM2B must not yet be described as fully complete. The following checklist areas remain unvalidated or only partially validated:
+
+- automated `npm run check` at the final branch head;
+- database verification script and RLS/index confirmation at the final schema state;
+- return-to-draft and reject paths;
+- full server-side permission matrix for viewer, contributor, content creator, moderator, admin, owner and beta tester;
+- publication duplicate prevention, failure, retry, maximum-attempt and cancellation paths;
+- scheduled publishing creation, cancellation, due processing and failure handling;
+- actor/status/action/date filtering in global history;
+- desktop and mobile responsive validation;
+- friendly concurrency-conflict UX;
+- user display names instead of raw UUIDs;
+- Roadmap, Release Notes, merge, tag and production smoke test.
+
+### Next validation order
+
+1. Test return-to-draft and reject transitions on a fresh test record.
+2. Validate the permission matrix with non-owner roles.
+3. Validate scheduled publishing end to end.
+4. Validate queue duplicate, cancel, failure and retry behaviour.
+5. Run final automated and database verification.
+6. Complete responsive UI checks.
+7. Update Roadmap and Release Notes.
+8. Merge, tag, deploy and smoke-test production.
+
+Do not start PM2C product expansion until these release gates are closed or explicitly deferred and documented.
 
 ## Important files
 
@@ -196,9 +212,8 @@ supabase/migrations/20260715210000_pm2b_editorial_persistence.sql
 - Live Data Engine datasets are served through `/api/data-engine/dataset?dataset=<key>`.
 - Heroes live dataset retrieval has been verified.
 - `/admin/data/:datasetId` renders `AdminDatasetDetailPage`.
-- Heroes declares the editing capability, has a registered dataset adapter and has a registered Record Editor schema on the PM2B branch.
-- `DatasetTable` disables Edit only when no edit handler is supplied.
-- Edit-button behaviour must be tested on an authenticated PM2B preview origin before it can be considered fixed or broken.
+- Heroes has a registered adapter and Record Editor schema on the PM2B branch.
+- Owner editing, workflow transitions, queue processing, archive, restore, rollback and concurrency have been runtime-validated for Heroes.
 
 ## Release discipline
 
@@ -227,4 +242,4 @@ Update `docs/AEGIS.md` whenever any of these change:
 - key integrations;
 - established collaboration or debugging workflow.
 
-Keep this file operational and concise. Detailed implementation history belongs in change-set, architecture and release documents.
+Keep this file operational and concise. Detailed implementation history belongs in testing, change-set, architecture and release documents.
