@@ -27,6 +27,7 @@ import TransferHubPage from "./pages/TransferHubPage";
 import PlayerProfilePage from "./pages/PlayerProfilePage";
 import PlayerProfileEditorPage from "./pages/PlayerProfileEditorPage";
 import PlayerProgressionPage from "./pages/PlayerProgressionPage";
+import PublicPlayerProgressionPage from "./pages/PublicPlayerProgressionPage";
 import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
 import HeroCollectionPage from "./pages/HeroCollectionPage";
 import HeroCompanionPage from "./pages/HeroCompanionPage";
@@ -63,6 +64,7 @@ function App() {
         <Route path="transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />
         <Route path="player/:forgeId" element={<PlayerProfilePage />} />
+        <Route path="player/:forgeId/progression" element={<PublicPlayerProgressionPage />} />
         <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
         <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
