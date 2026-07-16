@@ -3,6 +3,10 @@ import {
 } from "./buildingsRecordEditorSchema";
 
 import {
+  heroSkillsRecordEditorSchema,
+} from "./heroSkillsRecordEditorSchema";
+
+import {
   heroesRecordEditorSchema,
 } from "./heroesRecordEditorSchema";
 
@@ -49,6 +53,10 @@ registerRecordEditorSchema(
 
 registerRecordEditorSchema(
   heroesRecordEditorSchema,
+);
+
+registerRecordEditorSchema(
+  heroSkillsRecordEditorSchema,
 );
 
 export function getRecordEditorSchema(
