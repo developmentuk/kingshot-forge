@@ -1,0 +1,60 @@
+.hero-companion-skill-priority {
+  padding: 16px 18px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 15px;
+  background: rgba(6, 78, 59, 0.18);
+}
+
+.hero-companion-skill-priority p {
+  margin: 6px 0 0;
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
+.hero-companion-skill-progression {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.hero-companion-skill-progression > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #cbd5e1;
+  font-size: 0.84rem;
+}
+
+.hero-companion-skill-progression > div span {
+  color: #94a3b8;
+}
+
+.hero-companion-skill-progression ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(34px, 1fr));
+  gap: 8px;
+  margin: 12px 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-companion-skill-progression li {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22d3ee, #34d399);
+}
+
+.hero-companion-skill-progression li span {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+@media (max-width: 620px) {
+  .hero-companion-skill-card__content { min-width: 0; }
+  .hero-companion-skill-progression > div { flex-direction: column; gap: 4px; }
+}
