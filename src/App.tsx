@@ -3,6 +3,7 @@ import AppLayout from "./components/AppLayout";
 import "./App.css";
 import "./features/admin/recordEditor/recordEditor.css";
 import "./styles/playerDomain.css";
+import "./styles/heroCollectionPolish.css";
 
 import HomePage from "./pages/HomePage";
 import NameStudioPage from "./pages/NameStudioPage";
