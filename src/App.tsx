@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import "./App.css";
 import "./features/admin/recordEditor/recordEditor.css";
+import "./styles/playerDomain.css";
 
 import HomePage from "./pages/HomePage";
 import NameStudioPage from "./pages/NameStudioPage";
@@ -25,6 +26,7 @@ import TransferProfilePage from "./pages/TransferProfilePage";
 import TransferHubPage from "./pages/TransferHubPage";
 import PlayerProfilePage from "./pages/PlayerProfilePage";
 import PlayerProfileEditorPage from "./pages/PlayerProfileEditorPage";
+import PlayerProgressionPage from "./pages/PlayerProgressionPage";
 import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
 import HeroCollectionPage from "./pages/HeroCollectionPage";
 import HeroCompanionPage from "./pages/HeroCompanionPage";
@@ -62,6 +64,7 @@ function App() {
         <Route path="transfer-hub" element={<TransferHubPage />} />
         <Route path="player/:forgeId" element={<PlayerProfilePage />} />
         <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
+        <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
