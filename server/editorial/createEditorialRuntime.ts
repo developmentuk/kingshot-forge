@@ -116,6 +116,12 @@ export function createEditorialRuntime() {
           context.item.datasetId,
           context.item.recordId,
           version.values,
+          {
+            version: version.version,
+            versionId: version.id,
+            publishedBy:
+              context.item.requestedBy,
+          },
         );
 
         return editorialExecutor(context);
