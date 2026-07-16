@@ -3,12 +3,16 @@ import type {
   ScheduledPublication,
 } from "../../../platform";
 
+import {
+  runEditorialAction,
+} from "./editorialApi";
+
 interface PublicationOperationsPanelProps {
   queueItems: PublicationQueueItem[];
   schedules: ScheduledPublication[];
   onProcessQueueItem?: (
     itemId: string,
-  ) => void;
+  ) => void | Promise<void>;
   onRetryQueueItem?: (
     itemId: string,
   ) => void;
@@ -42,6 +46,26 @@ export function PublicationOperationsPanel({
   onCancelQueueItem,
   onCancelSchedule,
 }: PublicationOperationsPanelProps) {
+  async function processQueueItem(
+    item: PublicationQueueItem,
+  ): Promise<void> {
+    if (onProcessQueueItem) {
+      await onProcessQueueItem(item.id);
+      return;
+    }
+
+    await runEditorialAction(
+      "process_queue",
+      {
+        datasetId: item.datasetId,
+        recordId: item.recordId,
+        queueItemId: item.id,
+      },
+    );
+
+    window.location.reload();
+  }
+
   return (
     <section className="editorial-admin-card">
       <div className="editorial-admin-card__heading">
@@ -93,11 +117,9 @@ export function PublicationOperationsPanel({
                       <button
                         type="button"
                         className="button button--small"
-                        onClick={() =>
-                          onProcessQueueItem?.(
-                            item.id,
-                          )
-                        }
+                        onClick={() => {
+                          void processQueueItem(item);
+                        }}
                       >
                         Process now
                       </button>
