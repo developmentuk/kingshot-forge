@@ -118,31 +118,33 @@ Known warnings are non-blocking only when documented and unchanged in count or s
 
 The Foundation Phase established authentication, roles, Supabase persistence, the Data Engine, dataset contracts, structured editing, governed publishing, immutable history, queue foundations, audit architecture, Vercel-compatible editorial APIs and release governance.
 
-### Release 0.6.0 — Epic 2: Hero Domain Complete
+### Release 0.7.0 — Epic 3: Player Domain
 
 Active sprint:
 
 ```text
-Sprint 8.2 — Hero Domain Completion
+Sprint 9.1 — Player Domain Foundation
 ```
 
 Current working branch:
 
 ```text
-release/0.6.0-hero-domain
+release/0.7.0-player-domain
 ```
 
-Sprint 8.1 established Hero Skills as a complete canonical vertical slice. Sprint 8.2 completes the public Hero experience around the published Hero catalogue and published Hero Skills.
+Sprint 9.1 establishes the canonical Player profile domain, player-owned progression snapshots, Hero collection/showcase integration and public Player experiences by reusing the existing account, profile, Hero and permission foundations.
 
-## Sprint 8.2 guardrails
+## Sprint 9.1 guardrails
 
 - Do not redesign the architecture.
-- Reuse published datasets only.
-- Do not read editorial drafts from public Hero surfaces.
-- Derive recommendations only from published Hero facts and published skills; do not invent unpublished costs, values or breakpoints.
-- Keep player-owned progression separate from canonical Hero guidance.
+- Keep API-backed player identity in `player_accounts`.
+- Keep public presentation in `player_profiles`.
+- Keep player Hero state in `player_heroes`, referencing canonical published Hero records.
+- Keep progression snapshots player-owned and immutable.
+- Expose only data the player explicitly marks public.
+- Do not duplicate canonical Hero or dataset facts into player-owned records.
 - Complete desktop and mobile states, validation and documentation before release acceptance.
-- Runtime validation and deployment smoke testing remain required before merge to `main` and tagging `v0.6.0`.
+- Runtime validation and deployment smoke testing remain required before merge to `main` and tagging `v0.7.0`.
 
 ## Updating this file
 
