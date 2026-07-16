@@ -30,7 +30,7 @@ Verified player profiles, hero collections, progression records, favourites and 
 
 ### 3. Alliance and Kingdom Operations
 
-Recruitment, transfers, communities, event coordination, permissions and shared operational tools.
+Recruitment, transfers, communities, event coordination, permissions, gift-code services and shared operational tools.
 
 ### 4. Planning and Decision Support
 
@@ -64,6 +64,7 @@ Forge is organised around explicit domains rather than pages.
 - **Alliance Domain:** alliances, membership, leadership, recruitment and shared resources.
 - **Kingdom Domain:** kingdoms, administration, KvK history and community information.
 - **Transfer Domain:** eligibility, applications, invitations, passes and movement history.
+- **Operations Domain:** gift-code services, campaigns, attendance, buff scheduling, rally coordination and operational audit.
 - **Event Domain:** event definitions, schedules, scoring, planning and live coordination.
 - **Progression Domain:** buildings, troops, research, gear, charms, VIP and resource planning.
 - **Creative Domain:** names, chat, banners, artwork and compatibility rules.
@@ -85,8 +86,16 @@ The **Hero Domain is the reference implementation** for proving how canonical da
 | Search and discovery | Shared platform | Heroes | Consistent filtering, sorting and record lookup |
 | Media | Shared platform | Hero images | Managed assets with permissioned uploads |
 | Audit and operations | Shared platform | Heroes | Traceable actions and operable failure states |
+| Gift-code redemption | Operations platform | Gift Centre | Consent-driven, server-side, rate-limited redemption with audit history |
+| KvK coordination | Operations platform | KvK campaigns | Canonical scoring plus player, alliance and kingdom operational state |
 
 A shared capability must be implemented once at platform level and adopted by domains. Domain-specific behaviour may extend the platform but must not duplicate or bypass it.
+
+## Community Contributions
+
+Forge may adapt and expand community-contributed concepts when permission is granted. Contributions are reviewed before use, reimplemented within Forge architecture where necessary and credited clearly.
+
+The donated `Kingshot-kvk-planner` project contributes concepts and engineering inspiration from **Sir Flux** for Gift Centre, KvK Operations and Alliance Operations. The standalone application architecture is not imported. Approved workflows are integrated natively into Forge. See `docs/SIR_FLUX_CONTRIBUTION_REVIEW.md`.
 
 ## Forge Values
 
@@ -133,31 +142,55 @@ Complete the canonical Hero Domain as the reference implementation:
 5. Public Hero experience
 6. Domain-wide validation, documentation and release hardening
 
-### Epic 3 — Player Domain Complete
+### Epic 3 — Editorial Platform Completion
 
-Complete verified player identity, public profiles, linked game data and personalisation.
+Complete Domain 0 Editorial Intelligence and Domain 1 Editorial Platform before continuing product-domain expansion.
 
-### Epic 4 — Alliance and Kingdom Domains
+### Epic 4 — Player Domain Complete
 
-Complete communities, roles, membership, administration and shared operational surfaces.
+Complete verified player identity, linked game accounts, public profiles, progression and personalisation.
 
-### Epic 5 — Transfer Hub
+### Epic 5 — Gift Centre
+
+Deliver the first Forge Operations vertical slice:
+
+1. governed gift-code registry and discovery;
+2. code validation and expiry state;
+3. linked-player eligibility and explicit consent;
+4. server-side redemption;
+5. normalised outcomes and claim history;
+6. bounded retry, throttling, audit and operational monitoring;
+7. notification foundations.
+
+### Epic 6 — Alliance and Kingdom Domains
+
+Complete communities, roles, membership, administration and the identity boundaries required by shared Operations capabilities.
+
+### Epic 7 — Transfer Hub
 
 Complete recruitment, applications, eligibility, invitations, passes and transfer history.
 
-### Epic 6 — KvK and Event Operations
+### Epic 8 — KvK and Event Operations
 
-Complete preparation planning, scoring, live coordination, reminders and historical analysis.
+Adapt and expand approved Sir Flux concepts through native Forge architecture:
 
-### Epic 7 — Progression and Planning
+1. KvK preparation campaigns and canonical scoring;
+2. resource and speed-up pledges;
+3. alliance and kingdom readiness summaries;
+4. battle-segment attendance;
+5. royal buff scheduling;
+6. coordinated rally timing;
+7. reminders, Discord integration and operational history.
+
+### Epic 9 — Progression and Planning
 
 Complete building, troop, research, gear, charm, VIP and resource planning tools.
 
-### Epic 8 — Community Creation
+### Epic 10 — Community Creation
 
 Complete the creative studios, submissions, moderation and reusable community library.
 
-The order may change through evidence and community priorities, but only one active epic is developed at a time.
+The order may change through evidence and community priorities, but only one active epic is developed at a time. Gift Centre is intentionally prioritised ahead of broader Operations because it can provide immediate player value as a secure, independently testable vertical slice.
 
 ## Release Methodology
 
