@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { APP_VERSION } from "../config/release";
 
 type RoadmapStatus = "live" | "development" | "planned" | "future";
 
@@ -37,26 +38,26 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
-    version: "0.6.0",
-    name: "Hero Domain Complete",
+    version: APP_VERSION,
+    name: "Editorial Platform Completion",
     status: "development",
-    progress: 90,
-    priority: "Ready for runtime validation",
+    progress: 14,
+    priority: "Sprint 9.2 in development",
     description:
-      "The Hero Domain is now implemented as the complete reference experience for canonical Hero content, governed publication and published public guidance.",
+      "Complete Domain 0 Editorial Intelligence and Domain 1 Editorial Platform before Player Domain development continues.",
     features: [
-      "Sprint 8.1: canonical Hero Skills vertical slice",
-      "Published Hero catalogue and Hero Skill consumption",
-      "Hero strengths, weaknesses and best-use guidance",
-      "Hero synergies and recommended formation roles",
-      "Widget and Exclusive Gear guidance",
-      "Hero progression recommendations",
-      "Complete responsive Hero Companion experience",
-      "Final runtime, deployment and product-owner validation",
+      "Project Constitution",
+      "Complete registered-dataset audit",
+      "Shared editorial platform parity",
+      "Verification Centre",
+      "Hero Skills canonical evidence workflow",
+      "Live dataset health dashboard",
+      "Measured domain readiness report",
+      "End-to-end desktop, mobile and deployment validation",
     ],
   },
   {
-    version: "0.7",
+    version: "0.7.x",
     name: "Player Domain Complete",
     status: "planned",
     progress: 0,
@@ -123,7 +124,7 @@ function getStatusLabel(status: RoadmapStatus) {
     case "live":
       return "Complete";
     case "development":
-      return "In validation";
+      return "In development";
     case "planned":
       return "Planned";
     default:
@@ -139,14 +140,13 @@ function RoadmapPage() {
           <p className="eyebrow">Product roadmap</p>
           <h1 className="page-title">Build each domain completely</h1>
           <p>
-            The Forge Platform Foundation is complete. Release 0.6.0 now moves
-            through final Hero Domain runtime validation before Forge begins the
-            next domain.
+            Release {APP_VERSION} completes the Editorial Intelligence and Editorial
+            Platform domains before Player Domain development continues.
           </p>
         </div>
         <div className="product-roadmap__hero-actions">
           <Link className="button button--primary" to="/release-notes">Read release notes</Link>
-          <Link className="button button--secondary" to="/companion/heroes">Open Hero Companion</Link>
+          <Link className="button button--secondary" to="/admin/datasets">Open datasets</Link>
         </div>
       </header>
 
@@ -155,20 +155,20 @@ function RoadmapPage() {
           <span className="roadmap-priority-panel__icon">⚒️</span>
           <div>
             <p className="eyebrow">Current development priority</p>
-            <h2>Release 0.6.0 — Hero Domain Complete</h2>
+            <h2>Release {APP_VERSION} — Editorial Platform Completion</h2>
             <p>
-              Sprint 8.2 completes Hero guidance, formations, synergies,
-              progression, Widget and Exclusive Gear recommendations, mobile
-              behaviour and final UI polish using published datasets only.
+              Sprint 9.2 completes dataset parity, verification, canonical evidence,
+              live health metrics and measurable domain readiness using the existing
+              Forge platform architecture.
             </p>
           </div>
         </div>
         <div className="roadmap-priority-panel__tags">
-          <span>Hero Companion</span>
-          <span>Published content</span>
-          <span>Progression guidance</span>
-          <span>Mobile complete</span>
-          <span>Runtime validation</span>
+          <span>Editorial Intelligence</span>
+          <span>Editorial Platform</span>
+          <span>Verification Centre</span>
+          <span>Dataset health</span>
+          <span>Mobile first</span>
         </div>
       </section>
 
