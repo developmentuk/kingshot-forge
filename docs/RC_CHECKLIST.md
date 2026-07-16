@@ -25,31 +25,31 @@ This checklist is the canonical release-readiness record for Kingshot Forge. A r
 
 For every registered dataset, verify the declared capabilities match the implemented behaviour.
 
-- [ ] Heroes
-- [ ] Hero Skills
-- [ ] Buildings
-- [ ] Governor Gear
-- [ ] Troops
-- [ ] Governor Charm
-- [ ] VIP
-- [ ] Hero Shards
-- [ ] Hero XP
-- [ ] Truegold
-- [ ] War Academy
-- [ ] Events
-- [ ] KvK Scoring
-- [ ] Masters
+- [x] Heroes
+- [x] Hero Skills
+- [x] Buildings
+- [x] Governor Gear
+- [x] Troops
+- [x] Governor Charm
+- [x] VIP
+- [x] Hero Shards
+- [x] Hero XP
+- [x] Truegold
+- [x] War Academy
+- [x] Events
+- [x] KvK Scoring
+- [x] Masters
 
 For each supported dataset:
 
-- [ ] Dataset loads from the intended source
-- [ ] List view works
-- [ ] Search works
-- [ ] Filters work where provided
-- [ ] Sorting works where provided
-- [ ] Pagination works
-- [ ] View-record state works
-- [ ] Edit action is shown only when an adapter and schema exist
+- [x] Dataset loads from the intended source
+- [x] List view works
+- [x] Search works
+- [x] Filters work where provided
+- [x] Sorting works where provided
+- [x] Pagination works
+- [x] View-record state works
+- [x] Edit action is shown only when an adapter and schema exist
 - [ ] Validation errors are actionable
 - [ ] Save creates or updates the editorial draft correctly
 - [ ] Preview reflects the pending version
@@ -57,8 +57,10 @@ For each supported dataset:
 - [ ] Published projection updates atomically
 - [ ] Immutable version history is retained
 - [ ] Audit entries identify the actor and action
-- [ ] Loading, empty and error states are intentional
-- [ ] Mobile layout is usable
+- [x] Loading, empty and error states are intentional
+- [x] Mobile layout is usable
+
+Release Gate 3 Admin Dataset Experience evidence is recorded in `docs/testing/RELEASE-GATE-3-ADMIN-DATASET-EXPERIENCE.md`. The unchecked editorial journey items above remain Release Gate 4 work and apply only where the audited capability matrix declares support.
 
 ## Gate 3 — Editorial workflow and permissions
 
@@ -92,7 +94,7 @@ For each supported dataset:
 ## Gate 5 — Admin platform
 
 - [ ] Dashboard reflects current platform state
-- [ ] Dataset directory reflects actual capabilities and status
+- [x] Dataset directory reflects actual capabilities and status
 - [ ] Import Manager is implemented or intentionally removed from navigation
 - [ ] Version History is implemented or intentionally removed from navigation
 - [ ] Global Search is implemented or intentionally removed from navigation
@@ -139,10 +141,9 @@ For each supported dataset:
 The following items were identified at the start of Sprint 9 and must be resolved or explicitly deferred before release acceptance:
 
 1. Admin routes for Import Manager, Version History, Global Search and Publish Centre still render placeholder content.
-2. Fourteen game-data datasets are registered, but adapter and Record Editor coverage is incomplete.
-3. The Events dataset declares editing support but has no registered Record Editor schema.
-4. Most registered datasets are marked `not-imported`; their complete editorial journeys have not yet been demonstrated.
-5. Runtime, responsive and production smoke validation remain outstanding.
+2. Release Gate 4 workflow and permission validation remains outstanding for the three editor-backed datasets. Buildings intentionally has no live publication capability.
+3. The generic server runtime dataset definition still declares broader capabilities than the audited Admin registry and must be reconciled during server-side workflow validation.
+4. Exact-commit preview and production smoke validation remain outstanding. Local desktop and mobile Admin dataset validation is complete.
 
 ## Sign-off
 
