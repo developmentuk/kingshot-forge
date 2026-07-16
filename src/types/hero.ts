@@ -92,12 +92,12 @@ export interface HeroEditorValues {
   skill2Level: number | null
   skill3Level: number | null
   skill4Level: number | null
-  skill5Level: number | null
-  skill6Level: number | null
-  gearTopLeftLevel: number | null
-  gearTopRightLevel: number | null
-  gearBottomLeftLevel: number | null
-  gearBottomRightLevel: number | null
+  skill5Level?: number | null
+  skill6Level?: number | null
+  gearTopLeftLevel?: number | null
+  gearTopRightLevel?: number | null
+  gearBottomLeftLevel?: number | null
+  gearBottomRightLevel?: number | null
   widgetLevel: number | null
   isOwned: boolean
   isShowcase: boolean
