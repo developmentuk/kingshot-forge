@@ -68,13 +68,26 @@ export function RecordEditorPanel({
   );
 
   useEffect(() => {
+    const recordChanged =
+      record.id !== workingRecord.id;
+
+    // Do not replace a dirty working copy merely because an external
+    // refresh, auth event, or parent rerender supplied a new record
+    // object. Preserving the stale working copy is also required for
+    // optimistic-concurrency validation.
+    if (isDirty && !recordChanged) {
+      return;
+    }
+
     replaceRecord(record);
     setSaveError(null);
     setSaveMessage(null);
     setSaveValidation(null);
   }, [
+    isDirty,
     record,
     replaceRecord,
+    workingRecord.id,
   ]);
 
   useEffect(() => {
