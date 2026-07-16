@@ -19,6 +19,9 @@ import {
 import {
   getSupabaseAdmin,
 } from "../database/supabaseAdmin.js";
+import {
+  publishLiveDatasetRecord,
+} from "./publishLiveDatasetRecord.js";
 
 export function createRuntimeDatasetDefinition(
   datasetId: string,
@@ -73,12 +76,50 @@ export function createEditorialRuntime() {
   const permissionService =
     new EditorialPermissionService();
 
+  const editorialExecutor =
+    createEditorialPublicationExecutor(
+      workflowService,
+    );
+
   const queueService =
     new PublicationQueueService(
       queueRepository,
-      createEditorialPublicationExecutor(
-        workflowService,
-      ),
+      async (context) => {
+        const version =
+          await editorialRepository.getVersion(
+            context.item.versionId,
+          );
+
+        if (!version) {
+          throw new Error(
+            "The approved editorial version could not be found.",
+          );
+        }
+
+        if (
+          version.datasetId !==
+            context.item.datasetId ||
+          version.recordId !==
+            context.item.recordId
+        ) {
+          throw new Error(
+            "The publication queue item does not match its editorial version.",
+          );
+        }
+
+        // Project the approved values into the live catalogue before
+        // recording the editorial Published transition. If projection
+        // fails, the queue item fails and the editorial record remains
+        // Approved rather than claiming content is publicly available.
+        await publishLiveDatasetRecord(
+          client,
+          context.item.datasetId,
+          context.item.recordId,
+          version.values,
+        );
+
+        return editorialExecutor(context);
+      },
     );
 
   const scheduledPublishingService =
