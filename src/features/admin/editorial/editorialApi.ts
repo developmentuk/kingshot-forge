@@ -114,17 +114,70 @@ export function fetchEditorialRecordState(
   );
 }
 
+function prepareEditorialInput(
+  action: EditorialApiAction,
+  input: Record<string, unknown>,
+): Record<string, unknown> | null {
+  if (action !== "reject") {
+    return input;
+  }
+
+  const existingNote =
+    typeof input.note === "string"
+      ? input.note.trim()
+      : "";
+
+  if (existingNote) {
+    return {
+      ...input,
+      note: existingNote,
+    };
+  }
+
+  const reason = window.prompt(
+    "Why are changes being requested? This reason will be recorded in the immutable history.",
+  );
+
+  if (reason === null) {
+    return null;
+  }
+
+  const trimmedReason = reason.trim();
+
+  if (!trimmedReason) {
+    throw new Error(
+      "A reason is required when requesting changes.",
+    );
+  }
+
+  return {
+    ...input,
+    note: trimmedReason,
+  };
+}
+
 export function runEditorialAction<T>(
   action: EditorialApiAction,
   input: Record<string, unknown>,
 ): Promise<T> {
+  const preparedInput = prepareEditorialInput(
+    action,
+    input,
+  );
+
+  if (preparedInput === null) {
+    return Promise.reject(
+      new Error("Request changes was cancelled."),
+    );
+  }
+
   return request<T>(
     "/api/editorial/action",
     {
       method: "POST",
       body: JSON.stringify({
         action,
-        ...input,
+        ...preparedInput,
       }),
     },
   );
