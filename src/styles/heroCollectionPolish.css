@@ -1,0 +1,217 @@
+.hero-game-card__identity {
+  right: 16px;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.hero-game-card__crest {
+  display: grid;
+  width: 50px;
+  height: 58px;
+  flex: 0 0 auto;
+  place-items: center;
+  clip-path: polygon(50% 0, 94% 18%, 86% 76%, 50% 100%, 14% 76%, 6% 18%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.28), transparent 42%),
+    linear-gradient(180deg, #21344f, #101a2b);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.hero-game-card__crest svg {
+  width: 27px;
+  height: 27px;
+  fill: currentColor;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
+.hero-game-card__crest--infantry {
+  color: #8ed8ff;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), transparent 42%),
+    linear-gradient(180deg, #287bc1, #123b69);
+}
+
+.hero-game-card__crest--archer {
+  color: #f0b4ff;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.32), transparent 42%),
+    linear-gradient(180deg, #834bb5, #3c205f);
+}
+
+.hero-game-card__crest--cavalry {
+  color: #ffe09a;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), transparent 42%),
+    linear-gradient(180deg, #bd7a22, #65400f);
+}
+
+.hero-game-card__stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.28rem;
+  min-height: 2rem;
+  margin: 0 0 1rem;
+  letter-spacing: 0;
+}
+
+.hero-game-card__star {
+  position: relative;
+  display: inline-block;
+  width: 1.55rem;
+  height: 1.55rem;
+  font-size: 1.55rem;
+  line-height: 1;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+}
+
+.hero-game-card__star-empty,
+.hero-game-card__star-fill {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.hero-game-card__star-empty {
+  color: #4c5565;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.13);
+}
+
+.hero-game-card__star-fill {
+  width: var(--star-fill);
+  overflow: hidden;
+  color: #ffc84a;
+  white-space: nowrap;
+  -webkit-text-stroke: 1px #e99b18;
+}
+
+.hero-game-card__troop-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #aebbd0;
+  font-size: 0.84rem;
+}
+
+.hero-game-card__troop-label .hero-game-card__crest {
+  width: 25px;
+  height: 29px;
+  clip-path: polygon(50% 0, 94% 18%, 86% 76%, 50% 100%, 14% 76%, 6% 18%);
+  box-shadow: none;
+}
+
+.hero-game-card__troop-label .hero-game-card__crest svg {
+  width: 14px;
+  height: 14px;
+}
+
+.hero-game-card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0 1rem 1rem;
+}
+
+.hero-game-card__action {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  color: #eef3fb;
+  background: rgba(8, 13, 23, 0.58);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.hero-game-card__action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hero-game-card__action:focus-visible {
+  outline: 3px solid #54e0d2;
+  outline-offset: 2px;
+}
+
+.hero-game-card__action--progress {
+  border-color: rgba(196, 113, 237, 0.58);
+  color: #f4dcff;
+  background: linear-gradient(180deg, rgba(123, 55, 155, 0.34), rgba(66, 28, 83, 0.42));
+}
+
+.hero-game-card--legendary .hero-game-card__action--progress {
+  border-color: rgba(245, 196, 81, 0.62);
+  color: #ffe39a;
+  background: linear-gradient(180deg, rgba(142, 96, 20, 0.28), rgba(78, 48, 8, 0.38));
+}
+
+.hero-game-card__companion-link,
+.hero-game-card__footer,
+.hero-game-card__troop {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .hero-game-card__identity {
+    right: 9px;
+    gap: 0.45rem;
+  }
+
+  .hero-game-card__identity > .hero-game-card__crest {
+    width: 36px;
+    height: 42px;
+  }
+
+  .hero-game-card__identity > .hero-game-card__crest svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hero-game-card__stars {
+    gap: 0.12rem;
+    min-height: 1.35rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .hero-game-card__star {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+  }
+
+  .hero-game-card__actions {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+    padding: 0 0.7rem 0.7rem;
+  }
+
+  .hero-game-card__action {
+    min-height: 36px;
+    padding: 0.5rem;
+    font-size: 0.67rem;
+  }
+
+  .hero-game-card__troop-label {
+    padding-top: 0.65rem;
+    font-size: 0.68rem;
+  }
+}
