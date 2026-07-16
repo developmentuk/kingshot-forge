@@ -11,8 +11,13 @@ import {
   loadDataset,
 } from "../../server/data-engine/runner.js";
 
+import {
+  loadCanonicalHeroSkillsDataset,
+} from "../../server/data-engine/loadCanonicalHeroSkillsDataset.js";
+
 const SUPPORTED_DATASETS = new Set<DatasetKey>([
   "heroes",
+  "hero-skills",
   "hero-xp",
   "shards",
   "gear",
@@ -71,7 +76,9 @@ export default async function handler(
   }
 
   try {
-    const result = await loadDataset(dataset);
+    const result = dataset === "hero-skills"
+      ? await loadCanonicalHeroSkillsDataset()
+      : await loadDataset(dataset);
 
     response.status(200).json({
       status: "success",
