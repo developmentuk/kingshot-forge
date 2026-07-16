@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { useEffect, useState } from 'react'
 import type {
   Hero,
   HeroEditorValues,
@@ -20,9 +16,22 @@ type HeroEditorModalProps = {
 }
 
 const SKILL_GROUPS = [
-  { heading: 'Exploration skills', labels: ['Exploration 1', 'Exploration 2', 'Exploration 3'] },
-  { heading: 'Expedition skills', labels: ['Expedition 1', 'Expedition 2', 'Expedition 3'] },
+  {
+    heading: 'Exploration skills',
+    labels: ['Exploration Skill 1', 'Exploration Skill 2', 'Exploration Skill 3'],
+  },
+  {
+    heading: 'Expedition skills',
+    labels: ['Expedition Skill 1', 'Expedition Skill 2', 'Expedition Skill 3'],
+  },
 ]
+
+const GEAR_SLOTS = [
+  { key: 'topLeft', label: 'Top-left gear' },
+  { key: 'topRight', label: 'Top-right gear' },
+  { key: 'bottomLeft', label: 'Bottom-left gear' },
+  { key: 'bottomRight', label: 'Bottom-right gear' },
+] as const
 
 const STAR_OPTIONS = Array.from(
   { length: 26 },
@@ -40,16 +49,17 @@ function toNullableNumber(value: string): number | null {
 
 function formatStarOption(value: number) {
   if (value === 0) {
-    return '0 stars'
-  }
-
-  if (Number.isInteger(value)) {
-    return `${value} ${value === 1 ? 'star' : 'stars'}`
+    return 'Not ascended'
   }
 
   const fullStars = Math.floor(value)
-  const tier = Math.round((value - fullStars) * 5)
-  return `${fullStars} star${fullStars === 1 ? '' : 's'}, tier ${tier}`
+  const subTier = Math.round((value - fullStars) * 5)
+
+  if (subTier === 0) {
+    return `${fullStars} ${fullStars === 1 ? 'star' : 'stars'}`
+  }
+
+  return `${fullStars} ${fullStars === 1 ? 'star' : 'stars'} + ${subTier}/5`
 }
 
 function LevelSelect({
@@ -57,14 +67,16 @@ function LevelSelect({
   label,
   value,
   disabled,
-  max = 5,
+  min = 0,
+  max,
   onChange,
 }: {
   id: string
   label: string
   value: string
   disabled: boolean
-  max?: number
+  min?: number
+  max: number
   onChange: (value: string) => void
 }) {
   return (
@@ -77,7 +89,10 @@ function LevelSelect({
         onChange={(event) => onChange(event.target.value)}
       >
         <option value="">Not entered</option>
-        {Array.from({ length: max }, (_, index) => index + 1).map((level) => (
+        {Array.from(
+          { length: max - min + 1 },
+          (_, index) => min + index,
+        ).map((level) => (
           <option key={level} value={level}>
             Level {level}
           </option>
@@ -99,24 +114,23 @@ function HeroEditorModal({
   const [heroLevel, setHeroLevel] = useState('')
   const [starLevel, setStarLevel] = useState('')
   const [heroPower, setHeroPower] = useState('')
-  const [skillLevels, setSkillLevels] = useState<string[]>(Array(6).fill(''))
-  const [exclusiveGearLevel, setExclusiveGearLevel] = useState('')
+  const [skillLevels, setSkillLevels] = useState<string[]>(
+    Array(6).fill(''),
+  )
+  const [gearLevels, setGearLevels] = useState({
+    topLeft: '',
+    topRight: '',
+    bottomLeft: '',
+    bottomRight: '',
+  })
   const [widgetLevel, setWidgetLevel] = useState('')
   const [isOwned, setIsOwned] = useState(true)
   const [isShowcase, setIsShowcase] = useState(false)
   const [displayOrder, setDisplayOrder] = useState('')
   const [notes, setNotes] = useState('')
 
-  const supportsAdvancedGear =
+  const supportsWidget =
     hero.rarity === 'legendary' || hero.rarity === 'mythic'
-
-  const progressionSummary = useMemo(
-    () =>
-      supportsAdvancedGear
-        ? 'This Hero supports six skills, Exclusive Gear and Widget progression.'
-        : 'This Hero supports six skill levels. Exclusive Gear and Widgets are not available for this rarity.',
-    [supportsAdvancedGear],
-  )
 
   useEffect(() => {
     setHeroLevel(playerHero?.hero_level?.toString() ?? '')
@@ -130,13 +144,14 @@ function HeroEditorModal({
       playerHero?.skill_5_level?.toString() ?? '',
       playerHero?.skill_6_level?.toString() ?? '',
     ])
-    setExclusiveGearLevel(
-      supportsAdvancedGear
-        ? playerHero?.exclusive_gear_level?.toString() ?? ''
-        : '',
-    )
+    setGearLevels({
+      topLeft: playerHero?.gear_top_left_level?.toString() ?? '',
+      topRight: playerHero?.gear_top_right_level?.toString() ?? '',
+      bottomLeft: playerHero?.gear_bottom_left_level?.toString() ?? '',
+      bottomRight: playerHero?.gear_bottom_right_level?.toString() ?? '',
+    })
     setWidgetLevel(
-      supportsAdvancedGear
+      supportsWidget
         ? playerHero?.widget_level?.toString() ?? ''
         : '',
     )
@@ -144,7 +159,7 @@ function HeroEditorModal({
     setIsShowcase(playerHero?.is_showcase ?? false)
     setDisplayOrder(playerHero?.display_order?.toString() ?? '')
     setNotes(playerHero?.notes ?? '')
-  }, [hero, playerHero, supportsAdvancedGear])
+  }, [hero, playerHero, supportsWidget])
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
@@ -165,7 +180,9 @@ function HeroEditorModal({
     )
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault()
 
     await onSave({
@@ -180,10 +197,11 @@ function HeroEditorModal({
       skill4Level: toNullableNumber(skillLevels[3]),
       skill5Level: toNullableNumber(skillLevels[4]),
       skill6Level: toNullableNumber(skillLevels[5]),
-      exclusiveGearLevel: supportsAdvancedGear
-        ? toNullableNumber(exclusiveGearLevel)
-        : null,
-      widgetLevel: supportsAdvancedGear
+      gearTopLeftLevel: toNullableNumber(gearLevels.topLeft),
+      gearTopRightLevel: toNullableNumber(gearLevels.topRight),
+      gearBottomLeftLevel: toNullableNumber(gearLevels.bottomLeft),
+      gearBottomRightLevel: toNullableNumber(gearLevels.bottomRight),
+      widgetLevel: supportsWidget
         ? toNullableNumber(widgetLevel)
         : null,
       isOwned,
@@ -230,7 +248,9 @@ function HeroEditorModal({
               <span aria-hidden="true">⚔️</span>
             )}
             <div>
-              <p>Generation {hero.generation ?? '—'} · {hero.rarity}</p>
+              <p>
+                Generation {hero.generation ?? '—'} · {hero.rarity}
+              </p>
               <h2 id="hero-editor-title">{hero.name}</h2>
             </div>
           </div>
@@ -257,10 +277,6 @@ function HeroEditorModal({
             />
             <span>I own this hero</span>
           </label>
-
-          <p className="hero-editor-modal__capability-note">
-            {progressionSummary}
-          </p>
 
           <div className="hero-editor-modal__fields">
             <div className="field">
@@ -308,10 +324,10 @@ function HeroEditorModal({
 
           <section className="hero-editor-modal__skill-section">
             <div>
-              <p className="eyebrow">Hero progression</p>
-              <h3>Hero skill levels</h3>
+              <p className="eyebrow">Skills</p>
+              <h3>Six Hero skills</h3>
               <p>
-                Record all six skills in their two in-game groups rather than using a generic four-skill form.
+                Record the three Exploration and three Expedition skills shown in-game.
               </p>
             </div>
 
@@ -328,7 +344,11 @@ function HeroEditorModal({
                         label={label}
                         value={skillLevels[skillIndex]}
                         disabled={!isOwned || saving}
-                        onChange={(value) => updateSkill(skillIndex, value)}
+                        min={1}
+                        max={5}
+                        onChange={(value) =>
+                          updateSkill(skillIndex, value)
+                        }
                       />
                     )
                   })}
@@ -337,22 +357,44 @@ function HeroEditorModal({
             ))}
           </section>
 
-          {supportsAdvancedGear && (
+          <section className="hero-editor-modal__skill-section">
+            <div>
+              <p className="eyebrow">Hero Gear</p>
+              <h3>Four gear pieces</h3>
+              <p>
+                Track each of the four in-game Hero Gear slots independently.
+              </p>
+            </div>
+            <div className="hero-editor-modal__skills">
+              {GEAR_SLOTS.map((slot) => (
+                <LevelSelect
+                  key={slot.key}
+                  id={`gear-${slot.key}`}
+                  label={slot.label}
+                  value={gearLevels[slot.key]}
+                  disabled={!isOwned || saving}
+                  max={100}
+                  onChange={(value) =>
+                    setGearLevels((current) => ({
+                      ...current,
+                      [slot.key]: value,
+                    }))
+                  }
+                />
+              ))}
+            </div>
+          </section>
+
+          {supportsWidget && (
             <section className="hero-editor-modal__skill-section">
               <div>
-                <p className="eyebrow">Advanced progression</p>
-                <h3>Exclusive Gear and Widget</h3>
-                <p>These fields are only shown for Heroes that support them.</p>
+                <p className="eyebrow">Exclusive progression</p>
+                <h3>Widget</h3>
+                <p>
+                  Widget progression is available for Legendary and Mythic Heroes.
+                </p>
               </div>
               <div className="hero-editor-modal__skills">
-                <LevelSelect
-                  id="exclusive-gear-level"
-                  label="Exclusive Gear level"
-                  value={exclusiveGearLevel}
-                  disabled={!isOwned || saving}
-                  max={10}
-                  onChange={setExclusiveGearLevel}
-                />
                 <LevelSelect
                   id="widget-level"
                   label="Widget level"
@@ -370,7 +412,9 @@ function HeroEditorModal({
               type="checkbox"
               checked={isShowcase}
               disabled={!isOwned || saving}
-              onChange={(event) => setIsShowcase(event.target.checked)}
+              onChange={(event) =>
+                setIsShowcase(event.target.checked)
+              }
             />
             <span>Show this hero on my public profile</span>
           </label>
@@ -378,15 +422,23 @@ function HeroEditorModal({
           {isOwned && isShowcase && (
             <div className="field">
               <label htmlFor="display-order">Showcase position</label>
-              <input
+              <select
                 id="display-order"
-                type="number"
-                min="1"
-                max="5"
                 value={displayOrder}
                 disabled={saving}
-                onChange={(event) => setDisplayOrder(event.target.value)}
-              />
+                onChange={(event) =>
+                  setDisplayOrder(event.target.value)
+                }
+              >
+                <option value="">Choose position</option>
+                {Array.from({ length: 6 }, (_, index) => index + 1).map(
+                  (position) => (
+                    <option key={position} value={position}>
+                      Position {position}
+                    </option>
+                  ),
+                )}
+              </select>
             </div>
           )}
 
