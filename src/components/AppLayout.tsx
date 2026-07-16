@@ -19,6 +19,7 @@ const forgeNavigation: NavigationItem[] = [
 ]
 
 const companionNavigation: NavigationItem[] = [
+  { label: 'Hero Companion', shortLabel: 'Heroes', icon: '🦸', path: '/companion/heroes' },
   { label: 'Player Lookup', shortLabel: 'Players', icon: '👤', path: '/player-lookup' },
   { label: 'Gift Codes', shortLabel: 'Codes', icon: '🎁', path: '/gift-codes' },
   { label: 'Kingdom Explorer', shortLabel: 'Kingdoms', icon: '🏰', path: '/kingdom-explorer' },
