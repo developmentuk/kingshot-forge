@@ -35,7 +35,7 @@ const actionLabels: Record<
   submit_for_review: "Submit for review",
   return_to_draft: "Return to draft",
   approve: "Approve",
-  reject: "Reject",
+  reject: "Request changes",
   publish: "Publish",
   archive: "Archive",
   restore: "Restore",
