@@ -42,6 +42,9 @@ interface EditorialAdminWorkspaceProps {
   onPreviewRollback?: (
     versionId: string,
   ) => void;
+  onProcessQueueItem?: (
+    itemId: string,
+  ) => void;
   onRetryQueueItem?: (
     itemId: string,
   ) => void;
@@ -70,6 +73,7 @@ export function EditorialAdminWorkspace({
   onSelectVersion,
   onCompareWithCurrent,
   onPreviewRollback,
+  onProcessQueueItem,
   onRetryQueueItem,
   onCancelQueueItem,
   onCancelSchedule,
@@ -107,6 +111,9 @@ export function EditorialAdminWorkspace({
       <PublicationOperationsPanel
         queueItems={queueItems}
         schedules={schedules}
+        onProcessQueueItem={
+          onProcessQueueItem
+        }
         onRetryQueueItem={
           onRetryQueueItem
         }
