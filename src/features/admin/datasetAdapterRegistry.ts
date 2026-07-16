@@ -19,12 +19,17 @@ import {
 } from "./heroesDatasetAdapter";
 
 import {
+  heroSkillsDatasetAdapter,
+} from "./heroSkillsDatasetAdapter";
+
+import {
   hasAdminDatasetRegistration,
   requireAdminDatasetRegistration,
 } from "./datasetDefinitions";
 
 const registeredAdapters: DatasetAdapter[] = [
   heroesDatasetAdapter,
+  heroSkillsDatasetAdapter,
   eventsDatasetAdapter,
   buildingsDatasetAdapter,
 ];
@@ -88,7 +93,7 @@ export function hasDatasetAdapter(
 }
 
 export function listDatasetAdapters():
-  DatasetKey[] {
+DatasetKey[] {
   return [
     ...datasetAdapters.keys(),
   ].sort(
