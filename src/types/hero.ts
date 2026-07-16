@@ -98,6 +98,8 @@ export interface HeroEditorValues {
   gearTopRightLevel?: number | null
   gearBottomLeftLevel?: number | null
   gearBottomRightLevel?: number | null
+  /** Legacy compatibility only; ignored by the current persistence model. */
+  exclusiveGearLevel?: number | null
   widgetLevel: number | null
   isOwned: boolean
   isShowcase: boolean
