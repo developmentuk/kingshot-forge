@@ -23,6 +23,10 @@ import {
 } from "./heroSkillsDatasetAdapter";
 
 import {
+  coreDatasetAdapters,
+} from "./coreDatasetAdapters";
+
+import {
   hasAdminDatasetRegistration,
   requireAdminDatasetRegistration,
 } from "./datasetDefinitions";
@@ -32,6 +36,7 @@ const registeredAdapters: DatasetAdapter[] = [
   heroSkillsDatasetAdapter,
   eventsDatasetAdapter,
   buildingsDatasetAdapter,
+  ...coreDatasetAdapters,
 ];
 
 const datasetAdapters = new Map<
@@ -46,6 +51,15 @@ for (const adapter of registeredAdapters) {
     );
 
   if (
+    registration.capabilities?.browsing !== true
+  ) {
+    throw new Error(
+      `Dataset "${adapter.datasetId}" has a browser adapter but does not declare the browsing capability.`,
+    );
+  }
+
+  if (
+    adapter.createEditorRecord &&
     registration.capabilities?.editing !== true
   ) {
     throw new Error(
