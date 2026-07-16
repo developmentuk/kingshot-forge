@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getPublishedHeroSkills } from '../../repositories/heroSkillRepository'
 import type { PublishedHeroSkill } from '../../types/heroSkill'
+import './PublishedHeroSkills.css'
 
 interface PublishedHeroSkillsProps {
   heroSlug: string
