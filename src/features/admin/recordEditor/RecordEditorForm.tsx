@@ -1,10 +1,11 @@
 import {
   useMemo,
+  type FormEvent,
 } from "react";
 
-import type {
-  FormEvent,
-} from "react";
+import {
+  CompanionImageField,
+} from "./CompanionImageField";
 
 import {
   RecordEditorField,
@@ -27,16 +28,13 @@ interface RecordEditorFormProps {
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
   validation: RecordEditorValidationResult;
-
   isDirty: boolean;
   isSaving?: boolean;
   disabled?: boolean;
-
   onChange: (
     fieldKey: string,
     value: RecordEditorValue,
   ) => void;
-
   onSave: () => void;
   onCancel: () => void;
 }
@@ -44,9 +42,7 @@ interface RecordEditorFormProps {
 function getUngroupedFields(
   fields: RecordEditorFieldSchema[],
 ): RecordEditorFieldSchema[] {
-  return fields.filter(
-    (field) => !field.section,
-  );
+  return fields.filter((field) => !field.section);
 }
 
 function getFieldsForSection(
@@ -54,8 +50,7 @@ function getFieldsForSection(
   sectionId: string,
 ): RecordEditorFieldSchema[] {
   return fields.filter(
-    (field) =>
-      field.section === sectionId,
+    (field) => field.section === sectionId,
   );
 }
 
@@ -71,33 +66,19 @@ export function RecordEditorForm({
   onCancel,
 }: RecordEditorFormProps) {
   const orderedFields = useMemo(
-    () =>
-      getOrderedEditorFields(
-        schema,
-      ),
+    () => getOrderedEditorFields(schema),
     [schema],
   );
-
   const orderedSections = useMemo(
-    () =>
-      getOrderedEditorSections(
-        schema,
-      ),
+    () => getOrderedEditorSections(schema),
     [schema],
   );
+  const ungroupedFields = useMemo(
+    () => getUngroupedFields(orderedFields),
+    [orderedFields],
+  );
 
-  const ungroupedFields =
-    useMemo(
-      () =>
-        getUngroupedFields(
-          orderedFields,
-        ),
-      [orderedFields],
-    );
-
-  const isFormDisabled =
-    disabled || isSaving;
-
+  const isFormDisabled = disabled || isSaving;
   const canSave =
     isDirty &&
     validation.isValid &&
@@ -108,11 +89,83 @@ export function RecordEditorForm({
   ) {
     event.preventDefault();
 
-    if (!canSave) {
-      return;
+    if (canSave) {
+      onSave();
+    }
+  }
+
+  function renderField(
+    field: RecordEditorFieldSchema,
+  ) {
+    const value = record.values[field.key];
+    const error =
+      validation.errorsByField[field.key];
+
+    if (
+      schema.datasetId === "heroes" &&
+      field.key === "portrait_url"
+    ) {
+      const inputId =
+        `record-editor-field-${field.key}`;
+
+      return (
+        <div
+          key={field.key}
+          className={[
+            "record-editor-field",
+            "record-editor-field--full-width",
+            error
+              ? "record-editor-field--error"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div className="record-editor-special-field-heading">
+            <div>
+              <span>Hero portrait</span>
+            </div>
+          </div>
+
+          <CompanionImageField
+            id={inputId}
+            value={value}
+            record={record}
+            disabled={isFormDisabled}
+            describedBy={
+              error
+                ? `${inputId}-error`
+                : undefined
+            }
+            onChange={(nextValue) =>
+              onChange(field.key, nextValue)
+            }
+          />
+
+          {error && (
+            <p
+              id={`${inputId}-error`}
+              className="record-editor-field-error"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+        </div>
+      );
     }
 
-    onSave();
+    return (
+      <RecordEditorField
+        key={field.key}
+        field={field}
+        record={record}
+        value={value}
+        error={error}
+        disabled={isFormDisabled}
+        onChange={onChange}
+      />
+    );
   }
 
   return (
@@ -124,39 +177,27 @@ export function RecordEditorForm({
       <header className="record-editor-form-header">
         <div>
           <p className="record-editor-form-eyebrow">
-            Editing{" "}
-            {schema.singularLabel}
+            Editing {schema.singularLabel}
           </p>
-
           <h2>
             {String(
-              record.values[
-                schema.titleField
-              ] ??
+              record.values[schema.titleField] ??
                 record.id,
             )}
           </h2>
-
           <p>
-            Update this record using
-            the fields below.
+            Update this record using the fields below.
           </p>
         </div>
 
         <div className="record-editor-form-status">
-          {isSaving ? (
-            <span>
-              Saving…
-            </span>
-          ) : isDirty ? (
-            <span>
-              Unsaved changes
-            </span>
-          ) : (
-            <span>
-              No changes
-            </span>
-          )}
+          <span>
+            {isSaving
+              ? "Saving…"
+              : isDirty
+                ? "Unsaved changes"
+                : "No changes"}
+          </span>
         </div>
       </header>
 
@@ -167,156 +208,73 @@ export function RecordEditorForm({
           role="alert"
         >
           <h3 id="record-editor-validation-heading">
-            Please correct the
-            following
+            Please correct the following
           </h3>
-
           <ul>
-            {validation.errors.map(
-              (error) => {
-                const field =
-                  schema.fields.find(
-                    (candidate) =>
-                      candidate.key ===
-                      error.fieldKey,
-                  );
+            {validation.errors.map((error) => {
+              const field = schema.fields.find(
+                (candidate) =>
+                  candidate.key === error.fieldKey,
+              );
 
-                return (
-                  <li
-                    key={
-                      error.fieldKey
-                    }
-                  >
-                    <strong>
-                      {field?.label ??
-                        error.fieldKey}
-                      :
-                    </strong>{" "}
-                    {error.message}
-                  </li>
-                );
-              },
-            )}
+              return (
+                <li key={error.fieldKey}>
+                  <strong>
+                    {field?.label ?? error.fieldKey}:
+                  </strong>{" "}
+                  {error.message}
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
 
-      {ungroupedFields.length >
-        0 && (
+      {ungroupedFields.length > 0 && (
         <section className="record-editor-section">
           <div className="record-editor-section-header">
-            <h3>
-              General details
-            </h3>
+            <h3>General details</h3>
           </div>
-
           <div className="record-editor-field-grid">
-            {ungroupedFields.map(
-              (field) => (
-                <RecordEditorField
-                  key={field.key}
-                  field={field}
-                  record={record}
-                  value={
-                    record.values[
-                      field.key
-                    ]
-                  }
-                  error={
-                    validation
-                      .errorsByField[
-                      field.key
-                    ]
-                  }
-                  disabled={
-                    isFormDisabled
-                  }
-                  onChange={
-                    onChange
-                  }
-                />
-              ),
-            )}
+            {ungroupedFields.map(renderField)}
           </div>
         </section>
       )}
 
-      {orderedSections.map(
-        (section) => {
-          const sectionFields =
-            getFieldsForSection(
-              orderedFields,
-              section.id,
-            );
-
-          if (
-            sectionFields.length === 0
-          ) {
-            return null;
-          }
-
-          return (
-            <section
-              key={section.id}
-              className="record-editor-section"
-            >
-              <div className="record-editor-section-header">
-                <h3>
-                  {section.title}
-                </h3>
-
-                {section.description && (
-                  <p>
-                    {
-                      section.description
-                    }
-                  </p>
-                )}
-              </div>
-
-              <div className="record-editor-field-grid">
-                {sectionFields.map(
-                  (field) => (
-                    <RecordEditorField
-                      key={
-                        field.key
-                      }
-                      field={field}
-                      record={record}
-                      value={
-                        record.values[
-                          field.key
-                        ]
-                      }
-                      error={
-                        validation
-                          .errorsByField[
-                          field.key
-                        ]
-                      }
-                      disabled={
-                        isFormDisabled
-                      }
-                      onChange={
-                        onChange
-                      }
-                    />
-                  ),
-                )}
-              </div>
-            </section>
+      {orderedSections.map((section) => {
+        const sectionFields =
+          getFieldsForSection(
+            orderedFields,
+            section.id,
           );
-        },
-      )}
+
+        if (sectionFields.length === 0) {
+          return null;
+        }
+
+        return (
+          <section
+            key={section.id}
+            className="record-editor-section"
+          >
+            <div className="record-editor-section-header">
+              <h3>{section.title}</h3>
+              {section.description && (
+                <p>{section.description}</p>
+              )}
+            </div>
+            <div className="record-editor-field-grid">
+              {sectionFields.map(renderField)}
+            </div>
+          </section>
+        );
+      })}
 
       <footer className="record-editor-form-actions">
         <button
           type="button"
           className="record-editor-button record-editor-button--secondary"
-          disabled={
-            isFormDisabled ||
-            !isDirty
-          }
+          disabled={isFormDisabled || !isDirty}
           onClick={onCancel}
         >
           Cancel changes
@@ -327,9 +285,7 @@ export function RecordEditorForm({
           className="record-editor-button record-editor-button--primary"
           disabled={!canSave}
         >
-          {isSaving
-            ? "Saving…"
-            : "Save changes"}
+          {isSaving ? "Saving…" : "Save changes"}
         </button>
       </footer>
     </form>

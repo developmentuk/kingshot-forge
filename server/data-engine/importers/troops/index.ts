@@ -2,7 +2,7 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from '../../../../shared/data-engine/types'
+} from '../../../../shared/data-engine/types.js'
 
 import type {
   NormalisedTroopRecord,
@@ -10,7 +10,7 @@ import type {
   TroopSourcePayload,
   TroopTierSourceRecord,
   TroopTypeSourceRecord,
-} from './types'
+} from './types.js'
 
 const TROOPS_SOURCE_URL =
   'https://kingshotpro.com/data/troops.json'

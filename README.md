@@ -1,32 +1,42 @@
-# React + TypeScript + Vite
+# Forge Platform CS-003E
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Record Editor Validation Integration
 
-Currently, two official plugins are available:
+This change set connects the existing Record Editor save path to the shared Dataset Validation Service introduced in CS-003D.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Files
 
-## React Compiler
+- `src/features/admin/recordEditor/recordEditorPlatformValidation.ts`
+- `src/features/admin/recordEditor/RecordEditorPanel.tsx`
+- `docs/architecture/dataset-framework.md`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Behaviour
 
-## Expanding the Oxlint configuration
+- Existing interactive validation remains active while fields are edited.
+- A save attempt converts the active Record Editor schema and record into platform dataset contracts.
+- The shared Dataset Validation Service runs before `onSave`.
+- Validation errors block the save callback and are displayed in the existing validation summary and field messages.
+- Successful validation permits the existing save flow to continue unchanged.
+- Persistence and publishing are not introduced by this change set.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Apply
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+Extract into the repository root while on:
+
+`feature/cs-003e-record-editor-validation`
+
+Then run:
+
+```powershell
+npm run build
+npm run lint
+git status
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Commit after verification:
+
+```powershell
+git add .
+git commit -m "CS-003E integrate Record Editor validation"
+git push
+```

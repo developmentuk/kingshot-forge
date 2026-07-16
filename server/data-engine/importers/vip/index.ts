@@ -2,13 +2,13 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from '../../../../shared/data-engine/types'
+} from '../../../../shared/data-engine/types.js'
 
 import type {
   NormalisedVipRecord,
   VipLevelSourceRecord,
   VipSourcePayload,
-} from './types'
+} from './types.js'
 
 const VIP_SOURCE_URL =
   'https://kingshotpro.com/data/vip.json'

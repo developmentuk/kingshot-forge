@@ -9,10 +9,33 @@ import type {
 import {
   createRowsFromRecords,
   createSlugId,
+  isRecordObject,
   toCellValue,
   toTitleCase,
   type DatasetAdapter,
 } from "./datasetAdapters";
+
+import {
+  toRecordEditorValue,
+  type RecordEditorRecord,
+} from "./recordEditor/recordEditorSchema";
+
+function getHeroSlug(
+  hero: Record<string, unknown>,
+  index: number,
+): string {
+  const name =
+    typeof hero.name === "string"
+      ? hero.name
+      : `Hero ${index + 1}`;
+
+  return typeof hero.slug === "string"
+    ? hero.slug
+    : createSlugId(
+        name,
+        `hero-${index + 1}`,
+      );
+}
 
 export const heroesDatasetAdapter: DatasetAdapter = {
   datasetId: "heroes",
@@ -28,16 +51,11 @@ export const heroesDatasetAdapter: DatasetAdapter = {
             ? hero.name
             : `Hero ${index + 1}`;
 
-        const slug =
-          typeof hero.slug === "string"
-            ? hero.slug
-            : createSlugId(
-                name,
-                `hero-${index + 1}`,
-              );
-
         return {
-          id: slug,
+          id: getHeroSlug(
+            hero,
+            index,
+          ),
           values: {
             name,
             generation: toCellValue(
@@ -147,5 +165,50 @@ export const heroesDatasetAdapter: DatasetAdapter = {
       ],
       rows,
     };
+  },
+
+  createEditorRecord(
+    result: DatasetLoadResult,
+    rowId: string,
+  ): RecordEditorRecord | null {
+    for (
+      const [index, candidate] of
+      result.records.entries()
+    ) {
+      if (!isRecordObject(candidate)) {
+        continue;
+      }
+
+      if (
+        getHeroSlug(
+          candidate,
+          index,
+        ) !== rowId
+      ) {
+        continue;
+      }
+
+      const values: Record<
+        string,
+        ReturnType<
+          typeof toRecordEditorValue
+        >
+      > = {};
+
+      for (
+        const [key, value] of
+        Object.entries(candidate)
+      ) {
+        values[key] =
+          toRecordEditorValue(value);
+      }
+
+      return {
+        id: rowId,
+        values,
+      };
+    }
+
+    return null;
   },
 };

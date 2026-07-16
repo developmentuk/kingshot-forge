@@ -2,13 +2,13 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from '../../../../shared/data-engine/types'
+} from '../../../../shared/data-engine/types.js'
 
 import type {
   NormalisedShardRecord,
   ShardRaritySourceRecord,
   ShardsSourcePayload,
-} from './types'
+} from './types.js'
 
 const SHARDS_SOURCE_URL =
   'https://kingshotpro.com/data/shards.json'

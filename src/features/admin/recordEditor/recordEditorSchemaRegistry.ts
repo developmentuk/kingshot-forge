@@ -2,6 +2,10 @@ import {
   buildingsRecordEditorSchema,
 } from "./buildingsRecordEditorSchema";
 
+import {
+  heroesRecordEditorSchema,
+} from "./heroesRecordEditorSchema";
+
 import type {
   RecordEditorSchema,
 } from "./recordEditorSchema";
@@ -43,6 +47,10 @@ registerRecordEditorSchema(
   buildingsRecordEditorSchema,
 );
 
+registerRecordEditorSchema(
+  heroesRecordEditorSchema,
+);
+
 export function getRecordEditorSchema(
   datasetId: string,
 ): RecordEditorSchema | null {
@@ -79,14 +87,14 @@ export function hasRecordEditorSchema(
 }
 
 export function listRecordEditorSchemas():
-  RecordEditorSchema[] {
+RecordEditorSchema[] {
   return Array.from(
     recordEditorSchemas.values(),
   );
 }
 
 export function listEditableDatasetIds():
-  string[] {
+string[] {
   return listRecordEditorSchemas()
     .map(
       (schema) =>

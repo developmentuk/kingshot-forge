@@ -1,6 +1,7 @@
 import {
   useEffect,
   useState,
+  type ReactNode,
 } from "react";
 
 import {
@@ -10,26 +11,30 @@ import {
 import type {
   RecordEditorRecord,
   RecordEditorSchema,
+  RecordEditorValidationResult,
+  RecordEditorValue,
 } from "./recordEditorSchema";
 
 import {
   useRecordEditor,
 } from "./useRecordEditor";
 
+import {
+  validateRecordEditorRecordForSave,
+} from "./recordEditorPlatformValidation";
+
 interface RecordEditorPanelProps {
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
-
   isOpen?: boolean;
-
   onClose: () => void;
-
   onSave?: (
     record: RecordEditorRecord,
   ) =>
     | Promise<RecordEditorRecord | void>
     | RecordEditorRecord
     | void;
+  supplementalContent?: ReactNode;
 }
 
 export function RecordEditorPanel({
@@ -38,15 +43,16 @@ export function RecordEditorPanel({
   isOpen = true,
   onClose,
   onSave,
+  supplementalContent,
 }: RecordEditorPanelProps) {
   const [isSaving, setIsSaving] =
     useState(false);
-
   const [saveError, setSaveError] =
     useState<string | null>(null);
-
   const [saveMessage, setSaveMessage] =
     useState<string | null>(null);
+  const [saveValidation, setSaveValidation] =
+    useState<RecordEditorValidationResult | null>(null);
 
   const {
     workingRecord,
@@ -62,12 +68,26 @@ export function RecordEditorPanel({
   );
 
   useEffect(() => {
+    const recordChanged =
+      record.id !== workingRecord.id;
+
+    // Do not replace a dirty working copy merely because an external
+    // refresh, auth event, or parent rerender supplied a new record
+    // object. Preserving the stale working copy is also required for
+    // optimistic-concurrency validation.
+    if (isDirty && !recordChanged) {
+      return;
+    }
+
     replaceRecord(record);
     setSaveError(null);
     setSaveMessage(null);
+    setSaveValidation(null);
   }, [
+    isDirty,
     record,
     replaceRecord,
+    workingRecord.id,
   ]);
 
   useEffect(() => {
@@ -79,7 +99,6 @@ export function RecordEditorPanel({
       event: BeforeUnloadEvent,
     ) {
       event.preventDefault();
-
       event.returnValue = "";
     }
 
@@ -101,20 +120,17 @@ export function RecordEditorPanel({
   }
 
   function confirmDiscardChanges():
-    boolean {
-    if (!isDirty) {
-      return true;
-    }
-
-    return window.confirm(
-      "You have unsaved changes. Discard them?",
+  boolean {
+    return (
+      !isDirty ||
+      window.confirm(
+        "You have unsaved changes. Discard them?",
+      )
     );
   }
 
   function handleClose() {
-    if (
-      !confirmDiscardChanges()
-    ) {
+    if (!confirmDiscardChanges()) {
       return;
     }
 
@@ -125,9 +141,7 @@ export function RecordEditorPanel({
   }
 
   function handleCancel() {
-    if (
-      !confirmDiscardChanges()
-    ) {
+    if (!confirmDiscardChanges()) {
       return;
     }
 
@@ -136,6 +150,14 @@ export function RecordEditorPanel({
     setSaveMessage(
       "Changes discarded.",
     );
+  }
+
+  function handleFieldChange(
+    fieldKey: string,
+    value: RecordEditorValue,
+  ) {
+    setSaveValidation(null);
+    updateField(fieldKey, value);
   }
 
   async function handleSave() {
@@ -152,22 +174,34 @@ export function RecordEditorPanel({
     setSaveMessage(null);
 
     try {
+      const platformValidation =
+        await validateRecordEditorRecordForSave(
+          schema,
+          workingRecord,
+        );
+
+      setSaveValidation(
+        platformValidation,
+      );
+
+      if (!platformValidation.isValid) {
+        return;
+      }
+
       const savedRecord =
         await onSave?.(
           workingRecord,
         );
 
       if (savedRecord) {
-        commitChanges(
-          savedRecord,
-        );
+        commitChanges(savedRecord);
       } else {
         commitChanges();
       }
 
       setSaveMessage(
         onSave
-          ? "Record saved successfully."
+          ? "Draft saved successfully."
           : "Changes accepted locally. Server saving is not connected yet.",
       );
     } catch (error: unknown) {
@@ -197,10 +231,8 @@ export function RecordEditorPanel({
             <p className="record-editor-panel-eyebrow">
               Record Editor
             </p>
-
             <h2 id="record-editor-panel-heading">
-              Edit{" "}
-              {schema.singularLabel}
+              Edit {schema.singularLabel}
             </h2>
           </div>
 
@@ -220,10 +252,7 @@ export function RecordEditorPanel({
             className="record-editor-save-message record-editor-save-message--error"
             role="alert"
           >
-            <strong>
-              Save failed
-            </strong>
-
+            <strong>Save failed</strong>
             <p>{saveError}</p>
           </div>
         )}
@@ -240,24 +269,25 @@ export function RecordEditorPanel({
         <div className="record-editor-panel-content">
           <RecordEditorForm
             schema={schema}
-            record={
-              workingRecord
-            }
+            record={workingRecord}
             validation={
+              saveValidation ??
               validation
             }
             isDirty={isDirty}
             isSaving={isSaving}
             onChange={
-              updateField
+              handleFieldChange
             }
-            onSave={
-              handleSave
-            }
-            onCancel={
-              handleCancel
-            }
+            onSave={handleSave}
+            onCancel={handleCancel}
           />
+
+          {supplementalContent && (
+            <div className="record-editor-editorial-content">
+              {supplementalContent}
+            </div>
+          )}
         </div>
       </section>
     </div>

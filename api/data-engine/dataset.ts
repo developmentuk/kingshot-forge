@@ -5,7 +5,7 @@ import type {
 
 import type {
   DatasetKey,
-} from "../../shared/data-engine/types";
+} from "../../shared/data-engine/types.js";
 
 import {
   loadDataset,

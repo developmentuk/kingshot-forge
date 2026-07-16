@@ -2,13 +2,13 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from "../../../../shared/data-engine/types";
+} from "../../../../shared/data-engine/types.js";
 
 import type {
   EventSourcePayload,
   EventSourceRecord,
   NormalisedEventRecord,
-} from "./types";
+} from "./types.js";
 
 const EVENTS_SOURCE_URL =
   "https://kingshotpro.com/data/events.json";

@@ -4,7 +4,7 @@ import { fetchJsonSource, } from '../../sourceFetcher.js'
 
 import { heroesImporter, } from './index.js'
 
-import type { NormalisedHeroRecord, } from './types'
+import type { NormalisedHeroRecord, } from './types.js'
 
 export interface HeroesImportResult {
   runId: string

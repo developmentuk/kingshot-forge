@@ -2,13 +2,13 @@ import type {
   DatasetImporter,
   DatasetSourceMetadata,
   NormalisedDataset,
-} from '../../../../shared/data-engine/types'
+} from '../../../../shared/data-engine/types.js'
 
 import type {
   CharmLevelSourceRecord,
   CharmSourcePayload,
   NormalisedCharmRecord,
-} from './types'
+} from './types.js'
 
 const CHARM_SOURCE_URL =
   'https://kingshotpro.com/data/charm.json'

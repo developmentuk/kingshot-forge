@@ -1,6 +1,6 @@
 import type {
   SourceFetchResult,
-} from '../../shared/data-engine/types'
+} from '../../shared/data-engine/types.js'
 
 import {
   createPayloadHash,
