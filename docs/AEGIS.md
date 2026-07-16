@@ -63,58 +63,9 @@ The Forge Blueprint defines the product vision, pillars, domains, capability mat
 
 Forge develops one epic, one sprint and one release at a time.
 
-### Epic
+A sprint is complete only when its full user journey works across contract, validation, persistence or published projection, server-side permissions, application service, administration, public consumption, failure states, tests and documentation.
 
-An epic completes a product domain or major platform outcome. Do not begin another epic while the active epic contains unfinished release work unless the deferral is explicit and documented.
-
-### Sprint
-
-A sprint delivers one complete vertical slice with a defined user outcome and acceptance criteria. It must use existing shared platform capabilities before introducing new abstractions.
-
-### Release
-
-A release packages validated sprint outcomes. Every release ends with:
-
-1. automated validation;
-2. database verification where applicable;
-3. end-to-end desktop and mobile testing;
-4. documentation and ADR updates where applicable;
-5. Roadmap and Release Notes updates;
-6. logical GitHub commits;
-7. Vercel deployment of the exact commit;
-8. deployed smoke testing;
-9. merge to `main` and semantic version tag when accepted.
-
-## Complete vertical slice methodology
-
-A slice is complete only when the user journey works across every required layer:
-
-1. domain contract and canonical key;
-2. validation and error behaviour;
-3. persistence or published data projection;
-4. server-side authentication and authorisation;
-5. application service and API;
-6. administrative workflow;
-7. public or product consumer;
-8. loading, empty, failure and recovery states;
-9. automated and runtime testing;
-10. operational and product documentation.
-
-Do not build disconnected UI, database or service layers and describe them as a feature.
-
-## Shared platform capability principles
-
-- Shared capabilities are implemented once and reused by domains.
-- Domain-specific code may extend but must not bypass dataset, editorial, permission, publishing, history or audit services.
-- Keep client and server responsibilities separate.
-- Mutation permissions are enforced server-side; hidden controls are not security.
-- Supabase service-role access remains server-side only.
-- Editorial versions are immutable.
-- Record heads use optimistic concurrency.
-- Every editorial mutation appends an audit event.
-- Unsaved editor changes survive non-destructive refreshes and tab-focus events.
-- Concurrency conflicts preserve the user's working copy and provide actionable recovery.
-- Validate Vercel server-function compilation, not only the Vite client build.
+Shared capabilities are implemented once and reused by domains. Domain-specific code may extend but must not bypass dataset, editorial, permission, publishing, history or audit services.
 
 ## Canonical content rule
 
@@ -126,15 +77,7 @@ Personal player, alliance or kingdom state may reference canonical records but r
 
 ## Hero Domain reference implementation
 
-The Hero Domain is the reference implementation for the Forge platform. It must demonstrate:
-
-- canonical structured records;
-- provenance and confidence;
-- schema-driven editing;
-- draft, review, approval and publication;
-- immutable history, comparison and rollback;
-- public consumption of the published record;
-- player-owned progression data that references rather than duplicates canonical facts.
+The Hero Domain is the reference implementation for the Forge platform. It demonstrates canonical structured records, provenance and confidence, schema-driven editing, governed publication, immutable history, public consumption and player-owned progression that references canonical facts.
 
 New domains should copy the proven platform pattern, not recreate the architecture.
 
@@ -155,20 +98,7 @@ Run before release-oriented commits:
 npm run check
 ```
 
-This currently includes PM2B structural validation, lint and production build.
-
-Testing must also cover, where applicable:
-
-- unit and contract validation;
-- server-side permission matrices;
-- database constraints, indexes and RLS;
-- optimistic concurrency;
-- workflow transitions;
-- queue, schedule, failure, retry and cancellation paths;
-- desktop and mobile layouts;
-- deployed Vercel Functions;
-- authenticated end-to-end scenarios;
-- production smoke testing.
+Testing must also cover desktop and mobile layouts, published-only data consumption, server-side permissions, workflow transitions, Vercel Functions and production smoke testing where applicable.
 
 Known warnings are non-blocking only when documented and unchanged in count or scope.
 
@@ -186,49 +116,33 @@ Known warnings are non-blocking only when documented and unchanged in count or s
 
 ### Foundation Phase — Complete
 
-The Foundation Phase established:
-
-- authentication and Forge roles;
-- Supabase persistence;
-- Data Engine and dataset contracts;
-- reusable dataset adapters and validation;
-- structured Record Editor;
-- draft, review, approval and publication workflow;
-- immutable history, comparison, archive, restore and rollback;
-- publication queue and scheduled publishing foundations;
-- server-side permission and audit architecture;
-- Vercel-compatible editorial APIs;
-- governance, release and testing documentation;
-- the Heroes editorial path as the first platform reference.
-
-Known Foundation follow-ups that are not blockers for Hero Domain development must remain explicit in sprint planning rather than being silently forgotten.
+The Foundation Phase established authentication, roles, Supabase persistence, the Data Engine, dataset contracts, structured editing, governed publishing, immutable history, queue foundations, audit architecture, Vercel-compatible editorial APIs and release governance.
 
 ### Release 0.6.0 — Epic 2: Hero Domain Complete
 
 Active sprint:
 
 ```text
-Sprint 8.1 — Hero Skills
+Sprint 8.2 — Hero Domain Completion
 ```
 
-Current working branch at kick-off:
+Current working branch:
 
 ```text
-feature/pm2b-editorial-workflow
+release/0.6.0-hero-domain
 ```
 
-Inspect its live head before every change. The documentation close-out must be committed before Sprint 8.1 implementation begins.
+Sprint 8.1 established Hero Skills as a complete canonical vertical slice. Sprint 8.2 completes the public Hero experience around the published Hero catalogue and published Hero Skills.
 
-## Sprint 8.1 guardrails
+## Sprint 8.2 guardrails
 
 - Do not redesign the architecture.
-- Use the existing dataset, editorial, publishing and permission platform.
-- Treat Hero Skills as a complete canonical vertical slice.
-- Define the skill contract and stable keys before UI work.
-- Publish through the existing workflow.
-- Ensure administrative and public Hero consumers use the published canonical data.
-- Keep player-owned progression separate from canonical skill definitions.
-- Finish testing and documentation before starting the next Hero sprint.
+- Reuse published datasets only.
+- Do not read editorial drafts from public Hero surfaces.
+- Derive recommendations only from published Hero facts and published skills; do not invent unpublished costs, values or breakpoints.
+- Keep player-owned progression separate from canonical Hero guidance.
+- Complete desktop and mobile states, validation and documentation before release acceptance.
+- Runtime validation and deployment smoke testing remain required before merge to `main` and tagging `v0.6.0`.
 
 ## Updating this file
 
