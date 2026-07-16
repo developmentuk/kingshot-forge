@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { APP_VERSION, RELEASE_CHANNEL, SHORT_COMMIT_SHA } from "../config/release";
 
 function ReleaseNotesPage() {
   return (
@@ -6,22 +7,23 @@ function ReleaseNotesPage() {
       <header className="release-notes-hero">
         <div>
           <p className="eyebrow">Release notes</p>
-          <h1 className="page-title">Release 0.6.0 — Hero Domain Complete</h1>
+          <h1 className="page-title">Release {APP_VERSION} — Editorial Platform Completion</h1>
           <p>
-            The Hero Companion now combines the published Hero catalogue and
-            published Hero Skills into a complete, responsive guidance
-            experience built on the existing Forge editorial platform.
+            This release completes the Editorial Intelligence and Editorial Platform
+            foundations before Player Domain development continues.
           </p>
         </div>
-        <span className="release-notes-version">Sprint 8.2 ready for validation</span>
+        <span className="release-notes-version" title={`Commit ${SHORT_COMMIT_SHA}`}>
+          {RELEASE_CHANNEL} · v{APP_VERSION}
+        </span>
       </header>
 
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
-            <span className="release-entry__badge">Latest milestone</span>
-            <h2>Sprint 8.2 — Hero Domain Completion</h2>
-            <p>Completed in repository on 16 July 2026</p>
+            <span className="release-entry__badge">Current release</span>
+            <h2>Sprint 9.2 — Editorial Platform Completion</h2>
+            <p>Milestone-first development on the active release branch</p>
           </div>
           <Link className="button button--secondary" to="/roadmap">
             View roadmap
@@ -30,49 +32,65 @@ function ReleaseNotesPage() {
 
         <div className="release-entry__sections">
           <section>
+            <h3>Release objectives</h3>
+            <ul>
+              <li>Authoritative Forge project constitution</li>
+              <li>Evidence-based audit of every registered dataset</li>
+              <li>Complete shared editorial workflows</li>
+              <li>Verification Centre and confidence model</li>
+              <li>Canonical Hero Skills evidence workflow</li>
+              <li>Live dataset health and domain readiness reporting</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Release identity</h3>
+            <ul>
+              <li>Version is read from the canonical package metadata</li>
+              <li>Production and preview channels are identified automatically</li>
+              <li>Deployed commit metadata is injected by Vercel</li>
+              <li>Visible version labels share one application configuration</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Quality gates</h3>
+            <ul>
+              <li>Complete repository checks pass</li>
+              <li>The exact branch commit deploys successfully</li>
+              <li>Desktop and mobile workflows are smoke-tested</li>
+              <li>Canonical published data is used by public consumers</li>
+              <li>Documentation and release records match production</li>
+            </ul>
+          </section>
+        </div>
+      </article>
+
+      <article className="release-entry">
+        <div className="release-entry__heading">
+          <div>
+            <h2>Release 0.6.0 — Hero Domain Complete</h2>
+            <p>Sprint 8.2 reference-domain milestone</p>
+          </div>
+        </div>
+        <div className="release-entry__sections">
+          <section>
             <h3>Complete Hero guidance</h3>
             <ul>
-              <li>Hero strengths and weaknesses</li>
+              <li>Hero strengths, weaknesses and best-use guidance</li>
               <li>Published-data-driven Hero synergies</li>
-              <li>Recommended formation roles and troop focus</li>
-              <li>Best-use editorial guidance</li>
-              <li>Hero progression recommendations</li>
-              <li>Widget investment guidance</li>
-              <li>Exclusive Gear investment guidance</li>
+              <li>Recommended formations and troop focus</li>
+              <li>Hero progression, Widget and Exclusive Gear guidance</li>
+              <li>Responsive Hero catalogue and detail experience</li>
             </ul>
           </section>
-
           <section>
-            <h3>Published once, consumed everywhere</h3>
+            <h3>Canonical consumption</h3>
             <ul>
-              <li>Active Heroes remain sourced from the published Hero catalogue</li>
-              <li>Hero Skills remain sourced from the published-only projection</li>
-              <li>Draft and rejected content is never read by public Hero pages</li>
-              <li>No replacement tables or parallel editorial system</li>
-              <li>No invented material costs or unpublished breakpoints</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>Mobile and usability</h3>
-            <ul>
-              <li>Responsive Hero catalogue and detail layouts</li>
-              <li>Sticky, horizontally scrollable section navigation</li>
-              <li>Touch-sized navigation controls</li>
-              <li>Responsive synergy, formation and progression cards</li>
+              <li>Published Hero catalogue and Hero Skills only</li>
+              <li>Draft and rejected records excluded from public pages</li>
+              <li>No parallel editorial system or replacement tables</li>
               <li>Loading, unavailable, not-found and empty states</li>
-              <li>Integrated Hero issue reporting</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>Release validation gate</h3>
-            <ul>
-              <li>Run the complete repository check</li>
-              <li>Deploy the exact branch head to Vercel</li>
-              <li>Smoke-test desktop and mobile Hero journeys</li>
-              <li>Verify published and unpublished Hero Skill behaviour</li>
-              <li>Merge and tag v0.6.0 only after acceptance</li>
             </ul>
           </section>
         </div>
