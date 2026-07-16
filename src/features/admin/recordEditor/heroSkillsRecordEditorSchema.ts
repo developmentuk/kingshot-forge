@@ -35,9 +35,14 @@ RecordEditorSchema = {
       order: 40,
     },
     {
+      id: "provenance",
+      title: "Source and verification",
+      order: 50,
+    },
+    {
       id: "system",
       title: "System metadata",
-      order: 50,
+      order: 60,
       collapsedByDefault: true,
     },
   ],
@@ -65,6 +70,8 @@ RecordEditorSchema = {
       section: "relationship",
       order: 20,
       readOnly: true,
+      description:
+        "Resolved from the published Hero catalogue after publication.",
     },
     {
       key: "name",
@@ -168,12 +175,70 @@ RecordEditorSchema = {
       order: 40,
     },
     {
+      key: "is_active",
+      label: "Published active state",
+      type: "boolean",
+      section: "presentation",
+      order: 50,
+      required: true,
+      description:
+        "Inactive skills remain in history but are excluded from the public Companion.",
+    },
+    {
+      key: "source_name",
+      label: "Source name",
+      type: "text",
+      section: "provenance",
+      order: 10,
+      validation: {
+        maxLength: 200,
+      },
+    },
+    {
+      key: "source_url",
+      label: "Source URL",
+      type: "url",
+      section: "provenance",
+      order: 20,
+    },
+    {
+      key: "source_verified",
+      label: "Verification note",
+      type: "text",
+      section: "provenance",
+      order: 30,
+      validation: {
+        maxLength: 200,
+      },
+    },
+    {
+      key: "source_updated_at",
+      label: "Source updated date",
+      type: "date",
+      section: "provenance",
+      order: 40,
+    },
+    {
+      key: "source_accuracy_score",
+      label: "Accuracy score",
+      type: "number",
+      section: "provenance",
+      order: 50,
+      validation: {
+        integer: true,
+        min: 0,
+        max: 100,
+      },
+    },
+    {
       key: "id",
       label: "Record ID",
       type: "readonly",
       section: "system",
       order: 10,
       readOnly: true,
+      description:
+        "Stable editorial key generated when the draft is created.",
     },
     {
       key: "hero_id",
@@ -201,23 +266,33 @@ RecordEditorSchema = {
     },
   ],
 
-  createEmptyRecord: () => ({
-    id: "",
-    values: {
-      id: "",
-      hero_id: null,
-      hero_slug: "",
-      hero_name: null,
-      name: "",
-      category: "conquest",
-      skill_type: null,
-      description: null,
-      icon_url: null,
-      display_order: 1,
-      slot_index: 1,
-      max_level: 5,
-      created_at: null,
-      updated_at: null,
-    },
-  }),
+  createEmptyRecord: () => {
+    const id = `new-hero-skill-${Date.now().toString(36)}`;
+
+    return {
+      id,
+      values: {
+        id,
+        hero_id: null,
+        hero_slug: "",
+        hero_name: null,
+        name: "",
+        category: "conquest",
+        skill_type: null,
+        description: null,
+        icon_url: null,
+        display_order: 1,
+        slot_index: 1,
+        max_level: 5,
+        is_active: true,
+        source_updated_at: null,
+        source_verified: null,
+        source_accuracy_score: null,
+        source_name: null,
+        source_url: null,
+        created_at: null,
+        updated_at: null,
+      },
+    };
+  },
 };
