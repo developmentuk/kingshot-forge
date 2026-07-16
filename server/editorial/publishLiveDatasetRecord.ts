@@ -6,6 +6,12 @@ import type {
   DatasetRecordValues,
 } from "../../src/platform/datasets/index.js";
 
+export interface LivePublicationContext {
+  version: number;
+  versionId: string;
+  publishedBy: string;
+}
+
 function optionalText(
   value: unknown,
 ): string | null {
@@ -25,7 +31,7 @@ function requiredText(
 
   if (!text) {
     throw new Error(
-      `${label} is required before this hero can be published.`,
+      `${label} is required before this record can be published.`,
     );
   }
 
@@ -47,6 +53,21 @@ function optionalInteger(
     Number.isInteger(value)
     ? value
     : null;
+}
+
+function requiredPositiveInteger(
+  value: unknown,
+  label: string,
+): number {
+  const integer = optionalInteger(value);
+
+  if (integer === null || integer < 1) {
+    throw new Error(
+      `${label} must be a positive integer before this record can be published.`,
+    );
+  }
+
+  return integer;
 }
 
 function stringArray(
@@ -132,11 +153,99 @@ async function publishHero(
   }
 }
 
+async function publishHeroSkill(
+  client: SupabaseClient,
+  recordId: string,
+  values: DatasetRecordValues,
+  context: LivePublicationContext,
+): Promise<void> {
+  const heroSlug = requiredText(
+    values.hero_slug,
+    "Hero slug",
+  );
+  const editorialKey = requiredText(
+    values.id ?? recordId,
+    "Hero Skill record ID",
+  );
+
+  const { data: hero, error: heroError } = await client
+    .from("heroes")
+    .select("id")
+    .eq("slug", heroSlug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (heroError) {
+    throw new Error(
+      `Unable to resolve Hero "${heroSlug}" for publication: ${heroError.message}`,
+    );
+  }
+
+  if (!hero) {
+    throw new Error(
+      `Unable to publish Hero Skill "${editorialKey}": active Hero "${heroSlug}" was not found.`,
+    );
+  }
+
+  const payload = {
+    editorial_key: editorialKey,
+    hero_id: hero.id,
+    name: requiredText(values.name, "Skill name"),
+    category: requiredText(values.category, "Skill category"),
+    skill_type: optionalText(values.skill_type),
+    description: optionalText(values.description),
+    icon_url: optionalText(values.icon_url),
+    display_order: requiredPositiveInteger(
+      values.display_order,
+      "Display order",
+    ),
+    slot_index: requiredPositiveInteger(
+      values.slot_index,
+      "Skill slot",
+    ),
+    max_level: requiredPositiveInteger(
+      values.max_level,
+      "Maximum level",
+    ),
+    is_active:
+      optionalBoolean(values.is_active) ?? true,
+    source_updated_at: optionalText(
+      values.source_updated_at,
+    ),
+    source_verified: optionalText(
+      values.source_verified,
+    ),
+    source_accuracy_score: optionalInteger(
+      values.source_accuracy_score,
+    ),
+    source_name: optionalText(values.source_name),
+    source_url: optionalText(values.source_url),
+    published_version: context.version,
+    published_version_id: context.versionId,
+    published_at: new Date().toISOString(),
+    published_by: context.publishedBy,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await client
+    .from("hero_skills")
+    .upsert(payload, {
+      onConflict: "editorial_key",
+    });
+
+  if (error) {
+    throw new Error(
+      `Unable to publish Hero Skill "${editorialKey}" to the live catalogue: ${error.message}`,
+    );
+  }
+}
+
 export async function publishLiveDatasetRecord(
   client: SupabaseClient,
   datasetId: string,
   recordId: string,
   values: DatasetRecordValues,
+  context: LivePublicationContext,
 ): Promise<void> {
   switch (datasetId) {
     case "heroes":
@@ -144,6 +253,15 @@ export async function publishLiveDatasetRecord(
         client,
         recordId,
         values,
+      );
+      return;
+
+    case "hero-skills":
+      await publishHeroSkill(
+        client,
+        recordId,
+        values,
+        context,
       );
       return;
 
