@@ -50,6 +50,29 @@ const registrations: AdminDatasetRegistration[] = [
     },
   },
   {
+    id: "hero-skills",
+    version: 1,
+    title: "Hero Skills",
+    singularTitle: "Hero Skill",
+    description:
+      "Canonical Hero Skill definitions, ordering and verified effects.",
+    category: "game-data",
+    route: "/admin/data/hero-skills",
+    idField: "id",
+    titleField: "name",
+    fields: [],
+    capabilities: {
+      browsing: true,
+      editing: true,
+      importing: false,
+      search: true,
+    },
+    admin: {
+      order: 15,
+      status: "ready",
+    },
+  },
+  {
     id: "buildings",
     version: 1,
     title: "Buildings",
@@ -60,16 +83,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "key",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      editing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 20,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, editing: true, importing: true, search: true },
+    admin: { order: 20, status: "not-imported" },
   },
   {
     id: "gear",
@@ -82,15 +97,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "tier",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 30,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 30, status: "not-imported" },
   },
   {
     id: "troops",
@@ -103,15 +111,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "label",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 40,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 40, status: "not-imported" },
   },
   {
     id: "charm",
@@ -124,15 +125,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 50,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 50, status: "not-imported" },
   },
   {
     id: "vip",
@@ -145,15 +139,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 60,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 60, status: "not-imported" },
   },
   {
     id: "shards",
@@ -166,15 +153,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "label",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 70,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 70, status: "not-imported" },
   },
   {
     id: "hero-xp",
@@ -187,15 +167,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 80,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 80, status: "not-imported" },
   },
   {
     id: "truegold",
@@ -208,15 +181,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "building",
     titleField: "building",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 90,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 90, status: "not-imported" },
   },
   {
     id: "war-academy",
@@ -229,15 +195,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 100,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 100, status: "not-imported" },
   },
   {
     id: "events",
@@ -250,16 +209,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "name",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      editing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 110,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, editing: true, importing: true, search: true },
+    admin: { order: 110, status: "not-imported" },
   },
   {
     id: "kvk",
@@ -272,15 +223,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "day",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 120,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 120, status: "not-imported" },
   },
   {
     id: "masters",
@@ -293,15 +237,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "name",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      importing: true,
-      search: true,
-    },
-    admin: {
-      order: 130,
-      status: "not-imported",
-    },
+    capabilities: { browsing: true, importing: true, search: true },
+    admin: { order: 130, status: "not-imported" },
   },
 ];
 
@@ -330,7 +267,7 @@ export function hasAdminDatasetRegistration(
 }
 
 export function listAdminDatasetRegistrations():
-  AdminDatasetRegistration[] {
+AdminDatasetRegistration[] {
   return datasetRegistry
     .list()
     .map(
