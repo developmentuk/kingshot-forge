@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardCard from '../components/dashboard/DashboardCard'
-import ForgeProgressPanel from '../components/ForgeProgressPanel'
+import ForgeProgressPanel, { ForgeGlyph } from '../components/ForgeProgressPanel'
 import { clearRecentNames, loadRecentNames, RECENT_NAMES_UPDATED_EVENT } from '../data/recentNames'
 
 const NAME_FAVOURITES_KEY = 'kingshot-forge-name-favourites'
@@ -42,7 +42,17 @@ export default function MyForgePage() {
   return <main className="section page-section my-forge-landing">
     <header className="section-heading"><p className="eyebrow">My Forge</p><h1 className="page-title">Your Forge home</h1><p>Open your Passport, track progress, or jump straight to a player tool.</p></header>
     <DashboardCard title="Player Headquarters" subtitle="A quick view of your linked player and required Forge progress." icon="⭐" accent="gold"><ForgeProgressPanel compact /></DashboardCard>
-    <DashboardCard title="Player tools" subtitle="Keep your player record and planning in one place." icon="🧭" accent="blue"><div className="my-forge-shortcuts"><Link to="/my-forge/player-identity"><strong>Player Passport</strong><span>Identity, visibility, badges and account status</span></Link><Link to="/my-forge/profile"><strong>Edit Passport</strong><span>Change the player-controlled public fields</span></Link><Link to="/my-forge/progression"><strong>Personal Progression</strong><span>Record historical progression snapshots</span></Link><Link to="/my-forge/heroes"><strong>Hero Showcase</strong><span>Choose the heroes shown on your profile</span></Link><Link to="/my-forge/transfer-profile"><strong>Transfer Profile <small>Optional</small></strong><span>Plan a transfer only if it is relevant to you</span></Link></div></DashboardCard>
+    <DashboardCard title="Player tools" subtitle="Open a focused player surface." icon="🧭" accent="blue"><div className="my-forge-shortcuts">
+      <ToolCard to="/my-forge/player-identity" icon="passport" title="Player Passport" copy="Your full player record" />
+      <ToolCard to="/my-forge/profile" icon="link" title="Edit Passport" copy="Update your player fields" />
+      <ToolCard to="/my-forge/progression" icon="progress" title="Personal Progression" copy="Track saved snapshots" />
+      <ToolCard to="/my-forge/heroes" icon="hero" title="Hero Showcase" copy="Curate six featured heroes" />
+      <ToolCard to="/my-forge/transfer-profile" icon="transfer" title="Transfer Profile" copy="Optional transfer planning" badge="Optional" />
+    </div></DashboardCard>
     <DashboardCard title="Forge Library" subtitle="Saved locally on this device." icon="📚" accent="green"><div className="my-forge-summary"><div><strong>{nameCount}</strong><span>Favourite name styles</span></div><div><strong>{artCount}</strong><span>Favourite artwork</span></div><div><strong>{recentCount}</strong><span>Recent names</span></div><div><strong>{totalSaved}</strong><span>Total saved items</span></div></div><div className="my-forge-library-actions"><Link className="button button--secondary" to="/name-studio">Open Name Studio</Link><Link className="button button--secondary" to="/art-studio">Open Art Studio</Link><button className="button button--secondary" type="button" onClick={() => { clearRecentNames(); setRecentCount(0) }}>Clear recent names</button></div></DashboardCard>
   </main>
+}
+
+function ToolCard({ to, icon, title, copy, badge }: { to: string; icon: 'link' | 'passport' | 'hero' | 'progress' | 'transfer'; title: string; copy: string; badge?: string }) {
+  return <Link className="my-forge-tool" to={to}><span className="my-forge-tool__visual"><ForgeGlyph name={icon} size={34} /></span><span className="my-forge-tool__body"><strong>{title}</strong><span>{copy}</span></span>{badge ? <span className="my-forge-tool__badge">{badge}</span> : <span className="my-forge-tool__arrow" aria-hidden="true">↗</span>}</Link>
 }
