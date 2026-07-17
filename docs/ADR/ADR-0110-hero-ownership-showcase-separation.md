@@ -65,3 +65,7 @@ Revisit if Showcase supports multiple layouts, team presets or a different appro
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Decision Register](../PLAYER_DOMAIN_DECISION_REGISTER.md), [Canonical Content ADR](./ADR-001-canonical-content.md).
+
+## Sprint 9.3 implementation evidence
+
+The Hero Showcase boundary keeps Player-owned selection/progression claims separate from Hero Domain canonical facts and Editorial recommendations. No Hero data, editorial service or UI was changed; this ADR remains **Proposed**.

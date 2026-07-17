@@ -67,3 +67,7 @@ Revisit when public Player ID exposure is approved, scopes prove insufficient, o
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Glossary](../PLAYER_DOMAIN_GLOSSARY.md), [Decision Register](../PLAYER_DOMAIN_DECISION_REGISTER.md).
+
+## Sprint 9.3 implementation evidence
+
+Opaque public-alias and default-deny field-allowlisted projection contracts now exclude Forge User, raw Player and Character Link identifiers. No public route, alias persistence or release exists; visibility taxonomy still requires review and this ADR remains **Proposed**.

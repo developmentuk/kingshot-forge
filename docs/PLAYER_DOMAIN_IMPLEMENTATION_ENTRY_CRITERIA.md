@@ -1,8 +1,8 @@
 # Player Domain Implementation Entry Criteria
 
-**Status:** Proposed governance; implementation entry is not approved
+**Status:** Scoped Sprint 9.3 local contract/discovery entry completed; product, persistence and production entry not approved
 **Owner:** Player Domain architecture
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 17 July 2026
 **Last reviewed:** 17 July 2026
 
@@ -25,15 +25,15 @@ No criterion grants Supabase write, migration, deployment or production authorit
 | EC-07 | Blocking | Visibility semantics for private and safe projections approved. | PD-007 field/audience matrix, default-deny posture and contract scope. | Clark, Aegis, Privacy and Security | Unmet. |
 | EC-08 | May be deferred behind an interface | Public Player ID exposure policy approved or explicitly set to omit. | PD-009 outcome; interface contains no public Player ID while deferred. | Clark, Aegis, Privacy and Security | Unmet; conservative omission is recommended. |
 | EC-09 | May be deferred behind an interface | Alliance Authority policy approved where the milestone consumes it. | PD-010/011 or an interface that returns unavailable/denied and implements no Alliance command. | Clark, Aegis, Security and Operations | Unmet; Identity Milestone 1 excludes Alliance authority. |
-| EC-10 | Blocking | Read-only schema discovery charter approved. | Named environment/operator, exact object scope, access method, sanitised evidence/hash location and stop conditions. | Clark, Aegis, Database, Security and Privacy | Unmet; no database command authorised. |
+| EC-10 | Blocking | Read-only schema discovery charter approved. | Named environment/operator, exact object scope, access method, sanitised evidence/hash location and stop conditions. | Clark, Aegis, Database, Security and Privacy | Satisfied only for Sprint 9.3 by the exact brief and discovery report; no continuing database authority. |
 | EC-11 | Blocking | Migration recovery strategy approved for discovery/reconstruction planning. | Accepted ADR-0115 and reviewed recovery sequence. | Aegis, Clark and Database review | Unmet. |
-| EC-12 | Blocking | Supabase target environment identified and classified. | Exact project/branch reference and proof of production/non-production classification. | Database, Security and Aegis | Unmet; no environment may be assumed safe. |
-| EC-13 | Blocking | No production write authorisation is assumed. | Scope statement explicitly excludes SQL writes, migration application, fixtures and production mutations. | Clark and Aegis | Satisfied for this governance milestone; must be re-recorded for implementation. |
-| EC-14 | Blocking | Active Codex A/B/D overlap reassessed at implementation start. | Current heads/statuses, path/contract collision matrix and named resolution owner. | Aegis | Unmet for future implementation; current governance snapshot recorded only. |
+| EC-12 | Blocking | Supabase target environment identified and classified. | Exact project/branch reference and proof of production/non-production classification. | Database, Security and Aegis | Project `hrvdhjscwitqpwjhnjkm` identified; environment classification remains unresolved, so access stopped at read-only catalogue discovery. |
+| EC-13 | Blocking | No production write authorisation is assumed. | Scope statement explicitly excludes SQL writes, migration application, fixtures and production mutations. | Clark and Aegis | Satisfied for Sprint 9.3; no write or migration authority exists. |
+| EC-14 | Blocking | Active Codex A/B/D overlap reassessed at implementation start. | Current heads/statuses, path/contract collision matrix and named resolution owner. | Aegis | Reassessed for isolated Player paths; package-script and future shared actor/projection integration remain review risks. |
 | EC-15 | Blocking | API, ADR, logical model and future migration naming reservations agreed. | Collision check against accepted release head and workstreams; no in-flight shared names reused. | Aegis and Database review where physical names are involved | Unmet. |
 | EC-16 | Blocking | Milestone-specific Security and Privacy requirements accepted. | Threat/privacy model, prohibited data, logging/redaction, access and retention gates. | Security, Privacy, Aegis and Clark | Unmet. |
-| EC-17 | Blocking | Identity Milestone 1 scope approved. | Accepted objective, in/out scope, interfaces, no-provider/no-migration boundaries and completion criteria. | Clark and Aegis | Unmet; proposal is Proposed. |
-| EC-18 | Blocking | Test and rollback strategy approved. | Contract/negative/concurrency/secret tests, stop conditions, docs/code rollback and no-data rollback statement. | Aegis, Security and Operations | Unmet. |
+| EC-17 | Blocking | Identity Milestone 1 scope approved. | Accepted objective, in/out scope, interfaces, no-provider/no-migration boundaries and completion criteria. | Clark and Aegis | Satisfied only for the local Sprint 9.3 contract/discovery brief; executable product and persistence remain blocked. |
+| EC-18 | Blocking | Test and rollback strategy approved. | Contract/negative/concurrency/secret tests, stop conditions, docs/code rollback and no-data rollback statement. | Aegis, Security and Operations | Implemented locally for additive unused contracts; production review remains unmet. |
 | EC-19 | Required before production | Verification provider, proof, expiry, dispute and recovery policies accepted for any positive verified state. | Accepted PD-001/002/003/021 and provider-safe validation evidence. | Approval Matrix roles | Unmet. |
 | EC-20 | Required before production | Schema baseline, forward migrations, grants and RLS validated in an approved non-production target. | Inventory/reconstruction hashes, migration/RLS matrix, rollback rehearsal and advisor/review evidence current at execution. | Database, Security, Aegis and Clark | Unmet; no migration exists. |
 | EC-21 | Required before production | Data-classification retention and deletion processes accepted. | PD-017/022 outcomes, scheduled expiry/deletion tests and backup treatment. | Privacy, Security, Operations, Database, Clark and Aegis | Unmet. |
@@ -58,7 +58,7 @@ An interface deferral must:
 
 ## Entry review outcome
 
-At the date of this document, Player Identity implementation entry is **not approved**. The governance documents are ready for Clark and Aegis review, not for product implementation.
+Sprint 9.3 local contract/discovery entry is complete under the brief's explicit exception. Broader Player Identity product implementation remains **not approved**: every Player ADR is Proposed, live schema is not canonical, and persistence, provider, public release, Alliance authority and executable Player workflows remain blocked.
 
 ## Related documents
 

@@ -1,11 +1,11 @@
 # Kingshot Forge Player Domain Architecture
 
-**Status:** Proposed — governance package ready for Clark and Aegis review; implementation entry not granted
+**Status:** Architecture remains Proposed; Sprint 9.3 local contract/discovery foundation implemented for review
 **Owner:** Player Domain; Clark as Product Owner; Aegis as Technical Architect
 **Version:** 1.1
 **Date:** 17 July 2026
 **Last reviewed:** 17 July 2026
-**Applies from:** Sprint 9.3 preparation
+**Applies from:** Sprint 9.3 contract foundation
 **Repository baseline:** `1aca694ebe2e57339e17ab85ab190ad762620b8b`
 
 ## 1. Purpose and authority
@@ -1511,9 +1511,9 @@ All decisions below are **pending**. A recommendation is architecture advice, no
 - **Deferred:** intentionally reserved for a later milestone and not a live capability.
 - **Prohibited:** must not be implemented without a new approval that explicitly changes this architecture.
 
-### Milestone prohibition
+### Milestone boundary
 
-This architecture milestone creates documentation only. It does not implement Player Planning, product code, migrations, Supabase writes, external provider calls or deployment behaviour.
+Sprint 9.3 implements only additive local Player Identity contracts, pure policies, injected ports, server-side resolver factories, validation and fixture tests. It does not implement Player Planning, product routes/UI, persistence, migrations, Supabase writes, external provider calls, Alliance authority or deployment behaviour.
 
 ### Licence boundary confirmation
 
@@ -1521,7 +1521,7 @@ No contributed planner source code, schema, migration, comment, identifier, func
 
 ## 29. Implementation Entry Criteria
 
-The authoritative gate is [Player Domain Implementation Entry Criteria](./PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md). At version 1.1, Player Identity implementation entry is **not approved** because the architecture, critical ADRs, glossary and decision policies remain Proposed.
+The authoritative gate is [Player Domain Implementation Entry Criteria](./PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md). The Sprint 9.3 brief authorised a narrow local contract/discovery exception. It did not accept the architecture, critical ADRs, glossary or decision policies, and it did not grant persistence, executable product workflow, production or public-release entry.
 
 | Classification | Meaning |
 | --- | --- |
@@ -1533,3 +1533,17 @@ The authoritative gate is [Player Domain Implementation Entry Criteria](./PLAYER
 Minimum blocking outcomes include approved architecture and glossary; Accepted critical identity ADRs; approved configurable Character Limit Policy; approved Primary/Active semantics; approved private/safe visibility semantics; approved read-only schema discovery and migration-recovery strategy; identified Supabase environment; cross-workstream and naming reassessment; accepted security/privacy requirements; approved scope; and test/rollback plans.
 
 Verification provider/Alliance authority may be deferred only through the safe interface rule. The next proposed slice is [Player Identity Foundation — Implementation Milestone 1](./PLAYER_IDENTITY_IMPLEMENTATION_MILESTONE_1.md); it includes contracts, approved read-only discovery and server-resolution interfaces, not a provider, positive verification, Alliance authority, Gift provider, Planning implementation or migration by default.
+
+## 30. Sprint 9.3 Local Contract Evidence
+
+The implemented foundation lives in `shared/domains/player-identity/` and `server/player-identity/`. It applies the conservative Sprint defaults without binding them to live schema, API routes or UI:
+
+- identity types keep Forge User, Game Character and Character Link separate;
+- linked state never implies verified state;
+- Primary is a concurrency-checked preference and never a sensitive-operation fallback;
+- Active Character is explicit per-request server context;
+- limits are finite configuration inputs with no architectural numeric maximum;
+- public output is constructed from an allowlist and cannot contain Forge User, raw Player or Character Link identifiers;
+- consumer boundaries expose minimal projections while Gift/provider, Hero canonical/editorial, Art moderation and Alliance authority remain with their owning domains.
+
+The [read-only schema report](./reference/player-identity-schema-discovery.md) records live evidence and drift. The [Sprint 9.3 release note](./releases/SPRINT_9_3_PLAYER_IDENTITY_FOUNDATION.md) records exact scope. This evidence does not change any ADR from Proposed.

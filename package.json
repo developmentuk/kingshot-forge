@@ -18,7 +18,9 @@
     "test:editorial-api": "node scripts/test-editorial-api.mjs",
     "test:verification-centre": "node scripts/test-verification-centre.mjs",
     "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
-    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run test:editorial-api && npm run test:verification-centre && npm run test:hero-skills-governance && npm run lint && npm run build"
+    "validate:player-identity": "node scripts/validate-player-identity.mjs",
+    "test:player-identity": "node scripts/test-player-identity.mjs",
+    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run test:editorial-api && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",

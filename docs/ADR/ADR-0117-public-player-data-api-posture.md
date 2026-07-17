@@ -65,3 +65,7 @@ Revisit after schema discovery, Data API configuration changes or a new public c
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Supabase RLS guidance](https://supabase.com/docs/guides/database/postgres/row-level-security), [Supabase Data API guidance](https://supabase.com/docs/guides/api/securing-your-api).
+
+## Sprint 9.3 implementation evidence
+
+The public contract is a local allowlisted projection with no route or database adapter. Discovery shows why whole-row legacy RLS is insufficient for field minimisation. API posture, grants, rate limits and cache policy remain unapproved; this ADR remains **Proposed**.

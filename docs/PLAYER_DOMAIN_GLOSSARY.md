@@ -1,8 +1,8 @@
 # Kingshot Forge Player Domain Glossary
 
-**Status:** Proposed for Clark and Aegis approval
+**Status:** Proposed for Clark and Aegis approval; selected terms implemented as local Sprint 9.3 contracts
 **Owner:** Player Domain architecture
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 17 July 2026
 **Last reviewed:** 17 July 2026
 
@@ -621,3 +621,9 @@ Privacy classifications used here are **Public**, **Scoped**, **Private**, **Res
 - [Player Decision Register](./PLAYER_DOMAIN_DECISION_REGISTER.md)
 - [Player Approval Matrix](./PLAYER_DOMAIN_APPROVAL_MATRIX.md)
 - [Implementation Entry Criteria](./PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md)
+
+## Sprint 9.3 contract usage
+
+The local contract foundation now uses the qualified terms **Forge User Identity**, **Game Character Identity**, **Character Link**, **Character Ownership Verification**, **Primary Character**, **Active Character**, **Public Player Alias**, **Private Player Projection** and **Public Player Projection**. This implementation is evidence for review, not approval of the glossary.
+
+The contract-only visibility audience values `selected_fields` and `authenticated_forge_users` express evaluation inputs for the narrow policy. They do not replace or accept the broader Proposed Visibility Scope taxonomy. Before production, Clark, Aegis, Privacy and Security must reconcile those policy inputs with PD-007 and ADR-0105.

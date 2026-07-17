@@ -65,3 +65,7 @@ Revisit only if an approved authoritative provider supplies a stronger direct ow
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Glossary](../PLAYER_DOMAIN_GLOSSARY.md), [Gift Centre boundary ADR](./ADR-0112-gift-centre-integration-boundary.md).
+
+## Sprint 9.3 implementation evidence
+
+Character Link and Character Ownership Verification are separate contracts. Sensitive test resolution rejects a linked/unverified character. No live positive claim or provider exists; this ADR remains **Proposed**.

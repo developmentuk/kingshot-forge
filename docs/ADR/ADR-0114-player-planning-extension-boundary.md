@@ -65,3 +65,7 @@ Revisit after Player Identity and Alliance Authority milestones are accepted or 
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Clean-room Audit](../audits/PLAYER_DOMAIN_CLEAN_ROOM_AUDIT.md), [Implementation Entry Criteria](../PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md).
+
+## Sprint 9.3 implementation evidence
+
+The implemented paths contain identity contracts and resolvers only. No availability, rally, assignment, War Room or other Player Planning capability was added. This ADR remains **Proposed** and Planning remains blocked.

@@ -65,3 +65,7 @@ Revisit when legal/security retention changes, an integrity service is adopted o
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Decision Register](../PLAYER_DOMAIN_DECISION_REGISTER.md), [Approval Matrix](../PLAYER_DOMAIN_APPROVAL_MATRIX.md).
+
+## Sprint 9.3 implementation evidence
+
+Immutable in-process event contracts and a deep-freezing factory reject sensitive metadata and remain unpublished. No event store, transport or database write exists; retention and production audit design remain open, so this ADR remains **Proposed**.

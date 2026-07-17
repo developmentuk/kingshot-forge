@@ -68,3 +68,7 @@ Revisit if an authoritative schema export/history is recovered, Supabase changes
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Implementation Entry Criteria](../PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md), [Supabase Data API security guidance](https://supabase.com/docs/guides/api/securing-your-api), [Supabase changelog](https://supabase.com/changelog?tags=breaking-change).
+
+## Sprint 9.3 implementation evidence
+
+The [read-only schema report](../reference/player-identity-schema-discovery.md) confirms live/repository migration drift, ambiguous aggregates, grant/policy risks and the need for baseline recovery before forward work. No migration was created or applied. Recovery authority remains blocked and this ADR remains **Proposed**.

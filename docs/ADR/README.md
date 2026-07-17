@@ -102,3 +102,7 @@ Architecture specifications explain the complete target system. ADRs isolate ind
 | ADR-0117 | Expose public Player data through safe projections | Proposed | [ADR-0117](./ADR-0117-public-player-data-api-posture.md) |
 | ADR-0118 | Constrain and audit support intervention | Proposed | [ADR-0118](./ADR-0118-support-intervention-model.md) |
 | ADR-0119 | Append immutable Player audit history | Proposed | [ADR-0119](./ADR-0119-player-audit-immutable-history.md) |
+
+## Sprint 9.3 evidence note
+
+Local contracts and read-only schema evidence now exercise parts of ADR-0100 through ADR-0105, ADR-0109 through ADR-0115, ADR-0117 and ADR-0119. This is implementation evidence only. No Player ADR status changed; every ADR-0100 through ADR-0119 remains Proposed until its required approval record is added.

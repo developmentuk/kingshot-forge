@@ -2,7 +2,7 @@
 
 **Status:** Proposed governance
 **Owner:** Player Domain architecture
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 17 July 2026
 **Last reviewed:** 17 July 2026
 
@@ -75,3 +75,7 @@ Security, Privacy, Operations and Database are functional review roles. This doc
 - [ADR convention](./ADR/README.md)
 - [Implementation Entry Criteria](./PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md)
 - [Player Domain Architecture](./PLAYER_DOMAIN_ARCHITECTURE.md)
+
+## Sprint 9.3 scope note
+
+Clark's Sprint 9.3 brief authorises local contract/discovery evidence only. It does not satisfy the `A` or `R` cells above, accept an ADR, authorise a migration/database write, or approve production/public behaviour. The new code and read-only report are inputs to the named reviewers.

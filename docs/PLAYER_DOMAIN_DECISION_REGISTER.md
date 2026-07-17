@@ -2,7 +2,7 @@
 
 **Status:** Proposed decisions awaiting review
 **Owner:** Player Domain architecture
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 17 July 2026
 **Last reviewed:** 17 July 2026
 
@@ -325,3 +325,17 @@ Decision classes are **Architecture recommendation**, **Product policy**, **Secu
 ## Review record
 
 Record explicit review outcomes by changing the matching ADR and this register in the same governance change. An outcome must name the decision ID, approver role, result, date, conditions and evidence reference. Do not record approval by inference from an implementation commit.
+
+## Sprint 9.3 local implementation record
+
+The Sprint 9.3 brief authorised local contracts and read-only discovery under conservative defaults. It did not record any decision approval. All PD entries remain Proposed.
+
+| Decision evidence | Local implementation | Remaining gate |
+| --- | --- | --- |
+| PD-004 | Pure finite configurable limit input supports the named future adjustment sources; the only numeric default is clearly marked test-only. | Launch values, evaluation precedence and entitlement operations require approval. |
+| PD-005/006 | Pure Primary policy and explicit server Active resolver reject invalid/stale context and never fall back for a sensitive request. | Product behaviour, persistence and executable command approval remain open. |
+| PD-007/008/009/018 | Opaque alias and allowlisted projection contracts omit raw Player, Forge User and Character Link IDs. | Visibility taxonomy, alias lifecycle, public API, rate/cache/grant/RLS review remain open. |
+| PD-001/002/003/021 | Provider-neutral state and expiry/dispute/revocation contracts exist; positive event creation is disabled except marked synthetic tests. | Provider, proof, assurance, recovery and live-positive-state approval remain open. |
+| PD-010/011 | Actor types reserve a resource-scoped Alliance candidate only; no capability resolution exists. | Alliance authority and delegation remain open. |
+| PD-012/013 | Read-only discovery report confirms migration drift and recovery needs. | Canonical baseline, migration plan and non-production rehearsal remain open. |
+| PD-019/020 | Hero Showcase and Gift eligibility boundaries expose minimal Player-owned projections only. | Showcase product limits and Gift verified-character/consent/provider decisions remain open. |

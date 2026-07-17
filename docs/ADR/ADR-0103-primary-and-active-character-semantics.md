@@ -65,3 +65,7 @@ Revisit if Forge introduces organisation-controlled sessions, device-wide charac
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Glossary](../PLAYER_DOMAIN_GLOSSARY.md), [Player Identity Milestone 1](../PLAYER_IDENTITY_IMPLEMENTATION_MILESTONE_1.md).
+
+## Sprint 9.3 implementation evidence
+
+The pure Primary policy reports missing/invalid/revoked/disputed/removed states and requires an expected revision for reassignment. The server Active resolver requires an explicit requested character and never substitutes Primary. Product commands and persistence remain absent; this ADR remains **Proposed**.

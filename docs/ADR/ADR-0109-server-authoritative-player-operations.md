@@ -65,3 +65,7 @@ Revisit if Forge adopts a different trusted backend architecture or a simple low
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Player Identity Milestone 1](../PLAYER_IDENTITY_IMPLEMENTATION_MILESTONE_1.md), [Supabase RLS guidance](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+## Sprint 9.3 implementation evidence
+
+Dependency-injected server actor and Active Character resolver factories revalidate the user-character link, link lifecycle, operation decision, verification requirement and optional expected revision for each request. They have no browser or persistence dependency. No executable route exists and this ADR remains **Proposed**.

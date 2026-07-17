@@ -65,3 +65,7 @@ Revisit if Kingshot supplies an approved identity federation, Forge changes auth
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Glossary](../PLAYER_DOMAIN_GLOSSARY.md), [Decision Register](../PLAYER_DOMAIN_DECISION_REGISTER.md).
+
+## Sprint 9.3 implementation evidence
+
+Separate branded Forge User, Game Character and Character Link contracts now exist locally and tests cover one user with multiple explicit character contexts. Live persistence remains legacy and this ADR remains **Proposed**.

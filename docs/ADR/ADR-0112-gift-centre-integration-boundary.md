@@ -67,3 +67,7 @@ Revisit when Codex B's provider design is accepted, the Player interface lands o
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Decision Register](../PLAYER_DOMAIN_DECISION_REGISTER.md), Codex B's current proposed Gift Centre architecture (read-only workstream evidence; no repository link until tracked and integrated).
+
+## Sprint 9.3 implementation evidence
+
+A minimal internal eligibility projection carries active/link/authorisation/verification state, expiry, revision, safe display and only a provider-ID-availability boolean. It contains no consent, signing, credential, transport, retry or redemption lifecycle. No Codex B file changed and this ADR remains **Proposed**.

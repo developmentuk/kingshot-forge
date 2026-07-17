@@ -67,3 +67,7 @@ Revisit when an authorised provider or federation becomes available, the proof t
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Decision Register](../PLAYER_DOMAIN_DECISION_REGISTER.md), [Approval Matrix](../PLAYER_DOMAIN_APPROVAL_MATRIX.md).
+
+## Sprint 9.3 implementation evidence
+
+Provider-neutral state, assurance, timestamp, expiry, dispute, revocation and reason-code contracts now exist. The immutable-event factory rejects positive verification events unless marked synthetic unit-test data. No provider, proof collection or live verified record exists; this ADR remains **Proposed**.

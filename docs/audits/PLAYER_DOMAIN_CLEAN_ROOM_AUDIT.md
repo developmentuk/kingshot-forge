@@ -2,7 +2,7 @@
 
 **Status:** Complete; architecture and governance evidence baseline
 **Owner:** Aegis with Clark as Product Owner
-**Version:** 1.1
+**Version:** 1.2
 **Audit date:** 17 July 2026
 **Last governance update:** 17 July 2026
 **Repository baseline:** `1aca694ebe2e57339e17ab85ab190ad762620b8b`
@@ -320,6 +320,8 @@ For this audit:
 - no database commands were run during the audit.
 
 The later ADR/glossary governance continuation changed documentation and created local documentation commits only. It added no Player Identity or Player Planning product code, API route, React component, server implementation, database schema, migration, dependency, Supabase command/write, external mutation request or deployment. It did not copy contributed source or reuse contributed implementation structure.
+
+The Sprint 9.3 continuation subsequently added original Forge Player Identity contracts, pure policies, injected ports, server resolver factories, fixture tests and documentation. The contributed planner was not re-opened for implementation detail and no contributed source-level structure was recorded or reused. Supabase access was catalogue-only and read-only; no row data, migration or write was performed. Player Planning, provider logic, production persistence, public API/UI and Alliance authority remain absent.
 
 ## Git status -sb
 

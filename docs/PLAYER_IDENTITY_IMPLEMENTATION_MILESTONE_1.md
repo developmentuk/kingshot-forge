@@ -1,8 +1,8 @@
-# Player Identity Foundation — Implementation Milestone 1 Proposal
+# Player Identity Foundation — Implementation Milestone 1
 
-**Status:** Proposed; not authorised for implementation
+**Status:** Local contract/discovery foundation implemented; architectural review required before any next stage
 **Owner:** Player Domain architecture
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 17 July 2026
 **Last reviewed:** 17 July 2026
 
@@ -10,7 +10,7 @@
 
 Establish the smallest server-authoritative Player identity foundation that can represent multiple linked characters safely, resolve one explicit character for a request and define stable private/public projection contracts without implementing ownership verification, Alliance authority, Gift provider logic or Player Planning.
 
-This proposal is an implementation plan only. Work begins only after the [Implementation Entry Criteria](./PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md) classify entry as approved.
+The Sprint 9.3 brief authorised this narrow local contract/discovery implementation under conservative defaults. The [Implementation Entry Criteria](./PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md) continue to block persistence, product workflows, production and public release.
 
 ## User and platform outcome
 
@@ -58,21 +58,21 @@ Forge gains a stable distinction between authenticated Forge User, observed Game
 | [ADR-0104](./ADR/ADR-0104-character-verification-model.md) | May remain Proposed only through the documented unavailable-interface deferral |
 | Active workstreams | Reassessed against accepted release head immediately before implementation |
 
-## Likely modules — names require reservation
+## Implemented module boundary
 
-These are proposed Forge-native locations, not files created by this milestone:
+Sprint 9.3 reserved and created only the isolated shared/server paths below. Future paths remain unreserved:
 
 | Proposed area | Responsibility |
 | --- | --- |
-| `shared/domains/player-identity/` | Platform-neutral identity terms, safe states, opaque references and policy inputs |
-| `server/player-identity/` | Actor/character resolution, authorisation, policy evaluation and projection orchestration |
+| `shared/domains/player-identity/` | Implemented: platform-neutral identity terms, safe states, opaque references, projections, ports, validation and pure policies |
+| `server/player-identity/` | Implemented: dependency-injected actor and explicit Active Character resolver factories; no persistence |
 | `server/player-identity/repositories/` | Persistence contracts/adapters after schema evidence |
 | `api/player/` | Thin authenticated HTTP adapters only after contracts are approved |
 | `src/features/player-identity/` | Later character-management UI; not required for a server-contract-only first slice |
 | `src/context/` compatibility adapter | Temporary bridge from existing primary-only context to explicit resolved context |
 | `docs/reference/` | Approved contract/data dictionary and discovery evidence references |
 
-No path is reserved until Aegis compares the accepted release head and Codex A/B/D workstreams.
+No API, UI, repository-adapter or migration path is reserved. Aegis must compare the then-current accepted release and Codex A/B/D workstreams before those paths are introduced.
 
 ## API boundaries — contracts before routes
 
@@ -150,7 +150,7 @@ Milestone 1 does not assume a migration. After discovery:
 | Security/privacy | Rate/enumeration, log redaction, secret scan, user metadata non-authority and no positive verification state |
 | Discovery | Environment proof, inventory completeness/hash, no rows/secrets, repeatable comparison |
 
-No application build is required for a docs-only planning change. The later implementation runs the complete affected repository check chain.
+The implemented milestone runs focused fixture tests, structural boundary validation and the complete affected repository check chain.
 
 ## Rollout plan
 
@@ -195,3 +195,5 @@ Contracts are additive and initially unused. Rollback removes the unused adapter
 - [Decision Register](./PLAYER_DOMAIN_DECISION_REGISTER.md)
 - [Approval Matrix](./PLAYER_DOMAIN_APPROVAL_MATRIX.md)
 - [Canonical Glossary](./PLAYER_DOMAIN_GLOSSARY.md)
+- [Read-only schema discovery](./reference/player-identity-schema-discovery.md)
+- [Sprint 9.3 release note](./releases/SPRINT_9_3_PLAYER_IDENTITY_FOUNDATION.md)

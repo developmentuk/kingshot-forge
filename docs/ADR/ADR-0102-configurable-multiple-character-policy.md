@@ -67,3 +67,7 @@ Revisit when Forge defines supporter or subscription entitlements, introduces or
 ## Related documents
 
 [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md), [Glossary](../PLAYER_DOMAIN_GLOSSARY.md), [Approval Matrix](../PLAYER_DOMAIN_APPROVAL_MATRIX.md).
+
+## Sprint 9.3 implementation evidence
+
+A pure finite policy accepts base, entitlement, Alliance-role, subscription, administrative override and safety-ceiling inputs. No architectural maximum or commercial implementation was introduced; the only numeric default is explicitly non-production test data. This ADR remains **Proposed**.
