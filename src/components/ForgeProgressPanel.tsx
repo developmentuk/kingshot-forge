@@ -25,6 +25,7 @@ type ProgressItem = {
   detail: string
   complete: boolean
   to: string
+  icon: GlyphName
 }
 
 type Badge = {
@@ -32,6 +33,21 @@ type Badge = {
   detail: string
   earned: boolean
   to: string
+  icon: GlyphName
+}
+
+type GlyphName = 'link' | 'passport' | 'hero' | 'progress' | 'presence' | 'transfer'
+
+export function ForgeGlyph({ name, size = 28 }: { name: GlyphName; size?: number }) {
+  const paths: Record<GlyphName, string> = {
+    link: 'M9 12a4 4 0 0 0 6 0l2-2a4 4 0 0 0-6-6l-1 1m5 7a4 4 0 0 0-6 0l-2 2a4 4 0 0 0 6 6l1-1',
+    passport: 'M12 3 19 6v5c0 4.4-2.7 8-7 10-4.3-2-7-5.6-7-10V6l7-3Zm0 4v5m-3 0h6m-5-3h4',
+    hero: 'm12 3 2.2 5 5.3.6-3.9 3.7.9 5.2-4.5-2.6-4.5 2.6.9-5.2-3.9-3.7 5.3-.6L12 3Z',
+    progress: 'M5 19V9m7 10V5m7 14v-7M3 19h18',
+    presence: 'M12 21s7-3.4 7-9V5l-7-2-7 2v7c0 5.6 7 9 7 9Zm-3-9 2 2 4-4',
+    transfer: 'M5 7h14m0 0-4-4m4 4-4 4M19 17H5m0 0 4 4m-4-4 4-4',
+  }
+  return <svg className="forge-glyph" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name]} /></svg>
 }
 
 function getForgeLevel(score: number) {
@@ -99,19 +115,19 @@ export default function ForgeProgressPanel({ compact = false }: { compact?: bool
   }, [])
 
   const coreItems = useMemo<ProgressItem[]>(() => [
-    { label: 'Identity linked', detail: playerAccount ? 'Primary player linked' : 'Link a Kingshot player', complete: Boolean(playerAccount), to: '/my-forge/player-identity' },
-    { label: 'Player profile', detail: progress.hasProfile ? 'Profile record created' : 'Create your player profile', complete: progress.hasProfile, to: '/my-forge/profile' },
-    { label: 'Progression tracked', detail: progress.hasProgression ? 'First snapshot recorded' : 'Record your current progression', complete: progress.hasProgression, to: '/my-forge/progression' },
-    { label: 'Hero Showcase', detail: progress.showcasedHeroes === 6 ? 'Six heroes selected' : `${progress.showcasedHeroes}/6 heroes selected`, complete: progress.showcasedHeroes === 6, to: '/my-forge/heroes' },
+    { label: 'Identity Linked', detail: playerAccount ? 'Primary player linked' : 'Link a Kingshot player', complete: Boolean(playerAccount), to: '/my-forge/player-identity', icon: 'link' },
+    { label: 'Passport Created', detail: progress.hasProfile ? 'Profile record created' : 'Create your player profile', complete: progress.hasProfile, to: '/my-forge/profile', icon: 'passport' },
+    { label: 'Hero Showcase', detail: progress.showcasedHeroes === 6 ? 'Six heroes selected' : `${progress.showcasedHeroes}/6 heroes selected`, complete: progress.showcasedHeroes === 6, to: '/my-forge/heroes', icon: 'hero' },
+    { label: 'Progress Tracked', detail: progress.hasProgression ? 'First snapshot recorded' : 'Record your current progression', complete: progress.hasProgression, to: '/my-forge/progression', icon: 'progress' },
   ], [playerAccount, progress])
 
   const badges = useMemo<Badge[]>(() => [
-    { label: 'Identity Linked', detail: 'Your primary player is connected.', earned: Boolean(playerAccount), to: '/my-forge/player-identity' },
-    { label: 'Profile Builder', detail: 'A player profile has been created.', earned: progress.hasProfile, to: '/my-forge/profile' },
-    { label: 'Progress Tracker', detail: 'A first progression snapshot is saved.', earned: progress.hasProgression, to: '/my-forge/progression' },
-    { label: 'Hero Curator', detail: 'Six heroes are selected for Showcase.', earned: progress.showcasedHeroes === 6, to: '/my-forge/heroes' },
-    { label: 'Public Presence', detail: 'Account and profile visibility are public.', earned: progress.hasPublicVisibility, to: '/my-forge/profile' },
-    { label: 'Transfer Ready', detail: 'Transfer planning is voluntarily completed.', earned: progress.hasTransferProfile, to: '/my-forge/transfer-profile' },
+    { label: 'Identity Linked', detail: 'Primary player connected.', earned: Boolean(playerAccount), to: '/my-forge/player-identity', icon: 'link' },
+    { label: 'Passport Builder', detail: 'Passport profile created.', earned: progress.hasProfile, to: '/my-forge/profile', icon: 'passport' },
+    { label: 'Hero Curator', detail: 'Six Showcase heroes selected.', earned: progress.showcasedHeroes === 6, to: '/my-forge/heroes', icon: 'hero' },
+    { label: 'Progress Tracker', detail: 'First snapshot saved.', earned: progress.hasProgression, to: '/my-forge/progression', icon: 'progress' },
+    { label: 'Public Presence', detail: 'Account and profile are public.', earned: progress.hasPublicVisibility, to: '/my-forge/profile', icon: 'presence' },
+    { label: 'Transfer Ready', detail: 'Optional transfer plan completed.', earned: progress.hasTransferProfile, to: '/my-forge/transfer-profile', icon: 'transfer' },
   ], [playerAccount, progress])
 
   const score = Math.round((coreItems.filter((item) => item.complete).length / coreItems.length) * 100)
@@ -128,7 +144,7 @@ export default function ForgeProgressPanel({ compact = false }: { compact?: bool
       <div className="forge-progress__compact-welcome"><div><p className="eyebrow">Welcome back</p><h2>{playerAccount?.player_name}</h2><p>Kingdom {playerAccount?.kingdom_id ?? 'Not available'} · {progress.hasPublicVisibility ? 'Public Passport' : 'Private Passport'}</p></div><Link className="button button--secondary" to="/my-forge/player-identity">Open Player Passport</Link></div>
       <div className="forge-progress__compact-summary"><div><span>Forge Level</span><strong>{forgeLevel}</strong></div><div><span>Core complete</span><strong>{score}%</strong></div><div><span>Progression</span><strong>{progress.hasProgression ? 'Tracked' : 'Not started'}</strong></div><div><span>Showcase</span><strong>{progress.showcasedHeroes}/6</strong></div></div>
       <div className="forge-progress__next"><div><span>Next action</span><strong>{nextItem ? nextItem.detail : 'Required milestones complete'}</strong></div>{nextItem ? <Link className="button button--primary" to={nextItem.to}>Open</Link> : null}</div>
-      <div className="forge-progress__compact-badges"><span className="eyebrow">Earned badges</span>{earnedBadges.length ? earnedBadges.map((badge) => <Link key={badge.label} to={badge.to}>{badge.label}</Link>) : <span className="forge-progress__compact-muted">Complete a milestone to earn your first badge.</span>}<Link className="forge-progress__compact-all" to="/my-forge/player-identity">View Passport →</Link></div>
+      <div className="forge-progress__compact-badges"><span className="eyebrow">Earned badges</span>{earnedBadges.length ? earnedBadges.map((badge) => <Link key={badge.label} to={badge.to}><ForgeGlyph name={badge.icon} size={16} />{badge.label}</Link>) : <span className="forge-progress__compact-muted">Complete a milestone to earn your first badge.</span>}<Link className="forge-progress__compact-all" to="/my-forge/player-identity">View Passport →</Link></div>
     </section>
   }
 
@@ -136,8 +152,8 @@ export default function ForgeProgressPanel({ compact = false }: { compact?: bool
     <div className="forge-progress__status"><div><p className="eyebrow">Forge status</p><h2>Forge Level {forgeLevel}</h2><p>{score}% of your required Player Headquarters milestones are complete.</p></div><div className="forge-progress__score"><strong>{score}%</strong><span>Core complete</span></div></div>
     <div className="forge-progress__track" role="progressbar" aria-label="Required Forge milestone completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score}><span style={{ width: `${score}%` }} /></div>
     <div className="forge-progress__next"><div><span>Next action</span><strong>{nextItem ? nextItem.detail : 'Your required milestones are complete'}</strong></div>{nextItem ? <Link className="button button--primary" to={nextItem.to}>Open {nextItem.label}</Link> : null}</div>
-    <div className="forge-progress__section"><div className="forge-progress__section-heading"><div><p className="eyebrow">Required milestones</p><h3>Build your Player Headquarters</h3></div><small>Four equal milestones · 25% each</small></div><div className="forge-progress__milestones">{coreItems.map((item) => <Link key={item.label} className={item.complete ? 'forge-progress-item forge-progress-item--complete' : 'forge-progress-item'} to={item.to}><span aria-hidden="true">{item.complete ? '✓' : '○'}</span><div><strong>{item.label}</strong><small>{item.detail}</small></div></Link>)}</div></div>
-    <div className="forge-progress__section forge-progress__section--achievements"><div className="forge-progress__section-heading"><div><p className="eyebrow">Achievements</p><h3>Optional player badges</h3></div><small>Badges never change core completion</small></div><div className="forge-progress__badges">{badges.map((badge) => <Link key={badge.label} className={badge.earned ? 'forge-progress-badge forge-progress-badge--earned' : 'forge-progress-badge forge-progress-badge--locked'} to={badge.to} aria-label={`${badge.label}: ${badge.earned ? 'earned' : 'locked'}`}><span aria-hidden="true">{badge.earned ? '✦' : '○'}</span><div><strong>{badge.label}</strong><small>{badge.earned ? 'Earned' : 'Locked'} · {badge.detail}</small></div></Link>)}</div></div>
+    <div className="forge-progress__section"><div className="forge-progress__section-heading"><div><p className="eyebrow">Required milestones</p><h3>Passport completion</h3></div><small>Four equal milestones · 25% each</small></div><div className="forge-progress__milestones">{coreItems.map((item) => <Link key={item.label} className={item.complete ? 'forge-progress-item forge-progress-item--complete' : 'forge-progress-item'} to={item.to}><span className="forge-progress-item__icon"><ForgeGlyph name={item.icon} /></span><span className="forge-progress-item__state" aria-label={item.complete ? 'Earned' : 'Incomplete'}>{item.complete ? '✓' : '○'}</span><div><strong>{item.label}</strong><small>{item.complete ? 'Earned' : 'Incomplete'}</small></div></Link>)}</div></div>
+    <div className="forge-progress__section forge-progress__section--achievements"><div className="forge-progress__section-heading"><div><p className="eyebrow">Achievements</p><h3>Forge badge gallery</h3></div><small>Presentation only · optional</small></div><div className="forge-progress__badges">{badges.map((badge) => <Link key={badge.label} className={badge.earned ? 'forge-progress-badge forge-progress-badge--earned' : 'forge-progress-badge forge-progress-badge--locked'} to={badge.to} aria-label={`${badge.label}: ${badge.earned ? 'earned' : 'locked'}`}><span className="forge-progress-badge__emblem"><ForgeGlyph name={badge.icon} /></span><div><strong>{badge.label}</strong><small>{badge.earned ? 'Earned' : 'Locked'} · {badge.detail}</small></div></Link>)}</div></div>
     {errorMessage ? <p className="profile-panel__error" role="alert">{errorMessage}</p> : null}
   </section>
 }

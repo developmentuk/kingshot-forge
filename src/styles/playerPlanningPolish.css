@@ -70,6 +70,9 @@
 }
 
 .forge-progress__compact-badges > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   border: 1px solid rgba(114, 239, 156, 0.3);
   border-radius: 999px;
   padding: 0.4rem 0.6rem;
@@ -90,28 +93,79 @@
 }
 
 .my-forge-shortcuts > a {
-  display: grid;
-  flex: 1 1 230px;
-  gap: 0.25rem;
+  display: flex;
+  position: relative;
+  flex: 1 1 220px;
+  align-items: stretch;
+  gap: 0.8rem;
   min-width: 0;
-  border: 1px solid var(--forge-border, #3d2850);
-  padding: 0.85rem;
-  background: rgba(19, 12, 27, 0.7);
 }
 
-.my-forge-shortcuts strong {
+.my-forge-tool {
+  overflow: hidden;
+  border: 1px solid rgba(114, 239, 156, 0.18);
+  border-radius: 0.9rem;
+  padding: 0;
+  background: linear-gradient(145deg, rgba(32, 23, 50, 0.94), rgba(19, 12, 27, 0.86));
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.my-forge-tool:hover {
+  border-color: rgba(67, 230, 213, 0.62);
+  background: linear-gradient(145deg, rgba(42, 34, 69, 0.98), rgba(19, 12, 27, 0.92));
+  box-shadow: 0 0.8rem 1.8rem rgba(4, 2, 10, 0.24);
+  transform: translateY(-3px);
+}
+
+.my-forge-tool:focus-visible,
+.forge-progress-item:focus-visible,
+.forge-progress-badge:focus-visible,
+.forge-progress__compact-badges a:focus-visible {
+  outline: 3px solid var(--forge-cyan, #43e6d5);
+  outline-offset: 3px;
+}
+
+.my-forge-tool__visual {
+  display: grid;
+  min-width: 4.1rem;
+  place-items: center;
+  color: var(--forge-cyan, #43e6d5);
+  background: radial-gradient(circle, rgba(67, 230, 213, 0.2), rgba(67, 230, 213, 0.02) 68%);
+}
+
+.my-forge-tool__body {
+  display: grid;
+  flex: 1;
+  align-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.85rem 0;
+}
+
+.my-forge-tool__body strong {
   color: var(--forge-text, #fff7ed);
 }
 
-.my-forge-shortcuts span {
+.my-forge-tool__body span {
   color: var(--forge-muted, #b5a7bc);
   font-size: 0.72rem;
 }
 
-.my-forge-shortcuts small {
+.my-forge-tool__badge {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
   color: var(--forge-ember, #ff7043);
   font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.my-forge-tool__arrow {
+  align-self: center;
+  margin-right: 0.75rem;
+  color: var(--forge-muted, #b5a7bc);
 }
 
 .my-forge-library-actions {
@@ -169,6 +223,30 @@
   flex: 0 0 auto;
 }
 
+.forge-progress-item__icon {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border: 1px solid rgba(67, 230, 213, 0.35);
+  border-radius: 0.7rem;
+  color: var(--forge-cyan, #43e6d5);
+  background: rgba(67, 230, 213, 0.08);
+}
+
+.forge-progress-item__state {
+  display: grid;
+  width: 1.2rem;
+  height: 1.2rem;
+  place-items: center;
+  margin-left: -0.5rem;
+  border-radius: 50%;
+  color: var(--forge-muted, #b5a7bc);
+  background: var(--forge-panel-soft, #130c1b);
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
 .forge-progress-badge {
   display: flex;
   align-items: center;
@@ -181,12 +259,14 @@
 
 .forge-progress-badge > span {
   display: grid;
-  width: 30px;
-  height: 30px;
+  width: 2.9rem;
+  height: 2.9rem;
+  flex: 0 0 auto;
   place-items: center;
-  border-radius: 50%;
+  border: 1px solid rgba(180, 108, 255, 0.28);
+  border-radius: 0.8rem;
   color: var(--forge-muted, #b5a7bc);
-  background: rgba(180, 108, 255, 0.1);
+  background: linear-gradient(145deg, rgba(180, 108, 255, 0.2), rgba(19, 12, 27, 0.6));
   font-size: 0.85rem;
 }
 
@@ -213,12 +293,19 @@
 }
 
 .forge-progress-badge--earned > span {
-  color: #07150d;
-  background: var(--forge-green, #72ef9c);
+  border-color: rgba(114, 239, 156, 0.55);
+  color: var(--forge-green, #72ef9c);
+  background: radial-gradient(circle, rgba(114, 239, 156, 0.28), rgba(19, 12, 27, 0.6));
 }
 
 .forge-progress-badge--locked {
-  opacity: 0.7;
+  opacity: 0.58;
+  filter: saturate(0.55);
+}
+
+.forge-progress-badge--locked:hover {
+  opacity: 0.82;
+  filter: saturate(0.8);
 }
 
 .player-progression-group {
@@ -265,5 +352,9 @@
 
   .my-forge-library-actions .button {
     width: 100%;
+  }
+
+  .my-forge-tool {
+    flex-basis: 100%;
   }
 }
