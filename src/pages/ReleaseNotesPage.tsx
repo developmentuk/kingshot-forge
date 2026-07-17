@@ -7,11 +7,10 @@ function ReleaseNotesPage() {
       <header className="release-notes-hero">
         <div>
           <p className="eyebrow">Release notes</p>
-          <h1 className="page-title">Release {APP_VERSION} — Consolidated Domain Foundations</h1>
+          <h1 className="page-title">Kingshot Forge release history</h1>
           <p>
-            The largest architectural milestone for Kingshot Forge to date, establishing the
-            production-shaped foundations for Player Identity, Gift Redemption, Art Studio,
-            Hero Skills governance and Verification Centre workflows.
+            Follow the platform from its community foundations through governed editorial data
+            and into production-ready player experiences.
           </p>
         </div>
         <span className="release-notes-version" title={`Commit ${SHORT_COMMIT_SHA}`}>
@@ -22,7 +21,7 @@ function ReleaseNotesPage() {
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
-            <span className="release-entry__badge">Current release</span>
+            <span className="release-entry__badge">Latest completed release</span>
             <h2>Release 0.7.1 — Consolidated Domain Foundations</h2>
             <p>Released 17 July 2026</p>
           </div>
