@@ -272,27 +272,39 @@ Changes to product pillars, domain boundaries, canonical publishing, security pr
 
 ## Active Release
 
-### Release 0.7.1 — Sprint 9.3: Hero Skills Source Governance and Schema Foundation
+### Release 0.7.2 — Player-Facing Domain Activation
 
 Working branch:
 
 ```text
-release/0.7.0-player-domain
+release/0.7.2-player-facing-activation
 ```
 
-Sprint objective: establish the governed source-evidence, canonical contract and unapplied schema foundation required before Hero Skill facts may be reviewed, imported or published.
+Release objective: activate carefully selected player-facing journeys on top of the completed 0.7.1 domain foundations, while preserving existing architecture, privacy boundaries, canonical publishing rules and production safety.
 
-Sprint 9.3 is a design and local-foundation milestone. Source approval, migration application, canonical population, public Hero Skill UI work and editorial recommendation authoring remain out of scope. The 60 staged Hero Skill facts remain unreviewed evidence.
+Milestone order:
 
-Required review order:
+1. release integrity and activation-readiness audit;
+2. Player Identity and profile journey activation;
+3. manual Gift Centre activation;
+4. Art Studio gallery, attribution and submission activation;
+5. Verification Centre player-facing clarity improvements;
+6. published-only Hero Skills experience when approved data exists;
+7. homepage, navigation, mobile and accessibility completion;
+8. end-to-end validation, documentation and release preparation.
 
-1. source governance and evidence inventory;
-2. canonical, progression, unlock and evidence contracts;
-3. stable-identifier decision;
-4. unapplied schema and compatibility review;
-5. local validation and architectural approval.
+Release constraints:
 
-Do not redesign the architecture. Reuse the existing editorial, publishing, dataset, permission and Verification Centre platforms. Do not mark incomplete work complete.
+- reuse existing domain, editorial, publishing, permission and Verification Centre platforms;
+- consume published datasets only on public surfaces;
+- do not invent, infer or publish unapproved Hero Skill facts;
+- automatic gift redemption remains out of scope until separately approved;
+- do not apply production database changes without Clark's explicit approval;
+- use the connected Supabase project read-only unless a milestone explicitly requires and receives approval for a write;
+- finish and validate one vertical slice before beginning the next;
+- do not redesign the architecture or create parallel sources of truth.
+
+Milestone 0 is complete only when release metadata is internally consistent, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for the Player Identity audit.
 
 ## Session bootstrap
 
