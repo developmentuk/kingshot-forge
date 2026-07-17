@@ -6,6 +6,7 @@ import "./features/admin/verification/verificationCentre.css";
 import "./features/player-identity/playerIdentity.css";
 import "./styles/playerDomain.css";
 import "./styles/playerProgressionPolish.css";
+import "./styles/playerPlanningPolish.css";
 // Keep Hero Collection polish last so it overrides the legacy Hero card rules.
 import "./styles/heroCollectionPolish.css";
 

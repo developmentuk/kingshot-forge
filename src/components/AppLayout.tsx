@@ -36,6 +36,7 @@ const myForgeNavigation: NavigationItem[] = [
   { label: 'Player Identity', shortLabel: 'Identity', icon: '🛡️', path: '/my-forge/player-identity' },
   { label: 'Hero Collection', shortLabel: 'Heroes', icon: '🦸', path: '/my-forge/hero-collection' },
   { label: 'Hero Showcase', shortLabel: 'Showcase', icon: '🏆', path: '/my-forge/heroes' },
+  { label: 'Personal Progression', shortLabel: 'Progression', icon: '📈', path: '/my-forge/progression' },
   { label: 'Transfer Profile', shortLabel: 'Transfer', icon: '🎫', path: '/my-forge/transfer-profile' },
 ]
 
@@ -69,6 +70,7 @@ const mobileNavigation: NavigationItem[] = [
   { label: 'KvK Tracker', shortLabel: 'KvK', icon: '⚔️', path: '/kvk-tracker' },
   { label: 'Gift Codes', shortLabel: 'Codes', icon: '🎁', path: '/gift-codes' },
   { label: 'My Forge', shortLabel: 'My Forge', icon: '⭐', path: '/my-forge' },
+  { label: 'Personal Progression', shortLabel: 'Progression', icon: '📈', path: '/my-forge/progression' },
 ]
 
 function NavigationLink({ item, onNavigate }: { item: NavigationItem; onNavigate?: () => void }) {

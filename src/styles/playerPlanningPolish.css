@@ -1,0 +1,138 @@
+.forge-progress {
+  display: grid;
+  gap: 1rem;
+}
+
+.forge-progress__status,
+.forge-progress__section-heading,
+.forge-progress__next {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.forge-progress__status h2,
+.forge-progress__section-heading h3 {
+  margin: 0.2rem 0 0.35rem;
+}
+
+.forge-progress__status p:last-child,
+.forge-progress__section-heading small {
+  margin: 0;
+  color: var(--forge-muted, #b5a7bc);
+  font-size: 0.78rem;
+}
+
+.forge-progress__section {
+  display: grid;
+  gap: 0.8rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(180, 108, 255, 0.16);
+}
+
+.forge-progress__milestones,
+.forge-progress__badges {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.forge-progress-item,
+.forge-progress-badge {
+  min-width: 0;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.forge-progress-item:hover,
+.forge-progress-badge:hover {
+  transform: translateY(-2px);
+}
+
+.forge-progress-item > span,
+.forge-progress-badge > span {
+  flex: 0 0 auto;
+}
+
+.forge-progress-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid var(--forge-border, #3d2850);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: var(--forge-panel-soft, #130c1b);
+}
+
+.forge-progress-badge > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--forge-muted, #b5a7bc);
+  background: rgba(180, 108, 255, 0.1);
+  font-size: 0.85rem;
+}
+
+.forge-progress-badge div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.forge-progress-badge strong {
+  color: var(--forge-text, #fff7ed);
+  font-size: 0.76rem;
+}
+
+.forge-progress-badge small {
+  color: var(--forge-muted, #b5a7bc);
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.forge-progress-badge--earned {
+  border-color: rgba(114, 239, 156, 0.42);
+  background: rgba(114, 239, 156, 0.07);
+}
+
+.forge-progress-badge--earned > span {
+  color: #07150d;
+  background: var(--forge-green, #72ef9c);
+}
+
+.forge-progress-badge--locked {
+  opacity: 0.7;
+}
+
+.player-progression-group {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.player-progression-group__label {
+  margin: 0;
+  color: var(--forge-cyan, #43e6d5);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 620px) {
+  .forge-progress__status,
+  .forge-progress__section-heading,
+  .forge-progress__next {
+    flex-direction: column;
+  }
+
+  .forge-progress__next .button {
+    width: 100%;
+  }
+
+  .forge-progress__milestones,
+  .forge-progress__badges {
+    grid-template-columns: 1fr;
+  }
+}
