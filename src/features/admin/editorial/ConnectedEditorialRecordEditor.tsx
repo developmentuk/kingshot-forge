@@ -39,6 +39,8 @@ import {
 } from "./editorialApi";
 
 interface ConnectedEditorialRecordEditorProps {
+  mode?: "create" | "edit";
+  publishingAvailable: boolean;
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
   onClose: () => void;
@@ -53,6 +55,8 @@ function sanitiseValues(
 }
 
 export function ConnectedEditorialRecordEditor({
+  mode = "edit",
+  publishingAvailable,
   schema,
   record,
   onClose,
@@ -188,13 +192,16 @@ export function ConnectedEditorialRecordEditor({
     if (hasPermission("cms.publish")) {
       actions.push(
         "approve",
-        "publish",
         "archive",
       );
+
+      if (publishingAvailable) {
+        actions.push("publish");
+      }
     }
 
     return actions;
-  }, [hasPermission]);
+  }, [hasPermission, publishingAvailable]);
 
   async function saveDraft(
     nextRecord: RecordEditorRecord,
@@ -388,6 +395,7 @@ export function ConnectedEditorialRecordEditor({
 
   return (
     <RecordEditorPanel
+      mode={mode}
       schema={schema}
       record={currentRecord}
       onClose={onClose}

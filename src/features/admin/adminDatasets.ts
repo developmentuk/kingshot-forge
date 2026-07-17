@@ -1,41 +1,142 @@
-import type {
-  AdminDatasetRegistration,
-  AdminDatasetStatus,
-} from "./datasetDefinitions";
+import {
+  getDatasetCapabilityReadiness,
+  getDatasetReadinessDefinition,
+  type DatasetReadinessDefinition,
+} from "../../../shared/data-engine/readiness-registry";
+
+import {
+  calculateReadiness,
+  type ReadinessScore,
+} from "../../../shared/platform/readiness";
+
 import {
   adminDatasetService,
 } from "./adminDatasetService";
+
 import {
-  hasDatasetAdapter,
+  getDatasetAdapter,
 } from "./datasetAdapterRegistry";
 
-export type {
-  AdminDatasetStatus,
+import type {
+  AdminDatasetRegistration,
 } from "./datasetDefinitions";
 
+import {
+  getRecordEditorSchema,
+} from "./recordEditor/recordEditorSchemaRegistry";
+
+export interface AdminDatasetCapabilities {
+  browsing: boolean;
+  creation: boolean;
+  editing: boolean;
+  publishing: boolean;
+  search: boolean;
+  versionHistory: boolean;
+  viewing: boolean;
+}
+
 export interface AdminDatasetDefinition {
-  id: string;
+  id: AdminDatasetRegistration["id"];
   name: string;
   description: string;
   route: string;
-  status: AdminDatasetStatus;
+  sourceDescription: string;
+  capabilities: AdminDatasetCapabilities;
+  readiness: DatasetReadinessDefinition;
+  readinessScore: ReadinessScore;
 }
 
-function getRuntimeStatus(
-  registration: AdminDatasetRegistration,
-): AdminDatasetStatus {
-  if (hasDatasetAdapter(registration.id)) {
-    return registration.id === "hero-skills"
-      ? "warning"
-      : "ready";
-  }
-
-  return registration.admin.status;
+function isImplemented(
+  datasetId: AdminDatasetRegistration["id"],
+  capability:
+    | "browser"
+    | "viewer"
+    | "editor"
+    | "publishing"
+    | "version-history"
+    | "search",
+): boolean {
+  return getDatasetCapabilityReadiness(
+    datasetId,
+    capability,
+  ).status === "implemented";
 }
 
 function toAdminDatasetDefinition(
   registration: AdminDatasetRegistration,
 ): AdminDatasetDefinition {
+  const readiness =
+    getDatasetReadinessDefinition(
+      registration.id,
+    );
+
+  const adapter =
+    getDatasetAdapter(registration.id);
+
+  const editorSchema =
+    getRecordEditorSchema(registration.id);
+
+  const hasBrowser = Boolean(
+    registration.capabilities?.browsing &&
+    adapter &&
+    isImplemented(
+      registration.id,
+      "browser",
+    ),
+  );
+
+  const hasEditor = Boolean(
+    registration.capabilities?.editing &&
+    adapter?.createEditorRecord &&
+    editorSchema &&
+    isImplemented(
+      registration.id,
+      "editor",
+    ),
+  );
+
+  const capabilities: AdminDatasetCapabilities = {
+    browsing: hasBrowser,
+    creation: Boolean(
+      registration.capabilities?.creation &&
+      hasEditor &&
+      editorSchema?.allowCreate &&
+      editorSchema.createEmptyRecord,
+    ),
+    editing: hasEditor,
+    publishing: Boolean(
+      registration.capabilities?.publishing &&
+      hasEditor &&
+      isImplemented(
+        registration.id,
+        "publishing",
+      ),
+    ),
+    search: Boolean(
+      registration.capabilities?.search &&
+      hasBrowser &&
+      isImplemented(
+        registration.id,
+        "search",
+      ),
+    ),
+    versionHistory: Boolean(
+      registration.capabilities?.versionHistory &&
+      hasEditor &&
+      isImplemented(
+        registration.id,
+        "version-history",
+      ),
+    ),
+    viewing: Boolean(
+      hasBrowser &&
+      isImplemented(
+        registration.id,
+        "viewer",
+      ),
+    ),
+  };
+
   return {
     id: registration.id,
     name: registration.title,
@@ -43,7 +144,15 @@ function toAdminDatasetDefinition(
     route:
       registration.route ??
       `/admin/data/${registration.id}`,
-    status: getRuntimeStatus(registration),
+    sourceDescription:
+      readiness.importMode === "source-staging"
+        ? "Governed source-staging projection"
+        : "Data Engine import source",
+    capabilities,
+    readiness,
+    readinessScore: calculateReadiness(
+      readiness.capabilities,
+    ),
   };
 }
 

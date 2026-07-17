@@ -24,6 +24,7 @@ import {
 } from "./recordEditorPlatformValidation";
 
 interface RecordEditorPanelProps {
+  mode?: "create" | "edit";
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
   isOpen?: boolean;
@@ -38,6 +39,7 @@ interface RecordEditorPanelProps {
 }
 
 export function RecordEditorPanel({
+  mode = "edit",
   schema,
   record,
   isOpen = true,
@@ -232,7 +234,10 @@ export function RecordEditorPanel({
               Record Editor
             </p>
             <h2 id="record-editor-panel-heading">
-              Edit {schema.singularLabel}
+              {mode === "create"
+                ? "Create"
+                : "Edit"}{" "}
+              {schema.singularLabel}
             </h2>
           </div>
 
@@ -268,6 +273,7 @@ export function RecordEditorPanel({
 
         <div className="record-editor-panel-content">
           <RecordEditorForm
+            mode={mode}
             schema={schema}
             record={workingRecord}
             validation={

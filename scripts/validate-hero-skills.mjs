@@ -35,18 +35,33 @@ const expectations = [
   {
     path: 'src/features/admin/heroSkillsDatasetAdapter.ts',
     fragments: [
-      '＋ Create a Hero Skill',
-      'createDraftRecordId',
-      'source_accuracy_score',
+      'datasetId: "hero-skills"',
+      'createBrowserDefinition',
+      'createEditorRecord',
     ],
   },
   {
     path: 'src/features/admin/recordEditor/heroSkillsRecordEditorSchema.ts',
     fragments: [
       'allowCreate: true',
+      'createEmptyRecord',
       'Published active state',
       'Source and verification',
       'source_accuracy_score',
+    ],
+  },
+  {
+    path: 'src/features/admin/AdminDatasetDetailPage.tsx',
+    fragments: [
+      'editorSchema.createEmptyRecord()',
+      'mode: "create"',
+    ],
+  },
+  {
+    path: 'src/features/admin/DatasetTable.tsx',
+    fragments: [
+      'Create record',
+      'onCreateRow',
     ],
   },
   {

@@ -7,6 +7,7 @@ import {
 import type {
   CapabilityReadiness,
   ReadinessCapability,
+  ReadinessStatus,
 } from '../platform/readiness.js'
 
 export type DatasetDomain =
@@ -76,7 +77,61 @@ const DATASET_DOMAINS: Record<DatasetKey, DatasetDomain> = {
   kvk: 'events',
 }
 
-function createInitialCapabilities(key: DatasetKey): readonly CapabilityReadiness[] {
+const EDITOR_DATASET_KEYS = new Set<DatasetKey>([
+  'heroes',
+  'hero-skills',
+  'buildings',
+])
+
+const PUBLISHING_DATASET_KEYS = new Set<DatasetKey>([
+  'heroes',
+  'hero-skills',
+])
+
+const ADMIN_CAPABILITY_EVIDENCE: Partial<
+  Record<ReadinessCapability, string>
+> = {
+  browser: 'src/features/admin/datasetAdapterRegistry.ts',
+  viewer: 'src/features/admin/DatasetRecordPanel.tsx',
+  editor: 'src/features/admin/recordEditor/recordEditorSchemaRegistry.ts',
+  publishing: 'server/editorial/publishLiveDatasetRecord.ts',
+  'version-history': 'src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx',
+  search: 'src/features/admin/DatasetTable.tsx',
+  filters: 'src/features/admin/DatasetTable.tsx',
+  mobile: 'src/styles/legacy/08-admin.css',
+}
+
+function adminCapabilityStatus(
+  key: DatasetKey,
+  capability: ReadinessCapability,
+): ReadinessStatus | null {
+  switch (capability) {
+    case 'browser':
+    case 'viewer':
+    case 'search':
+    case 'mobile':
+      return 'implemented'
+
+    case 'editor':
+    case 'version-history':
+      return EDITOR_DATASET_KEYS.has(key)
+        ? 'implemented'
+        : 'missing'
+
+    case 'publishing':
+      return PUBLISHING_DATASET_KEYS.has(key)
+        ? 'implemented'
+        : 'missing'
+
+    case 'filters':
+      return 'missing'
+
+    default:
+      return null
+  }
+}
+
+function createCapabilities(key: DatasetKey): readonly CapabilityReadiness[] {
   const usesDataEngine = (IMPORTABLE_DATASET_KEYS as readonly DatasetKey[]).includes(key)
 
   return CAPABILITIES.map((capability) => {
@@ -98,6 +153,25 @@ function createInitialCapabilities(key: DatasetKey): readonly CapabilityReadines
       }
     }
 
+    const adminStatus = adminCapabilityStatus(
+      key,
+      capability,
+    )
+
+    if (adminStatus) {
+      return {
+        capability,
+        status: adminStatus,
+        evidence: ADMIN_CAPABILITY_EVIDENCE[capability],
+        note:
+          adminStatus === 'implemented'
+            ? 'Verified in the shared Admin dataset experience.'
+            : capability === 'filters'
+              ? 'Search and sorting are available; dataset-specific filters are not implemented.'
+              : `The ${capability} capability is not implemented for this dataset.`,
+      }
+    }
+
     return {
       capability,
       status: 'not-audited',
@@ -114,7 +188,7 @@ export const DATASET_READINESS_REGISTRY: readonly DatasetReadinessDefinition[] =
     description: `${DATASET_NAMES[key]} canonical dataset and editorial capabilities.`,
     canonical: true,
     importMode: key === 'hero-skills' ? 'source-staging' : 'data-engine',
-    capabilities: createInitialCapabilities(key),
+    capabilities: createCapabilities(key),
   }))
 
 export function getDatasetReadinessDefinition(
@@ -129,4 +203,22 @@ export function getDatasetReadinessDefinition(
   }
 
   return definition
+}
+
+export function getDatasetCapabilityReadiness(
+  key: DatasetKey,
+  capability: ReadinessCapability,
+): CapabilityReadiness {
+  const readiness = getDatasetReadinessDefinition(key)
+    .capabilities.find(
+      (candidate) => candidate.capability === capability,
+    )
+
+  if (!readiness) {
+    throw new Error(
+      `Dataset readiness capability "${capability}" not found for "${key}".`,
+    )
+  }
+
+  return readiness
 }

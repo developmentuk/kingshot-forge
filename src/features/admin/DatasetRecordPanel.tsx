@@ -21,6 +21,35 @@ function formatValue(value: unknown): string {
   return String(value);
 }
 
+function getRecordTitle(
+  columns: DatasetTableColumn[],
+  row: DatasetTableRow,
+): string {
+  const candidates = [
+    row.values.name,
+    row.values[columns[0]?.key],
+    row.id,
+  ];
+
+  for (const candidate of candidates) {
+    if (
+      typeof candidate === "string" &&
+      candidate.trim()
+    ) {
+      return candidate.trim();
+    }
+
+    if (
+      typeof candidate === "number" ||
+      typeof candidate === "boolean"
+    ) {
+      return String(candidate);
+    }
+  }
+
+  return "Record details";
+}
+
 export function DatasetRecordPanel({
   columns,
   row,
@@ -37,7 +66,12 @@ export function DatasetRecordPanel({
             Record details
           </p>
 
-          <h2>{formatValue(row.values.name ?? row.id)}</h2>
+          <h2>
+            {getRecordTitle(
+              columns,
+              row,
+            )}
+          </h2>
         </div>
 
         <button

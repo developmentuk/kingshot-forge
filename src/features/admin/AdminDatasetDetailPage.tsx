@@ -8,8 +8,14 @@ import {
   useParams,
 } from "react-router-dom";
 
+import type {
+  ReadinessCapability,
+  ReadinessStatus,
+} from "../../../shared/platform/readiness";
+
 import {
   getAdminDataset,
+  type AdminDatasetDefinition,
 } from "./adminDatasets";
 
 import {
@@ -33,10 +39,6 @@ import type {
   DatasetLoadResult,
 } from "./dataEngineApi";
 
-import {
-  getDatasetBrowserDefinition,
-} from "./datasetBrowserData";
-
 import type {
   DatasetBrowserDefinition,
   DatasetTableRow,
@@ -56,8 +58,56 @@ import type {
 } from "./recordEditor/recordEditorSchema";
 
 interface ActiveRecordEditor {
+  mode: "create" | "edit";
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
+}
+
+const capabilityLabels: Partial<
+  Record<ReadinessCapability, string>
+> = {
+  browser: "Dataset browser",
+  viewer: "Record viewer",
+  editor: "Record Editor",
+  publishing: "Live publishing",
+  "version-history": "Version history",
+  search: "Search",
+  mobile: "Mobile layout",
+};
+
+function formatReadinessStatus(
+  status: ReadinessStatus,
+): string {
+  switch (status) {
+    case "implemented":
+      return "Implemented";
+    case "partial":
+      return "Partial";
+    case "missing":
+      return "Not implemented";
+    case "not-applicable":
+      return "Not applicable";
+    case "not-audited":
+      return "Not audited";
+  }
+}
+
+function getReadinessStatus(
+  dataset: AdminDatasetDefinition,
+  capability: ReadinessCapability,
+): ReadinessStatus {
+  return dataset.readiness.capabilities.find(
+    (candidate) =>
+      candidate.capability === capability,
+  )?.status ?? "not-audited";
+}
+
+function formatFetchedAt(value: string): string {
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString();
 }
 
 export function AdminDatasetDetailPage() {
@@ -69,55 +119,50 @@ export function AdminDatasetDetailPage() {
   const [
     selectedRow,
     setSelectedRow,
-  ] =
-    useState<DatasetTableRow | null>(
-      null,
-    );
+  ] = useState<DatasetTableRow | null>(
+    null,
+  );
 
   const [
     activeEditor,
     setActiveEditor,
-  ] =
-    useState<ActiveRecordEditor | null>(
-      null,
-    );
+  ] = useState<ActiveRecordEditor | null>(
+    null,
+  );
 
   const [
     liveDatasetResult,
     setLiveDatasetResult,
-  ] =
-    useState<DatasetLoadResult | null>(
-      null,
-    );
+  ] = useState<DatasetLoadResult | null>(
+    null,
+  );
 
   const [
     liveBrowserDefinition,
     setLiveBrowserDefinition,
-  ] =
-    useState<DatasetBrowserDefinition | null>(
-      null,
-    );
+  ] = useState<DatasetBrowserDefinition | null>(
+    null,
+  );
 
   const [
     datasetLoading,
     setDatasetLoading,
-  ] = useState(false);
+  ] = useState(true);
 
   const [
     datasetError,
     setDatasetError,
-  ] =
-    useState<string | null>(
-      null,
-    );
+  ] = useState<string | null>(null);
 
   const [
     editorError,
     setEditorError,
-  ] =
-    useState<string | null>(
-      null,
-    );
+  ] = useState<string | null>(null);
+
+  const [
+    reloadRequest,
+    setReloadRequest,
+  ] = useState(0);
 
   const dataset = datasetId
     ? getAdminDataset(datasetId)
@@ -131,20 +176,20 @@ export function AdminDatasetDetailPage() {
     ? getRecordEditorSchema(datasetId)
     : null;
 
-  const fallbackBrowserDefinition =
-    datasetId
-      ? getDatasetBrowserDefinition(
-          datasetId,
-        )
-      : undefined;
-
-  const browserDefinition =
-    liveBrowserDefinition ??
-    fallbackBrowserDefinition;
-
   const supportsRecordEditing = Boolean(
+    dataset?.capabilities.editing &&
     adapter?.createEditorRecord &&
     editorSchema,
+  );
+
+  const supportsRecordCreation = Boolean(
+    dataset?.capabilities.creation &&
+    editorSchema?.createEmptyRecord,
+  );
+
+  const supportsBrowsing = Boolean(
+    dataset?.capabilities.browsing &&
+    adapter,
   );
 
   useEffect(() => {
@@ -155,7 +200,11 @@ export function AdminDatasetDetailPage() {
     setDatasetError(null);
     setEditorError(null);
 
-    if (!datasetId || !adapter) {
+    if (
+      !datasetId ||
+      !adapter ||
+      !supportsBrowsing
+    ) {
       setDatasetLoading(false);
       return;
     }
@@ -170,9 +219,7 @@ export function AdminDatasetDetailPage() {
       controller.signal,
     )
       .then((result) => {
-        if (
-          controller.signal.aborted
-        ) {
+        if (controller.signal.aborted) {
           return;
         }
 
@@ -198,9 +245,7 @@ export function AdminDatasetDetailPage() {
         );
       })
       .finally(() => {
-        if (
-          !controller.signal.aborted
-        ) {
+        if (!controller.signal.aborted) {
           setDatasetLoading(false);
         }
       });
@@ -209,8 +254,10 @@ export function AdminDatasetDetailPage() {
       controller.abort();
     };
   }, [
-    datasetId,
     adapter,
+    datasetId,
+    reloadRequest,
+    supportsBrowsing,
   ]);
 
   function handleViewRow(
@@ -221,31 +268,51 @@ export function AdminDatasetDetailPage() {
     setSelectedRow(row);
   }
 
+  function handleCreateRow() {
+    setEditorError(null);
+    setSelectedRow(null);
+
+    if (
+      !dataset?.capabilities.creation ||
+      !editorSchema?.createEmptyRecord
+    ) {
+      setEditorError(
+        "Record creation is not implemented for this dataset.",
+      );
+      return;
+    }
+
+    setActiveEditor({
+      mode: "create",
+      schema: editorSchema,
+      record:
+        editorSchema.createEmptyRecord(),
+    });
+  }
+
   function handleEditRow(
     row: DatasetTableRow,
   ) {
     setEditorError(null);
     setSelectedRow(null);
 
-    if (
-      !adapter?.createEditorRecord
-    ) {
+    if (!adapter?.createEditorRecord) {
       setEditorError(
-        "This dataset does not yet have a Record Editor adapter.",
+        "This dataset does not have a Record Editor adapter.",
       );
       return;
     }
 
     if (!editorSchema) {
       setEditorError(
-        "This dataset does not yet have a registered Record Editor schema.",
+        "This dataset does not have a registered Record Editor schema.",
       );
       return;
     }
 
     if (!liveDatasetResult) {
       setEditorError(
-        "The live dataset has not been loaded into the editor yet. Refresh this page and try again.",
+        "The live dataset must load before this record can be edited.",
       );
       return;
     }
@@ -264,6 +331,7 @@ export function AdminDatasetDetailPage() {
     }
 
     setActiveEditor({
+      mode: "edit",
       schema: editorSchema,
       record: editorRecord,
     });
@@ -278,7 +346,7 @@ export function AdminDatasetDetailPage() {
           </p>
           <h1>Dataset not found</h1>
           <p>
-            The requested dataset is not registered in the admin dataset list.
+            The requested dataset is not registered in the Admin dataset catalogue.
           </p>
           <Link
             to="/admin/datasets"
@@ -290,6 +358,16 @@ export function AdminDatasetDetailPage() {
       </main>
     );
   }
+
+  const visibleCapabilities: ReadinessCapability[] = [
+    "browser",
+    "viewer",
+    "editor",
+    "version-history",
+    "publishing",
+    "search",
+    "mobile",
+  ];
 
   return (
     <main className="admin-page">
@@ -304,131 +382,240 @@ export function AdminDatasetDetailPage() {
           <p className="admin-page__eyebrow">
             Data Engine Admin
           </p>
-          <h1>{dataset.name}</h1>
+          <div className="admin-dataset-heading">
+            <h1>{dataset.name}</h1>
+            <span
+              className={`admin-dataset-readiness admin-dataset-readiness--${
+                dataset.capabilities.editing
+                  ? "implemented"
+                  : "browse-only"
+              }`}
+            >
+              {dataset.capabilities.editing
+                ? "Editor implemented"
+                : dataset.capabilities.browsing
+                  ? "Browse only"
+                  : "Browser unavailable"}
+            </span>
+          </div>
           <p className="admin-page__intro">
             {dataset.description}
           </p>
         </div>
       </section>
 
-      {adapter &&
-        datasetLoading && (
-        <section className="admin-placeholder-panel">
-          <div className="admin-placeholder-panel__body">
-            <h2>
-              Loading live {dataset.name} dataset…
-            </h2>
-            <p>
-              Fetching and normalising the current Kingshot data.
-            </p>
-          </div>
-        </section>
-      )}
+      <section className="admin-dataset-experience">
+        <div>
+          <p className="admin-page__eyebrow">
+            Readiness evidence
+          </p>
+          <h2>
+            {dataset.capabilities.editing
+              ? "Browse, inspect and edit through the governed Record Editor."
+              : dataset.capabilities.browsing
+                ? "Browse and inspect live records. Editing is not implemented for this dataset."
+                : "This dataset is registered without an Admin browser implementation."}
+          </h2>
+          <p>{dataset.sourceDescription}</p>
+        </div>
 
-      {adapter &&
-        datasetError && (
-        <section className="admin-placeholder-panel">
-          <div className="admin-placeholder-panel__body">
-            <h2>
-              Live dataset unavailable
-            </h2>
-            <p>{datasetError}</p>
-            {fallbackBrowserDefinition && (
-              <p>
-                Temporary browser data is being shown as a fallback.
-              </p>
-            )}
+        <dl className="admin-dataset-experience__capabilities">
+          {visibleCapabilities.map(
+            (capability) => {
+              const status =
+                getReadinessStatus(
+                  dataset,
+                  capability,
+                );
+
+              return (
+                <div key={capability}>
+                  <dt>
+                    {capabilityLabels[capability] ??
+                      capability}
+                  </dt>
+                  <dd
+                    className={`admin-readiness-value admin-readiness-value--${status}`}
+                  >
+                    {formatReadinessStatus(status)}
+                  </dd>
+                </div>
+              );
+            },
+          )}
+          <div>
+            <dt>Create records</dt>
+            <dd
+              className={`admin-readiness-value admin-readiness-value--${
+                dataset.capabilities.creation
+                  ? "implemented"
+                  : "missing"
+              }`}
+            >
+              {dataset.capabilities.creation
+                ? "Implemented"
+                : "Not implemented"}
+            </dd>
           </div>
-        </section>
-      )}
+        </dl>
+      </section>
 
       {editorError && (
-        <section className="admin-placeholder-panel">
-          <div className="admin-placeholder-panel__body">
-            <h2>
-              Record Editor unavailable
-            </h2>
+        <section
+          className="admin-state-panel admin-state-panel--error"
+          role="alert"
+        >
+          <div>
+            <h2>Record Editor unavailable</h2>
             <p>{editorError}</p>
           </div>
+          <button
+            type="button"
+            onClick={() =>
+              setEditorError(null)
+            }
+          >
+            Dismiss
+          </button>
         </section>
       )}
 
-      {browserDefinition ? (
-        <>
-          <DatasetTable
-            columns={
-              browserDefinition.columns
-            }
-            rows={
-              browserDefinition.rows
-            }
-            searchPlaceholder={`Search ${dataset.name.toLowerCase()}...`}
-            pageSize={10}
-            onViewRow={handleViewRow}
-            onEditRow={
-              supportsRecordEditing
-                ? handleEditRow
-                : undefined
-            }
+      {datasetLoading && (
+        <section
+          className="admin-state-panel admin-state-panel--loading"
+          aria-live="polite"
+        >
+          <span
+            className="admin-state-panel__spinner"
+            aria-hidden="true"
           />
-
-          {selectedRow && (
-            <DatasetRecordPanel
-              columns={
-                browserDefinition.columns
-              }
-              row={selectedRow}
-              onClose={() =>
-                setSelectedRow(null)
-              }
-            />
-          )}
-
-          {activeEditor && (
-            <ConnectedEditorialRecordEditor
-              schema={
-                activeEditor.schema
-              }
-              record={
-                activeEditor.record
-              }
-              onClose={() =>
-                setActiveEditor(null)
-              }
-            />
-          )}
-        </>
-      ) : (
-        <section className="admin-placeholder-panel">
-          <div className="admin-placeholder-panel__header">
-            <div>
-              <p className="admin-placeholder-panel__label">
-                Dataset ID
-              </p>
-              <p className="admin-placeholder-panel__value">
-                {dataset.id}
-              </p>
-            </div>
-            <span
-              className={`admin-dataset-status admin-dataset-status--${dataset.status}`}
-            >
-              {dataset.status ===
-              "not-imported"
-                ? "Not imported"
-                : dataset.status}
-            </span>
-          </div>
-
-          <div className="admin-placeholder-panel__body">
-            <h2>
-              Dataset adapter not yet available
-            </h2>
+          <div>
+            <h2>Loading {dataset.name}</h2>
             <p>
-              This dataset is registered in the admin area, but its live table adapter has not yet been created.
+              Fetching and normalising the current dataset source.
             </p>
           </div>
         </section>
       )}
+
+      {!datasetLoading && datasetError && (
+        <section
+          className="admin-state-panel admin-state-panel--error"
+          role="alert"
+        >
+          <div>
+            <h2>Dataset unavailable</h2>
+            <p>{datasetError}</p>
+            <p>
+              No demo or fallback records are being substituted.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              setReloadRequest(
+                (request) => request + 1,
+              )
+            }
+          >
+            Retry
+          </button>
+        </section>
+      )}
+
+      {!datasetLoading &&
+        !datasetError &&
+        liveDatasetResult &&
+        liveBrowserDefinition && (
+          <>
+            <dl className="admin-dataset-source-summary">
+              <div>
+                <dt>Records loaded</dt>
+                <dd>
+                  {liveDatasetResult.recordCount}
+                </dd>
+              </div>
+              <div>
+                <dt>Source status</dt>
+                <dd>Available</dd>
+              </div>
+              <div>
+                <dt>Fetched</dt>
+                <dd>
+                  {formatFetchedAt(
+                    liveDatasetResult.fetchedAt,
+                  )}
+                </dd>
+              </div>
+            </dl>
+
+            <DatasetTable
+              columns={
+                liveBrowserDefinition.columns
+              }
+              rows={
+                liveBrowserDefinition.rows
+              }
+              searchPlaceholder={`Search ${dataset.name.toLowerCase()}...`}
+              pageSize={10}
+              emptyMessage={`The ${dataset.name} source loaded successfully, but it contains no records.`}
+              onCreateRow={
+                supportsRecordCreation
+                  ? handleCreateRow
+                  : undefined
+              }
+              onViewRow={
+                dataset.capabilities.viewing
+                  ? handleViewRow
+                  : undefined
+              }
+              onEditRow={
+                supportsRecordEditing
+                  ? handleEditRow
+                  : undefined
+              }
+            />
+
+            {selectedRow && (
+              <DatasetRecordPanel
+                columns={
+                  liveBrowserDefinition.columns
+                }
+                row={selectedRow}
+                onClose={() =>
+                  setSelectedRow(null)
+                }
+              />
+            )}
+
+            {activeEditor && (
+              <ConnectedEditorialRecordEditor
+                mode={activeEditor.mode}
+                publishingAvailable={
+                  dataset.capabilities.publishing
+                }
+                schema={activeEditor.schema}
+                record={activeEditor.record}
+                onClose={() =>
+                  setActiveEditor(null)
+                }
+              />
+            )}
+          </>
+        )}
+
+      {!datasetLoading &&
+        !datasetError &&
+        !supportsBrowsing && (
+          <section className="admin-state-panel">
+            <div>
+              <h2>Dataset browser not implemented</h2>
+              <p>
+                This dataset remains registered, but it exposes no record links or actions until a browser adapter is available.
+              </p>
+            </div>
+          </section>
+        )}
     </main>
   );
 }
