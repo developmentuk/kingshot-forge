@@ -3,6 +3,121 @@
   gap: 1rem;
 }
 
+.forge-progress--compact {
+  gap: 0.85rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.forge-progress__compact-welcome,
+.forge-progress__compact-summary,
+.forge-progress__compact-badges,
+.my-forge-shortcuts,
+.my-forge-library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.forge-progress__compact-welcome {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.forge-progress__compact-welcome h2 {
+  margin: 0.2rem 0 0.35rem;
+}
+
+.forge-progress__compact-welcome p:last-child {
+  margin: 0;
+  color: var(--forge-muted, #b5a7bc);
+  font-size: 0.78rem;
+}
+
+.forge-progress__compact-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.forge-progress__compact-summary > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  border: 1px solid var(--forge-border, #3d2850);
+  padding: 0.75rem;
+  background: rgba(19, 12, 27, 0.7);
+}
+
+.forge-progress__compact-summary span,
+.forge-progress__compact-badges > .eyebrow {
+  color: var(--forge-muted, #b5a7bc);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.forge-progress__compact-summary strong {
+  overflow-wrap: anywhere;
+  color: var(--forge-text, #fff7ed);
+  font-size: 0.94rem;
+}
+
+.forge-progress__compact-badges {
+  align-items: center;
+}
+
+.forge-progress__compact-badges > a {
+  border: 1px solid rgba(114, 239, 156, 0.3);
+  border-radius: 999px;
+  padding: 0.4rem 0.6rem;
+  color: var(--forge-green, #72ef9c);
+  background: rgba(114, 239, 156, 0.06);
+  font-size: 0.68rem;
+}
+
+.forge-progress__compact-badges .forge-progress__compact-all {
+  border-color: var(--forge-border-bright, #65407d);
+  color: var(--forge-cyan, #43e6d5);
+  background: transparent;
+}
+
+.forge-progress__compact-muted {
+  color: var(--forge-muted, #b5a7bc);
+  font-size: 0.72rem;
+}
+
+.my-forge-shortcuts > a {
+  display: grid;
+  flex: 1 1 230px;
+  gap: 0.25rem;
+  min-width: 0;
+  border: 1px solid var(--forge-border, #3d2850);
+  padding: 0.85rem;
+  background: rgba(19, 12, 27, 0.7);
+}
+
+.my-forge-shortcuts strong {
+  color: var(--forge-text, #fff7ed);
+}
+
+.my-forge-shortcuts span {
+  color: var(--forge-muted, #b5a7bc);
+  font-size: 0.72rem;
+}
+
+.my-forge-shortcuts small {
+  color: var(--forge-ember, #ff7043);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.my-forge-library-actions {
+  margin-top: 1rem;
+}
+
 .forge-progress__status,
 .forge-progress__section-heading,
 .forge-progress__next {
@@ -134,5 +249,21 @@
   .forge-progress__milestones,
   .forge-progress__badges {
     grid-template-columns: 1fr;
+  }
+
+  .forge-progress__compact-welcome .button {
+    width: 100%;
+  }
+
+  .forge-progress__compact-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .my-forge-library-actions {
+    display: grid;
+  }
+
+  .my-forge-library-actions .button {
+    width: 100%;
   }
 }

@@ -1,0 +1,16 @@
+.player-profile-editor-context .player-profile-api-grid,
+.player-profile-editor-form .player-profile-api-field {
+  display: none;
+}
+
+.player-profile-editor-context .player-profile-editor-note {
+  margin-bottom: 0;
+}
+
+.player-profile-editor-context {
+  padding: 1rem;
+}
+
+.player-profile-editor-context .player-profile-editor-identity {
+  margin-bottom: 0;
+}
