@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import LinkedPlayerPanel from '../components/LinkedPlayerPanel'
-import ProfilePanel from '../components/ProfilePanel'
 import DashboardCard from '../components/dashboard/DashboardCard'
 import { artTemplates } from '../data/artTemplates'
 import { nameVariants } from '../data/nameVariants'
@@ -14,6 +13,10 @@ import {
 } from '../data/recentNames'
 import ForgeProgressPanel from '../components/ForgeProgressPanel'
 import AdminHeroSyncPanel from '../components/AdminHeroSyncPanel'
+import { useAuth } from '../context/AuthContext'
+import { usePlayerIdentity } from '../context/PlayerIdentityContext'
+import { supabase } from '../lib/supabase'
+import type { PlayerVerificationStatus } from '../types/playerAccount'
 
 
 const NAME_FAVOURITES_KEY =
@@ -21,6 +24,136 @@ const NAME_FAVOURITES_KEY =
 
 const ART_FAVOURITES_KEY =
   'kingshot-forge-art-favourites'
+
+type PlayerProfileSummary = {
+  alliance_name: string | null
+  is_public: boolean
+}
+
+function PlayerHeadquarters() {
+  const { user, loading: authLoading, signInWithGoogle } = useAuth()
+  const {
+    playerAccount,
+    loadingPlayerAccount,
+    playerIdentityError,
+    refreshPlayerIdentity,
+  } = usePlayerIdentity()
+  const [profile, setProfile] = useState<PlayerProfileSummary | null>(null)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [profileError, setProfileError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadProfileSummary() {
+      if (!playerAccount) {
+        setProfile(null)
+        setProfileLoading(false)
+        setProfileError(null)
+        return
+      }
+
+      setProfileLoading(true)
+      setProfileError(null)
+      const { data, error } = await supabase
+        .from('player_profiles')
+        .select('alliance_name, is_public')
+        .eq('player_account_id', playerAccount.id)
+        .maybeSingle()
+
+      if (cancelled) return
+
+      if (error) {
+        setProfileError('Profile details could not be loaded.')
+        setProfile(null)
+      } else {
+        setProfile(data as PlayerProfileSummary | null)
+      }
+      setProfileLoading(false)
+    }
+
+    void loadProfileSummary()
+    return () => {
+      cancelled = true
+    }
+  }, [playerAccount])
+
+  const visibility = playerAccount
+    ? playerAccount.is_public && profile?.is_public
+      ? 'Public'
+      : 'Private'
+    : 'Not set up'
+
+  let action: { label: string; to?: string; onClick?: () => void; description: string }
+  if (authLoading || loadingPlayerAccount) {
+    action = { label: 'Loading identity', description: 'Checking your linked Kingshot player.' }
+  } else if (!user) {
+    action = { label: 'Sign in to continue', onClick: () => void signInWithGoogle(), description: 'Sign in to link a player and manage your Forge profile.' }
+  } else if (playerIdentityError) {
+    action = { label: 'Retry identity load', onClick: () => void refreshPlayerIdentity(), description: 'Your linked player could not be loaded.' }
+  } else if (!playerAccount) {
+    action = { label: 'Link a player', to: '/my-forge/player-identity', description: 'Connect your Kingshot player to unlock the account tools.' }
+  } else if (profileLoading || profileError || !profile) {
+    action = { label: 'Complete public profile', to: '/my-forge/profile', description: 'Add the details people will see on your Forge profile.' }
+  } else if (!playerAccount.is_public || !profile.is_public) {
+    action = { label: 'Manage visibility', to: '/my-forge/profile', description: 'Review the fields and visibility of your public profile.' }
+  } else {
+    action = { label: 'Update Hero Showcase', to: '/my-forge/heroes', description: 'Keep the heroes on your public profile current.' }
+  }
+
+  const initials = playerAccount?.player_name
+    ?.split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'KF'
+
+  return (
+    <section className="player-headquarters" aria-labelledby="player-headquarters-title">
+      <div className="player-headquarters__identity">
+        {playerAccount?.profile_photo ? (
+          <img className="player-headquarters__avatar" src={playerAccount.profile_photo} alt="" />
+        ) : (
+          <div className="player-headquarters__avatar player-headquarters__avatar--fallback" aria-hidden="true">{initials}</div>
+        )}
+        <div className="player-headquarters__copy">
+          <p className="eyebrow">Player Headquarters</p>
+          <h2 id="player-headquarters-title">{playerAccount?.player_name || 'Set up your player identity'}</h2>
+          <p>
+            {playerAccount
+              ? <>Kingdom {playerAccount.kingdom_id}{profile?.alliance_name ? <> · {profile.alliance_name}</> : null}</>
+              : 'One place for your linked player, profile, progression and showcase.'}
+          </p>
+        </div>
+        {playerAccount ? (
+          <div className="player-headquarters__badges" aria-label="Player status">
+            <span className="player-identity__status-badge">{getVerificationLabel(playerAccount.verification_status)}</span>
+            <span className="player-identity__status-badge player-identity__status-badge--muted">{visibility} profile</span>
+          </div>
+        ) : null}
+      </div>
+      <div className="player-headquarters__next">
+        <div>
+          <p className="eyebrow">Priority action</p>
+          <p>{action.description}</p>
+          {profileError ? <p className="player-headquarters__hint">Profile details will retry when you open the editor.</p> : null}
+        </div>
+        {action.to ? <Link className="button button--primary" to={action.to}>{action.label}</Link> : <button className="button button--primary" type="button" onClick={action.onClick} disabled={action.label === 'Loading identity'}>{action.label}</button>}
+      </div>
+    </section>
+  )
+}
+
+function getVerificationLabel(status: PlayerVerificationStatus) {
+  switch (status) {
+    case 'officially_verified': return 'Officially verified'
+    case 'community_verified': return 'Community verified'
+    case 'pending': return 'Verification pending'
+    case 'rejected': return 'Verification rejected'
+    case 'revoked': return 'Verification revoked'
+    default: return 'Linked account'
+  }
+}
 
 function loadStoredIds(storageKey: string): string[] {
   try {
@@ -217,6 +350,7 @@ function MyForgePage() {
           and saved Forge creations.
         </p>
       </div>
+      <PlayerHeadquarters />
 <DashboardCard
   title="Forge Progress"
   subtitle="Build your profile, showcase your heroes and increase your Forge level."
@@ -226,17 +360,8 @@ function MyForgePage() {
   <ForgeProgressPanel />
 </DashboardCard>
       <DashboardCard
-        title="Forge Passport"
-        subtitle="Manage your Kingshot Forge identity and public account details."
-        icon="🛡️"
-        accent="gold"
-      >
-        <ProfilePanel />
-      </DashboardCard>
-
-      <DashboardCard
-        title="Linked Kingshot Player"
-        subtitle="Connect your Forge identity to your Kingshot player account."
+        title="Linked player management"
+        subtitle="Refresh or change the linked player used by your Forge identity."
         icon="🔗"
         accent="blue"
       >
