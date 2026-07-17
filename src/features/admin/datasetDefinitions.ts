@@ -5,6 +5,10 @@ import {
   DatasetRegistry,
 } from "../../platform/datasets";
 
+import {
+  getDatasetCapabilityFlags,
+} from "../../../shared/data-engine/dataset-capabilities";
+
 import type {
   DatasetKey,
 } from "./dataEngineApi";
@@ -31,14 +35,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "name",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      editing: true,
-      importing: true,
-      publishing: true,
-      search: true,
-      versionHistory: true,
-    },
+    capabilities: getDatasetCapabilityFlags("heroes"),
     admin: {
       order: 10,
     },
@@ -55,15 +52,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      creation: true,
-      editing: true,
-      importing: false,
-      publishing: true,
-      search: true,
-      versionHistory: true,
-    },
+    capabilities: getDatasetCapabilityFlags("hero-skills"),
     admin: {
       order: 15,
     },
@@ -79,13 +68,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "key",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      editing: true,
-      importing: true,
-      search: true,
-      versionHistory: true,
-    },
+    capabilities: getDatasetCapabilityFlags("buildings"),
     admin: { order: 20 },
   },
   {
@@ -99,7 +82,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "tier",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("gear"),
     admin: { order: 30 },
   },
   {
@@ -113,7 +96,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "label",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("troops"),
     admin: { order: 40 },
   },
   {
@@ -127,7 +110,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("charm"),
     admin: { order: 50 },
   },
   {
@@ -141,7 +124,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("vip"),
     admin: { order: 60 },
   },
   {
@@ -155,7 +138,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "label",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("shards"),
     admin: { order: 70 },
   },
   {
@@ -169,7 +152,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("hero-xp"),
     admin: { order: 80 },
   },
   {
@@ -183,7 +166,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "building",
     titleField: "building",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("truegold"),
     admin: { order: 90 },
   },
   {
@@ -197,7 +180,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("war-academy"),
     admin: { order: 100 },
   },
   {
@@ -211,7 +194,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "name",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("events"),
     admin: { order: 110 },
   },
   {
@@ -225,7 +208,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "day",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("kvk"),
     admin: { order: 120 },
   },
   {
@@ -239,7 +222,7 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "name",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
+    capabilities: getDatasetCapabilityFlags("masters"),
     admin: { order: 130 },
   },
 ];

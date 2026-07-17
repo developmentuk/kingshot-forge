@@ -7,6 +7,7 @@ export {
 } from './EditorialPermissionService.js'
 
 export {
+  canRolePerformStandardEditorialAction,
   standardEditorialPermissionPolicy,
 } from './defaultPolicies.js'
 

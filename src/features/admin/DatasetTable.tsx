@@ -43,6 +43,10 @@ interface DatasetTableProps {
   onEditRow?: (
     row: DatasetTableRow,
   ) => void;
+
+  onReviewRow?: (
+    row: DatasetTableRow,
+  ) => void;
 }
 
 function formatCellValue(
@@ -130,6 +134,7 @@ export function DatasetTable({
   onCreateRow,
   onViewRow,
   onEditRow,
+  onReviewRow,
 }: DatasetTableProps) {
   const [
     searchTerm,
@@ -232,7 +237,7 @@ export function DatasetTable({
     );
 
   const hasRowActions = Boolean(
-    onViewRow || onEditRow,
+    onViewRow || onEditRow || onReviewRow,
   );
 
   function handleSearchChange(
@@ -422,6 +427,17 @@ export function DatasetTable({
                               }
                             >
                               Edit
+                            </button>
+                          )}
+
+                          {onReviewRow && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onReviewRow(row)
+                              }
+                            >
+                              Review
                             </button>
                           )}
                         </div>

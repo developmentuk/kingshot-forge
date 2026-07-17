@@ -1,4 +1,5 @@
 import type {
+  DatasetPermissionAction,
   DatasetPermissionPolicy,
 } from '../datasets/index.js'
 
@@ -64,3 +65,14 @@ export const standardEditorialPermissionPolicy:
       'admin',
     ],
   }
+
+export function canRolePerformStandardEditorialAction(
+  role: string,
+  action: DatasetPermissionAction,
+): boolean {
+  const rule =
+    standardEditorialPermissionPolicy[action]
+
+  return Array.isArray(rule) &&
+    rule.includes(role)
+}

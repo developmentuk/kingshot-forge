@@ -13,6 +13,12 @@ import {
 import {
   sendEditorialError,
 } from "../../server/editorial/http.js";
+import {
+  EditorialRequestError,
+} from "../../server/editorial/errors.js";
+import {
+  requireRegisteredDatasetCapabilities,
+} from "../../shared/data-engine/dataset-capabilities.js";
 
 function readQueryText(
   value: string | string[] | undefined,
@@ -22,7 +28,9 @@ function readQueryText(
     typeof value !== "string" ||
     value.trim().length === 0
   ) {
-    throw new Error(`${label} is required.`);
+    throw new EditorialRequestError(
+      `${label} is required.`,
+    );
   }
 
   return value.trim();
@@ -56,6 +64,10 @@ export default async function handler(
     const runtime = createEditorialRuntime();
     const definition =
       createRuntimeDatasetDefinition(
+        datasetId,
+      );
+    const capabilities =
+      requireRegisteredDatasetCapabilities(
         datasetId,
       );
 
@@ -103,14 +115,18 @@ export default async function handler(
         datasetId,
         recordId,
       ),
-      runtime.queueService.list({
-        datasetId,
-        recordId,
-      }),
-      runtime.scheduledPublishingService.list({
-        datasetId,
-        recordId,
-      }),
+      capabilities.publishing
+        ? runtime.queueService.list({
+            datasetId,
+            recordId,
+          })
+        : Promise.resolve([]),
+      capabilities.publishing
+        ? runtime.scheduledPublishingService.list({
+            datasetId,
+            recordId,
+          })
+        : Promise.resolve([]),
     ]);
 
     response.status(200).json({
