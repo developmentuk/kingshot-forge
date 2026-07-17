@@ -10,6 +10,7 @@ export function PrivatePlayerIdentityPage() {
   const {
     playerAccount,
     loadingPlayerAccount,
+    playerIdentityError,
     refreshPlayerIdentity,
   } = usePlayerIdentity()
 
@@ -58,6 +59,27 @@ export function PrivatePlayerIdentityPage() {
             onClick={() => void signInWithGoogle()}
           >
             Sign in with Google
+          </button>
+        </section>
+      </PlayerIdentityPageFrame>
+    )
+  }
+
+  if (playerIdentityError) {
+    return (
+      <PlayerIdentityPageFrame>
+        <section className="player-identity__notice" role="alert">
+          <div>
+            <p className="player-identity__eyebrow">Unable to load</p>
+            <h2>Your Player Identity is temporarily unavailable</h2>
+            <p>{playerIdentityError}</p>
+          </div>
+          <button
+            className="player-identity__button"
+            type="button"
+            onClick={() => void refreshPlayerIdentity()}
+          >
+            Try again
           </button>
         </section>
       </PlayerIdentityPageFrame>
@@ -342,6 +364,9 @@ function verificationDescription(
 function PlayerIdentityPageFrame({ children }: { children: ReactNode }) {
   return (
     <main className="player-identity">
+      <Link className="player-identity__back" to="/my-forge">
+        ← Back to My Forge
+      </Link>
       <header className="player-identity__hero">
         <p className="player-identity__eyebrow">My Forge</p>
         <h1>Player Identity</h1>

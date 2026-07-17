@@ -196,7 +196,22 @@ export async function getPublicPlayerProfile(
     error: profileError,
   } = await supabase
     .from('player_profiles')
-    .select('*')
+    .select(`
+      id,
+      player_account_id,
+      forge_id,
+      alliance_name,
+      town_center_level,
+      vip_level,
+      about_me,
+      play_style,
+      main_language,
+      transfer_status,
+      activities,
+      is_public,
+      created_at,
+      updated_at
+    `)
     .eq('forge_id', normalisedForgeId)
     .eq('is_public', true)
     .maybeSingle()
@@ -222,7 +237,6 @@ export async function getPublicPlayerProfile(
     .select(
       `
         id,
-        user_id,
         player_id,
         player_name,
         profile_photo,
@@ -239,6 +253,7 @@ export async function getPublicPlayerProfile(
       'id',
       profile.player_account_id,
     )
+    .eq('is_public', true)
     .maybeSingle()
 
   if (playerError) {

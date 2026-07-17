@@ -48,7 +48,6 @@ import {
 } from "./features/admin/verification";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import { PrivatePlayerIdentityPage } from "./features/player-identity/PrivatePlayerIdentityPage";
-import { PublicPlayerIdentityPage } from "./features/player-identity/PublicPlayerIdentityPage";
 import { PlayerSupportWorkspacePage } from "./features/player-identity/PlayerSupportWorkspacePage";
 
 function App() {
@@ -79,7 +78,7 @@ function App() {
         <Route path="player/:forgeId/progression" element={<PublicPlayerProgressionPage />} />
         <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
         <Route path="my-forge/player-identity" element={<PrivatePlayerIdentityPage />} />
-        <Route path="players/:publicAlias" element={<PublicPlayerIdentityPage />} />
+        <Route path="players/:forgeId" element={<PlayerProfilePage />} />
         <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />

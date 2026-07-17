@@ -14,6 +14,7 @@ import type { PlayerAccount } from '../types/playerAccount'
 type PlayerIdentityContextValue = {
   playerAccount: PlayerAccount | null
   loadingPlayerAccount: boolean
+  playerIdentityError: string | null
   refreshPlayerIdentity: () => Promise<void>
 }
 
@@ -35,15 +36,19 @@ export function PlayerIdentityProvider({
 
   const [loadingPlayerAccount, setLoadingPlayerAccount] =
     useState(true)
+  const [playerIdentityError, setPlayerIdentityError] =
+    useState<string | null>(null)
 
   const refreshPlayerIdentity = useCallback(async () => {
     if (!user) {
       setPlayerAccount(null)
+      setPlayerIdentityError(null)
       setLoadingPlayerAccount(false)
       return
     }
 
     setLoadingPlayerAccount(true)
+    setPlayerIdentityError(null)
 
     const { data, error } = await supabase
       .from('player_accounts')
@@ -81,6 +86,9 @@ export function PlayerIdentityProvider({
       )
 
       setPlayerAccount(null)
+      setPlayerIdentityError(
+        'Your linked player could not be loaded. Please try again.',
+      )
       setLoadingPlayerAccount(false)
       return
     }
@@ -123,11 +131,13 @@ export function PlayerIdentityProvider({
       () => ({
         playerAccount,
         loadingPlayerAccount,
+        playerIdentityError,
         refreshPlayerIdentity,
       }),
       [
         playerAccount,
         loadingPlayerAccount,
+        playerIdentityError,
         refreshPlayerIdentity,
       ],
     )
