@@ -2,12 +2,14 @@
 
 ## Purpose
 
-This document records the evidence-based audit begun in Sprint 9.2 Milestone 2 and extended by the Milestone 3 Editorial Platform audit. A capability is not marked complete unless its implementation has been inspected and proportionately exercised. Unknown work remains `Not audited`; it is never inferred from a page name, table or placeholder status.
+This document records the evidence-based audit begun in Sprint 9.2 Milestone 2, extended by the Milestone 3 Editorial Platform audit and represented in the Milestone 4 Verification Centre. A capability is not marked complete unless its implementation has been inspected and proportionately exercised. Unknown work remains `Not audited`; it is never inferred from a page name, table or placeholder status.
 
 The executable metadata model lives in:
 
 - `shared/platform/readiness.ts`
 - `shared/data-engine/readiness-registry.ts`
+- `shared/platform/verification.ts`
+- `shared/data-engine/verification-registry.ts`
 
 ## Canonical dataset inventory
 
@@ -15,20 +17,20 @@ The shared Data Engine contract registers 14 datasets.
 
 | Dataset | Import/adapter | Admin browser | Editor/history | Publication | Remaining audit |
 |---|---:|---:|---:|---:|---|
-| Heroes | Implemented | Implemented | Implemented | Partial | Live atomic publication, public consumption, verification |
-| Hero Skills | Implemented via source staging | Implemented | Implemented | Partial | Live atomic publication, public consumption, verification |
-| Hero XP | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| Hero Shards | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| Hero Gear | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| Chief Charms | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| Troops | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| Buildings | Implemented | Implemented | Implemented | Missing | Validation, API, public consumption, verification |
-| Truegold | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| War Academy | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| VIP | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| Events | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| Mastery Forging | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
-| KvK Scoring | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
+| Heroes | Implemented | Implemented | Implemented | Partial | Live atomic publication and public consumption |
+| Hero Skills | Implemented via source staging | Implemented | Implemented | Partial | Live atomic publication and public consumption |
+| Hero XP | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| Hero Shards | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| Hero Gear | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| Chief Charms | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| Troops | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| Buildings | Implemented | Implemented | Implemented | Missing | Validation, API and public consumption |
+| Truegold | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| War Academy | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| VIP | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| Events | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| Mastery Forging | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
+| KvK Scoring | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
 
 ## Confirmed findings
 
@@ -41,7 +43,7 @@ The shared Data Engine contract registers 14 datasets.
 7. Heroes and Hero Skills have registered publication capability. Buildings remains editable without a publication action.
 8. Hero Skills is the only dataset with schema-driven creation enabled. No synthetic browser record is used to enter create mode.
 9. Events is browse-only; editing is neither declared nor presented.
-10. Filters remain missing for all datasets. Public/API consumption and verification readiness remain unaudited unless separately evidenced.
+10. Filters remain missing for all datasets. Public/API consumption remains unaudited unless separately evidenced.
 
 ## Milestone 3 editorial-platform evidence
 
@@ -69,6 +71,24 @@ Validated locally on 17 July 2026 against all 14 registered Admin dataset routes
 - Live loading, loaded-empty, API error, retry recovery and unregistered-dataset states were exercised. The error state did not substitute demo or fallback records.
 - The catalogue and dashboard report readiness evidence rather than placeholder record counts or import dates. Live record counts remain visible only after a source has loaded.
 
+## Milestone 4 verification evidence
+
+Validated locally on 17 July 2026 without Supabase writes, migrations, deployment or production-data mutation.
+
+- The Admin Verification Centre derives all 14 dataset rows from the canonical dataset capability registry and the latest evidence recorded through the shared verification contracts. It does not maintain a second dataset inventory.
+- Readiness states are explicit: `Ready`, `Partial`, `Blocked`, `Unsupported`, `Failed`, `Not Run`, `Stale` and `Not Applicable`. A missing required result is synthesized as `Not Run`; failed, blocked, stale or untested required evidence cannot become `Ready`.
+- The current local snapshot reports 14 `Partial` datasets, zero `Ready`, one failed platform check and zero stale checks. Live publication, projection and RLS evidence remains blocked because no connected non-production database could be proven.
+- Heroes and Hero Skills show local publication-contract evidence separately from blocked live publication, projection, RLS and migration evidence. Buildings publication is `Unsupported`, while direct publication rejection is independently evidenced as passed.
+- Browse-only datasets report unsupported editor, workflow and publication capabilities rather than inheriting editor-backed behavior. Their live RLS and public-consumer checks remain `Not Run`.
+- Archive, restore and rollback are shown as explicitly unsupported at the current Admin/API boundary. The Verification Centre does not imply that the underlying workflow framework's unpublished lifecycle methods are safe for live projections.
+- Invalid dataset and invalid run routes show intentional not-found states and never substitute fallback evidence.
+- Protected-route rejection was exercised unauthenticated. The authenticated owner overview, representative detail routes and run evidence were exercised without page-level overflow or console errors.
+- Responsive verification set the browser viewport override to 1440×1000 and 390×844. Chrome's existing 90% zoom yielded effective CSS viewports of 1600×1111 and 433×937; the dimensions were recorded and wide tables remained contained horizontal-scroll regions.
+- Keyboard focus visibility was exercised, and each scrollable evidence table is a named, focusable region.
+- The focused source scan found no tracked credential-bearing environment file or recognised secret literal. `npm audit` remains a failed verification check: 10 dependency findings (6 high, 4 moderate) were reported and no automatic fix was applied.
+
+The complete evidence ledger and the controlled database test plan are in `docs/testing/SPRINT-9.2-MILESTONE-4.md`.
+
 ## Scoring rules
 
 - `Implemented` = 1 point.
@@ -85,5 +105,5 @@ A percentage must always expose the implemented, partial, missing and unaudited 
 2. Remaining editor, publishing and immutable-history integrations.
 3. Dataset filters.
 4. Public API and public pages.
-5. Verification and provenance coverage.
-6. Authoritative live draft and published counts when supported by shared services.
+5. Authoritative live draft and published counts when supported by shared services.
+6. Re-run blocked verification checks in a proven non-production Supabase environment.
