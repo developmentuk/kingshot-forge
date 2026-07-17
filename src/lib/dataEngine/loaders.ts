@@ -150,7 +150,7 @@ export async function loadDataset<
   const dataset = DATASET_QUERY_KEYS[key];
 
   const endpoint =
-    `/api/data-engine/preview?dataset=` +
+    `/api/data-engine/dataset?dataset=` +
     encodeURIComponent(dataset);
 
   try {
@@ -188,7 +188,12 @@ export async function loadDataset<
       );
     }
 
-    const data = extractDatasetData(body) as TData;
+    const extractedData = extractDatasetData(body);
+    const data = (
+      isRecord(extractedData) && Array.isArray(extractedData.records)
+        ? extractedData.records
+        : extractedData
+    ) as TData;
 
     if (
       data === undefined ||
@@ -243,7 +248,7 @@ export function getDatasetEndpoint(
   const dataset = DATASET_QUERY_KEYS[key];
 
   return (
-    `/api/data-engine/preview?dataset=` +
+    `/api/data-engine/dataset?dataset=` +
     encodeURIComponent(dataset)
   );
 }

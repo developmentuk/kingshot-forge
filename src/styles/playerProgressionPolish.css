@@ -1,0 +1,17 @@
+.player-progression-form select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.player-progression-context {
+  margin-bottom: 20px;
+}
+
+.player-progression-note {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--accent-gold, #d9a441);
+  background: rgba(217, 164, 65, 0.08);
+  font-size: 0.9rem;
+}
