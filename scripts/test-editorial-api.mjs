@@ -170,6 +170,12 @@ try {
   assert.equal(unauthenticatedResponse.statusCode, 401);
 
   await expectStatus(
+    400,
+    () => execute({}, actors.admin),
+    "missing editorial action",
+  );
+
+  await expectStatus(
     403,
     () =>
       execute(
@@ -201,21 +207,37 @@ try {
     "unknown dataset mutation",
   );
 
-  await expectStatus(
-    422,
-    () =>
-      execute(
-        {
-          action: "save_draft",
-          datasetId: "events",
-          recordId: "event",
-          values: {},
-          expectedVersion: null,
-        },
-        actors.admin,
-      ),
-    "browse-only dataset mutation",
-  );
+  const browseOnlyDatasets = [
+    "hero-xp",
+    "shards",
+    "gear",
+    "charm",
+    "troops",
+    "truegold",
+    "war-academy",
+    "vip",
+    "events",
+    "masters",
+    "kvk",
+  ];
+
+  for (const datasetId of browseOnlyDatasets) {
+    await expectStatus(
+      422,
+      () =>
+        execute(
+          {
+            action: "save_draft",
+            datasetId,
+            recordId: "synthetic-record",
+            values: {},
+            expectedVersion: null,
+          },
+          actors.admin,
+        ),
+      `${datasetId} browse-only mutation`,
+    );
+  }
 
   await expectStatus(
     422,
@@ -251,6 +273,7 @@ try {
     "invalid record payload",
   );
 
+  const heroSkillRuntime = createRuntime();
   const heroSkillDraft = await execute(
     {
       action: "save_draft",
@@ -269,9 +292,64 @@ try {
       expectedVersion: null,
     },
     actors.contributor,
+    heroSkillRuntime,
   );
   assert.equal(heroSkillDraft.head.status, "draft");
 
+  const heroSkillReview = await execute(
+    {
+      action: "submit_for_review",
+      datasetId: "hero-skills",
+      recordId: "synthetic-skill",
+      expectedVersion: heroSkillDraft.head.currentVersion,
+    },
+    actors.contributor,
+    heroSkillRuntime,
+  );
+  const returnedHeroSkill = await execute(
+    {
+      action: "reject",
+      datasetId: "hero-skills",
+      recordId: "synthetic-skill",
+      expectedVersion: heroSkillReview.head.currentVersion,
+      note: "Synthetic Hero Skill review",
+    },
+    actors.moderator,
+    heroSkillRuntime,
+  );
+  const secondHeroSkillReview = await execute(
+    {
+      action: "submit_for_review",
+      datasetId: "hero-skills",
+      recordId: "synthetic-skill",
+      expectedVersion: returnedHeroSkill.head.currentVersion,
+    },
+    actors.contributor,
+    heroSkillRuntime,
+  );
+  const approvedHeroSkill = await execute(
+    {
+      action: "approve",
+      datasetId: "hero-skills",
+      recordId: "synthetic-skill",
+      expectedVersion: secondHeroSkillReview.head.currentVersion,
+    },
+    actors.admin,
+    heroSkillRuntime,
+  );
+  const queuedHeroSkill = await execute(
+    {
+      action: "queue_publish",
+      datasetId: "hero-skills",
+      recordId: "synthetic-skill",
+      expectedVersion: approvedHeroSkill.head.currentVersion,
+    },
+    actors.admin,
+    heroSkillRuntime,
+  );
+  assert.equal(queuedHeroSkill.status, "pending");
+
+  const buildingRuntime = createRuntime();
   const buildingDraft = await execute(
     {
       action: "save_draft",
@@ -287,8 +365,31 @@ try {
       expectedVersion: null,
     },
     actors.contributor,
+    buildingRuntime,
   );
   assert.equal(buildingDraft.head.status, "draft");
+
+  const buildingReview = await execute(
+    {
+      action: "submit_for_review",
+      datasetId: "buildings",
+      recordId: "synthetic-building",
+      expectedVersion: buildingDraft.head.currentVersion,
+    },
+    actors.contributor,
+    buildingRuntime,
+  );
+  const returnedBuilding = await execute(
+    {
+      action: "return_to_draft",
+      datasetId: "buildings",
+      recordId: "synthetic-building",
+      expectedVersion: buildingReview.head.currentVersion,
+    },
+    actors.moderator,
+    buildingRuntime,
+  );
+  assert.equal(returnedBuilding.head.status, "draft");
 
   const runtime = createRuntime();
   const draft = await execute(
@@ -414,6 +515,22 @@ try {
     },
     actors.admin,
     runtime,
+  );
+
+  await expectStatus(
+    403,
+    () =>
+      execute(
+        {
+          action: "queue_publish",
+          datasetId: "heroes",
+          recordId: "synthetic-validation-hero",
+          expectedVersion: approved.head.currentVersion,
+        },
+        actors.contributor,
+        runtime,
+      ),
+    "unauthorised publication",
   );
   const schedule = await execute(
     {
@@ -620,6 +737,10 @@ try {
   const atomicResult =
     await atomicQueueService.process(atomicItem.id);
   assert.equal(atomicResult.status, "completed");
+  await assert.rejects(
+    () => atomicQueueService.process(atomicItem.id),
+    /Only pending items can be processed/,
+  );
 
   console.log(
     "Editorial direct API contract tests passed (in-memory fixtures only).",

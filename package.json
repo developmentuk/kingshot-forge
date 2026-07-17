@@ -13,8 +13,10 @@
     "validate:pm2b": "node scripts/validate-pm2b.mjs",
     "validate:hero-skills": "node scripts/validate-hero-skills.mjs",
     "validate:editorial-platform": "node scripts/validate-editorial-platform.mjs",
+    "validate:verification-centre": "node scripts/validate-verification-centre.mjs",
     "test:editorial-api": "node scripts/test-editorial-api.mjs",
-    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:editorial-platform && npm run test:editorial-api && npm run lint && npm run build"
+    "test:verification-centre": "node scripts/test-verification-centre.mjs",
+    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:editorial-platform && npm run validate:verification-centre && npm run test:editorial-api && npm run test:verification-centre && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
