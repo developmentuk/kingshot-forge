@@ -285,9 +285,19 @@ Key player routes:
 - `/my-forge/progression` — owned progression snapshots.
 - `/player/:forgeId` and `/players/:forgeId` — the same public profile projection, with public profile and account visibility enforced.
 
+Player planning flow:
+
+- `PlayerIdentityContext` supplies the authenticated user's primary `player_accounts` row to My Forge, progression, Hero Showcase and Transfer Profile; feature pages do not perform a second primary-account lookup.
+- `/my-forge/progression` records immutable `player_progression_snapshots` owned by that linked account. A first snapshot makes progression complete; each snapshot keeps its own public/private flag and notes remain owner-visible through the private read.
+- Forge Progress is the six-section calculation: linked player, profile record, progression snapshot, six-slot Hero Showcase, non-draft transfer profile and public visibility. Each section contributes one sixth, and the first incomplete section supplies the next action. No percentage is estimated or hard-coded.
+- Transfer Profile remains private unless its own `status` is `looking` and `is_public` is enabled. Private notes, Discord details and contact preferences are never used by public profile reads.
+- Profile, progression, Hero Showcase and Transfer Profile saves emit `kingshot-player-updated`, allowing dependent My Forge planning state to refresh.
+
+Canonical player routes are `/my-forge`, `/my-forge/player-identity`, `/my-forge/profile`, `/my-forge/progression`, `/my-forge/heroes`, `/transfer-profile`, `/player/:forgeId` and `/player/:forgeId/progression` (with `/players/:forgeId` retained as the public profile alias). Local setup requires copying `.env.example` to `.env.local` and filling the two publishable Supabase variables; no service-role key belongs in the browser.
+
 Public profile reads select only public profile fields and non-sensitive player display fields. They require both `player_profiles.is_public` and `player_accounts.is_public`; `user_id`, link metadata and support data are not selected for public presentation. Browser code uses the publishable Supabase key only; service-role credentials remain server-only.
 
-Validation completed for this milestone: Player Identity structural validation, focused and vertical-slice tests, TypeScript production build and lint. Lint retains the repository's existing seven warnings in unrelated/shared files. Live signed-in route and RLS verification still require a deployment or authenticated browser session with access to the configured Supabase project.
+Validation completed for this milestone: Player Identity structural validation, focused and vertical-slice tests, TypeScript production build and lint, plus targeted route and planning checks. Lint retains the repository's existing seven warnings in unrelated/shared files. Live signed-in route and RLS verification still require a deployment or authenticated browser session with access to the configured Supabase project.
 
 ## Active Release
 
