@@ -43,7 +43,7 @@ function getForgeLevel(score: number) {
   return 0
 }
 
-export default function ForgeProgressPanel() {
+export default function ForgeProgressPanel({ compact = false }: { compact?: boolean }) {
   const { user, loading: authLoading } = useAuth()
   const { playerAccount, loadingPlayerAccount, playerIdentityError, refreshPlayerIdentity } = usePlayerIdentity()
   const [progress, setProgress] = useState(EMPTY_PROGRESS)
@@ -121,6 +121,16 @@ export default function ForgeProgressPanel() {
   if (authLoading || loadingPlayerAccount || loading) return <section className="forge-progress" aria-busy="true"><p>Loading Forge planning…</p></section>
   if (!user) return <section className="forge-progress forge-progress--signed-out"><div className="forge-progress__icon">⚒</div><div><p className="eyebrow">Forge planning</p><h2>Begin your Forge journey</h2><p>Sign in to link your Kingshot player and build your player headquarters.</p></div></section>
   if (playerIdentityError) return <section className="forge-progress"><p className="eyebrow">Forge planning</p><h2>Planning is temporarily unavailable</h2><p>{playerIdentityError}</p><button className="button button--primary" type="button" onClick={() => void refreshPlayerIdentity()}>Retry identity load</button></section>
+
+  if (compact) {
+    const earnedBadges = badges.filter((badge) => badge.earned).slice(0, 3)
+    return <section className="forge-progress forge-progress--compact">
+      <div className="forge-progress__compact-welcome"><div><p className="eyebrow">Welcome back</p><h2>{playerAccount?.player_name}</h2><p>Kingdom {playerAccount?.kingdom_id ?? 'Not available'} · {progress.hasPublicVisibility ? 'Public Passport' : 'Private Passport'}</p></div><Link className="button button--secondary" to="/my-forge/player-identity">Open Player Passport</Link></div>
+      <div className="forge-progress__compact-summary"><div><span>Forge Level</span><strong>{forgeLevel}</strong></div><div><span>Core complete</span><strong>{score}%</strong></div><div><span>Progression</span><strong>{progress.hasProgression ? 'Tracked' : 'Not started'}</strong></div><div><span>Showcase</span><strong>{progress.showcasedHeroes}/6</strong></div></div>
+      <div className="forge-progress__next"><div><span>Next action</span><strong>{nextItem ? nextItem.detail : 'Required milestones complete'}</strong></div>{nextItem ? <Link className="button button--primary" to={nextItem.to}>Open</Link> : null}</div>
+      <div className="forge-progress__compact-badges"><span className="eyebrow">Earned badges</span>{earnedBadges.length ? earnedBadges.map((badge) => <Link key={badge.label} to={badge.to}>{badge.label}</Link>) : <span className="forge-progress__compact-muted">Complete a milestone to earn your first badge.</span>}<Link className="forge-progress__compact-all" to="/my-forge/player-identity">View Passport →</Link></div>
+    </section>
+  }
 
   return <section className="forge-progress">
     <div className="forge-progress__status"><div><p className="eyebrow">Forge status</p><h2>Forge Level {forgeLevel}</h2><p>{score}% of your required Player Headquarters milestones are complete.</p></div><div className="forge-progress__score"><strong>{score}%</strong><span>Core complete</span></div></div>
