@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  createGiftCodeAuditEvent,
   createGiftCodeDomainEvent,
 } from './events.ts'
 
@@ -61,5 +62,45 @@ test('gift-code domain events require explicit UTC evidence', () => {
         environment: 'test',
       }),
     /valid UTC timestamp/,
+  )
+})
+
+test('workflow audit events require sequence and privacy classification', () => {
+  const event = createGiftCodeAuditEvent({
+    eventId: 'event-4',
+    type: 'request_accepted',
+    occurredAt: '2026-07-17T12:00:00.000Z',
+    actorType: 'system',
+    correlationId: 'correlation-4',
+    providerId: 'official-kingshot',
+    environment: 'test',
+    requestId: 'request-1',
+    consentId: 'consent-1',
+    codePublicationId: 'publication-1',
+    publicationVersion: '4',
+    sequence: 1,
+    privacyClassification: 'player_sensitive',
+    metadata: {
+      prior_state: null,
+      next_state: 'requested',
+    },
+  })
+
+  assert.equal(event.sequence, 1)
+  assert.equal(event.privacyClassification, 'player_sensitive')
+  assert.equal(Object.isFrozen(event), true)
+  assert.throws(
+    () =>
+      createGiftCodeAuditEvent({
+        eventId: 'event-5',
+        type: 'duplicate_prevented',
+        occurredAt: '2026-07-17T12:00:00.000Z',
+        actorType: 'system',
+        correlationId: 'correlation-5',
+        environment: 'test',
+        sequence: 0,
+        privacyClassification: 'operational',
+      }),
+    /positive integer/,
   )
 })

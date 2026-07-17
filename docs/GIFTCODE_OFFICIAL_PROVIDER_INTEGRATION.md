@@ -1,14 +1,15 @@
 # Gift Centre Official Provider Integration Design
 
-**Status:** approved architecture; Sprint 9.3 provider foundation implemented
-with live integration disabled
+**Status:** approved architecture; Sprint 9.4 workflow and persistence
+foundation implemented locally with live integration disabled
 
 **Workstream:** `feature/giftcode-auto-redeem`
 
 **Design date:** 17 July 2026
 
-**Runtime state:** no live provider, route, job, persistence, migration, credential,
-or external mutation request exists on this branch
+**Runtime state:** no live provider, executable route, job, applied persistence,
+credential, or external mutation request exists on this branch; one local
+unapplied migration proposal exists
 
 ## 1. Purpose and authority
 
@@ -35,7 +36,8 @@ The official status of the script does not itself approve a Forge production
 deployment. Forge still requires controlled product, Player-domain, database,
 security, privacy, operational, non-production validation, and release
 approval. This milestone deliberately defers executable provider code,
-credentials, routes, jobs, persistence, migrations, and live tests.
+credentials, routes, jobs, applied persistence, migration execution, and live
+tests.
 
 ### Normative language
 
@@ -55,16 +57,17 @@ The branch already provides a safe, non-live foundation:
 | Provider selection | An immutable capability registry and dependency-injected factory support simulation, the official skeleton, and future providers without changing factory logic. |
 | Simulation | `simulationProvider.ts` is deterministic, sends no request, and cannot return success. `mockProvider.ts` remains a compatibility alias. |
 | Official provider | `officialProvider.ts` is a non-production skeleton with no transport, signing, cookie, or HTTP implementation. It always returns `not_supported` and `externalRequestSent: false`. |
-| Feature gates | Product, official-provider, and approved-environment gates use exact `true` matching and all default off. Simulation is isolated from live-provider gates. |
-| Eligibility | Pure domain policy checks authentication, a player account, an approved verification status, current consent, and code availability. |
-| Consent | `giftcode-redemption-v1` is required by the current foundation. There is no durable consent record yet. |
+| Feature gates | Product, official-provider, approved-environment, and queue-processing gates use exact `true` matching and all default off. Simulation is isolated from live-provider gates. |
+| Eligibility | Pure domain policy and an injected service compose authoritative actor, Player, publication, consent, gate, provider-health, rate-limit, and security-hold projections. Client Player IDs are not accepted. |
+| Consent | Purpose-, user-, character-, provider-, mode-, environment-, policy-, and digest-bound contracts support deterministic validity and one-way revocation. The proposed table remains unapplied. |
 | Identity | Only `community_verified` and `officially_verified` currently satisfy the foundation policy. Player linking alone does not. |
-| Idempotency | Deterministic v1 material uses player-account ID, gift-code ID, and version. It is not yet hashed, persisted, or complete enough for live use. |
-| Retry | The current policy permits at most three total attempts, with two bounded delays. Permanent and invalid-request failures never retry. |
+| Idempotency | Canonical length-prefixed v2 material includes environment, provider, operation, verified character, publication identity, and publication version, then hashes with SHA-256. The proposed schema has a unique version/hash constraint. |
+| Retry | Deterministic injected clock/jitter policy permits three total attempts at 30/120-second bases only for explicit retryable, `not_sent` results. Transport retry and ambiguity retry remain prohibited. |
 | Internal events | Pure immutable event contracts cover provider foundation and the approved lifecycle taxonomy, reject sensitive metadata keys, and have no persistence side effect. |
 | Provider health | A deterministic pure scoring model distinguishes disabled, unknown, healthy, degraded, unhealthy, and critical provider states. |
 | Live execution | No live adapter, external mutation request, signing implementation, credential, provider route, or provider cookie handling exists. The official skeleton is not production-ready. |
-| Durability | No redemption table, consent table, queue, background job, audit stream, or checked-in migration exists. |
+| Workflow | Explicit request and attempt lifecycles, queue claim/lease recovery, ambiguity lock, cancellation/expiry/withdrawal, projections, API descriptors, and capability boundaries are locally implemented and tested. |
+| Durability | A checked-in but unapplied migration proposes consent, request-as-queue, attempt, audit, health, rate-limit, and security-hold tables with RLS and safe views. No background job or database write exists. |
 
 The design below preserves every current safety property and expands the v1
 policy where durable implementation needs additional context.
@@ -86,6 +89,17 @@ The sprint adds no queue, eligibility integration, Player or Editorial import,
 API route, provider transport, signer, cookie jar, secret, persistence,
 migration, or Supabase write. Constructing the official skeleton cannot make it
 production-ready or permit an external request.
+
+### 2.2 Sprint 9.4 workflow boundary
+
+Sprint 9.4 adds pure workflow, consent, eligibility, idempotency, lifecycle,
+retry, ambiguity, queue, projection, API, capability, and audit contracts. It
+also adds a complete local database/RLS proposal that remains unapplied.
+
+The provider layer is not redesigned. No `api/` handler imports the new route
+descriptors, no worker executes a queue claim, and no persistence adapter writes
+to Supabase. Product, provider, environment, and queue gates all default off.
+See [the Sprint 9.4 architecture](./GIFTCODE_REDEMPTION_WORKFLOW_FOUNDATION.md).
 
 ## 3. Official script flow map
 
@@ -637,9 +651,11 @@ database transaction across HTTP.
 
 ## 14. Database design
 
-This is a logical proposal only. No migration is created or applied. Final FKs
-must wait for reconciliation of the checked-in and deployed Player/editorial
-schemas.
+This logical proposal is now encoded in the local unapplied Sprint 9.4
+migration. It was reconciled read-only against the deployed Player and
+Editorial schemas. Player and internal workflow FKs are proposed; the canonical
+Gift Code publication FK remains deferred because no deployed publication
+relation exists. No migration was applied.
 
 ### 14.1 Entities
 
@@ -1175,18 +1191,18 @@ active-character semantics; Operations owns queue/rate/circuit readiness.
 
 ## 30. Optional code changes and implementation boundary
 
-The architecture-design milestone needed only this document. Sprint 9.3 now
-implements the permitted non-live type refinements, isolated providers,
-registry/factory infrastructure, feature gates, events, health policy, and unit
-tests. The existing safety tests continue to enforce the disabled flag,
-simulation-only provider, no external request, no success, eligibility,
-idempotency material, and bounded retry foundation.
+The architecture-design milestone needed only this document. Sprint 9.3
+implemented the provider foundation. Sprint 9.4 implements the disabled local
+workflow and an unapplied persistence/RLS proposal. Safety tests enforce
+disabled product/provider/environment/queue gates, simulation-only behavior,
+the non-sending official skeleton, deterministic idempotency, bounded retry,
+ambiguity locks, lifecycle guards, safe projections, and capability limits.
 
-Permitted later in this architecture milestone only if review reveals a gap:
-non-executable interfaces, safety-contract tests, documentation references, and
-diagrams. Prohibited here are live provider code, network calls, credentials,
-API routes, jobs, migrations, persistence, dependencies, canonical data
-changes, Player implementation, Supabase writes, and deployment.
+Permitted after architectural approval are review corrections to contracts,
+tests, docs, and the unapplied migration proposal. Prohibited here are live
+provider code, network calls, credentials, executable API routes, jobs,
+migration application, canonical data changes, Player implementation,
+Supabase writes, and deployment.
 
 ### Design completion checklist
 
@@ -1198,8 +1214,8 @@ changes, Player implementation, Supabase writes, and deployment.
 - Consent, eligibility, durable idempotency, lifecycle, retry, queue, schema,
   RLS, APIs, audit, observability, security, privacy, validation, rollout,
   recovery, support, UI, roadmap, and approvals are implementation-ready.
-- Live behavior remains disabled; no request, secret, schema, route, job,
-  dependency, migration, or deployment is introduced.
+- Live behavior remains disabled; no provider request, secret, applied schema,
+  executable route, job, dependency, or deployment is introduced.
 
 Until every hard blocker and rollout gate is approved, Forge supports only the
 existing manual journey to the official Century Games redemption destination.

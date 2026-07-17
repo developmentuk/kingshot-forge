@@ -12,6 +12,9 @@ export const GIFT_CODE_OFFICIAL_PROVIDER_FLAG =
 export const GIFT_CODE_APPROVED_ENVIRONMENT_FLAG =
   'GIFTCODE_PROVIDER_ENVIRONMENT_APPROVED'
 
+export const GIFT_CODE_QUEUE_PROCESSING_FLAG =
+  'GIFTCODE_QUEUE_PROCESSING_ENABLED'
+
 export type GiftCodeRedemptionConfig = {
   enabled: boolean
 }
@@ -20,6 +23,7 @@ export type GiftCodeFeatureGates = Readonly<{
   redemptionEnabled: boolean
   officialProviderEnabled: boolean
   approvedEnvironment: boolean
+  queueProcessingEnabled: boolean
 }>
 
 export type GiftCodeProviderGateReason =
@@ -58,6 +62,10 @@ export function readGiftCodeFeatureGates(
     approvedEnvironment: isEnabled(
       environment,
       GIFT_CODE_APPROVED_ENVIRONMENT_FLAG,
+    ),
+    queueProcessingEnabled: isEnabled(
+      environment,
+      GIFT_CODE_QUEUE_PROCESSING_FLAG,
     ),
   })
 }

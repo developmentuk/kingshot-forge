@@ -4,22 +4,32 @@ export const GIFT_CODE_DOMAIN_EVENT_TYPES = [
   'provider_selection_rejected',
   'provider_health_evaluated',
   'feature_gate_evaluated',
+  'eligibility_evaluated',
   'consent_granted',
   'consent_revoked',
   'consent_expired',
+  'request_accepted',
+  'duplicate_prevented',
   'redemption_requested',
   'eligibility_failed',
   'redemption_queued',
+  'request_claimed',
   'processing_started',
+  'provider_call_planned',
+  'provider_call_prevented',
+  'simulation_executed',
   'provider_session_established',
   'provider_request_sent',
   'provider_response_received',
+  'response_classified',
+  'request_succeeded',
   'success_confirmed',
   'already_claimed_confirmed',
   'retry_scheduled',
   'manual_retry_requested',
   'retry_exhausted',
   'terminal_failure',
+  'ambiguity_detected',
   'ambiguous_outcome',
   'redemption_cancelled',
   'redemption_expired_before_send',
@@ -48,6 +58,16 @@ export const GIFT_CODE_DOMAIN_ACTOR_TYPES = [
 export type GiftCodeDomainActorType =
   (typeof GIFT_CODE_DOMAIN_ACTOR_TYPES)[number]
 
+export const GIFT_CODE_EVENT_PRIVACY_CLASSIFICATIONS = [
+  'operational',
+  'player_sensitive',
+  'consent_evidence',
+  'security_audit',
+] as const
+
+export type GiftCodeEventPrivacyClassification =
+  (typeof GIFT_CODE_EVENT_PRIVACY_CLASSIFICATIONS)[number]
+
 export type GiftCodeDomainEventMetadataValue =
   | string
   | number
@@ -69,8 +89,12 @@ export type GiftCodeDomainEvent = Readonly<{
   environment: string
   requestId: string | null
   attemptId: string | null
+  consentId: string | null
   characterInternalId: string | null
   codePublicationId: string | null
+  publicationVersion: string | null
+  sequence: number | null
+  privacyClassification: GiftCodeEventPrivacyClassification
   metadata: GiftCodeDomainEventMetadata
 }>
 
@@ -85,12 +109,28 @@ export type CreateGiftCodeDomainEventInput = Readonly<{
   environment: string
   requestId?: string | null
   attemptId?: string | null
+  consentId?: string | null
   characterInternalId?: string | null
   codePublicationId?: string | null
+  publicationVersion?: string | null
+  sequence?: number | null
+  privacyClassification?: GiftCodeEventPrivacyClassification
   metadata?: Readonly<
     Record<string, GiftCodeDomainEventMetadataValue>
   >
 }>
+
+export type CreateGiftCodeAuditEventInput =
+  CreateGiftCodeDomainEventInput &
+    Readonly<{
+      sequence: number
+      privacyClassification: GiftCodeEventPrivacyClassification
+    }>
+
+export type GiftCodeAuditEvent = GiftCodeDomainEvent &
+  Readonly<{
+    sequence: number
+  }>
 
 const SENSITIVE_METADATA_KEY =
   /secret|signature|cookie|token|authorization|password|payload|raw|player.?id|gift.?code/i
@@ -195,6 +235,10 @@ export function createGiftCodeDomainEvent(
       input.attemptId,
       'Attempt ID',
     ),
+    consentId: optionalText(
+      input.consentId,
+      'Consent ID',
+    ),
     characterInternalId: optionalText(
       input.characterInternalId,
       'Character internal ID',
@@ -203,6 +247,25 @@ export function createGiftCodeDomainEvent(
       input.codePublicationId,
       'Code publication ID',
     ),
+    publicationVersion: optionalText(
+      input.publicationVersion,
+      'Publication version',
+    ),
+    sequence: input.sequence ?? null,
+    privacyClassification:
+      input.privacyClassification ?? 'operational',
     metadata: freezeMetadata(input.metadata),
   })
+}
+
+export function createGiftCodeAuditEvent(
+  input: CreateGiftCodeAuditEventInput,
+): GiftCodeAuditEvent {
+  if (!Number.isInteger(input.sequence) || input.sequence < 1) {
+    throw new Error(
+      'Gift-code audit event sequence must be a positive integer.',
+    )
+  }
+
+  return createGiftCodeDomainEvent(input) as GiftCodeAuditEvent
 }

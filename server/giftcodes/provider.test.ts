@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   GIFT_CODE_APPROVED_ENVIRONMENT_FLAG,
   GIFT_CODE_OFFICIAL_PROVIDER_FLAG,
+  GIFT_CODE_QUEUE_PROCESSING_FLAG,
   GIFT_CODE_REDEMPTION_FLAG,
   assertProviderCanRun,
   readGiftCodeFeatureGates,
@@ -48,6 +49,7 @@ test('all live feature gates default to off', () => {
     redemptionEnabled: false,
     officialProviderEnabled: false,
     approvedEnvironment: false,
+    queueProcessingEnabled: false,
   })
 
   assert.deepEqual(
@@ -55,11 +57,13 @@ test('all live feature gates default to off', () => {
       [GIFT_CODE_REDEMPTION_FLAG]: 'true',
       [GIFT_CODE_OFFICIAL_PROVIDER_FLAG]: 'TRUE',
       [GIFT_CODE_APPROVED_ENVIRONMENT_FLAG]: '1',
+      [GIFT_CODE_QUEUE_PROCESSING_FLAG]: 'TRUE',
     }),
     {
       redemptionEnabled: true,
       officialProviderEnabled: false,
       approvedEnvironment: false,
+      queueProcessingEnabled: false,
     },
   )
 })
@@ -87,6 +91,7 @@ test('simulation provider is rejected even when every live gate is enabled', () 
           redemptionEnabled: true,
           officialProviderEnabled: true,
           approvedEnvironment: true,
+          queueProcessingEnabled: false,
         },
         mockGiftCodeRedemptionProvider,
       ),
@@ -102,6 +107,7 @@ test('production execution guard requires every live gate', () => {
           redemptionEnabled: true,
           officialProviderEnabled: true,
           approvedEnvironment: false,
+          queueProcessingEnabled: false,
         },
         {
           id: 'future-live-provider',
