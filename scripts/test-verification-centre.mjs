@@ -62,6 +62,27 @@ try {
         id === "hero-skills:canonical-boundary" && result === "passed",
     ),
   );
+  assert.ok(
+    heroSkills.checks.some(
+      ({ id, result }) =>
+        id === "hero-skills:source-governance-contract" &&
+        result === "passed",
+    ),
+  );
+  assert.ok(
+    heroSkills.checks.some(
+      ({ id, result }) =>
+        id === "hero-skills:approved-source-coverage" &&
+        result === "blocked",
+    ),
+  );
+  assert.ok(
+    heroSkills.checks.some(
+      ({ id, result }) =>
+        id === "hero-skills:governance-schema-application" &&
+        result === "blocked",
+    ),
+  );
   assert.equal(capabilityStatus(buildings, "publishing"), "unsupported");
   assert.ok(
     buildings.checks.some(

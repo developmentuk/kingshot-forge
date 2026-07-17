@@ -526,13 +526,89 @@ for (const datasetId of DATASET_KEYS) {
       severity: "critical",
       requiredForReady: true,
       supportingSources: [
-        "scripts/validate-hero-skills.mjs",
-        "docs/testing/SPRINT-9.2-MILESTONE-4.md",
+        "scripts/test-hero-skills-governance.mjs",
+        "docs/HERO_SKILLS_DATASET.md",
       ],
       result: "passed",
-      reason: "Milestone 4 adds verification metadata only and does not modify canonical Hero Skills content.",
+      reason: "The canonical contract rejects editorial recommendation fields and Exclusive Gear facts; the public projection contract selects safe fields only.",
       confidence: "high",
       expiring: true,
+    });
+
+    addCheck({
+      id: `${datasetId}:source-governance-contract`,
+      datasetId,
+      capability: "verification",
+      name: "Hero Skills source-governance contract",
+      description: "Source identity, digest, licensing, attribution, review and withdrawal rules are explicit and locally validated.",
+      expectedEvidence: "Focused source-evidence and canonical-contract tests pass using local fixtures only.",
+      severity: "critical",
+      requiredForReady: true,
+      supportingSources: [
+        "shared/platform/source-evidence.ts",
+        "scripts/test-hero-skills-governance.mjs",
+        "docs/governance/hero-skills-source-governance.md",
+      ],
+      result: "passed",
+      reason: "Local fixtures prove the governance boundary without treating staged facts as approved.",
+      confidence: "high",
+      expiring: true,
+    });
+
+    addCheck({
+      id: `${datasetId}:stable-identity-contract`,
+      datasetId,
+      capability: "validation",
+      name: "Hero Skills stable identity contract",
+      description: "Skill, progression and unlock identities are deterministic, collision-constrained and independent from names and source-row UUIDs.",
+      expectedEvidence: "Stable identity tests cover renames, variants, duplicate slots and immutable seeds.",
+      severity: "critical",
+      requiredForReady: true,
+      supportingSources: [
+        "docs/architecture/adr/ADR-0003-hero-skill-stable-identifiers.md",
+        "scripts/test-hero-skills-governance.mjs",
+      ],
+      result: "passed",
+      reason: "UUID-v5 identity minting is deterministic and corrections retain the stored identity seed.",
+      confidence: "high",
+      expiring: true,
+    });
+
+    addCheck({
+      id: `${datasetId}:approved-source-coverage`,
+      datasetId,
+      capability: "canonical-boundary",
+      name: "Hero Skills approved source coverage",
+      description: "Every canonical fact must be supported by approved, licensed and record-reviewed evidence.",
+      expectedEvidence: "An approved source inventory covers the intended Hero roster with canonical names and record-level review decisions.",
+      severity: "critical",
+      requiredForReady: true,
+      supportingSources: [
+        "docs/audits/HERO_SKILLS_SOURCE_INVENTORY.md",
+      ],
+      result: "blocked",
+      reason: "The 60 staged facts cover 10 heroes, all remain unreviewed, 36 lack canonical names and no licensing decision is recorded.",
+      confidence: "high",
+      remediation: "Clark and Aegis must approve a licensed source and record-level review plan before canonical promotion.",
+    });
+
+    addCheck({
+      id: `${datasetId}:governance-schema-application`,
+      datasetId,
+      capability: "migration",
+      name: "Hero Skills governance schema application",
+      description: "The reviewed source-evidence, progression, unlock and publication-eligibility schema is applied in a controlled environment.",
+      expectedEvidence: "Approved non-production migration history, constraints, RLS and rollback evidence.",
+      severity: "critical",
+      requiredForReady: true,
+      supportingSources: [
+        "supabase/migrations/20260717130617_hero_skill_source_governance_foundation.sql",
+        "docs/testing/SPRINT-9.3-HERO-SKILLS-GOVERNANCE.md",
+      ],
+      result: "blocked",
+      reason: "The Sprint 9.3 migration is a local unapplied proposal and production remains unchanged.",
+      confidence: "high",
+      remediation: "Approve the ADR and schema, update publication compatibility, then validate only in a proven non-production database.",
     });
   }
 
