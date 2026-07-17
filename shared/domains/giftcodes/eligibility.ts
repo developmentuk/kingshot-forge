@@ -14,6 +14,7 @@ export type GiftCodePlayerEligibilityProjection = Readonly<{
   active: boolean
   ownership: GiftCodeCharacterOwnership
   providerIdentityAvailable: boolean
+  reasons?: readonly GiftCodeResultCode[]
 }>
 
 export type GiftCodePublicationEligibilityProjection = Readonly<{
@@ -66,6 +67,10 @@ export function evaluateGiftCodeEligibility(
   context: GiftCodeEligibilityContext,
 ): GiftCodeEligibilityDecision {
   const reasons: GiftCodeResultCode[] = []
+
+  for (const reason of context.player.reasons ?? []) {
+    addReason(reasons, true, reason)
+  }
 
   addReason(
     reasons,
