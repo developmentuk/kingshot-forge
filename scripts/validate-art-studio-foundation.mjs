@@ -7,7 +7,8 @@ import process from "node:process";
 const migrationPath =
   "supabase/migrations/20260717130232_art_studio_community_foundation.sql";
 const migration = await readFile(migrationPath, "utf8");
-const lower = migration.toLowerCase();
+const normalizedMigration = migration.replace(/\r\n/gu, "\n");
+const lower = normalizedMigration.toLowerCase();
 
 const expectedTables = [
   "art_studio_artworks",
@@ -63,7 +64,7 @@ assert.equal(lower.match(/\bbegin;/gu)?.length, 1);
 assert.equal(lower.match(/\bcommit;/gu)?.length, 1);
 
 const viewMatches = [
-  ...migration.matchAll(
+  ...normalizedMigration.matchAll(
     /create or replace view public\.(art_studio_public_(?:catalogue|details))[\s\S]*?\nas\n([\s\S]*?);/giu,
   ),
 ];
@@ -117,7 +118,7 @@ for (const privateColumn of [
   "status_changed_by_user_id",
 ]) {
   const grantBlocks = [
-    ...migration.matchAll(/grant select \([\s\S]*?\) on table public\.art_studio_[a-z_]+ to authenticated;/giu),
+    ...normalizedMigration.matchAll(/grant select \([\s\S]*?\) on table public\.art_studio_[a-z_]+ to authenticated;/giu),
   ].map((match) => match[0].toLowerCase());
   assert.equal(
     grantBlocks.some((grant) => grant.includes(privateColumn)),
@@ -130,7 +131,7 @@ assert.ok(
   "The projection base table must grant only safe columns.",
 );
 
-const reportPolicy = migration.match(
+const reportPolicy = normalizedMigration.match(
   /create policy art_studio_reports_select_reporter_or_non_owner_moderator[\s\S]*?\n\);/iu,
 )?.[0] ?? "";
 assert.ok(reportPolicy.includes("reporter_user_id = (select auth.uid())"));
