@@ -32,11 +32,12 @@ const companionNavigation: NavigationItem[] = [
 
 const myForgeNavigation: NavigationItem[] = [
   { label: 'Dashboard', shortLabel: 'Dashboard', icon: '⭐', path: '/my-forge' },
-  { label: 'My Profile', shortLabel: 'Profile', icon: '🪪', path: '/my-forge/profile' },
-  { label: 'Player Identity', shortLabel: 'Identity', icon: '🛡️', path: '/my-forge/player-identity' },
+  { label: 'Player Passport', shortLabel: 'Passport', icon: '🛡️', path: '/my-forge/player-identity' },
+  { label: 'Edit Passport', shortLabel: 'Edit Passport', icon: '🪪', path: '/my-forge/profile' },
   { label: 'Hero Collection', shortLabel: 'Heroes', icon: '🦸', path: '/my-forge/hero-collection' },
   { label: 'Hero Showcase', shortLabel: 'Showcase', icon: '🏆', path: '/my-forge/heroes' },
-  { label: 'Transfer Profile', shortLabel: 'Transfer', icon: '🎫', path: '/transfer-profile' },
+  { label: 'Personal Progression', shortLabel: 'Progression', icon: '📈', path: '/my-forge/progression' },
+  { label: 'Transfer Profile · Optional', shortLabel: 'Transfer · Optional', icon: '🎫', path: '/my-forge/transfer-profile' },
 ]
 
 const libraryNavigation: NavigationItem[] = [
@@ -69,6 +70,7 @@ const mobileNavigation: NavigationItem[] = [
   { label: 'KvK Tracker', shortLabel: 'KvK', icon: '⚔️', path: '/kvk-tracker' },
   { label: 'Gift Codes', shortLabel: 'Codes', icon: '🎁', path: '/gift-codes' },
   { label: 'My Forge', shortLabel: 'My Forge', icon: '⭐', path: '/my-forge' },
+  { label: 'Personal Progression', shortLabel: 'Progression', icon: '📈', path: '/my-forge/progression' },
 ]
 
 function NavigationLink({ item, onNavigate }: { item: NavigationItem; onNavigate?: () => void }) {

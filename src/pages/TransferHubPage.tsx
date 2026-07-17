@@ -219,7 +219,7 @@ function TransferHubPage() {
 
             <Link
               className="button button--primary"
-              to="/transfer-profile"
+              to="/my-forge/transfer-profile"
             >
               Create your transfer profile
             </Link>

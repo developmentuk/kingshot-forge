@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { APP_VERSION } from "../config/release";
 
 type RoadmapStatus = "live" | "development" | "planned" | "future";
 
@@ -38,7 +37,7 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
-    version: APP_VERSION,
+    version: "0.7.1",
     name: "Consolidated Domain Foundations",
     status: "live",
     progress: 100,
@@ -59,22 +58,23 @@ const roadmapReleases: RoadmapRelease[] = [
   },
   {
     version: "0.7.2",
-    name: "Production-Ready User Experiences",
+    name: "Player-Facing Domain Activation",
     status: "development",
-    progress: 0,
-    priority: "Next release",
+    progress: 5,
+    priority: "Current release",
     description:
-      "Move from platform foundations towards carefully approved, production-ready user experiences built on the new domain architecture.",
+      "Activate selected player-facing journeys on the existing domain architecture, using published datasets and approval-gated capabilities.",
     features: [
-      "Player Identity approval and activation plan",
+      "Release metadata and version integrity",
+      "Player Identity activation",
       "Character linking and public profile experience",
       "Hero Showcase experience",
       "Manual Gift Centre redemption interface",
       "Gift eligibility and redemption history",
       "Art Studio gallery and submission workflow",
       "Moderation tools and community publishing controls",
-      "Canonical Hero Skills dataset approval",
-      "Hero Skills editorial authoring and public views",
+      "Verification Centre player-facing improvements",
+      "Published Hero Skills experience",
       "Google Analytics dashboards",
       "Mobile optimisation and performance improvements",
     ],
@@ -201,8 +201,8 @@ function RoadmapPage() {
           <p className="eyebrow">Product roadmap</p>
           <h1 className="page-title">Build each domain completely</h1>
           <p>
-            Release {APP_VERSION} completes the consolidated domain foundations. Release
-            0.7.2 now moves towards carefully approved, production-ready user experiences.
+            Release 0.7.1 completed the consolidated domain foundations. Release 0.7.2 now
+            activates carefully approved player-facing experiences on top of them.
           </p>
         </div>
         <div className="product-roadmap__hero-actions">
@@ -216,18 +216,19 @@ function RoadmapPage() {
           <span className="roadmap-priority-panel__icon">⚒️</span>
           <div>
             <p className="eyebrow">Current development priority</p>
-            <h2>Release 0.7.2 — Production-Ready User Experiences</h2>
+            <h2>Release 0.7.2 — Player-Facing Domain Activation</h2>
             <p>
-              The next release will activate selected capabilities only after approval,
-              validation and production-safety checks. Player Identity, Gift Centre,
-              Art Studio and Hero Skills will advance through small, focused milestones.
+              Selected capabilities will activate only after approval, validation and
+              production-safety checks. Player Identity, Gift Centre, Art Studio,
+              Verification Centre and Hero Skills will advance through focused milestones.
             </p>
           </div>
         </div>
         <div className="roadmap-priority-panel__tags">
-          <span>Player experience</span>
+          <span>Player Identity</span>
           <span>Gift Centre</span>
           <span>Art Studio</span>
+          <span>Verification Centre</span>
           <span>Hero Skills</span>
           <span>Mobile and performance</span>
         </div>

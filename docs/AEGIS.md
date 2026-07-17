@@ -270,29 +270,79 @@ Read these before changing product boundaries or shared platform behaviour:
 
 Changes to product pillars, domain boundaries, canonical publishing, security principles, sprint methodology or the Definition of Done require an ADR and corresponding constitution and Blueprint updates.
 
+## Player Identity milestone — release 0.7.2
+
+The Player Identity vertical slice is now active on the player-facing release branch. `PlayerIdentityContext` is the browser source of truth for the authenticated user's primary `player_accounts` row. It reads through the publishable Supabase client, exposes loading, unlinked and retryable failure states, and refreshes after the `kingshot-player-updated` event. Account mutations remain in the existing linked-player workflow; no second identity store or schema was introduced.
+
+My Forge now presents this identity as a Player Headquarters. The heading uses the linked player's real name, kingdom, optional profile alliance, verification status, visibility and a safe avatar fallback. Its priority action is derived from authentication, identity loading/error state, profile completion and visibility. Existing saved name and artwork functionality remains local to the Forge Library.
+
+Key player routes:
+
+- `/my-forge` — Player Headquarters and saved Forge library.
+- `/my-forge/player-identity` — private Player Passport, linked-player verification and visibility summary.
+- `/my-forge/profile` — Edit Passport for player-controlled profile fields and visibility controls.
+- `/my-forge/transfer-profile` — owned Transfer Profile editor (the existing `/transfer-profile` URL remains available).
+- `/my-forge/heroes` — owned Hero Showcase editor.
+- `/my-forge/progression` — owned progression snapshots.
+- `/player/:forgeId` and `/players/:forgeId` — the same public profile projection, with public profile and account visibility enforced.
+
+Player planning flow:
+
+- `PlayerIdentityContext` supplies the authenticated user's primary `player_accounts` row to My Forge, progression, Hero Showcase and Transfer Profile; feature pages do not perform a second primary-account lookup.
+- `/my-forge/progression` records immutable `player_progression_snapshots` owned by that linked account. A first snapshot makes progression complete; each snapshot keeps its own public/private flag and notes remain owner-visible through the private read.
+- Progression ownership is explicit: the linked API owns player name, Player ID, Kingdom, Town Center, avatar and API refresh time; the player owns current/highest power, Truegold, VIP, Infantry/Cavalry/Archers tiers, Governor Gear score, Governor Charm score, notes and visibility. Town Center is copied into a snapshot only as the existing historical context column and is never editable in the form.
+- Town Center, Truegold, troop tiers and VIP use the canonical terminology and published Data Engine output. The source dataset's `lancer` and `marksman` identifiers are compatibility details mapped to player-facing Cavalry and Archers labels; stored columns remain unchanged. Selector values are derived from normalised published records and revalidated before insert. Gear and Charm remain controlled non-negative numeric scores because their published datasets expose per-step/per-level values, not a reliable whole-governor score.
+- Forge Progress is the four-section required calculation: linked player, profile record, first progression snapshot and six-slot Hero Showcase. Each section contributes 25%, and the first incomplete section supplies the next action. Public Presence and Transfer Ready are presentation-only optional badges and never affect the required percentage.
+- The My Forge Player Headquarters presents a status summary, one next action, core milestones and earned/locked badges. Badges are derived from existing reads and require no new persistence or gamification service.
+- Player Passport is the full private account home at the compatibility route `/my-forge/player-identity`. It owns the compact identity record, verification/visibility context, completion detail, badges and links to Edit Passport, progression, showcase and optional Transfer Profile. My Forge is only the lightweight landing summary; public profiles remain separate public projections.
+- The final player page structure is My Forge → Player Passport → Edit Passport, with Personal Progression and optional Transfer Profile as separate tools. API-owned identity values are shown read-only in compact context banners; Edit Passport contains only player-controlled fields.
+- Player field ownership is explicit in the UI: PlayerIdentityContext owns API player name, ID, avatar, Kingdom, Town Center, link/verification state and refresh time; Edit Passport owns alliance, VIP, language, play style, transfer status, about text and visibility; Personal Progression owns saved power, Truegold, troop tiers, Gear, Charm, notes and snapshot visibility; Hero Showcase owns selected heroes and its six-slot completion; Transfer Profile owns only optional transfer readiness and preferences.
+- My Forge is intentionally lightweight: it shows one compact status summary, one next action, visual tool launchers and up to three earned badge previews. Player Passport owns the full visual completion view, four required milestone tiles, image-led optional badge gallery, compact domain summaries and player actions. Edit Passport and Personal Progression use compact linked-player context and do not repeat the full Passport hero.
+- Required milestones are presentation-derived from real saved data: Identity Linked, Passport Created, Hero Showcase and Progress Tracked. Optional badges are presentation-only and use existing reads: Identity Linked, Passport Builder, Hero Curator, Progress Tracker, Public Presence and Transfer Ready. Badge emblems are lightweight inline SVG treatments; no remote or licensed artwork and no new persistence are introduced.
+- Transfer Profile remains private unless its own `status` is `looking` and `is_public` is enabled. Private notes, Discord details and contact preferences are never used by public profile reads.
+- Profile, progression, Hero Showcase and Transfer Profile saves emit `kingshot-player-updated`, allowing dependent My Forge planning state to refresh.
+
+Canonical player routes are `/my-forge`, `/my-forge/player-identity`, `/my-forge/profile`, `/my-forge/progression` (Personal Progression), `/my-forge/transfer-profile`, `/my-forge/heroes`, `/transfer-profile`, `/player/:forgeId` and `/player/:forgeId/progression` (with `/players/:forgeId` retained as the public profile alias). Local setup requires copying `.env.example` to `.env.local` and filling the two publishable Supabase variables; no service-role key belongs in the browser.
+
+Public profile reads select only public profile fields and non-sensitive player display fields. They require both `player_profiles.is_public` and `player_accounts.is_public`; `user_id`, link metadata and support data are not selected for public presentation. Browser code uses the publishable Supabase key only; service-role credentials remain server-only.
+
+Validation completed for this milestone: Player Identity structural validation, focused and vertical-slice tests, TypeScript production build and lint, targeted route checks, and Data Engine record-shape checks for troops, Truegold and VIP. Legacy progression values are preserved in history and rendered with a review label when they are no longer in the published selector options; no destructive migration is performed. Lint retains the repository's existing seven warnings in unrelated/shared files. Live signed-in route and RLS verification still require a deployment or authenticated browser session with access to the configured Supabase project.
+
 ## Active Release
 
-### Release 0.7.1 — Sprint 9.3: Hero Skills Source Governance and Schema Foundation
+### Release 0.7.2 — Player-Facing Domain Activation
 
 Working branch:
 
 ```text
-release/0.7.0-player-domain
+release/0.7.2-player-facing-activation
 ```
 
-Sprint objective: establish the governed source-evidence, canonical contract and unapplied schema foundation required before Hero Skill facts may be reviewed, imported or published.
+Release objective: activate carefully selected player-facing journeys on top of the completed 0.7.1 domain foundations, while preserving existing architecture, privacy boundaries, canonical publishing rules and production safety.
 
-Sprint 9.3 is a design and local-foundation milestone. Source approval, migration application, canonical population, public Hero Skill UI work and editorial recommendation authoring remain out of scope. The 60 staged Hero Skill facts remain unreviewed evidence.
+Milestone order:
 
-Required review order:
+1. release integrity and activation-readiness audit;
+2. Player Identity and profile journey activation;
+3. manual Gift Centre activation;
+4. Art Studio gallery, attribution and submission activation;
+5. Verification Centre player-facing clarity improvements;
+6. published-only Hero Skills experience when approved data exists;
+7. homepage, navigation, mobile and accessibility completion;
+8. end-to-end validation, documentation and release preparation.
 
-1. source governance and evidence inventory;
-2. canonical, progression, unlock and evidence contracts;
-3. stable-identifier decision;
-4. unapplied schema and compatibility review;
-5. local validation and architectural approval.
+Release constraints:
 
-Do not redesign the architecture. Reuse the existing editorial, publishing, dataset, permission and Verification Centre platforms. Do not mark incomplete work complete.
+- reuse existing domain, editorial, publishing, permission and Verification Centre platforms;
+- consume published datasets only on public surfaces;
+- do not invent, infer or publish unapproved Hero Skill facts;
+- automatic gift redemption remains out of scope until separately approved;
+- do not apply production database changes without Clark's explicit approval;
+- use the connected Supabase project read-only unless a milestone explicitly requires and receives approval for a write;
+- finish and validate one vertical slice before beginning the next;
+- do not redesign the architecture or create parallel sources of truth.
+
+Milestone 0 is complete only when release metadata is internally consistent, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for the Player Identity audit.
 
 ## Session bootstrap
 

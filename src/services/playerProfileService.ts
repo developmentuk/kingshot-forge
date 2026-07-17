@@ -3,6 +3,7 @@ import type {
   PlayerProfile,
   PlayerTransferStatus,
 } from '../types/playerProfile'
+import type { PlayerAccount } from '../types/playerAccount'
 
 type PlayerVerificationStatus =
   | 'linked'
@@ -196,7 +197,22 @@ export async function getPublicPlayerProfile(
     error: profileError,
   } = await supabase
     .from('player_profiles')
-    .select('*')
+    .select(`
+      id,
+      player_account_id,
+      forge_id,
+      alliance_name,
+      town_center_level,
+      vip_level,
+      about_me,
+      play_style,
+      main_language,
+      transfer_status,
+      activities,
+      is_public,
+      created_at,
+      updated_at
+    `)
     .eq('forge_id', normalisedForgeId)
     .eq('is_public', true)
     .maybeSingle()
@@ -222,7 +238,6 @@ export async function getPublicPlayerProfile(
     .select(
       `
         id,
-        user_id,
         player_id,
         player_name,
         profile_photo,
@@ -239,6 +254,7 @@ export async function getPublicPlayerProfile(
       'id',
       profile.player_account_id,
     )
+    .eq('is_public', true)
     .maybeSingle()
 
   if (playerError) {
@@ -315,47 +331,20 @@ export async function getPublicPlayerProfile(
   }
 }
 
-export async function getMyPlayerProfile(
-  userId: string,
+export async function getMyPlayerProfileForAccount(
+  playerAccount: PlayerAccount,
   fallbackForgeId: string,
 ): Promise<EditablePlayerProfile | null> {
-  const {
-    data: playerData,
-    error: playerError,
-  } = await supabase
-    .from('player_accounts')
-    .select(
-      `
-        id,
-        user_id,
-        player_id,
-        player_name,
-        profile_photo,
-        kingdom_id,
-        player_level,
-        level_rendered,
-        level_rendered_detailed,
-        level_image,
-        verification_status,
-        last_refreshed_at
-      `,
-    )
-    .eq('user_id', userId)
-    .eq('is_primary', true)
-    .maybeSingle()
+  return getMyPlayerProfileFromIdentity(
+    playerAccount,
+    fallbackForgeId,
+  )
+}
 
-  if (playerError) {
-    throw new Error(
-      playerError.message,
-    )
-  }
-
-  if (!playerData) {
-    return null
-  }
-
-  const player =
-    playerData as PlayerAccountIdentity
+async function getMyPlayerProfileFromIdentity(
+  player: PlayerAccountIdentity,
+  fallbackForgeId: string,
+): Promise<EditablePlayerProfile | null> {
 
   const {
     data: profileData,
@@ -375,13 +364,7 @@ export async function getMyPlayerProfile(
     )
   }
 
-  return createEditableProfile(
-    player,
-    profileData
-      ? (profileData as PlayerProfile)
-      : null,
-    fallbackForgeId,
-  )
+  return createEditableProfile(player, profileData ? (profileData as PlayerProfile) : null, fallbackForgeId)
 }
 
 export async function saveMyPlayerProfile(

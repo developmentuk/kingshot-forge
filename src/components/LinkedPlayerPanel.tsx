@@ -1,10 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-  type FormEvent,
-} from 'react'
+import { useState, type FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 import { supabase } from '../lib/supabase'
 import { getPlayer } from '../services/kingshotApi'
 import type { KingshotPlayer } from '../types/player'
@@ -69,18 +65,18 @@ function LinkedPlayerPanel() {
     user,
     loading: authLoading,
   } = useAuth()
-
-  const [linkedAccount, setLinkedAccount] =
-    useState<PlayerAccount | null>(null)
+  const {
+    playerAccount: linkedAccount,
+    loadingPlayerAccount: loadingAccount,
+    refreshPlayerIdentity,
+    playerIdentityError,
+  } = usePlayerIdentity()
 
   const [previewPlayer, setPreviewPlayer] =
     useState<KingshotPlayer | null>(null)
 
   const [playerId, setPlayerId] =
     useState('')
-
-  const [loadingAccount, setLoadingAccount] =
-    useState(false)
 
   const [lookingUp, setLookingUp] =
     useState(false)
@@ -99,65 +95,6 @@ function LinkedPlayerPanel() {
 
   const [errorMessage, setErrorMessage] =
     useState('')
-
-  const loadLinkedAccount =
-    useCallback(async () => {
-      if (!user) {
-        setLinkedAccount(null)
-        setLoadingAccount(false)
-        return
-      }
-
-      setLoadingAccount(true)
-      setErrorMessage('')
-
-      const { data, error } = await supabase
-        .from('player_accounts')
-        .select(
-          `
-            id,
-            user_id,
-            player_id,
-            player_name,
-            kingdom_id,
-            player_level,
-            level_rendered,
-            level_rendered_detailed,
-            level_image,
-            profile_photo,
-            verification_status,
-            verification_method,
-            verified_by,
-            verified_at,
-            last_refreshed_at,
-            is_primary,
-            is_public,
-            created_at,
-            updated_at
-          `,
-        )
-        .eq('user_id', user.id)
-        .eq('is_primary', true)
-        .maybeSingle()
-
-      if (error) {
-        setErrorMessage(error.message)
-        setLoadingAccount(false)
-        return
-      }
-
-      setLinkedAccount(
-        data
-          ? (data as PlayerAccount)
-          : null,
-      )
-
-      setLoadingAccount(false)
-    }, [user])
-
-  useEffect(() => {
-    void loadLinkedAccount()
-  }, [loadLinkedAccount])
 
   async function handleLookup(
     event: FormEvent<HTMLFormElement>,
@@ -216,7 +153,7 @@ function LinkedPlayerPanel() {
     const now =
       new Date().toISOString()
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('player_accounts')
       .insert({
         user_id: user.id,
@@ -293,10 +230,6 @@ function LinkedPlayerPanel() {
       return
     }
 
-    setLinkedAccount(
-      data as PlayerAccount,
-    )
-
     setPreviewPlayer(null)
     setPlayerId('')
     setMessage(
@@ -305,6 +238,7 @@ function LinkedPlayerPanel() {
     setLinking(false)
 
     notifyPlayerIdentityChanged()
+    await refreshPlayerIdentity()
   }
 
   async function handleRefresh() {
@@ -325,7 +259,7 @@ function LinkedPlayerPanel() {
       const now =
         new Date().toISOString()
 
-      const { data, error } =
+      const { error } =
         await supabase
           .from('player_accounts')
           .update({
@@ -356,44 +290,17 @@ function LinkedPlayerPanel() {
             'user_id',
             user.id,
           )
-          .select(
-            `
-              id,
-              user_id,
-              player_id,
-              player_name,
-              kingdom_id,
-              player_level,
-              level_rendered,
-              level_rendered_detailed,
-              level_image,
-              profile_photo,
-              verification_status,
-              verification_method,
-              verified_by,
-              verified_at,
-              last_refreshed_at,
-              is_primary,
-              is_public,
-              created_at,
-              updated_at
-            `,
-          )
-          .single()
 
       if (error) {
         throw error
       }
-
-      setLinkedAccount(
-        data as PlayerAccount,
-      )
 
       setMessage(
         'Kingshot player data refreshed.',
       )
 
       notifyPlayerIdentityChanged()
+      await refreshPlayerIdentity()
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -456,7 +363,6 @@ function LinkedPlayerPanel() {
       return
     }
 
-    setLinkedAccount(null)
     setPreviewPlayer(null)
     setPlayerId('')
     setMessage(
@@ -465,6 +371,7 @@ function LinkedPlayerPanel() {
     setRemoving(false)
 
     notifyPlayerIdentityChanged()
+    await refreshPlayerIdentity()
   }
 
   async function handlePrivacyChange(
@@ -473,14 +380,6 @@ function LinkedPlayerPanel() {
     if (!user || !linkedAccount) {
       return
     }
-
-    const previousValue =
-      linkedAccount.is_public
-
-    setLinkedAccount({
-      ...linkedAccount,
-      is_public: isPublic,
-    })
 
     setErrorMessage('')
 
@@ -501,13 +400,11 @@ function LinkedPlayerPanel() {
       )
 
     if (error) {
-      setLinkedAccount({
-        ...linkedAccount,
-        is_public: previousValue,
-      })
-
       setErrorMessage(error.message)
+      return
     }
+
+    await refreshPlayerIdentity()
   }
 
   if (authLoading) {
@@ -516,6 +413,17 @@ function LinkedPlayerPanel() {
         <p>
           Loading Kingshot account…
         </p>
+      </section>
+    )
+  }
+
+  if (playerIdentityError) {
+    return (
+      <section className="linked-player-panel" role="alert">
+        <p>{playerIdentityError}</p>
+        <button type="button" className="button button--secondary" onClick={() => void refreshPlayerIdentity()}>
+          Try again
+        </button>
       </section>
     )
   }

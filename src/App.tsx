@@ -5,6 +5,9 @@ import "./features/admin/recordEditor/recordEditor.css";
 import "./features/admin/verification/verificationCentre.css";
 import "./features/player-identity/playerIdentity.css";
 import "./styles/playerDomain.css";
+import "./styles/playerProgressionPolish.css";
+import "./styles/playerPlanningPolish.css";
+import "./styles/passportPolish.css";
 // Keep Hero Collection polish last so it overrides the legacy Hero card rules.
 import "./styles/heroCollectionPolish.css";
 
@@ -48,7 +51,6 @@ import {
 } from "./features/admin/verification";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import { PrivatePlayerIdentityPage } from "./features/player-identity/PrivatePlayerIdentityPage";
-import { PublicPlayerIdentityPage } from "./features/player-identity/PublicPlayerIdentityPage";
 import { PlayerSupportWorkspacePage } from "./features/player-identity/PlayerSupportWorkspacePage";
 
 function App() {
@@ -74,12 +76,13 @@ function App() {
         <Route path="roadmap" element={<RoadmapPage />} />
         <Route path="release-notes" element={<ReleaseNotesPage />} />
         <Route path="transfer-profile" element={<TransferProfilePage />} />
+        <Route path="my-forge/transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />
         <Route path="player/:forgeId" element={<PlayerProfilePage />} />
         <Route path="player/:forgeId/progression" element={<PublicPlayerProgressionPage />} />
         <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
-        <Route path="my-forge/player-identity" element={<PrivatePlayerIdentityPage />} />
-        <Route path="players/:publicAlias" element={<PublicPlayerIdentityPage />} />
+        <Route path="/my-forge/player-identity" element={<PrivatePlayerIdentityPage />} />
+        <Route path="players/:forgeId" element={<PlayerProfilePage />} />
         <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />

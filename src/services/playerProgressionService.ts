@@ -58,16 +58,37 @@ export async function getPublicProgression(playerAccountId: string): Promise<Pla
   return (data ?? []).map((row) => mapSnapshot(row as Record<string, unknown>))
 }
 
-function validateTier(value: number | null, label: string) {
+function validateTier(value: number | null, label: string, supportedValues?: ReadonlySet<number>) {
   if (value !== null && (value < 1 || value > 12)) throw new Error(`${label} must be between T1 and T12.`)
+  if (value !== null && supportedValues && !supportedValues.has(value)) {
+    throw new Error(`${label} is not available in the published dataset.`)
+  }
 }
 
-export async function addProgressionSnapshot(playerAccountId: string, input: PlayerProgressionInput): Promise<void> {
-  validateTier(input.infantryTier, 'Infantry tier')
-  validateTier(input.lancerTier, 'Lancer tier')
-  validateTier(input.marksmanTier, 'Marksman tier')
+function validateNonNegative(value: number | null, label: string) {
+  if (value !== null && (!Number.isFinite(value) || value < 0)) throw new Error(`${label} must be zero or greater.`)
+}
+
+export type ProgressionValidationOptions = {
+  infantryTiers?: ReadonlySet<number>
+  lancerTiers?: ReadonlySet<number>
+  marksmanTiers?: ReadonlySet<number>
+  truegoldLevels?: ReadonlySet<number>
+  vipLevels?: ReadonlySet<number>
+}
+
+export async function addProgressionSnapshot(playerAccountId: string, input: PlayerProgressionInput, options: ProgressionValidationOptions = {}): Promise<void> {
+  validateNonNegative(input.currentPower, 'Current power')
+  validateNonNegative(input.highestPower, 'Highest power')
+  validateNonNegative(input.governorGearScore, 'Governor Gear score')
+  validateNonNegative(input.governorCharmScore, 'Governor Charm score')
+  validateTier(input.infantryTier, 'Infantry tier', options.infantryTiers)
+  validateTier(input.lancerTier, 'Cavalry tier', options.lancerTiers)
+  validateTier(input.marksmanTier, 'Archer tier', options.marksmanTiers)
   if (input.vipLevel !== null && (input.vipLevel < 0 || input.vipLevel > 12)) throw new Error('VIP level must be between 0 and 12.')
+  if (input.vipLevel !== null && options.vipLevels && !options.vipLevels.has(input.vipLevel)) throw new Error('VIP level is not available in the published dataset.')
   if (input.truegoldLevel !== null && (input.truegoldLevel < 0 || input.truegoldLevel > 8)) throw new Error('Truegold level must be between 0 and 8.')
+  if (input.truegoldLevel !== null && options.truegoldLevels && !options.truegoldLevels.has(input.truegoldLevel)) throw new Error('Truegold level is not available in the published dataset.')
 
   const { error } = await supabase.from('player_progression_snapshots').insert({
     player_account_id: playerAccountId,

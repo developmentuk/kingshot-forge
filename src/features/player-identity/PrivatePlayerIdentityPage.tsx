@@ -1,65 +1,341 @@
-import { useEffect, useState, type ReactNode } from "react"
-import { trackForgePlayerEvent } from "../../platform/analytics/forgeAnalytics"
-import { ActiveCharacterSelector } from "./ActiveCharacterSelector"
-import { AliasManager } from "./AliasManager"
-import { CharacterCard, type CharacterCardModel } from "./CharacterCard"
-import { FeatureDisabledNotice } from "./FeatureDisabledNotice"
-import { playerIdentityBrowserFlags, syntheticPlayerIdentityPreview } from "./featureFlags"
-import { HeroShowcaseBoundaryPanel } from "./HeroShowcaseBoundaryPanel"
-import { VisibilityEditor } from "./VisibilityEditor"
-
-const SYNTHETIC_CHARACTERS: readonly CharacterCardModel[] = [
-  { id: "synthetic-character-one", name: "Sentinel Vale", kingdom: "Kingdom 101", alliance: "FORGE", linkStatus: "linked", verificationStatus: "unverified", primary: true, activeEligible: true },
-  { id: "synthetic-character-two", name: "Ember Scout", kingdom: "Kingdom 204", alliance: "No public alliance", linkStatus: "disputed", verificationStatus: "pending", primary: false, activeEligible: false },
-]
+import { useEffect, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { usePlayerIdentity } from '../../context/PlayerIdentityContext'
+import { trackForgePlayerEvent } from '../../platform/analytics/forgeAnalytics'
+import type { PlayerAccount } from '../../types/playerAccount'
+import ForgeProgressPanel from '../../components/ForgeProgressPanel'
 
 export function PrivatePlayerIdentityPage() {
-  const [primary, setPrimary] = useState("synthetic-character-one")
-  const [activeForTab, setActiveForTab] = useState("")
-  const [announcement, setAnnouncement] = useState("")
-  useEffect(() => { trackForgePlayerEvent("player_identity_page_viewed", { surface: "private" }) }, [])
+  const { user, loading: authLoading, signInWithGoogle } = useAuth()
+  const {
+    playerAccount,
+    loadingPlayerAccount,
+    playerIdentityError,
+    refreshPlayerIdentity,
+  } = usePlayerIdentity()
 
-  if (!playerIdentityBrowserFlags.ui) {
-    return <PlayerIdentityPageFrame><FeatureDisabledNotice /></PlayerIdentityPageFrame>
-  }
-  if (!syntheticPlayerIdentityPreview) {
-    return <PlayerIdentityPageFrame><section className="player-identity__notice" role="alert"><div><p className="player-identity__eyebrow">Migration required</p><h2>Player persistence is not connected</h2><p>The UI gate is enabled, but the approved replacement schema and production adapter are not available. No data was loaded and no write was attempted.</p></div></section></PlayerIdentityPageFrame>
+  useEffect(() => {
+    trackForgePlayerEvent('player_identity_page_viewed', {
+      surface: 'private',
+      outcome: playerAccount ? 'linked' : 'unlinked',
+    })
+  }, [playerAccount])
+
+  if (authLoading || loadingPlayerAccount) {
+    return (
+      <PlayerIdentityPageFrame>
+        <section
+          className="player-identity__notice"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div>
+            <p className="player-identity__eyebrow">Loading</p>
+            <h2>Preparing your Player Passport</h2>
+            <p>
+              Forge is securely loading your linked Kingshot account.
+            </p>
+          </div>
+        </section>
+      </PlayerIdentityPageFrame>
+    )
   }
 
-  function choosePrimary(id: string) {
-    setPrimary(id)
-    setAnnouncement("Primary Character preview changed. No data was saved.")
-    trackForgePlayerEvent("primary_character_changed", { outcome: "preview" })
+  if (!user) {
+    return (
+      <PlayerIdentityPageFrame>
+        <section className="player-identity__notice">
+          <div>
+            <p className="player-identity__eyebrow">Sign in required</p>
+            <h2>Your Player Passport lives in My Forge</h2>
+            <p>
+              Sign in to connect your Kingshot player, manage what you
+              share, and open your profile and hero tools.
+            </p>
+          </div>
+          <button
+            className="player-identity__button"
+            type="button"
+            onClick={() => void signInWithGoogle()}
+          >
+            Sign in with Google
+          </button>
+        </section>
+      </PlayerIdentityPageFrame>
+    )
   }
-  function chooseActive(id: string) {
-    setActiveForTab(id)
-    const character = SYNTHETIC_CHARACTERS.find((candidate) => candidate.id === id)
-    const message = character?.activeEligible ? "Active Character selected for requests in this tab." : "Active Character rejected because this link is not eligible."
-    setAnnouncement(message)
-    trackForgePlayerEvent(character?.activeEligible ? "active_character_selected" : "active_character_rejected", { outcome: character?.activeEligible ? "accepted" : "rejected" })
+
+  if (playerIdentityError) {
+    return (
+      <PlayerIdentityPageFrame>
+        <section className="player-identity__notice" role="alert">
+          <div>
+            <p className="player-identity__eyebrow">Unable to load</p>
+            <h2>Your Player Passport is temporarily unavailable</h2>
+            <p>{playerIdentityError}</p>
+          </div>
+          <button
+            className="player-identity__button"
+            type="button"
+            onClick={() => void refreshPlayerIdentity()}
+          >
+            Try again
+          </button>
+        </section>
+      </PlayerIdentityPageFrame>
+    )
+  }
+
+  if (!playerAccount) {
+    return (
+      <PlayerIdentityPageFrame>
+        <section className="player-identity__summary">
+          <div>
+            <p className="player-identity__eyebrow">Player Passport</p>
+            <h2>Connect your Kingshot player</h2>
+            <p>
+              Your Forge account is ready. Link your Kingshot player to
+              unlock identity, profile, progression, and showcase tools.
+            </p>
+          </div>
+        </section>
+
+        <section className="player-identity__panel">
+          <p className="player-identity__eyebrow">Next step</p>
+          <h2>Create your linked Player Passport</h2>
+          <p>
+            Player linking is managed from My Forge, where your account can
+            be checked and refreshed without creating duplicate profiles.
+          </p>
+          <div className="player-identity__actions">
+            <Link
+              className="player-identity__button"
+              to="/my-forge"
+              onClick={() =>
+                trackForgePlayerEvent('linked_character_flow_started', {
+                  surface: 'player_identity',
+                })
+              }
+            >
+              Link a Kingshot player
+            </Link>
+            <button
+              className="player-identity__button player-identity__button--secondary"
+              type="button"
+              onClick={() => void refreshPlayerIdentity()}
+            >
+              Check again
+            </button>
+          </div>
+        </section>
+      </PlayerIdentityPageFrame>
+    )
   }
 
   return (
     <PlayerIdentityPageFrame>
-      <section className="player-identity__summary" aria-labelledby="identity-summary-title">
-        <div><p className="player-identity__eyebrow">Private Player profile · synthetic test preview</p><h2 id="identity-summary-title">Your linked identities</h2><p>Forge User and Game Characters remain separate. A link is not proof of ownership.</p></div>
-        <div className="player-identity__revision"><span>Identity revision</span><strong>12</strong></div>
-      </section>
-      <p className="player-identity__live" aria-live="polite">{announcement}</p>
+      <IdentitySummary playerAccount={playerAccount} />
+      <ForgeProgressPanel />
+
       <div className="player-identity__layout">
-        <section className="player-identity__main" aria-labelledby="linked-title">
-          <div className="player-identity__section-heading"><div><p className="player-identity__eyebrow">Finite limit · 2 of 4</p><h2 id="linked-title">Linked characters</h2></div><button className="player-identity__button" type="button" onClick={() => { setAnnouncement("Link proposal flow opened. Verification remains unavailable."); trackForgePlayerEvent("linked_character_flow_started") }}>Propose character link</button></div>
-          <div className="player-identity__cards">{SYNTHETIC_CHARACTERS.map((character) => <CharacterCard key={character.id} character={character} selectedPrimary={primary === character.id} onPrimaryChange={choosePrimary} onDispute={() => setAnnouncement("Dispute preview opened. No link was changed.")} />)}</div>
-          <section className="player-identity__panel"><p className="player-identity__eyebrow">Historical status</p><h2>Link history</h2><div className="player-identity__scroll"><table><thead><tr><th>Character</th><th>Status</th><th>Reason</th><th>Revision</th></tr></thead><tbody><tr><td>Sentinel Vale</td><td>Linked</td><td>Proposal recorded</td><td>10</td></tr><tr><td>Ember Scout</td><td>Disputed</td><td>User dispute</td><td>12</td></tr></tbody></table></div></section>
+        <section
+          className="player-identity__main"
+        >
+          <section className="player-identity__panel">
+            <p className="player-identity__eyebrow">Passport actions</p>
+            <h2>Complete your player record</h2>
+            <div className="player-identity__tool-grid">
+              <IdentityTool
+                title="Edit Passport"
+                description="Add the player-controlled fields shown on your public Passport."
+                to="/my-forge/profile"
+                action="Edit Passport"
+              />
+              <IdentityTool
+                title="Hero Showcase"
+                description="Select and arrange the heroes displayed on your public Forge profile."
+                to="/my-forge/heroes"
+                action="Manage heroes"
+              />
+              <IdentityTool
+                title="Progression"
+                description="Record and review the milestones that describe your account progress."
+                to="/my-forge/progression"
+                action="Open progression"
+              />
+              <IdentityTool
+                title="Transfer Profile"
+                description="Optional planning for a future kingdom move."
+                to="/my-forge/transfer-profile"
+                action="Open optional transfer"
+              />
+            </div>
+          </section>
         </section>
-        <aside className="player-identity__side"><ActiveCharacterSelector characters={SYNTHETIC_CHARACTERS} value={activeForTab} onChange={chooseActive} announcement={announcement} /><AliasManager onPropose={() => trackForgePlayerEvent("public_alias_proposed", { outcome: "preview" })} /></aside>
+
+        <aside className="player-identity__side">
+          <section className="player-identity__panel">
+            <p className="player-identity__eyebrow">Verification</p>
+            <h2>{formatVerification(playerAccount.verification_status)}</h2>
+            <p>
+              {verificationDescription(playerAccount.verification_status)}
+            </p>
+            {playerAccount.verified_at ? (
+              <p className="player-identity__hint">
+                Verified {formatDate(playerAccount.verified_at)}
+              </p>
+            ) : null}
+          </section>
+
+          <Link className="player-identity__button" to="/my-forge/profile">Edit Passport</Link>
+        </aside>
       </div>
-      <div className="player-identity__two-column"><VisibilityEditor onSave={() => trackForgePlayerEvent("player_visibility_updated", { outcome: "preview" })} /><HeroShowcaseBoundaryPanel onUpdate={() => { setAnnouncement("Hero Showcase preview changed. No data was saved."); trackForgePlayerEvent("hero_showcase_selection_updated", { outcome: "preview" }) }} /></div>
-      <section className="player-identity__panel"><p className="player-identity__eyebrow">Safe audit summary</p><h2>Recent identity activity</h2><ul className="player-identity__timeline"><li><strong>Link disputed</strong><span>Synthetic preview · revision 12</span></li><li><strong>Primary selected</strong><span>Synthetic preview · revision 11</span></li></ul><p className="player-identity__hint">Evidence, support notes, reviewer identities, credentials, and security-sensitive audit data are never included here.</p></section>
     </PlayerIdentityPageFrame>
   )
 }
 
+function IdentitySummary({
+  playerAccount,
+}: {
+  playerAccount: PlayerAccount
+}) {
+  return (
+    <section
+      className="player-identity__summary"
+      aria-labelledby="identity-summary-title"
+    >
+      <div>
+        <p className="player-identity__eyebrow">
+          My Forge · linked Kingshot player
+        </p>
+        <h2 id="identity-summary-title">
+          Welcome back, {playerAccount.player_name}
+        </h2>
+        <p>
+          Kingdom {playerAccount.kingdom_id} · Town Center {formatLevel(playerAccount)}
+        </p>
+        <div className="player-identity__summary-status" aria-label="Passport status">
+          <span>{formatVerification(playerAccount.verification_status)}</span>
+          <span>{playerAccount.is_public ? 'Public Passport' : 'Private Passport'}</span>
+        </div>
+        <dl className="player-identity__summary-details">
+          <div><dt>Player ID</dt><dd>{playerAccount.player_id}</dd></div>
+          <div><dt>Last refreshed</dt><dd>{formatDate(playerAccount.last_refreshed_at)}</dd></div>
+        </dl>
+      </div>
+      {playerAccount.profile_photo ? (
+        <img
+          className="player-identity__avatar"
+          src={playerAccount.profile_photo}
+          alt={`${playerAccount.player_name} profile`}
+        />
+      ) : (
+        <div className="player-identity__revision" aria-hidden="true">
+          <span>Kingdom</span>
+          <strong>{playerAccount.kingdom_id}</strong>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function IdentityTool({
+  title,
+  description,
+  to,
+  action,
+}: {
+  title: string
+  description: string
+  to: string
+  action: string
+}) {
+  return (
+    <article className="player-identity__tool-card">
+      <h3>{title}</h3>
+      <p>{description}</p>
+      <Link className="player-identity__text-link" to={to}>
+        {action} →
+      </Link>
+    </article>
+  )
+}
+
+function formatLevel(playerAccount: PlayerAccount) {
+  return (
+    playerAccount.level_rendered_detailed ||
+    playerAccount.level_rendered ||
+    (playerAccount.player_level
+      ? `Level ${playerAccount.player_level}`
+      : 'Not available')
+  )
+}
+
+function formatDate(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Not available'
+  }
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date)
+}
+
+function formatVerification(status: PlayerAccount['verification_status']) {
+  switch (status) {
+    case 'officially_verified':
+      return 'Officially verified'
+    case 'community_verified':
+      return 'Community verified'
+    case 'pending':
+      return 'Verification pending'
+    case 'rejected':
+      return 'Verification rejected'
+    case 'revoked':
+      return 'Verification revoked'
+    default:
+      return 'Linked'
+  }
+}
+
+function verificationDescription(
+  status: PlayerAccount['verification_status'],
+) {
+  switch (status) {
+    case 'officially_verified':
+      return 'Forge has confirmed this player through an official verification route.'
+    case 'community_verified':
+      return 'A trusted community reviewer has confirmed this linked player.'
+    case 'pending':
+      return 'Your verification request is waiting for review.'
+    case 'rejected':
+      return 'The previous verification request could not be approved.'
+    case 'revoked':
+      return 'Verification is no longer active for this linked player.'
+    default:
+      return 'This Kingshot player is connected to your Forge account but is not yet verified.'
+  }
+}
+
 function PlayerIdentityPageFrame({ children }: { children: ReactNode }) {
-  return <main className="player-identity"><header className="player-identity__hero"><p className="player-identity__eyebrow">My Forge</p><h1>Player Identity</h1><p>Manage character links, request context, and what you choose to share.</p></header>{children}</main>
+  return (
+    <main className="player-identity">
+      <Link className="player-identity__back" to="/my-forge">
+        ← Back to My Forge
+      </Link>
+      <header className="player-identity__hero">
+        <p className="player-identity__eyebrow">My Forge</p>
+        <h1>Player Passport</h1>
+        <p>
+          Your linked player, public presence, progress and next actions in one place.
+        </p>
+      </header>
+      {children}
+    </main>
+  )
 }

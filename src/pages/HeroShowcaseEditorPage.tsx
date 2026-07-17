@@ -320,6 +320,8 @@ widgetLevel: null,
 
       setPlayerHeroes(refreshedHeroes)
 
+      window.dispatchEvent(new Event('kingshot-player-updated'))
+
       setMessage(
         'Hero Showcase saved.',
       )
