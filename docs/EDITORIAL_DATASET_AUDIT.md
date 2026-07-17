@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document records the evidence-based audit for Sprint 9.2 Milestone 2. A capability is not marked complete unless its implementation has been inspected. Unknown work remains `Not audited`; it is never inferred from a page name, table or placeholder status.
+This document records the evidence-based audit begun in Sprint 9.2 Milestone 2 and extended by the Milestone 3 Editorial Platform audit. A capability is not marked complete unless its implementation has been inspected and proportionately exercised. Unknown work remains `Not audited`; it is never inferred from a page name, table or placeholder status.
 
 The executable metadata model lives in:
 
@@ -15,8 +15,8 @@ The shared Data Engine contract registers 14 datasets.
 
 | Dataset | Import/adapter | Admin browser | Editor/history | Publication | Remaining audit |
 |---|---:|---:|---:|---:|---|
-| Heroes | Implemented | Implemented | Implemented | Implemented | Validation, API, public consumption, verification |
-| Hero Skills | Implemented via source staging | Implemented | Implemented | Implemented | Validation, API, public consumption, verification |
+| Heroes | Implemented | Implemented | Implemented | Partial | Live atomic publication, public consumption, verification |
+| Hero Skills | Implemented via source staging | Implemented | Implemented | Partial | Live atomic publication, public consumption, verification |
 | Hero XP | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
 | Hero Shards | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
 | Hero Gear | Implemented | Implemented | Missing | Missing | Validation, API, public consumption, verification |
@@ -41,7 +41,22 @@ The shared Data Engine contract registers 14 datasets.
 7. Heroes and Hero Skills have registered publication capability. Buildings remains editable without a publication action.
 8. Hero Skills is the only dataset with schema-driven creation enabled. No synthetic browser record is used to enter create mode.
 9. Events is browse-only; editing is neither declared nor presented.
-10. Filters remain missing for all datasets. Validation, public/API consumption and verification readiness remain unaudited unless separately evidenced.
+10. Filters remain missing for all datasets. Public/API consumption and verification readiness remain unaudited unless separately evidenced.
+
+## Milestone 3 editorial-platform evidence
+
+Validated locally on 17 July 2026 without Supabase writes.
+
+- Heroes, Hero Skills and Buildings now reuse their registered Record Editor schemas for authoritative server validation. Invalid payloads are rejected with HTTP 422 before an editorial write is attempted.
+- The shared capability registry is the authority used by Admin declarations and the server runtime. Browse-only, unknown and non-publishable datasets cannot gain broader support through direct editorial API calls.
+- Viewer mutation, Moderator approval and non-publisher publication attempts are rejected server-side. Contributor draft/save/submit, Moderator reject and Admin approve/queue contracts were exercised with in-memory repositories.
+- Expected request, permission, transition, concurrency, resource-mismatch and capability failures map to actionable 4xx responses. An unauthenticated request to the running local API returned HTTP 401.
+- Draft saving cannot reset an existing non-Draft workflow state. Queue and schedule mutations require a resource belonging to the supplied dataset and record.
+- Buildings remains editable and non-publishable. Archive, restore and rollback are intentionally disabled until their live-projection semantics are defined.
+- A local, unapplied migration proposes permission-backed editorial read policies and one service-role-only atomic publication transaction for the existing Heroes and Hero Skills live projections.
+- Publication readiness is `Partial`, not `Implemented`: the SQL/application boundary passed structural and mocked queue-outcome checks, but no migration was applied and no live transaction was exercised.
+- At exact 1440×1000 and 390×844 CSS viewports, the authenticated Heroes and Buildings surfaces had no page-level horizontal overflow. Mobile tables used contained horizontal scrolling; the mobile Record Editor remained vertically reachable.
+- The Hero Skills route reached its intentional error/retry state because the local API process did not have `SUPABASE_URL`. No fallback records were substituted. Schema-driven Hero Skills draft creation passed the in-memory API/schema contract but was not re-exercised through the browser in this environment.
 
 ## Admin dataset experience validation
 
