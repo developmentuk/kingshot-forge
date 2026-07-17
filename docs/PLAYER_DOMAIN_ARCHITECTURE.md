@@ -1,8 +1,8 @@
 # Kingshot Forge Player Domain Architecture
 
-**Status:** Proposed — implementation-ready and awaiting Clark and Aegis approval
+**Status:** Proposed — governance package ready for Clark and Aegis review; implementation entry not granted
 **Owner:** Player Domain; Clark as Product Owner; Aegis as Technical Architect
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 17 July 2026
 **Last reviewed:** 17 July 2026
 **Applies from:** Sprint 9.3 preparation
@@ -25,12 +25,42 @@ The Player Domain owns verified associations between Forge users and Kingshot ch
 | [Sprint 9.1 Player release](./releases/0.7.0-sprint-9.1-player-domain.md) | Current-state evidence only. This specification supersedes any implication that linked identity is verified, the Player schema is reproducible, or current visibility is the target model. |
 | [Sir Flux contribution review](./SIR_FLUX_CONTRIBUTION_REVIEW.md) | Historical product context only. Clark’s later clean-room licence decision, recorded below, supersedes any broader reuse language for the contributed planner. |
 | [Player clean-room audit](./audits/PLAYER_DOMAIN_CLEAN_ROOM_AUDIT.md) | Evidence baseline. This specification supersedes its preliminary design recommendations where terminology differs. |
+| [Player Domain Glossary](./PLAYER_DOMAIN_GLOSSARY.md) | Proposed canonical terminology. Implementations must use its qualified identity, verification, authority and visibility meanings after approval. |
+| [Player ADR registry](./ADR/README.md) | Proposed durable decisions and approval state. No Player ADR is Accepted yet. |
+| [Player Decision Register](./PLAYER_DOMAIN_DECISION_REGISTER.md) | Canonical queue of unresolved architecture, product, security, privacy, operational and discovery decisions. |
+| [Player Approval Matrix](./PLAYER_DOMAIN_APPROVAL_MATRIX.md) | Maps each decision to Clark, Aegis and functional review gates. |
+| [Implementation Entry Criteria](./PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md) | Defines the conditions for beginning Player Identity implementation. Current result: not approved. |
+| [Player Identity Milestone 1 proposal](./PLAYER_IDENTITY_IMPLEMENTATION_MILESTONE_1.md) | Proposed next implementation slice only; it creates no present implementation authority. |
+
+### Approved versus Proposed legend
+
+| Label | Meaning in this specification |
+| --- | --- |
+| Approved | Explicitly accepted existing Forge governance, such as AEGIS and existing Accepted ADRs. Approval is attributable and does not automatically approve a new Player implementation milestone. |
+| Proposed | Complete architecture advice awaiting every approver named in the ADR/register. Proposed text is not product, migration, database-write or deployment authority. |
+| Deferred | Deliberately excluded from the current milestone; an interface may return unavailable/denied but cannot simulate the capability. |
+| Prohibited | Must not be implemented without an explicit governance change; includes copying contributed implementation structure and bypassing server/security boundaries. |
+
+Every Player ADR listed below is **Proposed and unapproved**:
+
+| Area | ADRs |
+| --- | --- |
+| Identity separation and trust | [ADR-0100](./ADR/ADR-0100-separate-user-and-character-identity.md), [ADR-0101](./ADR/ADR-0101-separate-link-from-verified-ownership.md) |
+| Multiple, primary and active characters | [ADR-0102](./ADR/ADR-0102-configurable-multiple-character-policy.md), [ADR-0103](./ADR/ADR-0103-primary-and-active-character-semantics.md) |
+| Verification and visibility | [ADR-0104](./ADR/ADR-0104-character-verification-model.md), [ADR-0105](./ADR/ADR-0105-public-identity-and-visibility.md) |
+| Kingdom and Alliance lifecycle | [ADR-0106](./ADR/ADR-0106-kingdom-membership-lifecycle.md), [ADR-0107](./ADR/ADR-0107-alliance-application-membership-rank-separation.md) |
+| Alliance and server authority | [ADR-0108](./ADR/ADR-0108-alliance-authority-model.md), [ADR-0109](./ADR/ADR-0109-server-authoritative-player-operations.md) |
+| Hero and Transfer boundaries | [ADR-0110](./ADR/ADR-0110-hero-ownership-showcase-separation.md), [ADR-0111](./ADR/ADR-0111-transfer-domain-boundary.md) |
+| Gift and notification integrations | [ADR-0112](./ADR/ADR-0112-gift-centre-integration-boundary.md), [ADR-0113](./ADR/ADR-0113-notification-boundary.md) |
+| Planning and schema recovery | [ADR-0114](./ADR/ADR-0114-player-planning-extension-boundary.md), [ADR-0115](./ADR/ADR-0115-player-schema-recovery-strategy.md) |
+| Retention and public API | [ADR-0116](./ADR/ADR-0116-player-data-classification-retention.md), [ADR-0117](./ADR/ADR-0117-public-player-data-api-posture.md) |
+| Support and immutable audit | [ADR-0118](./ADR/ADR-0118-support-intervention-model.md), [ADR-0119](./ADR/ADR-0119-player-audit-immutable-history.md) |
 
 Future work on Player Profiles, linked characters, verification, multiple characters, Kingdom and Alliance membership, Alliance authority, Hero Collection, Hero Showcase, Transfer Hub, Gift Centre identity and consent, notifications, availability, rallies, formations, assignments, attendance, requisitions, KvK campaigns and War Room features must conform to this specification.
 
 Changes to data ownership, identity semantics, verification trust, public contracts, permission boundaries, visibility scopes or audit retention require:
 
-1. a written decision in section 28 or a new ADR;
+1. a tracked decision in the Decision Register and the relevant ADR;
 2. Clark approval for product, privacy and public-exposure consequences;
 3. Aegis approval for security, migration and operational consequences;
 4. updates to this document and affected contracts before implementation;
@@ -224,6 +254,8 @@ Verification is provider-neutral. This architecture defines trust mechanics but 
 
 No category may be implemented until Clark and Aegis approve the provider, proof method, data collected, retention, expiry, abuse controls, failure modes, accessibility, legal basis, incident handling and test environment. A security review must confirm that the provider contract is documented and authorised.
 
+No verification provider, proof method, positive verification migration or provider adapter is approved at this governance milestone. The next Identity milestone may expose only a provider-neutral unavailable interface until [PD-001 through PD-003](./PLAYER_DOMAIN_DECISION_REGISTER.md#pd-001--character-verification-provider) are resolved.
+
 ### Prohibited verification material and behaviour
 
 Forge must never request, store or transmit:
@@ -241,15 +273,18 @@ The browser may collect a provider-approved challenge response but cannot decide
 
 ### Rules
 
-1. The maximum number of current links is a server-side configuration value, not a database or UI constant.
-2. Every user with at least one current link has exactly one primary association.
-3. Primary is a convenience default. Every API request still names or resolves the active character.
-4. Primary switching is a single transaction with optimistic concurrency and one audit event.
-5. A secondary character has independent verification, privacy, profile, progression, Kingdom and Alliance terms, Hero Collection, Showcase, Transfer listing, consent and subscriptions.
-6. Character switching must clear stale client caches and re-fetch an authoritative context token/response; client state alone cannot change scope.
-7. Unlinking ends the association rather than deleting character or historical records.
-8. Verified conflicts open a dispute; a second effective verified association is forbidden by a unique constraint and service policy.
-9. A deleted Forge user follows approved account-deletion policy: user-level preferences may be deleted, associations end, personal content is deleted or pseudonymised, and protected audit history follows retention policy.
+1. Multiple linked characters are an architectural capability. The data/domain model does not encode a maximum number of links.
+2. The effective account limit is a finite, server-enforced configurable platform or commercial policy, not a database, type or UI constant.
+3. Policy may later consider a default account allowance, supporter-tier allowance, Alliance-role entitlement, administrative exception or subscription entitlement. No entitlement or subscription behaviour is approved or implemented by this document.
+4. A policy reduction never silently deletes or unlinks existing characters; over-limit handling requires an approved product/support rule.
+5. Every user with at least one current link has exactly one primary association under the current recommendation.
+6. Primary is a convenience default. Every sensitive API request still names or resolves the active character explicitly.
+7. Primary switching is a single transaction with optimistic concurrency and one audit event.
+8. A secondary character has independent verification, privacy, profile, progression, Kingdom and Alliance terms, Hero Collection, Showcase, Transfer listing, consent and subscriptions.
+9. Character switching must clear stale client caches and re-fetch an authoritative context response; client state alone cannot change scope.
+10. Unlinking ends the association rather than deleting character or historical records.
+11. Verified conflicts open a dispute; a second effective verified association is forbidden by a unique constraint and service policy.
+12. A deleted Forge user follows approved account-deletion policy: user-level preferences may be deleted, associations end, personal content is deleted or pseudonymised, and protected audit history follows retention policy.
 
 ### Data ownership by subject
 
@@ -659,19 +694,21 @@ The architecture does not redesign the Transfer Hub UI. It hardens identity, per
 
 ## 19. Gift Centre integration
 
-Codex B owns the Gift Centre safety boundary. Player Domain supplies, through a stable server interface:
+Codex B owns the Gift Centre safety boundary and its current proposed official-provider architecture. Player Domain supplies, through a stable revisioned server interface:
 
 - the exact active character selected by the authenticated user;
-- owner-safe character name, Kingdom and external Player ID for explicit manual confirmation;
-- server-authoritative link and verification status;
+- owner-safe character name and Kingdom for explicit confirmation, plus external Player ID only through an approved owner/private-purpose projection;
+- server-authoritative link, ownership and effective verification state;
+- an active-character match and opaque internal identity for one exact request;
 - immediate link/revocation/dispute events;
 - purpose-specific, versioned consent state;
 - an owner-safe reference for manual-redemption history and future reminders;
+- purpose-approved provider Player ID only when the Gift/Player verification and consent decisions permit it;
 - provider-neutral eligibility inputs without implementing redemption.
 
-Gift Centre decides feature-specific eligibility and retains its own safety gates. A linked character is not sufficient for any verified-only action. Switching active character requires renewed confirmation. Consent for one character or purpose never transfers to another.
+Gift Centre decides feature-specific eligibility and retains provider mapping, signing, session/cookie handling, request lifecycle, idempotency, retry, result and incident safety gates. A linked character is not sufficient for any verified-only action. Switching active character requires renewed confirmation. Consent for one character or purpose never transfers to another.
 
-Live auto-redemption remains prohibited. Player Domain must not collect game passwords, session cookies, user-supplied bearer tokens or unofficial authentication material. It must not enable unsupported provider access or weaken Codex B’s disabled-by-default provider policy.
+Live auto-redemption is not approved or enabled by this architecture and must remain disabled until Codex B's own gates and [PD-020](./PLAYER_DOMAIN_DECISION_REGISTER.md#pd-020--gift-centre-verified-character-requirement) are accepted. Player Domain must not collect game passwords, session cookies, user-supplied bearer tokens, provider signing material or authentication material. It must not implement provider execution or weaken Codex B’s disabled-by-default provider policy.
 
 ## 20. Notification ownership
 
@@ -940,6 +977,43 @@ Security validation must include anonymous, wrong-owner, linked-unverified, expi
 
 The Player Domain context appears in section 3, the identity lifecycle in section 5 and the logical ERD in section 22. The remaining required diagrams follow.
 
+### Forge User versus Game Character identity
+
+```mermaid
+flowchart LR
+  AUTH["Supabase Auth principal"] --> USER["Forge User"]
+  LOOKUP["Approved character observation"] --> CHARACTER["Game Character"]
+  USER --> LINK["Character Link"]
+  CHARACTER --> LINK
+  LINK --> PROFILE["Character-owned Forge data"]
+  USER -. "authentication is not ownership" .-> CHARACTER
+```
+
+### Linked versus Verified state
+
+```mermaid
+flowchart TD
+  OBSERVED["Observed Character"] --> LINKED["Linked Character"]
+  LINKED -->|"no ownership proof"| UNVERIFIED["Linked, unverified"]
+  UNVERIFIED --> CASE["Verification Case"]
+  CASE --> DECISION{"Effective approved decision?"}
+  DECISION -->|"No"| UNVERIFIED
+  DECISION -->|"Yes"| VERIFIED["Verified Character"]
+  VERIFIED -->|"expiry, revocation or dispute"| UNVERIFIED
+```
+
+### Primary versus Active Character
+
+```mermaid
+flowchart TD
+  LINKS["Current Character Links"] --> PRIMARY["Primary Character: persisted convenience"]
+  PRIMARY --> PRESELECT["Client may preselect workspace"]
+  REQUEST["Sensitive request plus opaque character reference"] --> ACTIVE["Server resolves Active Character"]
+  PRESELECT -. "user confirms exact subject" .-> REQUEST
+  ACTIVE --> AUTHORISE["Re-check link, verification, scope and revision"]
+  PRIMARY -. "never authorises by itself" .-> AUTHORISE
+```
+
 ### Verification lifecycle
 
 ```mermaid
@@ -994,6 +1068,20 @@ flowchart LR
     AD --> AN["New restored tenure"]
   end
   KV --> AS
+```
+
+### Alliance application, membership and rank separation
+
+```mermaid
+flowchart LR
+  APPLICATION["Alliance Application"] --> DECISION{"Approved?"}
+  DECISION -->|"No"| CLOSED["Rejected or cancelled"]
+  DECISION -->|"Yes, guarded transaction"| TERM["Alliance Membership Term"]
+  TERM --> RANK["Effective Alliance Rank Term"]
+  RANK --> AUTHORITY["Resource-scoped capability decision"]
+  GLOBAL["Forge Global Role"] -. "no automatic mapping" .-> RANK
+  TERM -->|"leave, removal or dispute"| FORMER["Former or frozen term"]
+  FORMER -. "no current authority" .-> AUTHORITY
 ```
 
 ### Authorisation path
@@ -1112,6 +1200,32 @@ sequenceDiagram
   Projector-->>Visitor: Safe profile with cache metadata
 ```
 
+### Gift Centre integration boundary
+
+```mermaid
+flowchart LR
+  ACTOR["Authenticated actor plus opaque character reference"] --> GIFT["Gift Centre eligibility"]
+  GIFT --> PLAYER["Player identity resolver"]
+  PLAYER --> CONTEXT["Exact active character, effective verification and purpose projection"]
+  CONTEXT --> GIFT
+  GIFT --> CONSENT["Gift-owned consent and request policy"]
+  CONSENT --> PROVIDER["Gift-owned provider execution"]
+  PLAYER -. "no signing, cookie, transport or redemption result" .-> PROVIDER
+```
+
+### Notification boundary
+
+```mermaid
+flowchart LR
+  DOMAIN["Player, Alliance, Transfer, Gift or Planning event"] --> INTENT["Versioned notification intent"]
+  INTENT --> PLATFORM["Notification platform"]
+  PREFS["User preferences, consent and quiet hours"] --> PLATFORM
+  PLATFORM --> RECHECK["Re-check recipient and current scope"]
+  RECHECK --> DELIVERY["Provider delivery and bounded retry"]
+  REVOKE["Unlink, dispute, revocation or membership end"] --> CANCEL["Cancel affected subscriptions and unsent delivery"]
+  CANCEL --> PLATFORM
+```
+
 ### Future Planning dependency map
 
 ```mermaid
@@ -1140,7 +1254,25 @@ flowchart BT
   ASSIGN --> NOTICE
 ```
 
+### Decision approval flow
+
+```mermaid
+flowchart TD
+  DRAFT["Draft Proposed ADR and register entry"] --> EVIDENCE["Collect required evidence"]
+  EVIDENCE --> REVIEW["Security, Privacy, Operations and Database review as applicable"]
+  REVIEW --> CLARK{"Clark product approval required?"}
+  CLARK --> AEGIS{"Aegis architecture approval required?"}
+  AEGIS --> COMPLETE{"Every required approval explicit?"}
+  COMPLETE -->|"No"| PROPOSED["Remain Proposed; implementation blocked or interface-deferred"]
+  COMPLETE -->|"Yes"| ACCEPTED["Record Accepted ADR"]
+  ACCEPTED --> ENTRY{"Implementation Entry Criteria satisfied at current head?"}
+  ENTRY -->|"No"| BLOCKED["Do not implement"]
+  ENTRY -->|"Yes"| MILESTONE["Approved scoped implementation milestone"]
+```
+
 ## 26. Implementation roadmap
+
+This is the complete domain delivery sequence, not authority to start a numbered implementation. The proposed [Player Identity Foundation — Implementation Milestone 1](./PLAYER_IDENTITY_IMPLEMENTATION_MILESTONE_1.md) takes only the safe contract/discovery subset of roadmap Milestones 1–2 and stops before verification provider, persistence migration or public release. The roadmap must be rechecked against Accepted ADRs and the then-current release head before implementation.
 
 The recommended order is retained. It separates unknown-schema recovery from new design, places a server boundary before identity mutation, establishes verified character identity before multi-character/membership work, and delays Planning until every prerequisite is enforceable.
 
@@ -1308,7 +1440,7 @@ If no proof method is approved, the framework may be built and tested but Milest
 
 Codex A currently owns Editorial APIs, runtime validation, publication transactions, Editorial permission enforcement, persistence, dataset readiness, admin UI and associated tests/migrations. Its protected worktree has advanced beyond the Player audit base.
 
-A read-only coordination check on 17 July 2026 also found in-flight, uncommitted Codex A work for an Editorial **Verification Centre**. That surface evaluates evidence for canonical-dataset capability and environment readiness; it does not prove that a Forge user owns a Kingshot character. The shared word “verification” is therefore a naming and contract collision risk. Player implementation must not import or reuse that workstream's result vocabulary, contracts, services, routes or UI structure. Cross-domain language should qualify the concepts as **dataset readiness verification** and **character ownership verification**, and Clark/Aegis should approve any shared navigation label before integration.
+A read-only coordination check on 17 July 2026 confirmed that Codex A has landed an Editorial **Verification Centre** on its local release worktree. That surface evaluates evidence for canonical-dataset capability and environment readiness; it does not prove that a Forge user owns a Kingshot character. The shared word “verification” is therefore a naming and contract collision risk. Player implementation must not import or reuse that workstream's result vocabulary, contracts, services, routes or UI structure. Cross-domain language must use **Dataset Verification** and **Character Ownership Verification**, as defined by the [Glossary](./PLAYER_DOMAIN_GLOSSARY.md).
 
 Player architecture depends on Codex A only through stable platform outcomes:
 
@@ -1326,7 +1458,7 @@ Migration numbering and shared `api`, `server`, `shared` barrel exports are merg
 
 ### Codex B — Gift Centre
 
-Codex B owns Gift Centre safety contracts, the manual redemption journey, feature/provider gates, provider integration design and feature-specific consent/eligibility. Its branch advanced during this audit and now classifies a separately supplied redemption script as the authoritative official-flow reference while still keeping the live provider disabled. Player architecture neither evaluates nor imports that reference. Player implementation must not modify Gift Centre domain files, manual UI, provider mapping, signing/session logic or provider boundary.
+Codex B owns Gift Centre safety contracts, the manual redemption journey, feature/provider gates, provider integration design and feature-specific consent/eligibility. At the final read-only snapshot, its official-provider integration design was committed and its worktree contained additional uncommitted provider-foundation changes. That direction still keeps live provider execution disabled and adds no Player integration. Player architecture neither evaluates nor imports the separately supplied official-flow reference described by Codex B. Player implementation must not modify Gift Centre domain files, manual UI, provider mapping, signing/session logic or provider boundary.
 
 The future integration is a documented interface, not a branch edit:
 
@@ -1343,16 +1475,22 @@ Codex B’s current UI resolves the existing primary character. Multiple-charact
 
 Any planner material mentioned by the Gift Centre audit remains outside this Player workstream's implementation evidence. The Player boundary supplies an independently designed, server-authoritative eligibility projection only; it does not inherit redemption implementation structure, provider protocol details or source-derived contracts.
 
+### Codex D — Art Studio and Community Creation
+
+At the final read-only snapshot, Codex D had one Art Studio-specific audit commit and a clean worktree. Its audit proposes a separate community-artwork boundary and leaves public attribution policy awaiting approval. No present file or implemented contract overlap exists.
+
+Future overlap may arise if Art Studio chooses a profile display name, pseudonym or per-submission attribution and then binds that attribution to a Forge User, Game Character or public Character Alias. Codex D must consume an approved public-safe identity projection rather than a raw Player table, external Player ID or internal Forge user-character relationship. Player work must not edit Art Studio data, routes, components or moderation workflows. Reassess both worktrees before any shared identity display or public alias implementation.
+
 ## 28. Architecture decisions requiring approval
 
-All decisions below are **pending**. A recommendation is architecture advice, not approval.
+All decisions below are **pending**. A recommendation is architecture advice, not approval. This table preserves the original architecture summary IDs; the [Player Decision Register](./PLAYER_DOMAIN_DECISION_REGISTER.md) is the canonical approval queue with the complete PD-001 through PD-022 set, ADR links, evidence and review points. The [Approval Matrix](./PLAYER_DOMAIN_APPROVAL_MATRIX.md) defines the required approvers.
 
 | ID and decision | Options | Recommendation | Benefits | Risks | Consequence of deferral |
 | --- | --- | --- | --- | --- | --- |
 | A01 Verification provider | Official provider; controlled profile challenge; authenticated external account; manual moderation; none. | Keep provider-neutral framework and approve none until an authorised, documented provider passes security/privacy review. | Avoids coupling and unsupported authentication. | Delays verified-only features. | Milestone 3 cannot complete; downstream verified-only features remain blocked. |
 | A02 Ownership proof method | Provider assertion; time-bound public/profile challenge; account federation; moderated evidence. | Select only after provider review; require time-bound, replay-resistant proof and accessible recovery. | Clear trust claim and abuse controls. | False positives, evidence sensitivity and support load vary. | Case/evidence implementation shapes remain undefined. |
 | A03 Verification expiry | Non-expiring; fixed 90/180/365 days; provider-specific; event-driven plus maximum age. | Provider-specific with a configured maximum age and event-driven revocation; no non-expiring default. | Limits stale ownership while respecting proof strength. | Reverification friction and notification burden. | Effective-status policy and expiry jobs cannot be finalised. |
-| A04 Maximum linked characters | One; fixed three; fixed five; configurable per environment/role. | Server-configurable with initial default of three and no privileged self-bypass. | Supports real multi-character use without unbounded abuse. | More UI/state complexity and verification cost. | Schema can proceed, but product limits and tests remain unsettled. |
+| A04 Linked-character policy limit | Fixed one; fixed quantity; configurable account/platform/commercial policy; unlimited default. | Architecturally support many links and enforce a finite configurable server policy. Policy may later consider default allowance, supporter tier, Alliance-role entitlement, administrative exception or subscription; no value or entitlement is approved here. | Changes product/commercial allowances without schema redesign. | Weak/missing policy can increase abuse, verification cost and support load. | Contracts/schema must not encode a number; general link creation waits for PD-004 approval. |
 | A05 Primary-character behaviour | Optional primary; exactly one; last-used only; per-feature defaults. | Exactly one primary among current links plus explicit active character per request; last-used is client convenience only. | Predictable migration and safe exact-character actions. | Switching UX and cache invalidation work. | API context and Gift Centre integration remain ambiguous. |
 | A06 Unified visibility scopes | Public/private only; six scopes in section 11; per-feature custom scopes. | Approve the six canonical scopes with entity-specific allowlists and participant overlays. | Consistent privacy and reusable policy. | Policy testing complexity; leadership scope depends on membership hardening. | Public projection and schema migrations cannot be finalised. |
 | A07 Alliance role model | Existing role names; R1–R5 hierarchy only; capability grants only; R1–R5 plus capability/delegation policy. | R1–R5 as resource-scoped source plus explicit capability/delegation evaluation. | Matches product language without unsafe numeric rank comparisons. | More terms/policy records and leadership UX. | Alliance hardening and Planning leadership features remain blocked. |
@@ -1369,7 +1507,7 @@ All decisions below are **pending**. A recommendation is architecture advice, no
 ### State labels used by this document
 
 - **Current:** observed in the audited Forge commit; not necessarily safe or reproducible.
-- **Proposed:** defined by this architecture and ready for approval/implementation sequencing.
+- **Proposed:** complete architecture advice awaiting every named approval; it does not grant implementation entry.
 - **Deferred:** intentionally reserved for a later milestone and not a live capability.
 - **Prohibited:** must not be implemented without a new approval that explicitly changes this architecture.
 
@@ -1380,3 +1518,18 @@ This architecture milestone creates documentation only. It does not implement Pl
 ### Licence boundary confirmation
 
 No contributed planner source code, schema, migration, comment, identifier, function/component name, API contract, file structure or distinctive implementation structure was copied or reused in this specification. All target names, boundaries, workflows and contracts are original Forge design.
+
+## 29. Implementation Entry Criteria
+
+The authoritative gate is [Player Domain Implementation Entry Criteria](./PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md). At version 1.1, Player Identity implementation entry is **not approved** because the architecture, critical ADRs, glossary and decision policies remain Proposed.
+
+| Classification | Meaning |
+| --- | --- |
+| Blocking | Must be explicitly satisfied at the same reviewed repository head before Player Identity product code begins. |
+| May be deferred behind an interface | Requires a recorded deferral; the interface must return unavailable/denied and cannot make a positive claim. |
+| Required before production | May not be postponed beyond production persistence/provider use and never authorises an unsafe local shortcut. |
+| Required before public release | Must be complete before public identity/data is exposed, including deletion/export/cache behaviour. |
+
+Minimum blocking outcomes include approved architecture and glossary; Accepted critical identity ADRs; approved configurable Character Limit Policy; approved Primary/Active semantics; approved private/safe visibility semantics; approved read-only schema discovery and migration-recovery strategy; identified Supabase environment; cross-workstream and naming reassessment; accepted security/privacy requirements; approved scope; and test/rollback plans.
+
+Verification provider/Alliance authority may be deferred only through the safe interface rule. The next proposed slice is [Player Identity Foundation — Implementation Milestone 1](./PLAYER_IDENTITY_IMPLEMENTATION_MILESTONE_1.md); it includes contracts, approved read-only discovery and server-resolution interfaces, not a provider, positive verification, Alliance authority, Gift provider, Planning implementation or migration by default.

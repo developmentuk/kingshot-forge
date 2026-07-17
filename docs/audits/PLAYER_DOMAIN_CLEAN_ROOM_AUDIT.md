@@ -1,8 +1,10 @@
 # Player Domain clean-room audit
 
-**Status:** Complete; architecture input only
+**Status:** Complete; architecture and governance evidence baseline
 **Owner:** Aegis with Clark as Product Owner
+**Version:** 1.1
 **Audit date:** 17 July 2026
+**Last governance update:** 17 July 2026
 **Repository baseline:** `1aca694ebe2e57339e17ab85ab190ad762620b8b`
 **Workstream:** `feature/player-planning-foundation`
 **Review scope:** Existing Forge Player capabilities and high-level observable planning behaviours
@@ -13,7 +15,22 @@ Forge has useful Player-facing capabilities, but it does not yet have a safe ide
 
 Player Planning must not be implemented until Forge has a server-authoritative character link and verification model, reproducible schema history, resource-scoped Alliance authority, safe projections and an append-only Player audit trail.
 
-The target architecture produced from this audit is [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md).
+The target architecture produced from this audit is [Player Domain Architecture](../PLAYER_DOMAIN_ARCHITECTURE.md). Canonical terms are in the [Player Domain Glossary](../PLAYER_DOMAIN_GLOSSARY.md); proposed decisions and approvals are tracked through the [ADR registry](../ADR/README.md), [Decision Register](../PLAYER_DOMAIN_DECISION_REGISTER.md) and [Approval Matrix](../PLAYER_DOMAIN_APPROVAL_MATRIX.md).
+
+## ADR and Governance Outcome
+
+The architecture-and-governance continuation converted this audit into:
+
+- 20 Player Domain ADRs, ADR-0100 through ADR-0119, all marked **Proposed**;
+- a canonical glossary that separates Forge User/Game Character, linked/verified, primary/active and Dataset Verification/Character Ownership Verification;
+- a 22-decision register with architecture, product, security, privacy, operational and discovery classifications;
+- an approval matrix for Clark, Aegis and existing functional review roles;
+- explicit [Implementation Entry Criteria](../PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md); and
+- a proposed [Player Identity Foundation — Implementation Milestone 1](../PLAYER_IDENTITY_IMPLEMENTATION_MILESTONE_1.md).
+
+The governance outcome does not approve implementation. No Player ADR is Accepted, no verification provider is approved and the current entry assessment is **not approved**.
+
+Multiple linked characters are an architectural capability. The architecture has no hard maximum of three or any other number. A finite effective limit is configurable server policy that may later consider a default allowance, supporter tier, Alliance-role entitlement, administrative exception or subscription entitlement. None of those entitlements is implemented or approved here.
 
 ## Repository State
 
@@ -30,7 +47,7 @@ At the audit baseline:
 | Supabase activity | No commands or live inspection |
 | External mutations | None |
 
-Codex A and Codex B were inspected read-only from their separate worktrees. No files in either worktree were changed.
+Codex A and Codex B were inspected read-only from their separate worktrees during the original audit. The governance continuation also inspected Codex D read-only. No files in any protected worktree were changed by Codex C.
 
 ## Existing Forge Player Domain Audit
 
@@ -139,7 +156,7 @@ This inventory contains observation only. It deliberately excludes contributed s
 | Character existence lookup | Present | Rate limiting, safe projection and enumeration controls |
 | Character link | Present but browser-owned | Server-authoritative link transaction and conflict handling |
 | Ownership verification | Vocabulary only | Provider-neutral claim, evidence, decision, expiry, revocation and dispute framework |
-| Multiple characters | Data hint only | Link aggregate, configurable limit, primary switch and per-character state |
+| Multiple characters | Data hint only | Many-link architecture, configurable server policy limit, primary/active separation and per-character state; no numeric hard limit |
 | Public profile | Present | Unified visibility and safe server projection |
 | Progression history | Present | Consistent validation, server mutation and visibility enforcement |
 | Kingdom membership | Implicit | Explicit evidence-backed lifecycle and historical terms |
@@ -232,35 +249,49 @@ No migration or database command was created or run.
 
 ## Overlap Risk with Codex A
 
-Codex A owns Editorial Platform Completion, editorial permission enforcement, validation, persistence, publishing and dataset readiness. Player work must not modify editorial APIs, editorial services, dataset registries, default editorial policies, publication persistence, editorial migrations, shared package configuration or Codex A validation scripts. Player audit history must remain distinct from Editorial history while following the same append-only principle.
+Codex A owns Editorial Platform Completion, editorial permission enforcement, validation, persistence, publishing and Dataset Verification. Its Verification Centre evaluates canonical-dataset readiness in an environment; it is unrelated to Character Ownership Verification. Player work must not reuse its statuses/contracts/routes or modify editorial APIs, services, dataset registries, default policies, publication persistence, migrations, package configuration or validation scripts. Player audit history remains distinct from Editorial history while following the same append-only principle.
 
 ## Overlap Risk with Codex B
 
-Codex B owns Gift Centre safety contracts, the manual redemption journey, provider-neutral redemption policy, feature gates and consent/eligibility within Gift Centre. Player work should supply an exact active-character context, authoritative verification status and purpose-specific consent interface. It must not modify Gift Centre provider contracts, enable live automation or weaken its safety gates.
+Codex B owns Gift Centre safety contracts, the manual redemption journey, provider policy/execution and feature-specific consent/eligibility. At the final read-only snapshot, its official-provider integration design was committed and its worktree contained additional uncommitted provider-foundation changes; live execution remained disabled and no Player integration was added. Player work supplies an exact active-character, ownership/verification and purpose projection only. It must not import Codex B's official-flow reference, implement signing/session/provider/result logic, modify Codex B files, enable live automation or weaken Gift safety gates.
+
+## Overlap Risk with Codex D
+
+At the final read-only snapshot, Codex D had one Art Studio-specific audit commit and a clean worktree. No current path overlap exists. Its proposed public attribution choice remains unapproved. If Art Studio later uses Player identity, public creator attribution must use an approved Character Alias/Public Projection rather than raw Player IDs, Forge user IDs or Character Links. Codex C must not edit Art Studio routes, data, components or moderation workflows.
 
 ## Recommended First Implementation Milestone
 
-The smallest safe first product milestone is not availability, Alliance membership or a rally planner. It is the **Verified Player Character Foundation**, preceded by schema discovery and migration-recovery preparation.
+The smallest safe first product milestone is not availability, Alliance membership, verification-provider implementation or a rally planner. Governance refines the audit recommendation to **Player Identity Foundation — Implementation Milestone 1**, preceded by approved read-only schema discovery and migration-recovery preparation.
 
 Evidence for this choice:
 
 - linking currently does not prove ownership;
 - all downstream Player features bind to a primary linked row;
 - Alliance and Transfer journeys already imply stronger identity than exists;
-- Codex B needs an exact, trustworthy character context;
+- Codex B needs an exact, trustworthy character context before provider execution;
 - Planning requires membership and authority, which in turn require trustworthy character identity;
 - checked-in schema history is not reproducible.
+
+The milestone is limited to identity contracts, configurable Character Limit Policy, safe projection contracts, explicit Active Character context and server actor/character resolution interfaces. Verification remains an unavailable provider-neutral interface; no positive verification claim, Alliance authority, Gift provider, Planning code, schema or migration is included by default.
 
 ## Questions Requiring Approval
 
 - Which verification providers and proof methods may be evaluated?
 - What is the verification expiry policy?
-- What configurable maximum of linked characters should launch with the first multi-character milestone?
+- What finite default and entitlement/exception evaluation order should the configurable Character Limit Policy use at launch?
 - May an external Player ID appear in public projections?
 - Which visibility scopes and defaults does Clark approve?
 - What powers, duration and reason requirements apply to support intervention?
 - What retention periods apply to verification evidence, membership history, transfer contact, consent and audit?
 - When may a read-only live-schema inventory be obtained, and who approves the production baseline?
+
+The complete unresolved set is [Player Domain Decision Register](../PLAYER_DOMAIN_DECISION_REGISTER.md); no answer is inferred by recommendation.
+
+## Implementation Entry Blockers
+
+Implementation is blocked until the [Implementation Entry Criteria](../PLAYER_DOMAIN_IMPLEMENTATION_ENTRY_CRITERIA.md) are reviewed. Current blockers include Proposed architecture/ADRs/glossary, unresolved character-limit and primary/active policy, unapproved read-only schema discovery, no identified safe Supabase target, unapproved migration recovery, unresolved visibility/Player ID policy, pending security/privacy requirements, future naming/workstream reassessment and no approved milestone test/rollback charter.
+
+Verification provider and Alliance Authority may be deferred only behind interfaces that return unavailable/denied and cannot create positive trust or authority. Production and public-release criteria remain separately blocking even after local implementation entry.
 
 ## Known Risks
 
@@ -287,6 +318,8 @@ For this audit:
 - no product files were changed during the audit;
 - no commits were created during the audit;
 - no database commands were run during the audit.
+
+The later ADR/glossary governance continuation changed documentation and created local documentation commits only. It added no Player Identity or Player Planning product code, API route, React component, server implementation, database schema, migration, dependency, Supabase command/write, external mutation request or deployment. It did not copy contributed source or reuse contributed implementation structure.
 
 ## Git status -sb
 

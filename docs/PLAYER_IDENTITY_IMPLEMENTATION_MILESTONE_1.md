@@ -172,8 +172,8 @@ Contracts are additive and initially unused. Rollback removes the unused adapter
 | Workstream | Risk | Boundary |
 | --- | --- | --- |
 | Codex A Verification Centre | “Verification” naming and shared auth/permission/server conventions | Use Character Ownership Verification; do not reuse dataset readiness statuses/contracts/routes. Integrate only accepted shared actor/error conventions. |
-| Codex B Gift Centre | Exact active-character/verified-character dependency and untracked provider design | Player defines safe identity interface; Gift owns provider/consent/redemption. Do not edit Codex B files. |
-| Codex D Art Studio | Potential future public creator/character identity display | No D-specific changes currently observed; use public Character Alias only after agreement and do not edit D files. |
+| Codex B Gift Centre | Exact active-character/verified-character dependency; committed integration design plus uncommitted provider-foundation work at the final snapshot | Player defines safe identity interface; Gift owns provider/consent/redemption. Recheck the dirty worktree and do not edit Codex B files. |
+| Codex D Art Studio | Documentation-only audit proposes public attribution choices that could later consume identity | Agree the identity subject and safe projection first; use public Character Alias only if approved and do not edit D files. |
 | Accepted release line | Shared `api`, `server`, `shared`, context barrels and future migration numbering | Reassess/rebase only with approval; reserve names before implementation. |
 
 ## Completion criteria
