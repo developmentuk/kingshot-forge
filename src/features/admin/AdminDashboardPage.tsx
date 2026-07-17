@@ -54,6 +54,15 @@ export function AdminDashboardPage() {
         </article>
 
         <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">🧭</span>
+          <div>
+            <h2>Verification Centre</h2>
+            <p>Review dataset evidence, blockers, environment safety and readiness without hiding untested states.</p>
+          </div>
+          <Link to="/admin/verification" className="button button--primary">Open verification</Link>
+        </article>
+
+        <article className="admin-dashboard-card">
           <span className="admin-dashboard-card__icon">💬</span>
           <div>
             <h2>Feedback Queue</h2>

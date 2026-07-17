@@ -52,6 +52,7 @@ const platformNavigation: NavigationItem[] = [
 const adminNavigation: NavigationItem[] = [
   { label: 'Dashboard', shortLabel: 'Dashboard', icon: '🛠️', path: '/admin' },
   { label: 'Datasets', shortLabel: 'Data', icon: '🗄️', path: '/admin/datasets' },
+  { label: 'Verification Centre', shortLabel: 'Verify', icon: '🧭', path: '/admin/verification' },
   { label: 'Feedback Queue', shortLabel: 'Feedback', icon: '💬', path: '/admin/feedback' },
   { label: 'Import Manager', shortLabel: 'Import', icon: '📥', path: '/admin/imports' },
   { label: 'Global Search', shortLabel: 'Search', icon: '🔍', path: '/admin/search' },

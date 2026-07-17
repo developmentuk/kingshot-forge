@@ -14,6 +14,10 @@ import {
   DATASET_CAPABILITY_REGISTRY,
 } from './dataset-capabilities.js'
 
+import {
+  getDatasetVerificationReadinessStatus,
+} from './verification-registry.js'
+
 export type DatasetDomain =
   | 'hero'
   | 'progression'
@@ -93,6 +97,7 @@ const ADMIN_CAPABILITY_EVIDENCE: Partial<
   search: 'src/features/admin/DatasetTable.tsx',
   filters: 'src/features/admin/DatasetTable.tsx',
   mobile: 'src/styles/legacy/08-admin.css',
+  verification: 'shared/data-engine/verification-registry.ts',
 }
 
 function adminCapabilityStatus(
@@ -128,6 +133,9 @@ function adminCapabilityStatus(
 
     case 'filters':
       return 'missing'
+
+    case 'verification':
+      return getDatasetVerificationReadinessStatus(key)
 
     default:
       return null
@@ -171,6 +179,8 @@ function createCapabilities(key: DatasetKey): readonly CapabilityReadiness[] {
             ? 'Verified in the shared Admin dataset experience.'
             : adminStatus === 'partial' && capability === 'publishing'
               ? 'The atomic publication contract is implemented locally but its unapplied migration and live transaction remain unverified.'
+            : capability === 'verification'
+              ? 'Derived from current Verification Centre evidence. Live RLS, migration and publication checks remain blocked or not run.'
             : capability === 'filters'
               ? 'Search and sorting are available; dataset-specific filters are not implemented.'
               : `The ${capability} capability is not implemented for this dataset.`,
