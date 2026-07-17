@@ -130,7 +130,7 @@ export default function PlayerProfileEditorPage() {
           setErrorMessage(
             error instanceof Error
               ? error.message
-              : 'Your player profile could not be loaded.',
+              : 'Your Passport could not be loaded.',
           )
         }
       } finally {
@@ -243,14 +243,14 @@ export default function PlayerProfileEditorPage() {
 
       setMessage(
         profile.isPublic
-          ? 'Player profile saved and published.'
-          : 'Player profile saved privately.',
+          ? 'Passport saved and published.'
+          : 'Passport saved privately.',
       )
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'The player profile could not be saved.',
+          : 'The Passport could not be saved.',
       )
     } finally {
       setSaving(false)
@@ -277,7 +277,7 @@ export default function PlayerProfileEditorPage() {
         <section className="player-profile-editor-state">
           <span>👤</span>
 
-          <h1>Loading profile editor…</h1>
+          <h1>Loading Edit Passport…</h1>
 
           <p>
             Retrieving your linked player and
@@ -294,12 +294,10 @@ export default function PlayerProfileEditorPage() {
         <section className="player-profile-editor-state">
           <span>🔐</span>
 
-          <h1>Sign in to edit your profile</h1>
+          <h1>Sign in to edit your Passport</h1>
 
           <p>
-            Your public player profile is linked
-            to your Forge account and Kingshot
-            player identity.
+            Your public Passport is linked to your Forge account and Kingshot player.
           </p>
 
           <button
@@ -354,7 +352,7 @@ export default function PlayerProfileEditorPage() {
           <p>
             A primary Kingshot player account
             must be linked before you can create
-            a public player profile.
+            a public Passport.
           </p>
 
           <Link
@@ -376,11 +374,10 @@ export default function PlayerProfileEditorPage() {
             My Forge
           </p>
 
-          <h1>Edit player profile</h1>
+          <h1>Edit Passport</h1>
 
           <p>
-            Control the information shown on your
-            public Kingshot Forge profile.
+            Edit the player-controlled fields shown on your public Passport.
           </p>
         </div>
 
@@ -409,14 +406,14 @@ export default function PlayerProfileEditorPage() {
         onSubmit={handleSave}
       >
         <div className="player-profile-editor-form">
-          <section className="player-profile-editor-card">
+          <section className="player-profile-editor-card player-profile-editor-context">
             <div className="player-profile-editor-card__heading">
               <div>
                 <p className="eyebrow">
-                  Player identity
+                  Passport context
                 </p>
 
-                <h2>Linked Kingshot account</h2>
+                <h2>Linked player</h2>
               </div>
 
               <span className="player-profile-editor-badge">
@@ -449,9 +446,8 @@ export default function PlayerProfileEditorPage() {
                     'not available'}
                 </span>
 
-                <small>
-                  Forge ID: {profile.forgeId}
-                </small>
+                <small>Town Center: {profile.townCenterLevel}</small>
+                <small>Linked to Forge account</small>
               </div>
             </div>
 
@@ -499,10 +495,7 @@ export default function PlayerProfileEditorPage() {
 </div>
 
 <p className="player-profile-editor-note">
-  Player name, player ID, avatar, kingdom and
-  Town Center are supplied by the Kingshot API.
-  Refresh the linked player account to update
-  these values.
+  Player name, avatar, kingdom and Town Center are supplied by the Kingshot API and cannot be edited here.
 </p>
           </section>
 
@@ -510,10 +503,10 @@ export default function PlayerProfileEditorPage() {
             <div className="player-profile-editor-card__heading">
               <div>
                 <p className="eyebrow">
-                  Profile details
+                  Passport fields
                 </p>
 
-                <h2>Public information</h2>
+                  <h2>Player-controlled information</h2>
               </div>
             </div>
 
@@ -777,7 +770,7 @@ export default function PlayerProfileEditorPage() {
 
               <span>
                 <strong>
-                  Make my player profile public
+                  Make my Passport public
                 </strong>
 
                 <small>
@@ -796,8 +789,8 @@ export default function PlayerProfileEditorPage() {
               disabled={saving}
             >
               {saving
-                ? 'Saving profile…'
-                : 'Save player profile'}
+                ? 'Saving Passport…'
+                : 'Save Passport'}
             </button>
 
             {message && (

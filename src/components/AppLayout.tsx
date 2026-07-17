@@ -32,12 +32,12 @@ const companionNavigation: NavigationItem[] = [
 
 const myForgeNavigation: NavigationItem[] = [
   { label: 'Dashboard', shortLabel: 'Dashboard', icon: '⭐', path: '/my-forge' },
-  { label: 'My Profile', shortLabel: 'Profile', icon: '🪪', path: '/my-forge/profile' },
-  { label: 'Player Identity', shortLabel: 'Identity', icon: '🛡️', path: '/my-forge/player-identity' },
+  { label: 'Player Passport', shortLabel: 'Passport', icon: '🛡️', path: '/my-forge/player-identity' },
+  { label: 'Edit Passport', shortLabel: 'Edit Passport', icon: '🪪', path: '/my-forge/profile' },
   { label: 'Hero Collection', shortLabel: 'Heroes', icon: '🦸', path: '/my-forge/hero-collection' },
   { label: 'Hero Showcase', shortLabel: 'Showcase', icon: '🏆', path: '/my-forge/heroes' },
   { label: 'Personal Progression', shortLabel: 'Progression', icon: '📈', path: '/my-forge/progression' },
-  { label: 'Transfer Profile', shortLabel: 'Transfer', icon: '🎫', path: '/my-forge/transfer-profile' },
+  { label: 'Transfer Profile · Optional', shortLabel: 'Transfer · Optional', icon: '🎫', path: '/my-forge/transfer-profile' },
 ]
 
 const libraryNavigation: NavigationItem[] = [

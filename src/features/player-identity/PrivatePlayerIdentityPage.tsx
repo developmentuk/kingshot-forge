@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { usePlayerIdentity } from '../../context/PlayerIdentityContext'
 import { trackForgePlayerEvent } from '../../platform/analytics/forgeAnalytics'
 import type { PlayerAccount } from '../../types/playerAccount'
+import ForgeProgressPanel from '../../components/ForgeProgressPanel'
 
 export function PrivatePlayerIdentityPage() {
   const { user, loading: authLoading, signInWithGoogle } = useAuth()
@@ -31,7 +32,7 @@ export function PrivatePlayerIdentityPage() {
         >
           <div>
             <p className="player-identity__eyebrow">Loading</p>
-            <h2>Preparing your Player Identity</h2>
+            <h2>Preparing your Player Passport</h2>
             <p>
               Forge is securely loading your linked Kingshot account.
             </p>
@@ -47,7 +48,7 @@ export function PrivatePlayerIdentityPage() {
         <section className="player-identity__notice">
           <div>
             <p className="player-identity__eyebrow">Sign in required</p>
-            <h2>Your Player Identity lives in My Forge</h2>
+            <h2>Your Player Passport lives in My Forge</h2>
             <p>
               Sign in to connect your Kingshot player, manage what you
               share, and open your profile and hero tools.
@@ -71,7 +72,7 @@ export function PrivatePlayerIdentityPage() {
         <section className="player-identity__notice" role="alert">
           <div>
             <p className="player-identity__eyebrow">Unable to load</p>
-            <h2>Your Player Identity is temporarily unavailable</h2>
+            <h2>Your Player Passport is temporarily unavailable</h2>
             <p>{playerIdentityError}</p>
           </div>
           <button
@@ -91,7 +92,7 @@ export function PrivatePlayerIdentityPage() {
       <PlayerIdentityPageFrame>
         <section className="player-identity__summary">
           <div>
-            <p className="player-identity__eyebrow">Player Identity</p>
+            <p className="player-identity__eyebrow">Player Passport</p>
             <h2>Connect your Kingshot player</h2>
             <p>
               Your Forge account is ready. Link your Kingshot player to
@@ -102,7 +103,7 @@ export function PrivatePlayerIdentityPage() {
 
         <section className="player-identity__panel">
           <p className="player-identity__eyebrow">Next step</p>
-          <h2>Create your linked player identity</h2>
+          <h2>Create your linked Player Passport</h2>
           <p>
             Player linking is managed from My Forge, where your account can
             be checked and refreshed without creating duplicate profiles.
@@ -135,6 +136,7 @@ export function PrivatePlayerIdentityPage() {
   return (
     <PlayerIdentityPageFrame>
       <IdentitySummary playerAccount={playerAccount} />
+      <ForgeProgressPanel />
 
       <div className="player-identity__layout">
         <section
@@ -183,10 +185,10 @@ export function PrivatePlayerIdentityPage() {
             <h2>Build your Forge presence</h2>
             <div className="player-identity__tool-grid">
               <IdentityTool
-                title="Player profile"
-                description="Add your alliance, Town Center, VIP level, languages, and introduction."
+                title="Edit Passport"
+                description="Add the player-controlled fields shown on your public Passport."
                 to="/my-forge/profile"
-                action="Edit profile"
+                action="Edit Passport"
               />
               <IdentityTool
                 title="Hero Showcase"
@@ -369,10 +371,9 @@ function PlayerIdentityPageFrame({ children }: { children: ReactNode }) {
       </Link>
       <header className="player-identity__hero">
         <p className="player-identity__eyebrow">My Forge</p>
-        <h1>Player Identity</h1>
+        <h1>Player Passport</h1>
         <p>
-          Your linked Kingshot player, verification, profile tools, and
-          sharing status in one place.
+          Your linked player, public presence, progress and next actions in one place.
         </p>
       </header>
       {children}
