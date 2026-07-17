@@ -1,0 +1,168 @@
+/* Shared UX polish layered over legacy feature styles. */
+
+:where(.section-heading, .player-domain-hero, .player-profile-editor-heading, .hero-companion-heading, .forge-hub-hero) {
+  max-width: var(--forge-content-max);
+}
+
+:where(.section-heading, .player-domain-hero, .player-profile-editor-heading) h1 {
+  max-width: 18ch;
+  overflow-wrap: anywhere;
+  font-size: clamp(2rem, 5vw, 3.65rem);
+  line-height: var(--forge-line-height-tight);
+}
+
+:where(.section-heading, .player-domain-hero, .player-profile-editor-heading) p:last-child {
+  max-width: var(--forge-content-readable);
+  color: var(--forge-colour-text-secondary);
+  line-height: var(--forge-line-height-body);
+}
+
+:where(.player-profile-heading h1, .player-identity__hero h1, .transfer-profile-page .section-heading h1, .gift-codes-heading h1, .art-forge-heading h1, .hero-editor-page h1) {
+  max-width: 18ch;
+  overflow-wrap: anywhere;
+  font-size: clamp(2rem, 5vw, 3.65rem);
+  line-height: var(--forge-line-height-tight);
+}
+
+:where(.player-profile-heading, .player-identity__hero, .transfer-profile-page .section-heading, .gift-codes-heading, .art-forge-heading, .hero-editor-page) p:last-child {
+  color: var(--forge-colour-text-secondary);
+  line-height: var(--forge-line-height-body);
+}
+
+:where(.button, .player-identity__button, .primary-button, .secondary-button, .app-sidebar__feedback, .hero-game-card__action) {
+  min-height: var(--forge-ux-control-height);
+  border-radius: var(--forge-ux-radius-control);
+  transition:
+    transform var(--forge-transition-interactive),
+    color var(--forge-transition-interactive),
+    background-color var(--forge-transition-interactive),
+    border-color var(--forge-transition-interactive),
+    box-shadow var(--forge-transition-interactive);
+}
+
+:where(.button, .player-identity__button, .primary-button, .secondary-button, .app-sidebar__feedback, .hero-game-card__action):active {
+  transform: translateY(1px);
+}
+
+:where(.dashboard-card, .player-domain-card, .player-profile-panel, .player-profile-editor-card, .transfer-profile-section, .gift-redemption-panel, .art-library-card, .forge-hub-section, .hero-companion-panel, .hero-companion-section) {
+  border-color: var(--forge-ux-border-panel);
+  border-radius: var(--forge-ux-radius-card);
+}
+
+:where(.dashboard-card, .player-domain-card, .player-profile-panel, .player-profile-editor-card, .transfer-profile-section, .gift-redemption-panel, .forge-hub-section) {
+  box-shadow: var(--forge-shadow-sm);
+}
+
+:where(.dashboard-card, .player-domain-card, .player-profile-panel, .player-profile-editor-card, .transfer-profile-section, .gift-redemption-panel) :where(input, select, textarea),
+:where(.field, .player-progression-form label) :where(input, select, textarea) {
+  min-height: var(--forge-ux-control-height);
+  border-radius: var(--forge-ux-radius-control);
+  border-color: var(--forge-colour-border-default);
+  background-color: var(--forge-colour-bg-subtle);
+  color: var(--forge-colour-text-primary);
+}
+
+:where(.dashboard-card, .player-domain-card, .player-profile-panel, .player-profile-editor-card, .transfer-profile-section, .gift-redemption-panel) :where(input, select, textarea):focus,
+:where(.field, .player-progression-form label) :where(input, select, textarea):focus {
+  border-color: var(--forge-colour-focus);
+  box-shadow: var(--forge-focus-ring);
+  outline: 0;
+}
+
+:where(.profile-panel__error, .player-profile-editor-state .profile-panel__error, .transfer-profile-state--error, .gift-codes-state--error) {
+  border-radius: var(--forge-radius-sm);
+  line-height: var(--forge-line-height-body);
+}
+
+:where(.profile-panel__success, .player-profile-editor-state .profile-panel__success) {
+  border-radius: var(--forge-radius-sm);
+  line-height: var(--forge-line-height-body);
+}
+
+.app-navigation__link,
+.mobile-bottom-navigation__link,
+.app-sidebar__close,
+.app-header__menu-button,
+.account-menu__sign-out,
+.floating-feedback-button {
+  transition:
+    transform var(--forge-transition-interactive),
+    color var(--forge-transition-interactive),
+    background-color var(--forge-transition-interactive),
+    border-color var(--forge-transition-interactive),
+    box-shadow var(--forge-transition-interactive);
+}
+
+.app-navigation__link {
+  overflow-wrap: anywhere;
+}
+
+.app-navigation__link:hover,
+.app-navigation__link:focus-visible {
+  border-color: var(--forge-ux-border-hover);
+}
+
+.app-navigation__link--active {
+  box-shadow: inset 3px 0 0 var(--forge-colour-action-primary);
+}
+
+.player-domain-hero,
+.player-profile-editor-heading,
+.hero-companion-heading,
+.forge-hub-hero {
+  margin-bottom: var(--forge-ux-page-gap);
+}
+
+.player-domain-actions,
+.player-profile-editor-heading__actions,
+.transfer-profile-actions,
+.hero-actions,
+.hero-companion-heading__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--forge-space-3);
+}
+
+.player-domain-actions > *,
+.player-profile-editor-heading__actions > *,
+.transfer-profile-actions > * {
+  max-width: 100%;
+}
+
+@media (max-width: 800px) {
+  .app-main {
+    padding-inline: var(--forge-ux-mobile-gutter);
+  }
+
+  .app-navigation__link {
+    min-height: 2.75rem;
+  }
+
+  .mobile-bottom-navigation {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .mobile-bottom-navigation__link {
+    min-width: 0;
+    min-height: 2.8rem;
+    padding-inline: 0.15rem;
+  }
+
+  :where(.player-domain-actions, .player-profile-editor-heading__actions, .transfer-profile-actions) > .button {
+    flex: 1 1 10rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-bottom-navigation__link small {
+    font-size: 0.48rem;
+  }
+
+  :where(.player-domain-actions, .player-profile-editor-heading__actions, .transfer-profile-actions) {
+    width: 100%;
+  }
+
+  :where(.player-domain-actions, .player-profile-editor-heading__actions, .transfer-profile-actions) > .button {
+    width: 100%;
+  }
+}

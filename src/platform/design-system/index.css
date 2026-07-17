@@ -11,6 +11,7 @@
 @import "./tokens/shadows.css";
 @import "./tokens/motion.css";
 @import "./tokens/z-index.css";
+@import "./tokens/ux.css";
 
 @import "./base/reset.css";
 @import "./base/globals.css";
