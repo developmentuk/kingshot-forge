@@ -279,8 +279,8 @@ My Forge now presents this identity as a Player Headquarters. The heading uses t
 Key player routes:
 
 - `/my-forge` — Player Headquarters and saved Forge library.
-- `/my-forge/player-identity` — private linked-player identity, verification and visibility summary.
-- `/my-forge/profile` — owned player profile editor and visibility controls.
+- `/my-forge/player-identity` — private Player Passport, linked-player verification and visibility summary.
+- `/my-forge/profile` — Edit Passport for player-controlled profile fields and visibility controls.
 - `/my-forge/transfer-profile` — owned Transfer Profile editor (the existing `/transfer-profile` URL remains available).
 - `/my-forge/heroes` — owned Hero Showcase editor.
 - `/my-forge/progression` — owned progression snapshots.
@@ -294,6 +294,8 @@ Player planning flow:
 - Town Center, Truegold, troop tiers and VIP use the canonical terminology and published Data Engine output. The source dataset's `lancer` and `marksman` identifiers are compatibility details mapped to player-facing Cavalry and Archers labels; stored columns remain unchanged. Selector values are derived from normalised published records and revalidated before insert. Gear and Charm remain controlled non-negative numeric scores because their published datasets expose per-step/per-level values, not a reliable whole-governor score.
 - Forge Progress is the four-section required calculation: linked player, profile record, first progression snapshot and six-slot Hero Showcase. Each section contributes 25%, and the first incomplete section supplies the next action. Public Presence and Transfer Ready are presentation-only optional badges and never affect the required percentage.
 - The My Forge Player Headquarters presents a status summary, one next action, core milestones and earned/locked badges. Badges are derived from existing reads and require no new persistence or gamification service.
+- Player Passport is the full private account home at the compatibility route `/my-forge/player-identity`. It owns the compact identity record, verification/visibility context, completion detail, badges and links to Edit Passport, progression, showcase and optional Transfer Profile. My Forge is only the lightweight landing summary; public profiles remain separate public projections.
+- The final player page structure is My Forge → Player Passport → Edit Passport, with Personal Progression and optional Transfer Profile as separate tools. API-owned identity values are shown read-only in compact context banners; Edit Passport contains only player-controlled fields.
 - Transfer Profile remains private unless its own `status` is `looking` and `is_public` is enabled. Private notes, Discord details and contact preferences are never used by public profile reads.
 - Profile, progression, Hero Showcase and Transfer Profile saves emit `kingshot-player-updated`, allowing dependent My Forge planning state to refresh.
 
