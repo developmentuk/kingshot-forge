@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext'
 import { artTemplates } from '../data/artTemplates'
 import { nameVariants } from '../data/nameVariants'
 import { usePlayerIdentity } from '../context/PlayerIdentityContext'
-import { useRole } from '../context/RoleContext'
 import { APP_VERSION } from '../config/release'
 
 type ForgeTool = {
@@ -156,18 +155,6 @@ function HomePage() {
       template.source === 'Community Submission',
   ).length
 
-  const {
-    role,
-    permissions,
-    loadingRole,
-  } = useRole()
-
-  console.log({
-    role,
-    permissions,
-    loadingRole,
-  })
-
   return (
     <section className="forge-hub">
       <header className="forge-hub-hero">
@@ -255,23 +242,22 @@ function HomePage() {
 
           <div>
             <div className="home-release-banner__meta">
-              <span>New release</span>
+              <span>Current deployment</span>
               <strong>Version {APP_VERSION}</strong>
             </div>
 
-            <h2>The Forge is live</h2>
+            <h2>Domain foundations are complete</h2>
 
             <p>
-              Player profiles, live gift codes, Player Lookup,
-              Kingdom Explorer, KvK history and a stronger mobile
-              experience are now available.
+              Release 0.7.1 established the governed foundations for Player Identity,
+              Gift Redemption, Art Studio, Hero Skills and Verification Centre workflows.
             </p>
 
             <div className="home-release-banner__tags">
-              <span>Player identities</span>
-              <span>Gift Codes</span>
-              <span>Kingdom Explorer</span>
-              <span>KvK Tracker</span>
+              <span>Player Identity</span>
+              <span>Gift Redemption</span>
+              <span>Art Studio</span>
+              <span>Verification Centre</span>
             </div>
           </div>
         </div>
@@ -370,9 +356,8 @@ function HomePage() {
           <h2>Help build the Forge</h2>
 
           <p>
-            Google sign-in is now available. Community submissions,
-            synced favourites and contributor profiles are being
-            developed next.
+            Sign in to access your Forge profile and connected player identity.
+            Community features will activate only after their safety and publishing checks pass.
           </p>
         </div>
 
