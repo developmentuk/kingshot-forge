@@ -36,6 +36,7 @@ interface PlayerIdentityEventBase<Name extends string> {
 }
 
 export type PlayerIdentityDomainEvent =
+  | PlayerIdentityEventBase<"CharacterLinkProposed">
   | PlayerIdentityEventBase<"CharacterLinked">
   | PlayerIdentityEventBase<"CharacterLinkRevoked">
   | PlayerIdentityEventBase<"CharacterLinkDisputed">
@@ -43,17 +44,26 @@ export type PlayerIdentityDomainEvent =
   | PlayerIdentityEventBase<"PrimaryCharacterChanged">
   | PlayerIdentityEventBase<"ActiveCharacterResolved">
   | PlayerIdentityEventBase<"ActiveCharacterRejected">
-  | PlayerIdentityEventBase<"CharacterVerificationRequested">
-  | PlayerIdentityEventBase<"CharacterVerificationGranted">
-  | PlayerIdentityEventBase<"CharacterVerificationExpired">
-  | PlayerIdentityEventBase<"CharacterVerificationRevoked">
-  | PlayerIdentityEventBase<"CharacterVerificationDisputed">
+  | PlayerIdentityEventBase<"VerificationRequested">
+  | PlayerIdentityEventBase<"VerificationGranted">
+  | PlayerIdentityEventBase<"VerificationExpired">
+  | PlayerIdentityEventBase<"VerificationRevoked">
+  | PlayerIdentityEventBase<"VerificationDisputed">
+  | PlayerIdentityEventBase<"PublicAliasProposed">
+  | PlayerIdentityEventBase<"PublicAliasChanged">
+  | PlayerIdentityEventBase<"PublicAliasDisabled">
+  | PlayerIdentityEventBase<"SupportCaseOpened">
+  | PlayerIdentityEventBase<"SupportDecisionRecorded">
+  | PlayerIdentityEventBase<"HighRiskApprovalRequested">
+  | PlayerIdentityEventBase<"HighRiskApprovalGranted">
+  | PlayerIdentityEventBase<"HighRiskApprovalRejected">
+  | PlayerIdentityEventBase<"HeroShowcaseSelectionChanged">
   | (PlayerIdentityEventBase<"PlayerVisibilityChanged"> & {
       readonly visibilityAudience: PlayerVisibilityAudience
     })
 
 const SENSITIVE_METADATA_KEY_PATTERN =
-  /(authorization|cookie|credential|evidence|password|proof|providersecret|rawplayerid|servicerole|secret|token)/i
+  /(audit|authorization|cookie|credential|evidence|identifier|password|proof|providersecret|rawplayerid|servicerole|secret|support|token)/i
 const SENSITIVE_METADATA_VALUE_PATTERN =
   /(^Bearer\s|sb_(secret|service_role)_|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/i
 
@@ -110,7 +120,7 @@ export function createImmutablePlayerIdentityEvent<
   }
 
   if (
-    event.name === "CharacterVerificationGranted" &&
+    event.name === "VerificationGranted" &&
     event.syntheticUnitTestData !== true
   ) {
     throw new Error(

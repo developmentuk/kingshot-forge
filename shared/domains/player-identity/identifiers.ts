@@ -14,6 +14,9 @@ export type KingdomId = PlayerIdentityIdentifier<"KingdomId">
 export type AllianceId = PlayerIdentityIdentifier<"AllianceId">
 export type VerificationRecordId = PlayerIdentityIdentifier<"VerificationRecordId">
 export type PlayerIdentityEventId = PlayerIdentityIdentifier<"PlayerIdentityEventId">
+export type PlayerSupportCaseId = PlayerIdentityIdentifier<"PlayerSupportCaseId">
+export type HighRiskApprovalId = PlayerIdentityIdentifier<"HighRiskApprovalId">
+export type LinkProposalId = PlayerIdentityIdentifier<"LinkProposalId">
 export type PlayerIdentityRevision = number & {
   readonly [playerIdentityRevisionBrand]: "PlayerIdentityRevision"
 }
