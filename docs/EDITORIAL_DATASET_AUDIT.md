@@ -18,7 +18,7 @@ The shared Data Engine contract registers 14 datasets.
 | Dataset | Import/adapter | Admin browser | Editor/history | Publication | Remaining audit |
 |---|---:|---:|---:|---:|---|
 | Heroes | Implemented | Implemented | Implemented | Partial | Live atomic publication and public consumption |
-| Hero Skills | Implemented via source staging | Implemented | Implemented | Partial | Live atomic publication and public consumption |
+| Hero Skills | Source staging only; no approved source | Legacy editor registered | Legacy framework only; zero records | Blocked | Source approval, target-schema application, compatible publication and public consumption |
 | Hero XP | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
 | Hero Shards | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
 | Hero Gear | Implemented | Implemented | Missing | Missing | Validation, API and public consumption |
@@ -44,6 +44,18 @@ The shared Data Engine contract registers 14 datasets.
 8. Hero Skills is the only dataset with schema-driven creation enabled. No synthetic browser record is used to enter create mode.
 9. Events is browse-only; editing is neither declared nor presented.
 10. Filters remain missing for all datasets. Public/API consumption remains unaudited unless separately evidenced.
+
+## Sprint 9.3 Hero Skills governance evidence
+
+Validated locally on 17 July 2026 with read-only connected-database inspection.
+
+- The 60 extracted facts remain staged and unreviewed. Thirty-six lack a canonical name; none has a recorded source digest, permitted-use decision or record-level approval.
+- Live, editorial and published Hero Skill record counts are all zero. The registered legacy editor and publication capability therefore do not constitute a canonical dataset.
+- The target canonical contract now separates structured progression, typed unlocks, source evidence, withdrawal and server-calculated publication eligibility from subjective Editorial guidance.
+- The shared canonical vocabulary excludes `exclusive_gear`; runtime/UI compatibility changes are explicitly deferred.
+- The current live schema cannot safely represent structured progression or unlocks, contains an incompatible Hero/slot uniqueness rule, and has overlapping SELECT policies including a permissive policy. These findings are not corrected in production by this milestone.
+- A local unapplied proposal provides target constraints and public privacy boundaries. Approved source coverage and schema application remain `Blocked` in the Verification Centre.
+- The current public component still derives upgrade-path language and empty level markers. Public UI correction is deferred until approved canonical facts and a compatible projection exist.
 
 ## Milestone 3 editorial-platform evidence
 

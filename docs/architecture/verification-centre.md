@@ -25,6 +25,8 @@ The Verification Centre reuses:
 
 It adds no dataset adapter, editor adapter, publication service, permission or persistence path.
 
+For source-governed datasets, verification evidence distinguishes contract readiness from data readiness. Hero Skills may pass source-governance and stable-identity contract checks while approved-source coverage and target-schema application remain Blocked. The Verification Centre reports those facts; it does not approve evidence, promote staging rows or calculate browser-supplied publication eligibility.
+
 ## Verification model
 
 A verification definition describes:
@@ -88,6 +90,8 @@ The current environment is explicitly classified as `local application / databas
 - local structural, API, in-memory and browser evidence remains distinguishable from live database evidence.
 
 The UI never upgrades these states based on mocked or in-memory publication success.
+
+Sprint 9.3 retains this rule: read-only source inventory and local SQL parsing are valid evidence for design readiness only. They do not prove RLS, migration, atomic publication or public-consumer behavior.
 
 ## Admin routes
 

@@ -8,6 +8,8 @@ Established the initial public product, authentication, profiles, community foun
 
 ## Milestone 2 — CMS & Publishing — Current
 
+Release 0.7.1 Sprint 9.3 has established the local Hero Skills source-governance, canonical-contract and schema-proposal foundation. Approved source coverage, migration application, compatible atomic publication and public consumption remain blockers; Hero Skills is not yet a canonical dataset.
+
 ### 2.0 Platform hardening
 
 - restore green build/lint

@@ -272,7 +272,7 @@ Changes to product pillars, domain boundaries, canonical publishing, security pr
 
 ## Active Release
 
-### Release 0.7.1 — Sprint 9.2: Editorial Platform Completion
+### Release 0.7.1 — Sprint 9.3: Hero Skills Source Governance and Schema Foundation
 
 Working branch:
 
@@ -280,20 +280,19 @@ Working branch:
 release/0.7.0-player-domain
 ```
 
-Sprint objective: complete Domain 0 (Editorial Intelligence) and Domain 1 (Editorial Platform) before continuing Player Domain development.
+Sprint objective: establish the governed source-evidence, canonical contract and unapplied schema foundation required before Hero Skill facts may be reviewed, imported or published.
 
-Milestone order:
+Sprint 9.3 is a design and local-foundation milestone. Source approval, migration application, canonical population, public Hero Skill UI work and editorial recommendation authoring remain out of scope. The 60 staged Hero Skill facts remain unreviewed evidence.
 
-1. Project Constitution
-2. Editorial Domain Audit
-3. Editorial Platform Completion
-4. Verification Centre
-5. Hero Skills Canonical Dataset
-6. Dataset Health Dashboard
-7. Domain Readiness Report
-8. End-to-end validation and release documentation
+Required review order:
 
-Do not redesign the architecture. Reuse the existing editorial, publishing, dataset and permission platforms. Do not mark incomplete work complete.
+1. source governance and evidence inventory;
+2. canonical, progression, unlock and evidence contracts;
+3. stable-identifier decision;
+4. unapplied schema and compatibility review;
+5. local validation and architectural approval.
+
+Do not redesign the architecture. Reuse the existing editorial, publishing, dataset, permission and Verification Centre platforms. Do not mark incomplete work complete.
 
 ## Session bootstrap
 

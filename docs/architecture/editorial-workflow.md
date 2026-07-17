@@ -85,3 +85,9 @@ The repository compares this with the current stored version. A mismatch writes 
 - Rollbacks create new versions instead of rewriting history.
 - Production authorisation remains a server-side responsibility.
 - Published content is never edited in place.
+
+## Canonical references from Editorial guidance
+
+Editorial recommendations reference stable canonical IDs and the publication version on which the recommendation was reviewed. They do not own copies of canonical names, descriptions, progression values or unlock requirements.
+
+For Hero Skills, priority, upgrade order, best-use guidance, strengths/weaknesses, synergies and formations remain Editorial records. A canonical publication change marks dependent guidance review-due; a withdrawn canonical skill blocks new guidance publication until the reference is resolved. Existing immutable Editorial versions retain the historical reference.
