@@ -427,51 +427,33 @@ function MyForgePage() {
   </span>
 </Link>
 
-          <article className="my-forge-feature-card">
+          <Link className="my-forge-feature-card my-forge-feature-card--link" to="/my-forge/progression">
             <span className="my-forge-feature-card__icon">
-              ⚔️
+              📈
             </span>
-
             <div>
               <span className="my-forge-card__category">
-                Army
+                Progression
               </span>
-
-              <h3>Troop statistics</h3>
-
-              <p>
-                Add Infantry, Cavalry and Archer
-                troop tiers and quantities.
-              </p>
+              <h3>Progression snapshot</h3>
+              <p>Record your Town Center, troop tiers, VIP and current power.</p>
             </div>
+            <span className="my-forge-feature-card__status my-forge-feature-card__status--available">Open planner →</span>
+          </Link>
 
-            <span className="my-forge-feature-card__status">
-              Planned
-            </span>
-          </article>
-
-          <article className="my-forge-feature-card">
+          <Link className="my-forge-feature-card my-forge-feature-card--link" to="/transfer-profile">
             <span className="my-forge-feature-card__icon">
-              🛡️
+              🔁
             </span>
-
             <div>
               <span className="my-forge-card__category">
-                Equipment
+                Transfer
               </span>
-
-              <h3>Equipment Showcase</h3>
-
-              <p>
-                Display your equipment slots,
-                rarity and item levels.
-              </p>
+              <h3>Transfer profile</h3>
+              <p>Record transfer preferences and choose whether to publish them.</p>
             </div>
-
-            <span className="my-forge-feature-card__status">
-              Planned
-            </span>
-          </article>
+            <span className="my-forge-feature-card__status my-forge-feature-card__status--available">Open profile →</span>
+          </Link>
         </div>
       </DashboardCard>
 
