@@ -153,9 +153,9 @@ export function GiftRedemptionFoundationPanel() {
 
         <p>
           <strong>Automatic redemption is unavailable.</strong>{' '}
-          It will remain disabled unless an authorized,
-          documented integration and Forge consent controls
-          are approved.
+          It will remain disabled until an approved Forge
+          server integration and consent controls are in
+          place.
         </p>
       </div>
     </section>
