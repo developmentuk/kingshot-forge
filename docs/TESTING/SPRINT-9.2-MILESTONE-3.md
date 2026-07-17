@@ -88,6 +88,8 @@ The new focused suite used in-memory editorial, queue and schedule repositories 
 - Moderator approval → 403;
 - Contributor draft save and submit for review → success;
 - Admin approval, schedule and queue → success;
+- immutable version count plus Moderator rejection and Admin approval actor/action identity;
+- failed publication outcome plus retry back to Pending;
 - mismatched queue and schedule resources → 409;
 - non-Approved publication request → 409;
 - archive/restore/rollback capability rejection → 422;

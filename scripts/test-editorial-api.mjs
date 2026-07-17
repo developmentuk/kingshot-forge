@@ -454,6 +454,27 @@ try {
     runtime,
   );
 
+  const editorialHistory =
+    await runtime.historyService.getHistory(
+      "heroes",
+      "synthetic-validation-hero",
+    );
+  assert.equal(editorialHistory.totalVersions, 5);
+  assert.ok(
+    editorialHistory.entries.some(
+      (entry) =>
+        entry.auditEvent?.action === "rejected" &&
+        entry.auditEvent.actorId === "moderator-user",
+    ),
+  );
+  assert.ok(
+    editorialHistory.entries.some(
+      (entry) =>
+        entry.auditEvent?.action === "approved" &&
+        entry.auditEvent.actorId === "admin-user",
+    ),
+  );
+
   await expectStatus(
     409,
     () =>
@@ -533,6 +554,36 @@ try {
       `unsupported ${action}`,
     );
   }
+
+  const failedQueueRepository =
+    new platform.InMemoryPublicationQueueRepository();
+  const failedQueueService =
+    new platform.PublicationQueueService(
+      failedQueueRepository,
+      async () => {
+        throw new Error(
+          "Synthetic projection failure",
+        );
+      },
+    );
+  const failedItem = await failedQueueService.enqueue({
+    datasetId: "heroes",
+    recordId: "synthetic-validation-hero",
+    versionId: "synthetic-approved-failure",
+    expectedVersion: 3,
+    requestedBy: "admin-user",
+  });
+  const failedResult =
+    await failedQueueService.process(failedItem.id);
+  assert.equal(failedResult.status, "failed");
+  assert.equal(failedResult.attempts, 1);
+  assert.equal(
+    failedResult.failureMessage,
+    "Synthetic projection failure",
+  );
+  const retriedResult =
+    await failedQueueService.retry(failedItem.id);
+  assert.equal(retriedResult.status, "pending");
 
   const atomicQueueRepository =
     new platform.InMemoryPublicationQueueRepository();
