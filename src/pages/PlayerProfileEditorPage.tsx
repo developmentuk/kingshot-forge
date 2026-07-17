@@ -239,6 +239,8 @@ export default function PlayerProfileEditorPage() {
           profile.isPublic,
       })
 
+      window.dispatchEvent(new Event('kingshot-player-updated'))
+
       setMessage(
         profile.isPublic
           ? 'Player profile saved and published.'

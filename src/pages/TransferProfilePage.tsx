@@ -524,6 +524,8 @@ function TransferProfilePage() {
           'Transfer profile created.',
         )
       }
+
+      window.dispatchEvent(new Event('kingshot-player-updated'))
     } catch (error) {
       setErrorMessage(
         error instanceof Error

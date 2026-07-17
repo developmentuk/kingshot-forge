@@ -1,109 +1,64 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 import { supabase } from '../lib/supabase'
 
 type ForgeProgressData = {
-  hasLinkedPlayer: boolean
-  hasPublicProfile: boolean
-  hasBiography: boolean
+  hasProfile: boolean
+  hasProgression: boolean
   showcasedHeroes: number
   hasTransferProfile: boolean
+  hasPublicVisibility: boolean
 }
 
 const EMPTY_PROGRESS: ForgeProgressData = {
-  hasLinkedPlayer: false,
-  hasPublicProfile: false,
-  hasBiography: false,
+  hasProfile: false,
+  hasProgression: false,
   showcasedHeroes: 0,
   hasTransferProfile: false,
+  hasPublicVisibility: false,
 }
 
-function clampPercentage(value: number) {
-  return Math.min(100, Math.max(0, value))
+type ProgressItem = {
+  label: string
+  detail: string
+  complete: boolean
+  to: string
 }
 
 function getForgeLevel(score: number) {
-  if (score >= 100) {
-    return 5
-  }
-
-  if (score >= 75) {
-    return 4
-  }
-
-  if (score >= 50) {
-    return 3
-  }
-
-  if (score >= 25) {
-    return 2
-  }
-
-  if (score > 0) {
-    return 1
-  }
-
+  if (score >= 100) return 5
+  if (score >= 80) return 4
+  if (score >= 60) return 3
+  if (score >= 40) return 2
+  if (score > 0) return 1
   return 0
 }
 
-function getNextTask(
-  progress: ForgeProgressData,
-): string {
-  if (!progress.hasLinkedPlayer) {
-    return 'Link your Kingshot player account'
-  }
-
-  if (!progress.hasPublicProfile) {
-    return 'Create and publish your player profile'
-  }
-
-  if (!progress.hasBiography) {
-    return 'Add an introduction to your profile'
-  }
-
-  if (progress.showcasedHeroes < 6) {
-    return `Add ${
-      6 - progress.showcasedHeroes
-    } more hero${
-      6 - progress.showcasedHeroes === 1
-        ? ''
-        : 'es'
-    } to your showcase`
-  }
-
-  if (!progress.hasTransferProfile) {
-    return 'Publish your transfer profile'
-  }
-
-  return 'Your Forge profile is complete'
+function getNextItem(items: ProgressItem[]) {
+  return items.find((item) => !item.complete) ?? null
 }
 
 export default function ForgeProgressPanel() {
+  const { user, loading: authLoading } = useAuth()
   const {
-    user,
-    loading: authLoading,
-  } = useAuth()
-
-  const [progress, setProgress] =
-    useState<ForgeProgressData>(
-      EMPTY_PROGRESS,
-    )
-
-  const [loading, setLoading] =
-    useState(true)
-
-  const [errorMessage, setErrorMessage] =
-    useState('')
+    playerAccount,
+    loadingPlayerAccount,
+    playerIdentityError,
+    refreshPlayerIdentity,
+  } = usePlayerIdentity()
+  const [progress, setProgress] = useState(EMPTY_PROGRESS)
+  const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [refreshToken, setRefreshToken] = useState(0)
 
   useEffect(() => {
     let cancelled = false
 
     async function loadProgress() {
-      if (authLoading) {
-        return
-      }
-
-      if (!user) {
+      if (authLoading || loadingPlayerAccount) return
+      if (!user || !playerAccount) {
         setProgress(EMPTY_PROGRESS)
         setLoading(false)
         return
@@ -113,367 +68,104 @@ export default function ForgeProgressPanel() {
       setErrorMessage('')
 
       try {
-        const {
-          data: playerAccount,
-          error: playerAccountError,
-        } = await supabase
-          .from('player_accounts')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('is_primary', true)
-          .maybeSingle()
-
-        if (playerAccountError) {
-          throw playerAccountError
-        }
-
-        if (!playerAccount) {
-          if (!cancelled) {
-            setProgress(EMPTY_PROGRESS)
-          }
-
-          return
-        }
-
-        const playerAccountId =
-          playerAccount.id as string
-
-        const [
-          playerProfileResult,
-          heroResult,
-          transferResult,
-        ] = await Promise.all([
+        const [profileResult, progressionResult, heroResult, transferResult] = await Promise.all([
           supabase
             .from('player_profiles')
-            .select(
-              'is_public, about_me',
-            )
-            .eq(
-              'player_account_id',
-              playerAccountId,
-            )
+            .select('id, is_public')
+            .eq('player_account_id', playerAccount.id)
             .maybeSingle(),
-
+          supabase
+            .from('player_progression_snapshots')
+            .select('id')
+            .eq('player_account_id', playerAccount.id)
+            .order('recorded_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
           supabase
             .from('player_heroes')
-            .select('id', {
-              count: 'exact',
-              head: true,
-            })
-            .eq(
-              'player_account_id',
-              playerAccountId,
-            )
+            .select('id', { count: 'exact', head: true })
+            .eq('player_account_id', playerAccount.id)
             .eq('is_showcase', true),
-
           supabase
             .from('transfer_profiles')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('is_public', true)
+            .select('id, status')
+            .eq('player_account_id', playerAccount.id)
             .maybeSingle(),
         ])
 
-        if (playerProfileResult.error) {
-          throw playerProfileResult.error
-        }
-
-        if (heroResult.error) {
-          throw heroResult.error
-        }
-
-        if (transferResult.error) {
-          throw transferResult.error
-        }
-
-        const playerProfile =
-          playerProfileResult.data
-
-        const nextProgress: ForgeProgressData = {
-          hasLinkedPlayer: true,
-
-          hasPublicProfile:
-            playerProfile?.is_public === true,
-
-          hasBiography:
-            Boolean(
-              playerProfile?.about_me?.trim(),
-            ),
-
-          showcasedHeroes:
-            Math.min(
-              heroResult.count ?? 0,
-              6,
-            ),
-
-          hasTransferProfile:
-            Boolean(transferResult.data),
+        for (const result of [profileResult, progressionResult, heroResult, transferResult]) {
+          if (result.error) throw result.error
         }
 
         if (!cancelled) {
-          setProgress(nextProgress)
+          setProgress({
+            hasProfile: Boolean(profileResult.data),
+            hasProgression: Boolean(progressionResult.data),
+            showcasedHeroes: Math.min(heroResult.count ?? 0, 6),
+            hasTransferProfile: Boolean(transferResult.data && transferResult.data.status !== 'draft'),
+            hasPublicVisibility: Boolean(
+              playerAccount.is_public && profileResult.data?.is_public,
+            ),
+          })
         }
       } catch (error) {
         if (!cancelled) {
           setErrorMessage(
             error instanceof Error
               ? error.message
-              : 'Forge progress could not be loaded.',
+              : 'Forge planning progress could not be loaded.',
           )
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
+        if (!cancelled) setLoading(false)
       }
     }
 
     void loadProgress()
-
     return () => {
       cancelled = true
     }
-  }, [authLoading, user])
+  }, [authLoading, loadingPlayerAccount, playerAccount, refreshToken, user])
 
-  const score = useMemo(() => {
-    let total = 0
-
-    if (user) {
-      total += 10
+  useEffect(() => {
+    const refresh = () => {
+      setRefreshToken((current) => current + 1)
     }
+    window.addEventListener('kingshot-player-updated', refresh)
+    return () => window.removeEventListener('kingshot-player-updated', refresh)
+  }, [])
 
-    if (progress.hasLinkedPlayer) {
-      total += 20
-    }
+  const items = useMemo<ProgressItem[]>(() => [
+    { label: 'Linked player', detail: playerAccount ? 'Primary player linked' : 'Link a Kingshot player', complete: Boolean(playerAccount), to: '/my-forge/player-identity' },
+    { label: 'Player profile', detail: progress.hasProfile ? 'Profile record created' : 'Create your player profile', complete: progress.hasProfile, to: '/my-forge/profile' },
+    { label: 'Progression snapshot', detail: progress.hasProgression ? 'Current position recorded' : 'Record your current progression', complete: progress.hasProgression, to: '/my-forge/progression' },
+    { label: 'Hero Showcase', detail: `${progress.showcasedHeroes}/6 heroes selected`, complete: progress.showcasedHeroes === 6, to: '/my-forge/heroes' },
+    { label: 'Transfer profile', detail: progress.hasTransferProfile ? 'Transfer planning recorded' : 'Complete transfer planning', complete: progress.hasTransferProfile, to: '/transfer-profile' },
+    { label: 'Public visibility', detail: progress.hasPublicVisibility ? 'Profile is public' : 'Review public visibility', complete: progress.hasPublicVisibility, to: '/my-forge/profile' },
+  ], [playerAccount, progress])
 
-    if (progress.hasPublicProfile) {
-      total += 20
-    }
+  const score = Math.round((items.filter((item) => item.complete).length / items.length) * 100)
+  const forgeLevel = getForgeLevel(score)
+  const nextItem = getNextItem(items)
 
-    if (progress.hasBiography) {
-      total += 10
-    }
-
-    total +=
-      (progress.showcasedHeroes / 6) * 30
-
-    if (progress.hasTransferProfile) {
-      total += 10
-    }
-
-    return Math.round(
-      clampPercentage(total),
-    )
-  }, [progress, user])
-
-  const forgeLevel =
-    getForgeLevel(score)
-
-  const nextTask =
-    getNextTask(progress)
-
-  if (loading || authLoading) {
-    return (
-      <section
-        className="forge-progress"
-        aria-busy="true"
-      >
-        <p>Loading Forge progress…</p>
-      </section>
-    )
+  if (authLoading || loadingPlayerAccount || loading) {
+    return <section className="forge-progress" aria-busy="true"><p>Loading Forge planning…</p></section>
   }
 
   if (!user) {
-    return (
-      <section className="forge-progress forge-progress--signed-out">
-        <div className="forge-progress__icon">
-          ⚒
-        </div>
-
-        <div>
-          <p className="eyebrow">
-            Forge progression
-          </p>
-
-          <h2>Begin your Forge journey</h2>
-
-          <p>
-            Sign in and link your Kingshot
-            account to begin building your
-            player profile.
-          </p>
-        </div>
-      </section>
-    )
+    return <section className="forge-progress forge-progress--signed-out"><div className="forge-progress__icon">⚒</div><div><p className="eyebrow">Forge planning</p><h2>Begin your Forge journey</h2><p>Sign in to link your Kingshot player and record your planning information.</p></div></section>
   }
 
-  return (
-    <section className="forge-progress">
-      <div className="forge-progress__header">
-        <div>
-          <p className="eyebrow">
-            Forge progression
-          </p>
+  if (playerIdentityError) {
+    return <section className="forge-progress"><p className="eyebrow">Forge planning</p><h2>Planning is temporarily unavailable</h2><p>{playerIdentityError}</p><button className="button button--primary" type="button" onClick={() => void refreshPlayerIdentity()}>Retry identity load</button></section>
+  }
 
-          <h2>
-            Forge Level {forgeLevel}
-          </h2>
-
-          <p>
-            Complete your profile to increase
-            your Forge level.
-          </p>
-        </div>
-
-        <div className="forge-progress__score">
-          <strong>{score}%</strong>
-          <span>Complete</span>
-        </div>
-      </div>
-
-      <div
-        className="forge-progress__track"
-        role="progressbar"
-        aria-label="Forge profile completion"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={score}
-      >
-        <span
-          style={{
-            width: `${score}%`,
-          }}
-        />
-      </div>
-
-      <div className="forge-progress__levels">
-        {[1, 2, 3, 4, 5].map(
-          (level) => (
-            <span
-              key={level}
-              className={
-                level <= forgeLevel
-                  ? 'forge-progress__level forge-progress__level--active'
-                  : 'forge-progress__level'
-              }
-            >
-              {level}
-            </span>
-          ),
-        )}
-      </div>
-
-      <div className="forge-progress__checklist">
-        <div
-          className={
-            progress.hasLinkedPlayer
-              ? 'forge-progress-item forge-progress-item--complete'
-              : 'forge-progress-item'
-          }
-        >
-          <span>
-            {progress.hasLinkedPlayer
-              ? '✓'
-              : '1'}
-          </span>
-
-          <div>
-            <strong>Linked player</strong>
-            <small>20% completion</small>
-          </div>
-        </div>
-
-        <div
-          className={
-            progress.hasPublicProfile
-              ? 'forge-progress-item forge-progress-item--complete'
-              : 'forge-progress-item'
-          }
-        >
-          <span>
-            {progress.hasPublicProfile
-              ? '✓'
-              : '2'}
-          </span>
-
-          <div>
-            <strong>Public profile</strong>
-            <small>20% completion</small>
-          </div>
-        </div>
-
-        <div
-          className={
-            progress.hasBiography
-              ? 'forge-progress-item forge-progress-item--complete'
-              : 'forge-progress-item'
-          }
-        >
-          <span>
-            {progress.hasBiography
-              ? '✓'
-              : '3'}
-          </span>
-
-          <div>
-            <strong>Player introduction</strong>
-            <small>10% completion</small>
-          </div>
-        </div>
-
-        <div
-          className={
-            progress.showcasedHeroes === 6
-              ? 'forge-progress-item forge-progress-item--complete'
-              : 'forge-progress-item'
-          }
-        >
-          <span>
-            {progress.showcasedHeroes === 6
-              ? '✓'
-              : '4'}
-          </span>
-
-          <div>
-            <strong>Hero Showcase</strong>
-
-            <small>
-              {progress.showcasedHeroes}/6
-              heroes selected
-            </small>
-          </div>
-        </div>
-
-        <div
-          className={
-            progress.hasTransferProfile
-              ? 'forge-progress-item forge-progress-item--complete'
-              : 'forge-progress-item'
-          }
-        >
-          <span>
-            {progress.hasTransferProfile
-              ? '✓'
-              : '5'}
-          </span>
-
-          <div>
-            <strong>Transfer profile</strong>
-            <small>10% completion</small>
-          </div>
-        </div>
-      </div>
-
-      <div className="forge-progress__next">
-        <span>Next objective</span>
-        <strong>{nextTask}</strong>
-      </div>
-
-      {errorMessage && (
-        <p className="profile-panel__error">
-          {errorMessage}
-        </p>
-      )}
-    </section>
-  )
+  return <section className="forge-progress">
+    <div className="forge-progress__header"><div><p className="eyebrow">Forge planning</p><h2>Forge Level {forgeLevel}</h2><p>Six player-owned sections, calculated from saved data.</p></div><div className="forge-progress__score"><strong>{score}%</strong><span>Complete</span></div></div>
+    <div className="forge-progress__track" role="progressbar" aria-label="Forge planning completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score}><span style={{ width: `${score}%` }} /></div>
+    <div className="forge-progress__levels">{[1, 2, 3, 4, 5].map((level) => <span key={level} className={level <= forgeLevel ? 'forge-progress__level forge-progress__level--active' : 'forge-progress__level'}>{level}</span>)}</div>
+    <div className="forge-progress__checklist">{items.map((item, index) => <Link key={item.label} className={item.complete ? 'forge-progress-item forge-progress-item--complete' : 'forge-progress-item'} to={item.to}><span>{item.complete ? '✓' : index + 1}</span><div><strong>{item.label}</strong><small>{item.detail}</small></div></Link>)}</div>
+    <div className="forge-progress__next"><span>Next objective</span><strong>{nextItem ? <Link to={nextItem.to}>{nextItem.detail}</Link> : 'Your player planning is complete'}</strong></div>
+    {errorMessage ? <p className="profile-panel__error" role="alert">{errorMessage}</p> : null}
+  </section>
 }
