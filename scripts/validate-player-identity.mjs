@@ -125,11 +125,13 @@ async function main() {
   const discoveryHashPath = "docs/reference/player-identity-schema-discovery.sha256"
 
   if (await exists(discoveryPath) && await exists(discoveryHashPath)) {
-    const discovery = await readFile(resolve(root, discoveryPath))
+    const discovery = await readFile(resolve(root, discoveryPath), "utf8")
     const expectedHash = (
       await readFile(resolve(root, discoveryHashPath), "utf8")
     ).trim().split(/\s+/u)[0]
-    const actualHash = createHash("sha256").update(discovery).digest("hex")
+    const actualHash = createHash("sha256")
+      .update(discovery.replace(/\r\n/g, "\n"))
+      .digest("hex")
 
     if (actualHash !== expectedHash) {
       failures.push("Player Identity schema-discovery integrity receipt is stale.")
