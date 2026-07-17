@@ -63,6 +63,17 @@ At least Heroes, Events and Buildings complete the full import → draft → val
 - notification foundations
 - moderation tools
 
+## Release 0.7.3 — Forge UX Polish — In development
+
+The accepted player-facing journeys are being refined through a focused shared UX pass. This work keeps the existing architecture and data boundaries intact while standardising visual tokens, navigation, cards, forms, responsive behaviour, keyboard focus and reduced-motion support.
+
+- shared visual tokens and surface patterns;
+- responsive desktop and mobile navigation;
+- consistent page headers, buttons and controls;
+- loading, empty, error and success state polish;
+- My Forge, Player Passport and public-page refinement;
+- no new domains, product features, tables or schema changes.
+
 ## Milestone 5 — Intelligence & Automation
 
 - calculators and planning tools from published data

@@ -21,6 +21,37 @@ function ReleaseNotesPage() {
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
+            <span className="release-entry__badge">Current milestone</span>
+            <h2>Release 0.7.3 — Forge UX Polish</h2>
+            <p>In development · July 2026</p>
+          </div>
+          <Link className="button button--secondary" to="/roadmap">
+            View roadmap
+          </Link>
+        </div>
+        <div className="release-entry__sections">
+          <section>
+            <h3>Shared experience</h3>
+            <ul>
+              <li>Shared semantic surface, spacing and interaction aliases</li>
+              <li>Consistent page headers, cards, buttons and form controls</li>
+              <li>Responsive navigation and mobile touch targets</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Accessibility and resilience</h3>
+            <ul>
+              <li>Visible keyboard focus and reduced-motion support</li>
+              <li>Clear loading, error, empty and save-state presentation</li>
+              <li>My Forge, Player Passport and public-page polish without data changes</li>
+            </ul>
+          </section>
+        </div>
+      </article>
+
+      <article className="release-entry release-entry--latest">
+        <div className="release-entry__heading">
+          <div>
             <span className="release-entry__badge">Latest completed release</span>
             <h2>Release 0.7.1 — Consolidated Domain Foundations</h2>
             <p>Released 17 July 2026</p>
@@ -103,8 +134,8 @@ function ReleaseNotesPage() {
           <section>
             <h3>Looking ahead</h3>
             <p>
-              Release 0.7.2 will move from platform foundations towards carefully approved,
-              production-ready user experiences built on these systems.
+              Release 0.7.2 activated the accepted player-facing journeys. Release 0.7.3
+              continues with shared UX polish and accessibility refinement.
             </p>
           </section>
         </div>
