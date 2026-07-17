@@ -339,3 +339,7 @@ The Sprint 9.3 brief authorised local contracts and read-only discovery under co
 | PD-010/011 | Actor types reserve a resource-scoped Alliance candidate only; no capability resolution exists. | Alliance authority and delegation remain open. |
 | PD-012/013 | Read-only discovery report confirms migration drift and recovery needs. | Canonical baseline, migration plan and non-production rehearsal remain open. |
 | PD-019/020 | Hero Showcase and Gift eligibility boundaries expose minimal Player-owned projections only. | Showcase product limits and Gift verified-character/consent/provider decisions remain open. |
+
+## Sprint 9.4 local implementation record
+
+Sprint 9.4 implements the complete Player Identity path only as a disabled local vertical slice. Exact-match feature gates are all OFF by default; the production repository cannot persist; capabilities grant nothing; verification and public exposure remain disabled. The service, API, UI, integration, support, legacy and migration-proposal artifacts are implementation evidence, not decision approval. Every PD and ADR remains Proposed until an explicit governance record says otherwise.

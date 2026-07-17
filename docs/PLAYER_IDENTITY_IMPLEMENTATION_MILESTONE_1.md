@@ -197,3 +197,6 @@ Contracts are additive and initially unused. Rollback removes the unused adapter
 - [Canonical Glossary](./PLAYER_DOMAIN_GLOSSARY.md)
 - [Read-only schema discovery](./reference/player-identity-schema-discovery.md)
 - [Sprint 9.3 release note](./releases/SPRINT_9_3_PLAYER_IDENTITY_FOUNDATION.md)
+# Sprint 9.4 completion note
+
+The milestone’s production-shaped domain path is implemented locally behind default-OFF gates, including disabled persistence, deterministic synthetic test adapters, private/public/support UI, integration boundaries and recovery documentation. This is not production completion: no migration, provider, capability grant, public profile or production adapter is approved or enabled.

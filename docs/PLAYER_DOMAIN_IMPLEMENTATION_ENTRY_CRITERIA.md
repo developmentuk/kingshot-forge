@@ -66,3 +66,6 @@ Sprint 9.3 local contract/discovery entry is complete under the brief's explicit
 - [Decision Register](./PLAYER_DOMAIN_DECISION_REGISTER.md)
 - [Approval Matrix](./PLAYER_DOMAIN_APPROVAL_MATRIX.md)
 - [ADR registry](./ADR/README.md)
+# Sprint 9.4 disabled-slice record
+
+Sprint 9.4 satisfies local implementation and test entry only for a disabled, non-persistent vertical slice. It does not satisfy migration, live persistence, verification, capability-grant, public-exposure or production-release criteria. Those gates remain blocked on the recovery and approval evidence listed in [docs/player-identity/MIGRATION_RECOVERY_AND_VALIDATION.md](./player-identity/MIGRATION_RECOVERY_AND_VALIDATION.md).

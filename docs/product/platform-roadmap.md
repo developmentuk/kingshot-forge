@@ -56,6 +56,7 @@ At least Heroes, Events and Buildings complete the full import → draft → val
 
 ## Milestone 4 — Player & Community Platform
 
+- Player Identity disabled vertical slice completed locally in Sprint 9.4; migration recovery, non-production rehearsal and explicit approval remain before enablement
 - mature player profiles
 - alliance administration
 - kingdom and transfer workflows

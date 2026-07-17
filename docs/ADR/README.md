@@ -106,3 +106,6 @@ Architecture specifications explain the complete target system. ADRs isolate ind
 ## Sprint 9.3 evidence note
 
 Local contracts and read-only schema evidence now exercise parts of ADR-0100 through ADR-0105, ADR-0109 through ADR-0115, ADR-0117 and ADR-0119. This is implementation evidence only. No Player ADR status changed; every ADR-0100 through ADR-0119 remains Proposed until its required approval record is added.
+# Sprint 9.4 status note
+
+The disabled Player Identity vertical slice provides implementation evidence for review but does not change the status of ADR-0100 through ADR-0119. They remain Proposed until Clark and Aegis record explicit outcomes in the decision register and each affected ADR.

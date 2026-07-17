@@ -1547,3 +1547,6 @@ The implemented foundation lives in `shared/domains/player-identity/` and `serve
 - consumer boundaries expose minimal projections while Gift/provider, Hero canonical/editorial, Art moderation and Alliance authority remain with their owning domains.
 
 The [read-only schema report](./reference/player-identity-schema-discovery.md) records live evidence and drift. The [Sprint 9.3 release note](./releases/SPRINT_9_3_PLAYER_IDENTITY_FOUNDATION.md) records exact scope. This evidence does not change any ADR from Proposed.
+# Sprint 9.4 implementation posture
+
+The Player Identity repository, service, API, UI, integration, support and legacy boundaries now exist locally as a complete disabled vertical slice. This implementation does not accept any Proposed decision: all exact-match feature gates default OFF, capabilities deny all, production persistence is a disabled adapter, verification has no provider and public projection is not enabled. The operational specification is in [docs/player-identity/VERTICAL_SLICE.md](./player-identity/VERTICAL_SLICE.md); migration recovery remains governed by [docs/player-identity/MIGRATION_RECOVERY_AND_VALIDATION.md](./player-identity/MIGRATION_RECOVERY_AND_VALIDATION.md).
