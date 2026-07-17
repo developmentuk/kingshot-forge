@@ -1,5 +1,4 @@
 import {
-  getDatasetCapabilityReadiness,
   getDatasetReadinessDefinition,
   type DatasetReadinessDefinition,
 } from "../../../shared/data-engine/readiness-registry";
@@ -46,22 +45,6 @@ export interface AdminDatasetDefinition {
   readinessScore: ReadinessScore;
 }
 
-function isImplemented(
-  datasetId: AdminDatasetRegistration["id"],
-  capability:
-    | "browser"
-    | "viewer"
-    | "editor"
-    | "publishing"
-    | "version-history"
-    | "search",
-): boolean {
-  return getDatasetCapabilityReadiness(
-    datasetId,
-    capability,
-  ).status === "implemented";
-}
-
 function toAdminDatasetDefinition(
   registration: AdminDatasetRegistration,
 ): AdminDatasetDefinition {
@@ -78,21 +61,13 @@ function toAdminDatasetDefinition(
 
   const hasBrowser = Boolean(
     registration.capabilities?.browsing &&
-    adapter &&
-    isImplemented(
-      registration.id,
-      "browser",
-    ),
+    adapter,
   );
 
   const hasEditor = Boolean(
     registration.capabilities?.editing &&
     adapter?.createEditorRecord &&
-    editorSchema &&
-    isImplemented(
-      registration.id,
-      "editor",
-    ),
+    editorSchema,
   );
 
   const capabilities: AdminDatasetCapabilities = {
@@ -106,34 +81,18 @@ function toAdminDatasetDefinition(
     editing: hasEditor,
     publishing: Boolean(
       registration.capabilities?.publishing &&
-      hasEditor &&
-      isImplemented(
-        registration.id,
-        "publishing",
-      ),
+      hasEditor,
     ),
     search: Boolean(
       registration.capabilities?.search &&
-      hasBrowser &&
-      isImplemented(
-        registration.id,
-        "search",
-      ),
+      hasBrowser,
     ),
     versionHistory: Boolean(
       registration.capabilities?.versionHistory &&
-      hasEditor &&
-      isImplemented(
-        registration.id,
-        "version-history",
-      ),
+      hasEditor,
     ),
     viewing: Boolean(
-      hasBrowser &&
-      isImplemented(
-        registration.id,
-        "viewer",
-      ),
+      hasBrowser,
     ),
   };
 

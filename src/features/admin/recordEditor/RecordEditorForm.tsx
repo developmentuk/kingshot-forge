@@ -25,7 +25,7 @@ import type {
 } from "./recordEditorSchema";
 
 interface RecordEditorFormProps {
-  mode?: "create" | "edit";
+  mode?: "create" | "edit" | "review";
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
   validation: RecordEditorValidationResult;
@@ -43,7 +43,7 @@ interface RecordEditorFormProps {
 function getRecordTitle(
   schema: RecordEditorSchema,
   record: RecordEditorRecord,
-  mode: "create" | "edit",
+  mode: "create" | "edit" | "review",
 ): string {
   const titleValue =
     record.values[schema.titleField];
@@ -208,7 +208,9 @@ export function RecordEditorForm({
           <p className="record-editor-form-eyebrow">
             {mode === "create"
               ? "Creating"
-              : "Editing"}{" "}
+              : mode === "review"
+                ? "Reviewing"
+                : "Editing"}{" "}
             {schema.singularLabel}
           </p>
           <h2>
@@ -221,7 +223,9 @@ export function RecordEditorForm({
           <p>
             {mode === "create"
               ? "Complete the fields below to create an editorial draft."
-              : "Update this record using the fields below."}
+              : mode === "review"
+                ? "Inspect the current values and use the editorial workflow controls below."
+                : "Update this record using the fields below."}
           </p>
         </div>
 

@@ -10,6 +10,14 @@ import type {
   ReadinessStatus,
 } from '../platform/readiness.js'
 
+import {
+  DATASET_CAPABILITY_REGISTRY,
+} from './dataset-capabilities.js'
+
+import {
+  getDatasetVerificationReadinessStatus,
+} from './verification-registry.js'
+
 export type DatasetDomain =
   | 'hero'
   | 'progression'
@@ -77,28 +85,19 @@ const DATASET_DOMAINS: Record<DatasetKey, DatasetDomain> = {
   kvk: 'events',
 }
 
-const EDITOR_DATASET_KEYS = new Set<DatasetKey>([
-  'heroes',
-  'hero-skills',
-  'buildings',
-])
-
-const PUBLISHING_DATASET_KEYS = new Set<DatasetKey>([
-  'heroes',
-  'hero-skills',
-])
-
 const ADMIN_CAPABILITY_EVIDENCE: Partial<
   Record<ReadinessCapability, string>
 > = {
   browser: 'src/features/admin/datasetAdapterRegistry.ts',
   viewer: 'src/features/admin/DatasetRecordPanel.tsx',
   editor: 'src/features/admin/recordEditor/recordEditorSchemaRegistry.ts',
-  publishing: 'server/editorial/publishLiveDatasetRecord.ts',
+  validation: 'server/editorial/validation.ts',
+  publishing: 'supabase/migrations/20260717170000_secure_atomic_editorial_publication.sql',
   'version-history': 'src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx',
   search: 'src/features/admin/DatasetTable.tsx',
   filters: 'src/features/admin/DatasetTable.tsx',
   mobile: 'src/styles/legacy/08-admin.css',
+  verification: 'shared/data-engine/verification-registry.ts',
 }
 
 function adminCapabilityStatus(
@@ -113,18 +112,30 @@ function adminCapabilityStatus(
       return 'implemented'
 
     case 'editor':
+      return DATASET_CAPABILITY_REGISTRY[key].editing
+        ? 'implemented'
+        : 'missing'
+
+    case 'validation':
+      return DATASET_CAPABILITY_REGISTRY[key].validation
+        ? 'implemented'
+        : 'missing'
+
     case 'version-history':
-      return EDITOR_DATASET_KEYS.has(key)
+      return DATASET_CAPABILITY_REGISTRY[key].versionHistory
         ? 'implemented'
         : 'missing'
 
     case 'publishing':
-      return PUBLISHING_DATASET_KEYS.has(key)
-        ? 'implemented'
+      return DATASET_CAPABILITY_REGISTRY[key].publishing
+        ? 'partial'
         : 'missing'
 
     case 'filters':
       return 'missing'
+
+    case 'verification':
+      return getDatasetVerificationReadinessStatus(key)
 
     default:
       return null
@@ -166,6 +177,10 @@ function createCapabilities(key: DatasetKey): readonly CapabilityReadiness[] {
         note:
           adminStatus === 'implemented'
             ? 'Verified in the shared Admin dataset experience.'
+            : adminStatus === 'partial' && capability === 'publishing'
+              ? 'The atomic publication contract is implemented locally but its unapplied migration and live transaction remain unverified.'
+            : capability === 'verification'
+              ? 'Derived from current Verification Centre evidence. Live RLS, migration and publication checks remain blocked or not run.'
             : capability === 'filters'
               ? 'Search and sorting are available; dataset-specific filters are not implemented.'
               : `The ${capability} capability is not implemented for this dataset.`,

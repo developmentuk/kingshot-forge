@@ -43,6 +43,10 @@ interface EditorialApiResponse<T> {
   status: "success" | "error";
   data?: T;
   message?: string;
+  issues?: Array<{
+    message: string;
+    fieldId?: string;
+  }>;
 }
 
 async function getAccessToken():
@@ -89,8 +93,17 @@ async function request<T>(
     payload.status !== "success" ||
     payload.data === undefined
   ) {
+    const issueSummary = payload.issues
+      ?.map((issue) =>
+        issue.fieldId
+          ? `${issue.fieldId}: ${issue.message}`
+          : issue.message,
+      )
+      .join(" ");
+
     throw new Error(
-      payload.message ??
+      issueSummary ||
+        payload.message ||
         "The editorial request failed.",
     );
   }

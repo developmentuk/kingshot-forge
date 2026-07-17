@@ -33,6 +33,7 @@ const companionNavigation: NavigationItem[] = [
 const myForgeNavigation: NavigationItem[] = [
   { label: 'Dashboard', shortLabel: 'Dashboard', icon: '⭐', path: '/my-forge' },
   { label: 'My Profile', shortLabel: 'Profile', icon: '🪪', path: '/my-forge/profile' },
+  { label: 'Player Identity', shortLabel: 'Identity', icon: '🛡️', path: '/my-forge/player-identity' },
   { label: 'Hero Collection', shortLabel: 'Heroes', icon: '🦸', path: '/my-forge/hero-collection' },
   { label: 'Hero Showcase', shortLabel: 'Showcase', icon: '🏆', path: '/my-forge/heroes' },
   { label: 'Transfer Profile', shortLabel: 'Transfer', icon: '🎫', path: '/transfer-profile' },
@@ -52,12 +53,14 @@ const platformNavigation: NavigationItem[] = [
 const adminNavigation: NavigationItem[] = [
   { label: 'Dashboard', shortLabel: 'Dashboard', icon: '🛠️', path: '/admin' },
   { label: 'Datasets', shortLabel: 'Data', icon: '🗄️', path: '/admin/datasets' },
+  { label: 'Verification Centre', shortLabel: 'Verify', icon: '🧭', path: '/admin/verification' },
   { label: 'Feedback Queue', shortLabel: 'Feedback', icon: '💬', path: '/admin/feedback' },
   { label: 'Import Manager', shortLabel: 'Import', icon: '📥', path: '/admin/imports' },
   { label: 'Global Search', shortLabel: 'Search', icon: '🔍', path: '/admin/search' },
   { label: 'Version History', shortLabel: 'History', icon: '🕒', path: '/admin/history' },
   { label: 'Publish', shortLabel: 'Publish', icon: '🚀', path: '/admin/publish' },
   { label: 'Data Engine', shortLabel: 'Engine', icon: '⚙️', path: '/admin/data-engine' },
+  { label: 'Player Identity', shortLabel: 'Players', icon: '🛡️', path: '/admin/player-identity' },
 ]
 
 const mobileNavigation: NavigationItem[] = [

@@ -12,7 +12,18 @@
     "validate:nodenext": "node scripts/fix-nodenext-imports.mjs",
     "validate:pm2b": "node scripts/validate-pm2b.mjs",
     "validate:hero-skills": "node scripts/validate-hero-skills.mjs",
-    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run lint && npm run build"
+    "validate:hero-skills-governance": "node scripts/validate-hero-skills-governance.mjs",
+    "validate:editorial-platform": "node scripts/validate-editorial-platform.mjs",
+    "validate:verification-centre": "node scripts/validate-verification-centre.mjs",
+    "validate:art-studio": "node scripts/validate-art-studio-foundation.mjs",
+    "test:editorial-api": "node scripts/test-editorial-api.mjs",
+    "test:verification-centre": "node scripts/test-verification-centre.mjs",
+    "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
+    "validate:player-identity": "node scripts/validate-player-identity.mjs",
+    "test:player-identity": "node scripts/test-player-identity.mjs && node scripts/test-player-identity-vertical-slice.mjs",
+    "test:art-studio": "node scripts/test-art-studio-foundation.mjs && node scripts/test-art-studio-player-attribution.mjs",
+    "test:art-studio-attribution": "node scripts/test-art-studio-player-attribution.mjs",
+    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",

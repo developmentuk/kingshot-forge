@@ -208,6 +208,20 @@ export class PublicationQueueService {
         item: structuredClone(processing),
       })
 
+      if (result.queueOutcomeCommitted) {
+        const completed =
+          await this.requireItem(itemId)
+
+        if (completed.status !== 'completed') {
+          throw new PublicationQueueError(
+            `Atomic publication completed without a completed queue outcome for "${itemId}".`,
+            itemId,
+          )
+        }
+
+        return structuredClone(completed)
+      }
+
       return this.complete(
         processing,
         result,

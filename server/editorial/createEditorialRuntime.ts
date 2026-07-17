@@ -3,47 +3,81 @@ import type {
 } from "../../src/platform/datasets/index.js";
 
 import {
+  getDatasetCapabilityFlags,
+  getRegisteredDatasetCapabilities,
+} from "../../shared/data-engine/dataset-capabilities.js";
+import {
+  isDatasetKey,
+} from "../../shared/data-engine/datasets.js";
+
+import {
+  createRecordEditorDatasetDefinition,
+} from "../../src/features/admin/recordEditor/recordEditorPlatformValidation.js";
+import {
+  getRecordEditorSchema,
+} from "../../src/features/admin/recordEditor/recordEditorSchemaRegistry.js";
+
+import {
   EditorialDraftService,
   EditorialHistoryService,
   EditorialPermissionService,
+  EditorialConcurrencyError,
+  EditorialTransitionError,
   EditorialWorkflowService,
   PublicationQueueService,
   ScheduledPublishingService,
   SupabaseEditorialRepository,
+  SupabaseAtomicPublicationRepository,
   SupabasePublicationQueueRepository,
   SupabaseScheduledPublicationRepository,
   standardEditorialPermissionPolicy,
-  createEditorialPublicationExecutor,
 } from "../../src/platform/index.js";
 
 import {
   getSupabaseAdmin,
 } from "../database/supabaseAdmin.js";
 import {
-  publishLiveDatasetRecord,
-} from "./publishLiveDatasetRecord.js";
+  EditorialCapabilityError,
+  EditorialDatasetNotFoundError,
+  EditorialRecordNotFoundError,
+  EditorialResourceMismatchError,
+} from "./errors.js";
+import {
+  validateEditorialValues,
+} from "./validation.js";
 
 export function createRuntimeDatasetDefinition(
   datasetId: string,
 ): DatasetDefinition {
+  const capabilities =
+    getRegisteredDatasetCapabilities(datasetId);
+
+  if (!capabilities || !isDatasetKey(datasetId)) {
+    throw new EditorialDatasetNotFoundError(
+      datasetId,
+    );
+  }
+
+  const schema = getRecordEditorSchema(datasetId);
+
+  if (!capabilities.editing || !schema) {
+    throw new EditorialCapabilityError(
+      datasetId,
+      "editorial editing",
+      `Dataset "${datasetId}" is browse-only and does not expose editorial mutation APIs.`,
+    );
+  }
+
+  const definition =
+    createRecordEditorDatasetDefinition(schema);
+
   return {
-    id: datasetId,
-    version: 1,
-    title: datasetId,
-    singularTitle: "Record",
-    description:
-      "Runtime editorial dataset definition.",
-    category: "game-data",
+    ...definition,
     route: `/admin/data/${datasetId}`,
-    idField: "id",
-    titleField: "id",
-    fields: [],
-    capabilities: {
-      browsing: true,
-      editing: true,
-      importing: true,
-      search: true,
-    },
+    capabilities:
+      getDatasetCapabilityFlags(
+        datasetId,
+      ),
     permissions:
       standardEditorialPermissionPolicy,
   };
@@ -58,6 +92,10 @@ export function createEditorialRuntime() {
     new SupabasePublicationQueueRepository(client);
   const scheduleRepository =
     new SupabaseScheduledPublicationRepository(
+      client,
+    );
+  const atomicPublicationRepository =
+    new SupabaseAtomicPublicationRepository(
       client,
     );
 
@@ -76,11 +114,6 @@ export function createEditorialRuntime() {
   const permissionService =
     new EditorialPermissionService();
 
-  const editorialExecutor =
-    createEditorialPublicationExecutor(
-      workflowService,
-    );
-
   const queueService =
     new PublicationQueueService(
       queueRepository,
@@ -91,8 +124,9 @@ export function createEditorialRuntime() {
           );
 
         if (!version) {
-          throw new Error(
-            "The approved editorial version could not be found.",
+          throw new EditorialRecordNotFoundError(
+            context.item.datasetId,
+            context.item.recordId,
           );
         }
 
@@ -102,29 +136,59 @@ export function createEditorialRuntime() {
           version.recordId !==
             context.item.recordId
         ) {
-          throw new Error(
-            "The publication queue item does not match its editorial version.",
+          throw new EditorialResourceMismatchError(
+            "publication queue item",
           );
         }
 
-        // Project the approved values into the live catalogue before
-        // recording the editorial Published transition. If projection
-        // fails, the queue item fails and the editorial record remains
-        // Approved rather than claiming content is publicly available.
-        await publishLiveDatasetRecord(
-          client,
+        const head =
+          await editorialRepository.getHead(
+            context.item.datasetId,
+            context.item.recordId,
+          );
+
+        if (!head) {
+          throw new EditorialRecordNotFoundError(
+            context.item.datasetId,
+            context.item.recordId,
+          );
+        }
+
+        if (
+          head.currentVersion !==
+            context.item.expectedVersion ||
+          head.currentVersionId !==
+            context.item.versionId
+        ) {
+          throw new EditorialConcurrencyError(
+            context.item.datasetId,
+            context.item.recordId,
+            context.item.expectedVersion,
+            head.currentVersion,
+          );
+        }
+
+        if (
+          head.status !== "approved" ||
+          version.status !== "approved"
+        ) {
+          throw new EditorialTransitionError(
+            head.status,
+            ["approved"],
+            "published",
+          );
+        }
+
+        await validateEditorialValues(
           context.item.datasetId,
           context.item.recordId,
           version.values,
-          {
-            version: version.version,
-            versionId: version.id,
-            publishedBy:
-              context.item.requestedBy,
-          },
+          "publish",
         );
 
-        return editorialExecutor(context);
+        return atomicPublicationRepository.publish(
+          context.item,
+        );
       },
     );
 
@@ -138,6 +202,7 @@ export function createEditorialRuntime() {
     editorialRepository,
     queueRepository,
     scheduleRepository,
+    atomicPublicationRepository,
     draftService,
     workflowService,
     historyService,

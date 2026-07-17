@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import {
+  canRolePerformStandardEditorialAction,
   EditorialDiffService,
   type EditorialRecordVersion,
 } from "../../../platform";
@@ -39,7 +40,7 @@ import {
 } from "./editorialApi";
 
 interface ConnectedEditorialRecordEditorProps {
-  mode?: "create" | "edit";
+  mode?: "create" | "edit" | "review";
   publishingAvailable: boolean;
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
@@ -63,6 +64,7 @@ export function ConnectedEditorialRecordEditor({
 }: ConnectedEditorialRecordEditorProps) {
   const {
     hasPermission,
+    role,
   } = useRole();
 
   const [
@@ -174,34 +176,69 @@ export function ConnectedEditorialRecordEditor({
       EditorialWorkflowAction[] = [];
 
     if (
-      hasPermission("cms.records.edit")
+      hasPermission("cms.records.edit") &&
+      canRolePerformStandardEditorialAction(role, "update")
     ) {
       actions.push("submit_for_review");
     }
 
     if (
-      hasPermission("cms.history.restore")
+      hasPermission("cms.history.restore") &&
+      canRolePerformStandardEditorialAction(role, "review")
     ) {
       actions.push(
         "return_to_draft",
         "reject",
-        "restore",
       );
     }
 
-    if (hasPermission("cms.publish")) {
-      actions.push(
-        "approve",
-        "archive",
-      );
+    if (
+      hasPermission("cms.publish") &&
+      canRolePerformStandardEditorialAction(role, "approve")
+    ) {
+      actions.push("approve");
+    }
 
-      if (publishingAvailable) {
-        actions.push("publish");
-      }
+    if (
+      publishingAvailable &&
+      hasPermission("cms.publish") &&
+      canRolePerformStandardEditorialAction(role, "publish")
+    ) {
+      actions.push("publish");
     }
 
     return actions;
-  }, [hasPermission, publishingAvailable]);
+  }, [hasPermission, publishingAvailable, role]);
+
+  const saveAction =
+    mode === "create" ? "create" : "update";
+  const savePermission =
+    hasPermission(
+      mode === "create"
+        ? "cms.records.create"
+        : "cms.records.edit",
+    ) &&
+    canRolePerformStandardEditorialAction(
+      role,
+      saveAction,
+    );
+  const draftIsEditable =
+    !state?.head || state.head.status === "draft";
+  const editingDisabled =
+    loading ||
+    Boolean(runtimeError && !state) ||
+    !savePermission ||
+    !draftIsEditable;
+  const editingDisabledMessage =
+    loading
+      ? "Editorial state is loading."
+      : runtimeError && !state
+        ? "Editorial state could not be loaded, so saving is disabled. Retry by reopening this record."
+        : !savePermission
+          ? "Your role can view this record but cannot save editorial drafts."
+          : !draftIsEditable
+            ? `This record is ${state?.head?.status.replaceAll("_", " ")}. Return it to draft before editing values.`
+            : undefined;
 
   async function saveDraft(
     nextRecord: RecordEditorRecord,
@@ -302,49 +339,20 @@ export function ConnectedEditorialRecordEditor({
     );
   }
 
-  async function previewRollback(
-    versionId: string,
-  ) {
-    compareWithCurrent(versionId);
-
-    if (
-      !state?.head ||
-      !window.confirm(
-        "Restore this historical version as a new draft version?",
-      )
-    ) {
-      return;
-    }
-
-    setRuntimeError(null);
-
-    try {
-      await runEditorialAction(
-        "rollback",
-        {
-          datasetId: schema.datasetId,
-          recordId: record.id,
-          expectedVersion:
-            state.head.currentVersion,
-          targetVersionId: versionId,
-        },
-      );
-
-      await loadState();
-    } catch (error) {
-      setRuntimeError(
-        error instanceof Error
-          ? error.message
-          : "Unable to roll back this record.",
-      );
-    }
-  }
-
   async function retryQueueItem(
     queueItemId: string,
   ) {
     await runOperationalAction(
       "retry_queue",
+      { queueItemId },
+    );
+  }
+
+  async function processQueueItem(
+    queueItemId: string,
+  ) {
+    await runOperationalAction(
+      "process_queue",
       { queueItemId },
     );
   }
@@ -398,6 +406,10 @@ export function ConnectedEditorialRecordEditor({
       mode={mode}
       schema={schema}
       record={currentRecord}
+      disabled={editingDisabled}
+      disabledMessage={
+        editingDisabledMessage
+      }
       onClose={onClose}
       onSave={saveDraft}
       supplementalContent={
@@ -440,6 +452,13 @@ export function ConnectedEditorialRecordEditor({
                 state.queueItems
               }
               schedules={state.schedules}
+              publishingAvailable={
+                publishingAvailable &&
+                canRolePerformStandardEditorialAction(
+                  role,
+                  "publish",
+                )
+              }
               allowedActions={
                 allowedActions
               }
@@ -456,8 +475,8 @@ export function ConnectedEditorialRecordEditor({
               onCompareWithCurrent={
                 compareWithCurrent
               }
-              onPreviewRollback={
-                previewRollback
+              onProcessQueueItem={
+                processQueueItem
               }
               onRetryQueueItem={
                 retryQueueItem

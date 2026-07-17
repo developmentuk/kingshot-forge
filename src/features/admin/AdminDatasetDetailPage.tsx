@@ -8,6 +8,14 @@ import {
   useParams,
 } from "react-router-dom";
 
+import {
+  useRole,
+} from "../../context/RoleContext";
+
+import {
+  canRolePerformStandardEditorialAction,
+} from "../../platform";
+
 import type {
   ReadinessCapability,
   ReadinessStatus,
@@ -58,7 +66,7 @@ import type {
 } from "./recordEditor/recordEditorSchema";
 
 interface ActiveRecordEditor {
-  mode: "create" | "edit";
+  mode: "create" | "edit" | "review";
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
 }
@@ -111,6 +119,7 @@ function formatFetchedAt(value: string): string {
 }
 
 export function AdminDatasetDetailPage() {
+  const { hasPermission, role } = useRole();
   const { datasetId } =
     useParams<{
       datasetId: string;
@@ -176,15 +185,56 @@ export function AdminDatasetDetailPage() {
     ? getRecordEditorSchema(datasetId)
     : null;
 
-  const supportsRecordEditing = Boolean(
+  const supportsRecordEditor = Boolean(
     dataset?.capabilities.editing &&
     adapter?.createEditorRecord &&
     editorSchema,
   );
 
+  const supportsRecordEditing = Boolean(
+    supportsRecordEditor &&
+    hasPermission("cms.records.edit") &&
+    canRolePerformStandardEditorialAction(
+      role,
+      "update",
+    ),
+  );
+
+  const supportsWorkflowReview = Boolean(
+    supportsRecordEditor &&
+    !supportsRecordEditing &&
+    (
+      canRolePerformStandardEditorialAction(
+        role,
+        "review",
+      ) &&
+      hasPermission("cms.history.restore") ||
+      (
+        canRolePerformStandardEditorialAction(
+          role,
+          "approve",
+        ) &&
+        hasPermission("cms.publish")
+      ) ||
+      (
+        dataset?.capabilities.publishing &&
+        canRolePerformStandardEditorialAction(
+          role,
+          "publish",
+        ) &&
+        hasPermission("cms.publish")
+      )
+    ),
+  );
+
   const supportsRecordCreation = Boolean(
     dataset?.capabilities.creation &&
-    editorSchema?.createEmptyRecord,
+    editorSchema?.createEmptyRecord &&
+    hasPermission("cms.records.create") &&
+    canRolePerformStandardEditorialAction(
+      role,
+      "create",
+    ),
   );
 
   const supportsBrowsing = Boolean(
@@ -274,7 +324,12 @@ export function AdminDatasetDetailPage() {
 
     if (
       !dataset?.capabilities.creation ||
-      !editorSchema?.createEmptyRecord
+      !editorSchema?.createEmptyRecord ||
+      !hasPermission("cms.records.create") ||
+      !canRolePerformStandardEditorialAction(
+        role,
+        "create",
+      )
     ) {
       setEditorError(
         "Record creation is not implemented for this dataset.",
@@ -290,8 +345,9 @@ export function AdminDatasetDetailPage() {
     });
   }
 
-  function handleEditRow(
+  function openRecordEditor(
     row: DatasetTableRow,
+    mode: "edit" | "review",
   ) {
     setEditorError(null);
     setSelectedRow(null);
@@ -331,10 +387,42 @@ export function AdminDatasetDetailPage() {
     }
 
     setActiveEditor({
-      mode: "edit",
+      mode,
       schema: editorSchema,
       record: editorRecord,
     });
+  }
+
+  function handleEditRow(
+    row: DatasetTableRow,
+  ) {
+    if (
+      !hasPermission("cms.records.edit") ||
+      !canRolePerformStandardEditorialAction(
+        role,
+        "update",
+      )
+    ) {
+      setEditorError(
+        "Your role can view this dataset but cannot edit records.",
+      );
+      return;
+    }
+
+    openRecordEditor(row, "edit");
+  }
+
+  function handleReviewRow(
+    row: DatasetTableRow,
+  ) {
+    if (!supportsWorkflowReview) {
+      setEditorError(
+        "Your role cannot review this editorial record.",
+      );
+      return;
+    }
+
+    openRecordEditor(row, "review");
   }
 
   if (!dataset) {
@@ -572,6 +660,11 @@ export function AdminDatasetDetailPage() {
               onEditRow={
                 supportsRecordEditing
                   ? handleEditRow
+                  : undefined
+              }
+              onReviewRow={
+                supportsWorkflowReview
+                  ? handleReviewRow
                   : undefined
               }
             />

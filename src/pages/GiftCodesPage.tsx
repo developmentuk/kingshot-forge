@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { GiftRedemptionFoundationPanel } from '../features/giftcodes/GiftRedemptionFoundationPanel'
 import { supabase } from '../lib/supabase'
 import type {
   GiftCode,
@@ -99,7 +100,7 @@ function GiftCodesPage() {
 
         <p>
           Copy currently active Kingshot codes and redeem them
-          inside the game.
+          on the official Century Games page.
         </p>
       </div>
 
@@ -132,6 +133,8 @@ function GiftCodesPage() {
           {refreshing ? 'Refreshing…' : 'Refresh codes'}
         </button>
       </div>
+
+      <GiftRedemptionFoundationPanel />
 
       {loading ? (
         <div className="gift-codes-state">
@@ -201,8 +204,10 @@ function GiftCodesPage() {
         <strong>Code availability can change</strong>
 
         <p>
-          Codes are supplied by the KingShot.net API. A code may
-          become unavailable before the page refreshes.
+          The code list is supplied by the community-run
+          KingShot.net API. A code may become unavailable before
+          this page refreshes; redemption happens separately on
+          the official Century Games page.
         </p>
       </div>
     </section>

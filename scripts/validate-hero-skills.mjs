@@ -15,13 +15,12 @@ const expectations = [
     ],
   },
   {
-    path: 'server/editorial/publishLiveDatasetRecord.ts',
+    path: 'supabase/migrations/20260717170000_secure_atomic_editorial_publication.sql',
     fragments: [
-      'case "hero-skills"',
-      'publishHeroSkill',
-      '.from("hero_skills")',
+      "queue_item.dataset_id = 'heroes'",
+      'insert into public.hero_skills',
       'published_version_id',
-      'onConflict: "editorial_key"',
+      'on conflict (editorial_key)',
     ],
   },
   {

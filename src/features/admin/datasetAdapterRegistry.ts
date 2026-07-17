@@ -3,8 +3,8 @@ import type {
 } from "./dataEngineApi";
 
 import {
-  getDatasetCapabilityReadiness,
-} from "../../../shared/data-engine/readiness-registry";
+  requireRegisteredDatasetCapabilities,
+} from "../../../shared/data-engine/dataset-capabilities";
 
 import type {
   DatasetAdapter,
@@ -91,11 +91,33 @@ for (const adapter of registeredAdapters) {
 }
 
 for (const registration of listAdminDatasetRegistrations()) {
+  const sharedCapabilities =
+    requireRegisteredDatasetCapabilities(
+      registration.id,
+    );
   const adapter = datasetAdapters.get(registration.id);
   const editorSchema =
     getRecordEditorSchema(registration.id);
 
   const hasBrowserAdapter = Boolean(adapter);
+
+  const declaredChecks = [
+    ["browsing", registration.capabilities?.browsing === true],
+    ["creation", registration.capabilities?.creation === true],
+    ["editing", registration.capabilities?.editing === true],
+    ["importing", registration.capabilities?.importing === true],
+    ["publishing", registration.capabilities?.publishing === true],
+    ["search", registration.capabilities?.search === true],
+    ["versionHistory", registration.capabilities?.versionHistory === true],
+  ] as const;
+
+  for (const [capability, declared] of declaredChecks) {
+    if (sharedCapabilities[capability] !== declared) {
+      throw new Error(
+        `Dataset "${registration.id}" ${capability} declaration does not match the shared capability registry.`,
+      );
+    }
+  }
 
   if (
     (registration.capabilities?.browsing === true) !==
@@ -133,38 +155,6 @@ for (const registration of listAdminDatasetRegistrations()) {
     throw new Error(
       `Dataset "${registration.id}" creation capability does not match its Record Editor schema.`,
     );
-  }
-
-  const readinessChecks = [
-    ["browser", hasBrowserAdapter],
-    ["editor", hasCompleteRecordEditor],
-    [
-      "publishing",
-      registration.capabilities?.publishing === true,
-    ],
-    [
-      "version-history",
-      registration.capabilities?.versionHistory === true,
-    ],
-    [
-      "search",
-      registration.capabilities?.search === true &&
-        hasBrowserAdapter,
-    ],
-  ] as const;
-
-  for (const [capability, implemented] of readinessChecks) {
-    const readinessImplemented =
-      getDatasetCapabilityReadiness(
-        registration.id,
-        capability,
-      ).status === "implemented";
-
-    if (readinessImplemented !== implemented) {
-      throw new Error(
-        `Dataset "${registration.id}" ${capability} readiness does not match its registered Admin capability.`,
-      );
-    }
   }
 
   if (

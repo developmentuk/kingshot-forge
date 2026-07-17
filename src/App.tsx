@@ -2,6 +2,8 @@ import { Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import "./App.css";
 import "./features/admin/recordEditor/recordEditor.css";
+import "./features/admin/verification/verificationCentre.css";
+import "./features/player-identity/playerIdentity.css";
 import "./styles/playerDomain.css";
 // Keep Hero Collection polish last so it overrides the legacy Hero card rules.
 import "./styles/heroCollectionPolish.css";
@@ -39,7 +41,15 @@ import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
 import { AdminDatasetsPage } from "./features/admin/AdminDatasetsPage";
 import { AdminDatasetDetailPage } from "./features/admin/AdminDatasetDetailPage";
 import { FeedbackAdminPage } from "./features/admin/FeedbackAdminPage";
+import {
+  DatasetVerificationPage,
+  VerificationCentrePage,
+  VerificationRunPage,
+} from "./features/admin/verification";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
+import { PrivatePlayerIdentityPage } from "./features/player-identity/PrivatePlayerIdentityPage";
+import { PublicPlayerIdentityPage } from "./features/player-identity/PublicPlayerIdentityPage";
+import { PlayerSupportWorkspacePage } from "./features/player-identity/PlayerSupportWorkspacePage";
 
 function App() {
   return (
@@ -68,6 +78,8 @@ function App() {
         <Route path="player/:forgeId" element={<PlayerProfilePage />} />
         <Route path="player/:forgeId/progression" element={<PublicPlayerProgressionPage />} />
         <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
+        <Route path="my-forge/player-identity" element={<PrivatePlayerIdentityPage />} />
+        <Route path="players/:publicAlias" element={<PublicPlayerIdentityPage />} />
         <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
@@ -79,6 +91,11 @@ function App() {
         <Route path="admin/data/:datasetId" element={<ProtectedRoute permission="cms.view"><AdminDatasetDetailPage /></ProtectedRoute>} />
         <Route path="admin/feedback" element={<ProtectedRoute permission="cms.view"><FeedbackAdminPage /></ProtectedRoute>} />
         <Route path="admin/data-engine" element={<ProtectedRoute permission="cms.view"><DataEngineDiagnosticsPage /></ProtectedRoute>} />
+        <Route path="admin/verification" element={<ProtectedRoute permission="cms.view"><VerificationCentrePage /></ProtectedRoute>} />
+        <Route path="admin/verification/runs/:runId" element={<ProtectedRoute permission="cms.view"><VerificationRunPage /></ProtectedRoute>} />
+        <Route path="admin/verification/:datasetId" element={<ProtectedRoute permission="cms.view"><DatasetVerificationPage /></ProtectedRoute>} />
+        <Route path="admin/player-identity" element={<PlayerSupportWorkspacePage />} />
+        <Route path="admin/player-identity/:caseId" element={<PlayerSupportWorkspacePage />} />
         <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Import Manager</h1><p>Import management will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
         <Route path="admin/history" element={<ProtectedRoute permission="cms.history.view"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Version History</h1><p>Dataset and record history will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
         <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Global Search</h1><p>Search across every Forge dataset from one place.</p></div></section></main></ProtectedRoute>} />

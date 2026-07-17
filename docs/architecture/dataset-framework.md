@@ -63,3 +63,16 @@ CS-003D introduces the shared validation service. Existing Record Editor validat
 CS-003E adds a compatibility bridge between the existing Record Editor schemas and the platform Dataset Validation Service. Interactive field validation remains available while editing, and every save attempt now passes through the shared platform validation boundary before the persistence callback can run.
 
 The bridge is temporary. Dataset registrations will ultimately own complete field schemas, allowing the Record Editor to consume platform definitions directly without translating its legacy schema format.
+
+## Source-governed datasets
+
+Hero Skills demonstrates a source-governed path where extraction cannot enter canonical normalisation directly:
+
+```text
+source discovery → preserved evidence → staged facts → source review
+→ record approval → canonical draft → editorial workflow → published projection
+```
+
+`shared/platform/source-evidence.ts` defines reusable evidence metadata. Dataset contracts own domain validation; the Verification Centre reports evidence/readiness but does not approve sources or create canonical records. Staging UUIDs are evidence-row identities and must never become canonical IDs.
+
+The Sprint 9.3 Hero Skills proposal is unapplied. It does not change the existing Data Engine import registry or treat the 60 staged rows as imported canonical data.

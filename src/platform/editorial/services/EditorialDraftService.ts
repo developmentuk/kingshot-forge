@@ -17,6 +17,18 @@ export interface EditorialDraftServiceOptions {
   createId?: () => string
 }
 
+export class EditorialDraftStatusError extends Error {
+  readonly currentStatus: EditorialRecordHead['status']
+
+  constructor(currentStatus: EditorialRecordHead['status']) {
+    super(
+      `Draft values can only be saved while the editorial record is in "draft" status; current status is "${currentStatus}".`,
+    )
+    this.name = 'EditorialDraftStatusError'
+    this.currentStatus = currentStatus
+  }
+}
+
 function defaultNow(): string {
   return new Date().toISOString()
 }
@@ -76,6 +88,15 @@ export class EditorialDraftService {
         datasetId,
         recordId,
       )
+
+    if (
+      existingHead &&
+      existingHead.status !== 'draft'
+    ) {
+      throw new EditorialDraftStatusError(
+        existingHead.status,
+      )
+    }
 
     const nextVersion =
       (existingHead?.currentVersion ?? 0) + 1
