@@ -270,6 +270,25 @@ Read these before changing product boundaries or shared platform behaviour:
 
 Changes to product pillars, domain boundaries, canonical publishing, security principles, sprint methodology or the Definition of Done require an ADR and corresponding constitution and Blueprint updates.
 
+## Player Identity milestone — release 0.7.2
+
+The Player Identity vertical slice is now active on the player-facing release branch. `PlayerIdentityContext` is the browser source of truth for the authenticated user's primary `player_accounts` row. It reads through the publishable Supabase client, exposes loading, unlinked and retryable failure states, and refreshes after the `kingshot-player-updated` event. Account mutations remain in the existing linked-player workflow; no second identity store or schema was introduced.
+
+My Forge now presents this identity as a Player Headquarters. The heading uses the linked player's real name, kingdom, optional profile alliance, verification status, visibility and a safe avatar fallback. Its priority action is derived from authentication, identity loading/error state, profile completion and visibility. Existing saved name and artwork functionality remains local to the Forge Library.
+
+Key player routes:
+
+- `/my-forge` — Player Headquarters and saved Forge library.
+- `/my-forge/player-identity` — private linked-player identity, verification and visibility summary.
+- `/my-forge/profile` — owned player profile editor and visibility controls.
+- `/my-forge/heroes` — owned Hero Showcase editor.
+- `/my-forge/progression` — owned progression snapshots.
+- `/player/:forgeId` and `/players/:forgeId` — the same public profile projection, with public profile and account visibility enforced.
+
+Public profile reads select only public profile fields and non-sensitive player display fields. They require both `player_profiles.is_public` and `player_accounts.is_public`; `user_id`, link metadata and support data are not selected for public presentation. Browser code uses the publishable Supabase key only; service-role credentials remain server-only.
+
+Validation completed for this milestone: Player Identity structural validation, focused and vertical-slice tests, TypeScript production build and lint. Lint retains the repository's existing seven warnings in unrelated/shared files. Live signed-in route and RLS verification still require a deployment or authenticated browser session with access to the configured Supabase project.
+
 ## Active Release
 
 ### Release 0.7.2 — Player-Facing Domain Activation
