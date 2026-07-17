@@ -39,21 +39,44 @@ const roadmapReleases: RoadmapRelease[] = [
   },
   {
     version: APP_VERSION,
-    name: "Editorial Platform Completion",
-    status: "development",
-    progress: 14,
-    priority: "Sprint 9.2 in development",
+    name: "Consolidated Domain Foundations",
+    status: "live",
+    progress: 100,
+    priority: "Released 17 July 2026",
     description:
-      "Complete Domain 0 Editorial Intelligence and Domain 1 Editorial Platform before product-domain development continues.",
+      "Production-shaped foundations for verification, player identity, gift redemption, community artwork and Hero Skills governance, with all new capabilities safely disabled.",
     features: [
-      "Project Constitution",
-      "Complete registered-dataset audit",
-      "Shared editorial platform parity",
+      "Editorial Platform",
+      "Dataset Framework",
       "Verification Centre",
-      "Hero Skills canonical evidence workflow",
-      "Live dataset health dashboard",
-      "Measured domain readiness report",
-      "End-to-end desktop, mobile and deployment validation",
+      "Hero Skills Governance",
+      "Player Identity Foundation",
+      "Gift Redemption Foundation",
+      "Community Art Studio Foundation",
+      "Privacy-safe domain integration boundaries",
+      "Expanded validation and release safety checks",
+    ],
+  },
+  {
+    version: "0.7.2",
+    name: "Production-Ready User Experiences",
+    status: "development",
+    progress: 0,
+    priority: "Next release",
+    description:
+      "Move from platform foundations towards carefully approved, production-ready user experiences built on the new domain architecture.",
+    features: [
+      "Player Identity approval and activation plan",
+      "Character linking and public profile experience",
+      "Hero Showcase experience",
+      "Manual Gift Centre redemption interface",
+      "Gift eligibility and redemption history",
+      "Art Studio gallery and submission workflow",
+      "Moderation tools and community publishing controls",
+      "Canonical Hero Skills dataset approval",
+      "Hero Skills editorial authoring and public views",
+      "Google Analytics dashboards",
+      "Mobile optimisation and performance improvements",
     ],
   },
   {
@@ -178,9 +201,8 @@ function RoadmapPage() {
           <p className="eyebrow">Product roadmap</p>
           <h1 className="page-title">Build each domain completely</h1>
           <p>
-            Release {APP_VERSION} completes the Editorial Intelligence and Editorial
-            Platform domains. Player identity follows, then Gift Centre is accelerated
-            as the first native Forge Operations release.
+            Release {APP_VERSION} completes the consolidated domain foundations. Release
+            0.7.2 now moves towards carefully approved, production-ready user experiences.
           </p>
         </div>
         <div className="product-roadmap__hero-actions">
@@ -194,21 +216,20 @@ function RoadmapPage() {
           <span className="roadmap-priority-panel__icon">⚒️</span>
           <div>
             <p className="eyebrow">Current development priority</p>
-            <h2>Release {APP_VERSION} — Editorial Platform Completion</h2>
+            <h2>Release 0.7.2 — Production-Ready User Experiences</h2>
             <p>
-              Sprint 9.2 completes dataset parity, verification, canonical evidence,
-              live health metrics and measurable domain readiness. The donated Sir Flux
-              operations concepts are now documented and scheduled without interrupting
-              the active milestone-first release.
+              The next release will activate selected capabilities only after approval,
+              validation and production-safety checks. Player Identity, Gift Centre,
+              Art Studio and Hero Skills will advance through small, focused milestones.
             </p>
           </div>
         </div>
         <div className="roadmap-priority-panel__tags">
-          <span>Editorial Intelligence</span>
-          <span>Editorial Platform</span>
-          <span>Verification Centre</span>
-          <span>Gift Centre next</span>
-          <span>Sir Flux credited</span>
+          <span>Player experience</span>
+          <span>Gift Centre</span>
+          <span>Art Studio</span>
+          <span>Hero Skills</span>
+          <span>Mobile and performance</span>
         </div>
       </section>
 
