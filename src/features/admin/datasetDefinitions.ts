@@ -5,19 +5,16 @@ import {
   DatasetRegistry,
 } from "../../platform/datasets";
 
+import {
+  getDatasetCapabilityFlags,
+} from "../../../shared/data-engine/dataset-capabilities";
+
 import type {
   DatasetKey,
 } from "./dataEngineApi";
 
-export type AdminDatasetStatus =
-  | "ready"
-  | "warning"
-  | "error"
-  | "not-imported";
-
 export interface AdminDatasetMetadata {
   order: number;
-  status: AdminDatasetStatus;
 }
 
 export interface AdminDatasetRegistration
@@ -38,15 +35,9 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "name",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      editing: true,
-      importing: true,
-      search: true,
-    },
+    capabilities: getDatasetCapabilityFlags("heroes"),
     admin: {
       order: 10,
-      status: "ready",
     },
   },
   {
@@ -61,15 +52,9 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "name",
     fields: [],
-    capabilities: {
-      browsing: true,
-      editing: true,
-      importing: false,
-      search: true,
-    },
+    capabilities: getDatasetCapabilityFlags("hero-skills"),
     admin: {
       order: 15,
-      status: "ready",
     },
   },
   {
@@ -83,8 +68,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "key",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, editing: true, importing: true, search: true },
-    admin: { order: 20, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("buildings"),
+    admin: { order: 20 },
   },
   {
     id: "gear",
@@ -97,8 +82,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "tier",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 30, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("gear"),
+    admin: { order: 30 },
   },
   {
     id: "troops",
@@ -111,8 +96,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "label",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 40, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("troops"),
+    admin: { order: 40 },
   },
   {
     id: "charm",
@@ -125,8 +110,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 50, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("charm"),
+    admin: { order: 50 },
   },
   {
     id: "vip",
@@ -139,8 +124,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 60, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("vip"),
+    admin: { order: 60 },
   },
   {
     id: "shards",
@@ -153,8 +138,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "label",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 70, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("shards"),
+    admin: { order: 70 },
   },
   {
     id: "hero-xp",
@@ -167,8 +152,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "level",
     titleField: "level",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 80, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("hero-xp"),
+    admin: { order: 80 },
   },
   {
     id: "truegold",
@@ -181,8 +166,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "building",
     titleField: "building",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 90, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("truegold"),
+    admin: { order: 90 },
   },
   {
     id: "war-academy",
@@ -195,8 +180,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "id",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 100, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("war-academy"),
+    admin: { order: 100 },
   },
   {
     id: "events",
@@ -209,8 +194,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "name",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, editing: true, importing: true, search: true },
-    admin: { order: 110, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("events"),
+    admin: { order: 110 },
   },
   {
     id: "kvk",
@@ -223,8 +208,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "day",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 120, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("kvk"),
+    admin: { order: 120 },
   },
   {
     id: "masters",
@@ -237,8 +222,8 @@ const registrations: AdminDatasetRegistration[] = [
     idField: "name",
     titleField: "name",
     fields: [],
-    capabilities: { browsing: true, importing: true, search: true },
-    admin: { order: 130, status: "not-imported" },
+    capabilities: getDatasetCapabilityFlags("masters"),
+    admin: { order: 130 },
   },
 ];
 

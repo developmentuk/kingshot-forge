@@ -3,10 +3,6 @@ import type {
   ScheduledPublication,
 } from "../../../platform";
 
-import {
-  runEditorialAction,
-} from "./editorialApi";
-
 interface PublicationOperationsPanelProps {
   queueItems: PublicationQueueItem[];
   schedules: ScheduledPublication[];
@@ -49,21 +45,7 @@ export function PublicationOperationsPanel({
   async function processQueueItem(
     item: PublicationQueueItem,
   ): Promise<void> {
-    if (onProcessQueueItem) {
-      await onProcessQueueItem(item.id);
-      return;
-    }
-
-    await runEditorialAction(
-      "process_queue",
-      {
-        datasetId: item.datasetId,
-        recordId: item.recordId,
-        queueItemId: item.id,
-      },
-    );
-
-    window.location.reload();
+    await onProcessQueueItem?.(item.id);
   }
 
   return (
@@ -113,7 +95,8 @@ export function PublicationOperationsPanel({
                   )}
 
                   <div className="editorial-admin-actions">
-                    {item.status === "pending" && (
+                    {item.status === "pending" &&
+                      onProcessQueueItem && (
                       <button
                         type="button"
                         className="button button--small"
@@ -125,7 +108,8 @@ export function PublicationOperationsPanel({
                       </button>
                     )}
 
-                    {item.status === "failed" && (
+                    {item.status === "failed" &&
+                      onRetryQueueItem && (
                       <button
                         type="button"
                         className="button button--small"
@@ -140,7 +124,8 @@ export function PublicationOperationsPanel({
                     )}
 
                     {(item.status === "pending" ||
-                      item.status === "failed") && (
+                      item.status === "failed") &&
+                      onCancelQueueItem && (
                       <button
                         type="button"
                         className="button button--small button--danger"
@@ -202,7 +187,8 @@ export function PublicationOperationsPanel({
                   )}
 
                   {schedule.status ===
-                    "scheduled" && (
+                    "scheduled" &&
+                    onCancelSchedule && (
                     <div className="editorial-admin-actions">
                       <button
                         type="button"

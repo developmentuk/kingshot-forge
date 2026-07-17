@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import type {
   Hero,
@@ -25,35 +26,89 @@ function formatLabel(value: string | null) {
     )
 }
 
-function formatStars(starLevel: number | null) {
-  const safeLevel = Math.max(
-    0,
-    Math.min(5, starLevel ?? 0),
-  )
+function TroopCrest({
+  troopType,
+}: {
+  troopType: Hero['troop_type']
+}) {
+  const icon = (() => {
+    if (troopType === 'infantry') {
+      return (
+        <path d="M12 2.8 19 5.5v5.7c0 4.5-2.8 8.4-7 10-4.2-1.6-7-5.5-7-10V5.5L12 2.8Zm0 3L7.4 7.5v3.7c0 3.1 1.8 5.9 4.6 7.3 2.8-1.4 4.6-4.2 4.6-7.3V7.5L12 5.8Z" />
+      )
+    }
 
-  return Array.from(
-    { length: 5 },
-    (_, index) =>
-      index < safeLevel ? '★' : '☆',
-  ).join('')
+    if (troopType === 'archer') {
+      return (
+        <>
+          <path d="M6.1 4.4c5.3 1.4 8.1 5.8 8.7 13.2l-2.2.2C12 11.5 9.8 7.9 5.5 6.7l.6-2.3Z" />
+          <path d="m5 18 12.5-12.5 1.5 1.5L6.5 19.5 5 18Z" />
+          <path d="m15.2 4.8 4-.8-.8 4-3.2-3.2ZM4.3 16.3l3.4 3.4-4.7 1.1 1.3-4.5Z" />
+        </>
+      )
+    }
+
+    if (troopType === 'cavalry') {
+      return (
+        <path d="M7.1 20.2c.2-3.7 1-6.3 2.5-7.9L7.8 9.7l1.4-4.1 3.5 1.2 3.2-3.1.7 4.1 2.4 2.3-1.7 3.2-2.2-.7c-.5 1.2-.4 2.3.4 3.4l1.4 2.1-2.1 2.1H7.1Zm4.3-9.8c2.2-.8 4.1-.7 5.7.3l-1.5-1.4-2.5.7-1.7.4Z" />
+      )
+    }
+
+    return (
+      <path d="m7 4 2 2-1.5 1.5 3 3 3-3L12 6l2-2 6 6-2 2-1.5-1.5-3 3 3 3L18 15l2 2-3 3-2-2 1.5-1.5-3-3-3 3L12 18l-2 2-3-3 2-2 1.5 1.5 3-3-3-3-3 3L6 12l-2-2 3-6Z" />
+    )
+  })()
+
+  return (
+    <span
+      className={`hero-game-card__crest hero-game-card__crest--${troopType ?? 'unknown'}`}
+      aria-label={formatLabel(troopType)}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        {icon}
+      </svg>
+    </span>
+  )
 }
 
-function getTroopIcon(
-  troopType: Hero['troop_type'],
-) {
-  if (troopType === 'infantry') {
-    return '🛡️'
-  }
+function StarRating({ level }: { level: number | null }) {
+  const safeLevel = Math.max(
+    0,
+    Math.min(5, level ?? 0),
+  )
 
-  if (troopType === 'cavalry') {
-    return '🐎'
-  }
+  return (
+    <div
+      className="hero-game-card__stars"
+      aria-label={`${safeLevel} out of 5 stars`}
+    >
+      {Array.from({ length: 5 }, (_, index) => {
+        const fill = Math.max(
+          0,
+          Math.min(1, safeLevel - index),
+        )
 
-  if (troopType === 'archer') {
-    return '🏹'
-  }
-
-  return '⚔️'
+        return (
+          <span
+            className="hero-game-card__star"
+            key={index}
+            style={
+              {
+                '--star-fill': `${fill * 100}%`,
+              } as CSSProperties
+            }
+            aria-hidden="true"
+          >
+            <span className="hero-game-card__star-empty">★</span>
+            <span className="hero-game-card__star-fill">★</span>
+          </span>
+        )
+      })}
+    </div>
+  )
 }
 
 function HeroCard({
@@ -113,34 +168,19 @@ function HeroCard({
             {isOwned ? 'Owned' : 'Locked'}
           </span>
 
-          <span
-            className="hero-game-card__troop"
-            aria-label={formatLabel(
-              hero.troop_type,
-            )}
-          >
-            {getTroopIcon(hero.troop_type)}
-          </span>
-
           <div className="hero-game-card__identity">
-            <p>{formatLabel(hero.rarity)}</p>
-            <h2>{hero.name}</h2>
+            <TroopCrest troopType={hero.troop_type} />
+            <div>
+              <p>{formatLabel(hero.rarity)}</p>
+              <h2>{hero.name}</h2>
+            </div>
           </div>
         </div>
 
         <div className="hero-game-card__body">
-          <div className="hero-game-card__stars">
-            <span
-              aria-label={`${
-                playerHero?.star_level ?? 0
-              } stars`}
-            >
-              {formatStars(
-                playerHero?.star_level ??
-                  null,
-              )}
-            </span>
-          </div>
+          <StarRating
+            level={playerHero?.star_level ?? null}
+          />
 
           <div className="hero-game-card__stats">
             <div>
@@ -160,25 +200,35 @@ function HeroCard({
             </div>
           </div>
 
-          <div className="hero-game-card__footer">
-            <span>
-              {formatLabel(hero.troop_type)}
-            </span>
-            <strong>
-              {isOwned
-                ? 'Edit progression'
-                : 'Add hero'}
-            </strong>
+          <div className="hero-game-card__troop-label">
+            <TroopCrest troopType={hero.troop_type} />
+            <span>{formatLabel(hero.troop_type)}</span>
           </div>
         </div>
       </button>
 
-      <Link
-        to={companionPath}
-        className="hero-game-card__companion-link"
-      >
-        Open Companion guide
-      </Link>
+      <div className="hero-game-card__actions">
+        <Link
+          to={companionPath}
+          className="hero-game-card__action hero-game-card__action--guide"
+        >
+          <span aria-hidden="true">▤</span>
+          Companion Guide
+        </Link>
+
+        <button
+          type="button"
+          className="hero-game-card__action hero-game-card__action--progress"
+          onClick={() =>
+            onSelect(hero, playerHero)
+          }
+        >
+          <span aria-hidden="true">
+            {isOwned ? '↗' : '+'}
+          </span>
+          {isOwned ? 'Edit Progression' : 'Add Hero'}
+        </button>
+      </div>
     </article>
   )
 }

@@ -135,17 +135,19 @@ export function EditorialHistoryPanel({
                     Compare
                   </button>
 
-                  <button
-                    type="button"
-                    className="button button--small"
-                    onClick={() =>
-                      onPreviewRollback?.(
-                        version.id,
-                      )
-                    }
-                  >
-                    Rollback preview
-                  </button>
+                  {onPreviewRollback && (
+                    <button
+                      type="button"
+                      className="button button--small"
+                      onClick={() =>
+                        onPreviewRollback(
+                          version.id,
+                        )
+                      }
+                    >
+                      Rollback preview
+                    </button>
+                  )}
                 </div>
               </article>
             );

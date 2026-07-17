@@ -10,6 +10,7 @@ import type {
   DatasetRecordDraft,
   DatasetRecordValues,
   DatasetValidationIssue,
+  DatasetValidationResult,
   DatasetValue,
 } from "../../../platform/datasets";
 
@@ -133,7 +134,7 @@ function createFieldDefinition(
   };
 }
 
-function createDatasetDefinition(
+export function createRecordEditorDatasetDefinition(
   schema: RecordEditorSchema,
 ): DatasetDefinition {
   return {
@@ -175,7 +176,7 @@ function createDatasetDefinition(
   };
 }
 
-function createRecordDraft(
+export function createRecordEditorDatasetDraft(
   schema: RecordEditorSchema,
   record: RecordEditorRecord,
 ): DatasetRecordDraft {
@@ -234,23 +235,38 @@ export async function validateRecordEditorRecordForSave(
   schema: RecordEditorSchema,
   record: RecordEditorRecord,
 ): Promise<RecordEditorValidationResult> {
+  const result =
+    await validateRecordEditorRecordWithPlatform(
+      schema,
+      record,
+      "update",
+    );
+
+  return toRecordEditorValidationResult(
+    result.issues,
+  );
+}
+
+export async function validateRecordEditorRecordWithPlatform(
+  schema: RecordEditorSchema,
+  record: RecordEditorRecord,
+  operation: "create" | "update" | "review" | "publish",
+): Promise<DatasetValidationResult> {
   const registry = new DatasetRegistry();
   registry.register(
-    createDatasetDefinition(schema),
+    createRecordEditorDatasetDefinition(schema),
   );
 
   const validationService =
     new DatasetValidationService(registry);
 
   const result = await validationService.validate(
-    createRecordDraft(schema, record),
+    createRecordEditorDatasetDraft(schema, record),
     {
       datasetId: schema.datasetId,
-      operation: "update",
+      operation,
     },
   );
 
-  return toRecordEditorValidationResult(
-    result.issues,
-  );
+  return result;
 }

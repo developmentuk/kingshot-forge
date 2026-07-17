@@ -24,9 +24,12 @@ import {
 } from "./recordEditorPlatformValidation";
 
 interface RecordEditorPanelProps {
+  mode?: "create" | "edit" | "review";
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
   isOpen?: boolean;
+  disabled?: boolean;
+  disabledMessage?: string;
   onClose: () => void;
   onSave?: (
     record: RecordEditorRecord,
@@ -38,9 +41,12 @@ interface RecordEditorPanelProps {
 }
 
 export function RecordEditorPanel({
+  mode = "edit",
   schema,
   record,
   isOpen = true,
+  disabled = false,
+  disabledMessage,
   onClose,
   onSave,
   supplementalContent,
@@ -232,7 +238,12 @@ export function RecordEditorPanel({
               Record Editor
             </p>
             <h2 id="record-editor-panel-heading">
-              Edit {schema.singularLabel}
+              {mode === "create"
+                ? "Create"
+                : mode === "review"
+                  ? "Review"
+                  : "Edit"}{" "}
+              {schema.singularLabel}
             </h2>
           </div>
 
@@ -266,8 +277,19 @@ export function RecordEditorPanel({
           </div>
         )}
 
+        {disabledMessage && (
+          <div
+            className="record-editor-save-message"
+            role="status"
+          >
+            <strong>Editing unavailable</strong>
+            <p>{disabledMessage}</p>
+          </div>
+        )}
+
         <div className="record-editor-panel-content">
           <RecordEditorForm
+            mode={mode}
             schema={schema}
             record={workingRecord}
             validation={
@@ -276,6 +298,7 @@ export function RecordEditorPanel({
             }
             isDirty={isDirty}
             isSaving={isSaving}
+            disabled={disabled}
             onChange={
               handleFieldChange
             }

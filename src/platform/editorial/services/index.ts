@@ -1,4 +1,5 @@
 export {
+  EditorialDraftStatusError,
   EditorialDraftService,
 } from './EditorialDraftService.js'
 export type {

@@ -15,13 +15,12 @@ const expectations = [
     ],
   },
   {
-    path: 'server/editorial/publishLiveDatasetRecord.ts',
+    path: 'supabase/migrations/20260717170000_secure_atomic_editorial_publication.sql',
     fragments: [
-      'case "hero-skills"',
-      'publishHeroSkill',
-      '.from("hero_skills")',
+      "queue_item.dataset_id = 'heroes'",
+      'insert into public.hero_skills',
       'published_version_id',
-      'onConflict: "editorial_key"',
+      'on conflict (editorial_key)',
     ],
   },
   {
@@ -35,18 +34,33 @@ const expectations = [
   {
     path: 'src/features/admin/heroSkillsDatasetAdapter.ts',
     fragments: [
-      '＋ Create a Hero Skill',
-      'createDraftRecordId',
-      'source_accuracy_score',
+      'datasetId: "hero-skills"',
+      'createBrowserDefinition',
+      'createEditorRecord',
     ],
   },
   {
     path: 'src/features/admin/recordEditor/heroSkillsRecordEditorSchema.ts',
     fragments: [
       'allowCreate: true',
+      'createEmptyRecord',
       'Published active state',
       'Source and verification',
       'source_accuracy_score',
+    ],
+  },
+  {
+    path: 'src/features/admin/AdminDatasetDetailPage.tsx',
+    fragments: [
+      'editorSchema.createEmptyRecord()',
+      'mode: "create"',
+    ],
+  },
+  {
+    path: 'src/features/admin/DatasetTable.tsx',
+    fragments: [
+      'Create record',
+      'onCreateRow',
     ],
   },
   {

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { APP_VERSION, RELEASE_CHANNEL, SHORT_COMMIT_SHA } from "../config/release";
 
 function ReleaseNotesPage() {
   return (
@@ -6,22 +7,24 @@ function ReleaseNotesPage() {
       <header className="release-notes-hero">
         <div>
           <p className="eyebrow">Release notes</p>
-          <h1 className="page-title">Release 0.6.0 — Hero Domain Complete</h1>
+          <h1 className="page-title">Release {APP_VERSION} — Consolidated Domain Foundations</h1>
           <p>
-            The Hero Companion now combines the published Hero catalogue and
-            published Hero Skills into a complete, responsive guidance
-            experience built on the existing Forge editorial platform.
+            The largest architectural milestone for Kingshot Forge to date, establishing the
+            production-shaped foundations for Player Identity, Gift Redemption, Art Studio,
+            Hero Skills governance and Verification Centre workflows.
           </p>
         </div>
-        <span className="release-notes-version">Sprint 8.2 ready for validation</span>
+        <span className="release-notes-version" title={`Commit ${SHORT_COMMIT_SHA}`}>
+          {RELEASE_CHANNEL} · v{APP_VERSION}
+        </span>
       </header>
 
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
-            <span className="release-entry__badge">Latest milestone</span>
-            <h2>Sprint 8.2 — Hero Domain Completion</h2>
-            <p>Completed in repository on 16 July 2026</p>
+            <span className="release-entry__badge">Current release</span>
+            <h2>Release 0.7.1 — Consolidated Domain Foundations</h2>
+            <p>Released 17 July 2026</p>
           </div>
           <Link className="button button--secondary" to="/roadmap">
             View roadmap
@@ -30,50 +33,80 @@ function ReleaseNotesPage() {
 
         <div className="release-entry__sections">
           <section>
-            <h3>Complete Hero guidance</h3>
+            <h3>Verification Centre</h3>
             <ul>
-              <li>Hero strengths and weaknesses</li>
-              <li>Published-data-driven Hero synergies</li>
-              <li>Recommended formation roles and troop focus</li>
-              <li>Best-use editorial guidance</li>
-              <li>Hero progression recommendations</li>
-              <li>Widget investment guidance</li>
-              <li>Exclusive Gear investment guidance</li>
+              <li>Editorial verification and dataset governance framework</li>
+              <li>Source evidence, confidence and approval foundations</li>
+              <li>Production-shaped workflows kept safely disabled</li>
             </ul>
           </section>
 
           <section>
-            <h3>Published once, consumed everywhere</h3>
+            <h3>Player Identity</h3>
             <ul>
-              <li>Active Heroes remain sourced from the published Hero catalogue</li>
-              <li>Hero Skills remain sourced from the published-only projection</li>
-              <li>Draft and rejected content is never read by public Hero pages</li>
-              <li>No replacement tables or parallel editorial system</li>
-              <li>No invented material costs or unpublished breakpoints</li>
+              <li>Character identity and Active Character model</li>
+              <li>Public and private identity boundaries</li>
+              <li>Hero Showcase ownership and verification foundations</li>
+              <li>Privacy-first integration contracts</li>
             </ul>
           </section>
 
           <section>
-            <h3>Mobile and usability</h3>
+            <h3>Gift Redemption</h3>
             <ul>
-              <li>Responsive Hero catalogue and detail layouts</li>
-              <li>Sticky, horizontally scrollable section navigation</li>
-              <li>Touch-sized navigation controls</li>
-              <li>Responsive synergy, formation and progression cards</li>
-              <li>Loading, unavailable, not-found and empty states</li>
-              <li>Integrated Hero issue reporting</li>
+              <li>Provider abstraction and eligibility engine</li>
+              <li>Consent, safety and redemption workflow contracts</li>
+              <li>Privacy-safe Player Identity integration</li>
+              <li>Automatic redemption remains disabled</li>
             </ul>
           </section>
 
           <section>
-            <h3>Release validation gate</h3>
+            <h3>Art Studio</h3>
             <ul>
-              <li>Run the complete repository check</li>
-              <li>Deploy the exact branch head to Vercel</li>
-              <li>Smoke-test desktop and mobile Hero journeys</li>
-              <li>Verify published and unpublished Hero Skill behaviour</li>
-              <li>Merge and tag v0.6.0 only after acceptance</li>
+              <li>Community artwork security model</li>
+              <li>Public-safe creator attribution</li>
+              <li>Moderation and publication architecture</li>
+              <li>Community publishing remains disabled</li>
             </ul>
+          </section>
+
+          <section>
+            <h3>Hero Skills governance</h3>
+            <ul>
+              <li>Source evidence validation and stable identifiers</li>
+              <li>Editorial approval and dataset governance</li>
+              <li>No Hero Skill data invented or published</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Platform improvements</h3>
+            <ul>
+              <li>Improved modular domain architecture</li>
+              <li>Stronger privacy and capability boundaries</li>
+              <li>Expanded automated validation and integration testing</li>
+              <li>Improved NodeNext and production build validation</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Safety state</h3>
+            <ul>
+              <li>Player Identity, Gift Redemption and Art Studio capabilities remain OFF</li>
+              <li>Hero Skills remain source-gated and unpublished</li>
+              <li>No production migrations were applied</li>
+              <li>No production data, grants or RLS policies were changed</li>
+              <li>No external product providers were contacted</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Looking ahead</h3>
+            <p>
+              Release 0.7.2 will move from platform foundations towards carefully approved,
+              production-ready user experiences built on these systems.
+            </p>
           </section>
         </div>
       </article>
@@ -81,20 +114,20 @@ function ReleaseNotesPage() {
       <article className="release-entry">
         <div className="release-entry__heading">
           <div>
-            <h2>Sprint 8.1 — Hero Skills</h2>
-            <p>Canonical vertical slice</p>
+            <h2>Release 0.7.0 — Editorial Platform Completion</h2>
+            <p>Editorial Intelligence and shared platform milestone</p>
           </div>
         </div>
         <div className="release-entry__sections">
           <section>
             <h3>Highlights</h3>
             <ul>
-              <li>Canonical structured Hero Skill records</li>
-              <li>Schema-driven editing and validation</li>
-              <li>Draft, review, approval and publication</li>
-              <li>Immutable history, comparison and rollback</li>
-              <li>Published-only public Hero Skill projection</li>
-              <li>Server-side permissions and RLS</li>
+              <li>Authoritative Forge project constitution</li>
+              <li>Evidence-based audit of registered datasets</li>
+              <li>Complete shared editorial workflows</li>
+              <li>Verification Centre and confidence model</li>
+              <li>Canonical Hero Skills evidence workflow</li>
+              <li>Live dataset health and domain readiness reporting</li>
             </ul>
           </section>
         </div>
@@ -103,22 +136,28 @@ function ReleaseNotesPage() {
       <article className="release-entry">
         <div className="release-entry__heading">
           <div>
-            <h2>Foundation Phase</h2>
-            <p>Completed 16 July 2026</p>
+            <h2>Release 0.6.0 — Hero Domain Complete</h2>
+            <p>Sprint 8.2 reference-domain milestone</p>
           </div>
         </div>
         <div className="release-entry__sections">
           <section>
-            <h3>Platform completed</h3>
+            <h3>Complete Hero guidance</h3>
             <ul>
-              <li>Authentication and Forge role model</li>
-              <li>Supabase persistence and server-side security</li>
-              <li>Kingshot Data Engine and dataset contracts</li>
-              <li>Structured Record Editor</li>
-              <li>Governed editorial workflow</li>
-              <li>Immutable versions, history and rollback</li>
-              <li>Publication queue and audit architecture</li>
-              <li>Optimistic concurrency and conflict recovery</li>
+              <li>Hero strengths, weaknesses and best-use guidance</li>
+              <li>Published-data-driven Hero synergies</li>
+              <li>Recommended formations and troop focus</li>
+              <li>Hero progression, Widget and Exclusive Gear guidance</li>
+              <li>Responsive Hero catalogue and detail experience</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Canonical consumption</h3>
+            <ul>
+              <li>Published Hero catalogue and Hero Skills only</li>
+              <li>Draft and rejected records excluded from public pages</li>
+              <li>No parallel editorial system or replacement tables</li>
+              <li>Loading, unavailable, not-found and empty states</li>
             </ul>
           </section>
         </div>

@@ -26,6 +26,7 @@ interface EditorialAdminWorkspaceProps {
   comparison?: EditorialVersionComparison;
   queueItems?: PublicationQueueItem[];
   schedules?: ScheduledPublication[];
+  publishingAvailable?: boolean;
   allowedActions?: EditorialWorkflowAction[];
   busyAction?: EditorialWorkflowAction | null;
   loadingHistory?: boolean;
@@ -65,6 +66,7 @@ export function EditorialAdminWorkspace({
   comparison,
   queueItems = [],
   schedules = [],
+  publishingAvailable = false,
   allowedActions,
   busyAction,
   loadingHistory,
@@ -108,22 +110,24 @@ export function EditorialAdminWorkspace({
         }
       />
 
-      <PublicationOperationsPanel
-        queueItems={queueItems}
-        schedules={schedules}
-        onProcessQueueItem={
-          onProcessQueueItem
-        }
-        onRetryQueueItem={
-          onRetryQueueItem
-        }
-        onCancelQueueItem={
-          onCancelQueueItem
-        }
-        onCancelSchedule={
-          onCancelSchedule
-        }
-      />
+      {publishingAvailable && (
+        <PublicationOperationsPanel
+          queueItems={queueItems}
+          schedules={schedules}
+          onProcessQueueItem={
+            onProcessQueueItem
+          }
+          onRetryQueueItem={
+            onRetryQueueItem
+          }
+          onCancelQueueItem={
+            onCancelQueueItem
+          }
+          onCancelSchedule={
+            onCancelSchedule
+          }
+        />
+      )}
     </div>
   );
 }

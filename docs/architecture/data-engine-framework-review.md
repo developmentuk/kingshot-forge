@@ -63,6 +63,8 @@ The registry must preserve the relation between dataset key and record type thro
 
 Provenance, canonical URL, verification date, confidence and licence must be retained. Editorial values and estimates must be visually distinct in the CMS and public product where material. The source data demonstrates why this matters: hero tiers are editorial, some troop/building values are estimated, and Masters values contain acknowledged source conflicts. fileciteturn0file1L1-L1 fileciteturn0file8L1-L1 fileciteturn0file9L1-L1
 
+Hero Skills adds a stricter evidence gate: source identity, retrieval, digest, version, permitted-use decision, attribution, reviewer and record-level approval are mandatory before canonical promotion. Scrape confidence and structural completeness do not satisfy that gate. Structured progression and unlocks are child facts with independent evidence and verification rather than fields inferred from maximum level or display text.
+
 ## Recommendation
 
 Keep the registry/importer concept. Refactor it into a typed package and add staging/publication instead of replacing it.

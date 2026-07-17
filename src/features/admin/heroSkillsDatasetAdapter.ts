@@ -19,12 +19,6 @@ import {
   type RecordEditorRecord,
 } from "./recordEditor/recordEditorSchema";
 
-const CREATE_ROW_PREFIX = "new-hero-skill";
-
-function createDraftRecordId(): string {
-  return `${CREATE_ROW_PREFIX}-${Date.now().toString(36)}`;
-}
-
 function getSkillId(
   skill: Record<string, unknown>,
   index: number,
@@ -47,38 +41,23 @@ export const heroSkillsDatasetAdapter: DatasetAdapter = {
   createBrowserDefinition(
     result: DatasetLoadResult,
   ): DatasetBrowserDefinition {
-    const createRecordId = createDraftRecordId();
-    const rows = [
-      {
-        id: createRecordId,
+    const rows = createRowsFromRecords(
+      result.records,
+      (skill, index) => ({
+        id: getSkillId(skill, index),
         values: {
-          hero: "Choose a Hero in the editor",
-          name: "＋ Create a Hero Skill",
-          category: "New draft",
-          skillType: "",
-          slot: "—",
-          order: "—",
-          maxLevel: "—",
+          hero: toCellValue(
+            skill.hero_name ?? skill.hero_slug,
+          ),
+          name: toCellValue(skill.name),
+          category: toTitleCase(skill.category),
+          skillType: toTitleCase(skill.skill_type),
+          slot: toCellValue(skill.slot_index),
+          order: toCellValue(skill.display_order),
+          maxLevel: toCellValue(skill.max_level),
         },
-      },
-      ...createRowsFromRecords(
-        result.records,
-        (skill, index) => ({
-          id: getSkillId(skill, index),
-          values: {
-            hero: toCellValue(
-              skill.hero_name ?? skill.hero_slug,
-            ),
-            name: toCellValue(skill.name),
-            category: toTitleCase(skill.category),
-            skillType: toTitleCase(skill.skill_type),
-            slot: toCellValue(skill.slot_index),
-            order: toCellValue(skill.display_order),
-            maxLevel: toCellValue(skill.max_level),
-          },
-        }),
-      ),
-    ];
+      }),
+    );
 
     return {
       datasetId: "hero-skills",
@@ -134,34 +113,6 @@ export const heroSkillsDatasetAdapter: DatasetAdapter = {
     result: DatasetLoadResult,
     rowId: string,
   ): RecordEditorRecord | null {
-    if (rowId.startsWith(`${CREATE_ROW_PREFIX}-`)) {
-      return {
-        id: rowId,
-        values: {
-          id: rowId,
-          hero_id: null,
-          hero_slug: "",
-          hero_name: null,
-          name: "",
-          category: "conquest",
-          skill_type: null,
-          description: null,
-          icon_url: null,
-          display_order: 1,
-          slot_index: 1,
-          max_level: 5,
-          is_active: true,
-          source_updated_at: null,
-          source_verified: null,
-          source_accuracy_score: null,
-          source_name: null,
-          source_url: null,
-          created_at: null,
-          updated_at: null,
-        },
-      };
-    }
-
     for (
       const [index, candidate] of
       result.records.entries()

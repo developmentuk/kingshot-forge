@@ -1,0 +1,88 @@
+import { supabase } from '../lib/supabase'
+
+export type PlayerProgressionSnapshot = {
+  id: string
+  playerAccountId: string
+  recordedAt: string
+  currentPower: number | null
+  highestPower: number | null
+  townCenterLevel: number | null
+  truegoldLevel: number | null
+  vipLevel: number | null
+  infantryTier: number | null
+  lancerTier: number | null
+  marksmanTier: number | null
+  governorGearScore: number | null
+  governorCharmScore: number | null
+  notes: string | null
+  isPublic: boolean
+}
+
+export type PlayerProgressionInput = Omit<PlayerProgressionSnapshot, 'id' | 'recordedAt' | 'playerAccountId'>
+
+function asNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function mapSnapshot(row: Record<string, unknown>): PlayerProgressionSnapshot {
+  return {
+    id: String(row.id),
+    playerAccountId: String(row.player_account_id),
+    recordedAt: String(row.recorded_at),
+    currentPower: asNumber(row.current_power),
+    highestPower: asNumber(row.highest_power),
+    townCenterLevel: asNumber(row.town_center_level),
+    truegoldLevel: asNumber(row.truegold_level),
+    vipLevel: asNumber(row.vip_level),
+    infantryTier: asNumber(row.infantry_tier),
+    lancerTier: asNumber(row.lancer_tier),
+    marksmanTier: asNumber(row.marksman_tier),
+    governorGearScore: asNumber(row.governor_gear_score),
+    governorCharmScore: asNumber(row.governor_charm_score),
+    notes: typeof row.notes === 'string' ? row.notes : null,
+    isPublic: row.is_public === true,
+  }
+}
+
+export async function getMyProgression(playerAccountId: string): Promise<PlayerProgressionSnapshot[]> {
+  const { data, error } = await supabase.from('player_progression_snapshots').select('*').eq('player_account_id', playerAccountId).order('recorded_at', { ascending: false }).limit(24)
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((row) => mapSnapshot(row as Record<string, unknown>))
+}
+
+export async function getPublicProgression(playerAccountId: string): Promise<PlayerProgressionSnapshot[]> {
+  const { data, error } = await supabase.from('player_progression_snapshots').select('*').eq('player_account_id', playerAccountId).eq('is_public', true).order('recorded_at', { ascending: false }).limit(12)
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((row) => mapSnapshot(row as Record<string, unknown>))
+}
+
+function validateTier(value: number | null, label: string) {
+  if (value !== null && (value < 1 || value > 12)) throw new Error(`${label} must be between T1 and T12.`)
+}
+
+export async function addProgressionSnapshot(playerAccountId: string, input: PlayerProgressionInput): Promise<void> {
+  validateTier(input.infantryTier, 'Infantry tier')
+  validateTier(input.lancerTier, 'Lancer tier')
+  validateTier(input.marksmanTier, 'Marksman tier')
+  if (input.vipLevel !== null && (input.vipLevel < 0 || input.vipLevel > 12)) throw new Error('VIP level must be between 0 and 12.')
+  if (input.truegoldLevel !== null && (input.truegoldLevel < 0 || input.truegoldLevel > 8)) throw new Error('Truegold level must be between 0 and 8.')
+
+  const { error } = await supabase.from('player_progression_snapshots').insert({
+    player_account_id: playerAccountId,
+    current_power: input.currentPower,
+    highest_power: input.highestPower,
+    town_center_level: input.townCenterLevel,
+    truegold_level: input.truegoldLevel,
+    vip_level: input.vipLevel,
+    infantry_tier: input.infantryTier,
+    lancer_tier: input.lancerTier,
+    marksman_tier: input.marksmanTier,
+    governor_gear_score: input.governorGearScore,
+    governor_charm_score: input.governorCharmScore,
+    notes: input.notes?.trim() || null,
+    is_public: input.isPublic,
+  })
+  if (error) throw new Error(error.message)
+}

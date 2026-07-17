@@ -1,46 +1,64 @@
-import { Link } from "react-router-dom";
+import {
+  Link,
+} from "react-router-dom";
+
+import type {
+  ReadinessCapability,
+  ReadinessStatus,
+} from "../../../shared/platform/readiness";
+
 import {
   adminDatasets,
-  type AdminDatasetStatus,
+  type AdminDatasetDefinition,
 } from "./adminDatasets";
-import { getDatasetStats } from "./adminDatasetStats";
 
-function getStatusLabel(
-  status: AdminDatasetStatus,
+function getReadinessStatus(
+  dataset: AdminDatasetDefinition,
+  capability: ReadinessCapability,
+): ReadinessStatus {
+  return dataset.readiness.capabilities.find(
+    (candidate) =>
+      candidate.capability === capability,
+  )?.status ?? "not-audited";
+}
+
+function formatReadinessStatus(
+  status: ReadinessStatus,
 ): string {
   switch (status) {
-    case "ready":
-      return "Ready";
-
-    case "warning":
-      return "Warning";
-
-    case "error":
-      return "Error";
-
-    case "not-imported":
-      return "Not imported";
+    case "implemented":
+      return "Implemented";
+    case "partial":
+      return "Partial";
+    case "missing":
+      return "Not implemented";
+    case "not-applicable":
+      return "Not applicable";
+    case "not-audited":
+      return "Not audited";
   }
 }
 
-function getStatusClassName(
-  status: AdminDatasetStatus,
-): string {
-  return (
-    `admin-dataset-status ` +
-    `admin-dataset-status--${status}`
-  );
-}
-
 export function AdminDatasetsPage() {
-  const readyCount = adminDatasets.filter(
-    (dataset) => dataset.status === "ready",
-  ).length;
+  const browserReadyCount =
+    adminDatasets.filter(
+      (dataset) =>
+        dataset.capabilities.browsing,
+    ).length;
 
-  const pendingCount = adminDatasets.filter(
-    (dataset) =>
-      dataset.status === "not-imported",
-  ).length;
+  const editorReadyCount =
+    adminDatasets.filter(
+      (dataset) =>
+        dataset.capabilities.editing,
+    ).length;
+
+  const notAuditedCount =
+    adminDatasets.reduce(
+      (total, dataset) =>
+        total +
+        dataset.readinessScore.notAudited,
+      0,
+    );
 
   return (
     <main className="admin-page">
@@ -53,9 +71,7 @@ export function AdminDatasetsPage() {
           <h1>Datasets</h1>
 
           <p className="admin-page__intro">
-            Review dataset availability, open individual
-            datasets and monitor their current import
-            status.
+            Review the evidence-backed readiness of every registered dataset, browse live records and open the Record Editor only where its integration is complete.
           </p>
         </div>
 
@@ -64,29 +80,35 @@ export function AdminDatasetsPage() {
             <span className="admin-summary__value">
               {adminDatasets.length}
             </span>
-
             <span className="admin-summary__label">
-              Total datasets
+              Registered datasets
             </span>
           </article>
 
           <article className="admin-summary__card">
             <span className="admin-summary__value">
-              {readyCount}
+              {browserReadyCount}
             </span>
-
             <span className="admin-summary__label">
-              Ready
+              Browsers implemented
             </span>
           </article>
 
           <article className="admin-summary__card">
             <span className="admin-summary__value">
-              {pendingCount}
+              {editorReadyCount}
             </span>
-
             <span className="admin-summary__label">
-              Awaiting import
+              Editors implemented
+            </span>
+          </article>
+
+          <article className="admin-summary__card">
+            <span className="admin-summary__value">
+              {notAuditedCount}
+            </span>
+            <span className="admin-summary__label">
+              Capabilities not audited
             </span>
           </article>
         </div>
@@ -94,7 +116,24 @@ export function AdminDatasetsPage() {
 
       <section className="admin-dataset-grid">
         {adminDatasets.map((dataset) => {
-          const stats = getDatasetStats(dataset.id);
+          const browserStatus =
+            getReadinessStatus(
+              dataset,
+              "browser",
+            );
+          const editorStatus =
+            getReadinessStatus(
+              dataset,
+              "editor",
+            );
+          const publishingStatus =
+            getReadinessStatus(
+              dataset,
+              "publishing",
+            );
+          const auditedCount =
+            dataset.readiness.capabilities.length -
+            dataset.readinessScore.notAudited;
 
           return (
             <article
@@ -106,16 +145,21 @@ export function AdminDatasetsPage() {
                   <p className="admin-dataset-card__id">
                     {dataset.id}
                   </p>
-
                   <h2>{dataset.name}</h2>
                 </div>
 
                 <span
-                  className={getStatusClassName(
-                    dataset.status,
-                  )}
+                  className={`admin-dataset-readiness admin-dataset-readiness--${
+                    dataset.capabilities.editing
+                      ? "implemented"
+                      : "browse-only"
+                  }`}
                 >
-                  {getStatusLabel(dataset.status)}
+                  {dataset.capabilities.editing
+                    ? "Editor implemented"
+                    : dataset.capabilities.browsing
+                      ? "Browse only"
+                      : "Browser unavailable"}
                 </span>
               </div>
 
@@ -123,23 +167,46 @@ export function AdminDatasetsPage() {
                 {dataset.description}
               </p>
 
-              <dl className="admin-dataset-card__meta">
+              <dl className="admin-dataset-card__readiness">
                 <div>
-                  <dt>Records</dt>
-                  <dd>{stats.records}</dd>
+                  <dt>Browser</dt>
+                  <dd className={`admin-readiness-value admin-readiness-value--${browserStatus}`}>
+                    {formatReadinessStatus(browserStatus)}
+                  </dd>
                 </div>
-
                 <div>
-                  <dt>Last imported</dt>
-                  <dd>{stats.lastImported}</dd>
+                  <dt>Editor</dt>
+                  <dd className={`admin-readiness-value admin-readiness-value--${editorStatus}`}>
+                    {formatReadinessStatus(editorStatus)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Publishing</dt>
+                  <dd className={`admin-readiness-value admin-readiness-value--${publishingStatus}`}>
+                    {formatReadinessStatus(publishingStatus)}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Capabilities audited</dt>
+                  <dd>
+                    {auditedCount} / {dataset.readiness.capabilities.length}
+                  </dd>
                 </div>
               </dl>
+
+              <p className="admin-dataset-card__source">
+                {dataset.sourceDescription}
+              </p>
 
               <Link
                 to={dataset.route}
                 className="admin-dataset-card__link"
               >
-                Open dataset
+                {dataset.capabilities.editing
+                  ? "Manage dataset"
+                  : dataset.capabilities.browsing
+                    ? "Browse dataset"
+                    : "View readiness"}
               </Link>
             </article>
           );

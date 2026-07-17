@@ -51,7 +51,12 @@ How success will be measured.
 
 - ADR-0001: Modular monorepo and module boundaries
 - ADR-0002: CMS record versioning and publication model
-- ADR-0003: Runtime schema validation library
-- ADR-0004: Server-side authorisation policy
-- ADR-0005: Design-system styling strategy
-- ADR-0006: API error and response contract
+- ADR-0004: Runtime schema validation library
+- ADR-0005: Server-side authorisation policy
+- ADR-0006: Design-system styling strategy
+- ADR-0007: API error and response contract
+
+## Recorded decisions
+
+- ADR-0002: Data-driven dataset platform
+- ADR-0003: Hero Skill stable identifiers (Proposed)

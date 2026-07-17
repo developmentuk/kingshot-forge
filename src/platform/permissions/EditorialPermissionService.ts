@@ -32,10 +32,10 @@ const operationActions: Record<
 > = {
   create_draft: 'create',
   save_draft: 'update',
-  submit_for_review: 'review',
+  submit_for_review: 'update',
   return_to_draft: 'review',
   approve: 'approve',
-  reject: 'approve',
+  reject: 'review',
   publish: 'publish',
   archive: 'archive',
   restore: 'restore',

@@ -1,23 +1,23 @@
 import { Link } from 'react-router-dom'
 import { adminDatasets } from './adminDatasets'
-import { getDatasetStats } from './adminDatasetStats'
 import { useRole } from '../../context/RoleContext'
 
 export function AdminDashboardPage() {
   const { role, canEditRecords, canPublish, hasPermission } = useRole()
 
-  const readyDatasets = adminDatasets.filter(
-    (dataset) => dataset.status === 'ready',
+  const browserReadyDatasets = adminDatasets.filter(
+    (dataset) => dataset.capabilities.browsing,
   ).length
 
-  const pendingDatasets = adminDatasets.filter(
-    (dataset) => dataset.status === 'not-imported',
+  const editorReadyDatasets = adminDatasets.filter(
+    (dataset) => dataset.capabilities.editing,
   ).length
 
-  const totalRecords = adminDatasets.reduce((total, dataset) => {
-    const records = getDatasetStats(dataset.id).records
-    return total + (typeof records === 'number' ? records : 0)
-  }, 0)
+  const notAuditedCapabilities = adminDatasets.reduce(
+    (total, dataset) =>
+      total + dataset.readinessScore.notAudited,
+    0,
+  )
 
   return (
     <main className="admin-page">
@@ -38,9 +38,9 @@ export function AdminDashboardPage() {
 
       <section className="admin-dashboard-stats">
         <article><span>Total datasets</span><strong>{adminDatasets.length}</strong></article>
-        <article><span>Ready</span><strong>{readyDatasets}</strong></article>
-        <article><span>Awaiting import</span><strong>{pendingDatasets}</strong></article>
-        <article><span>Known records</span><strong>{totalRecords}</strong></article>
+        <article><span>Browser ready</span><strong>{browserReadyDatasets}</strong></article>
+        <article><span>Editor ready</span><strong>{editorReadyDatasets}</strong></article>
+        <article><span>Not audited</span><strong>{notAuditedCapabilities}</strong></article>
       </section>
 
       <section className="admin-dashboard-grid">
@@ -48,9 +48,18 @@ export function AdminDashboardPage() {
           <span className="admin-dashboard-card__icon">🗄️</span>
           <div>
             <h2>Datasets</h2>
-            <p>Browse every registered dataset and inspect its records and import status.</p>
+            <p>Browse every registered dataset and inspect its evidence-backed readiness.</p>
           </div>
           <Link to="/admin/datasets" className="button button--primary">Open datasets</Link>
+        </article>
+
+        <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">🧭</span>
+          <div>
+            <h2>Verification Centre</h2>
+            <p>Review dataset evidence, blockers, environment safety and readiness without hiding untested states.</p>
+          </div>
+          <Link to="/admin/verification" className="button button--primary">Open verification</Link>
         </article>
 
         <article className="admin-dashboard-card">
@@ -68,11 +77,7 @@ export function AdminDashboardPage() {
             <h2>Import Manager</h2>
             <p>Refresh remote sources and review import results.</p>
           </div>
-          {hasPermission('cms.import.run') ? (
-            <Link to="/admin/imports" className="button button--secondary">Open imports</Link>
-          ) : (
-            <span className="admin-dashboard-card__restricted">Permission required</span>
-          )}
+          <span className="admin-dashboard-card__restricted">Not yet implemented</span>
         </article>
 
         <article className="admin-dashboard-card">
@@ -90,11 +95,7 @@ export function AdminDashboardPage() {
             <h2>Publish Centre</h2>
             <p>Validate and publish approved dataset changes.</p>
           </div>
-          {canPublish ? (
-            <Link to="/admin/publish" className="button button--secondary">Open publishing</Link>
-          ) : (
-            <span className="admin-dashboard-card__restricted">Permission required</span>
-          )}
+          <span className="admin-dashboard-card__restricted">Available per supported dataset</span>
         </article>
       </section>
 

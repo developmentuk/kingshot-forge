@@ -8,6 +8,8 @@ Established the initial public product, authentication, profiles, community foun
 
 ## Milestone 2 — CMS & Publishing — Current
 
+Release 0.7.1 Sprint 9.3 has established the local Hero Skills source-governance, canonical-contract and schema-proposal foundation. Approved source coverage, migration application, compatible atomic publication and public consumption remain blockers; Hero Skills is not yet a canonical dataset.
+
 ### 2.0 Platform hardening
 
 - restore green build/lint
@@ -54,6 +56,7 @@ At least Heroes, Events and Buildings complete the full import → draft → val
 
 ## Milestone 4 — Player & Community Platform
 
+- Player Identity disabled vertical slice completed locally in Sprint 9.4; migration recovery, non-production rehearsal and explicit approval remain before enablement
 - mature player profiles
 - alliance administration
 - kingdom and transfer workflows

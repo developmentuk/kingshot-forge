@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { APP_VERSION } from "../config/release";
 
 type RoadmapStatus = "live" | "development" | "planned" | "future";
 
@@ -37,56 +38,101 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
-    version: "0.6.0",
-    name: "Hero Domain Complete",
-    status: "development",
-    progress: 90,
-    priority: "Ready for runtime validation",
+    version: APP_VERSION,
+    name: "Consolidated Domain Foundations",
+    status: "live",
+    progress: 100,
+    priority: "Released 17 July 2026",
     description:
-      "The Hero Domain is now implemented as the complete reference experience for canonical Hero content, governed publication and published public guidance.",
+      "Production-shaped foundations for verification, player identity, gift redemption, community artwork and Hero Skills governance, with all new capabilities safely disabled.",
     features: [
-      "Sprint 8.1: canonical Hero Skills vertical slice",
-      "Published Hero catalogue and Hero Skill consumption",
-      "Hero strengths, weaknesses and best-use guidance",
-      "Hero synergies and recommended formation roles",
-      "Widget and Exclusive Gear guidance",
-      "Hero progression recommendations",
-      "Complete responsive Hero Companion experience",
-      "Final runtime, deployment and product-owner validation",
+      "Editorial Platform",
+      "Dataset Framework",
+      "Verification Centre",
+      "Hero Skills Governance",
+      "Player Identity Foundation",
+      "Gift Redemption Foundation",
+      "Community Art Studio Foundation",
+      "Privacy-safe domain integration boundaries",
+      "Expanded validation and release safety checks",
     ],
   },
   {
-    version: "0.7",
+    version: "0.7.2",
+    name: "Production-Ready User Experiences",
+    status: "development",
+    progress: 0,
+    priority: "Next release",
+    description:
+      "Move from platform foundations towards carefully approved, production-ready user experiences built on the new domain architecture.",
+    features: [
+      "Player Identity approval and activation plan",
+      "Character linking and public profile experience",
+      "Hero Showcase experience",
+      "Manual Gift Centre redemption interface",
+      "Gift eligibility and redemption history",
+      "Art Studio gallery and submission workflow",
+      "Moderation tools and community publishing controls",
+      "Canonical Hero Skills dataset approval",
+      "Hero Skills editorial authoring and public views",
+      "Google Analytics dashboards",
+      "Mobile optimisation and performance improvements",
+    ],
+  },
+  {
+    version: "0.8.0",
     name: "Player Domain Complete",
     status: "planned",
     progress: 0,
     description:
-      "Verified player identity, public profiles, linked game data and personalised Forge experiences.",
+      "Complete verified player identity and linked account foundations required by personal and operational Forge services.",
     features: [
       "Verified player profiles",
       "Linked Kingshot identity",
       "Kingdom and alliance history",
       "Personal dashboard and favourites",
       "Canonical-data-powered progression views",
+      "Consent and account controls for future automated services",
     ],
   },
   {
-    version: "0.8",
-    name: "Alliance and Kingdom Domains",
+    version: "0.8.5",
+    name: "Gift Centre",
+    status: "planned",
+    progress: 0,
+    priority: "Accelerated community priority",
+    description:
+      "The first Forge Operations vertical slice: discover, verify and safely redeem gift codes for consented linked player accounts.",
+    features: [
+      "Governed gift-code registry",
+      "Code discovery, validation and expiry state",
+      "Explicit linked-player redemption consent",
+      "Server-side auto redeem",
+      "Normalised success and failure outcomes",
+      "Player redemption history",
+      "Rate limits, safe retries and audit trail",
+      "Notification foundations",
+      "Original concepts and engineering inspiration credited to Sir Flux",
+    ],
+  },
+  {
+    version: "0.9.0",
+    name: "Alliance and Kingdom Foundations",
     status: "planned",
     progress: 0,
     description:
-      "Complete communities, membership, leadership, administration and shared operational surfaces.",
+      "Complete communities, membership, leadership and operational scoping before shared KvK workflows are introduced.",
     features: [
       "Alliance and kingdom pages",
       "Membership and leadership roles",
       "Verified representatives",
       "Community announcements",
       "Shared resources and Discord links",
+      "Operations permissions and audit boundaries",
     ],
   },
   {
-    version: "0.9",
+    version: "0.9.5",
     name: "Transfer Hub",
     status: "planned",
     progress: 0,
@@ -101,19 +147,35 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
-    version: "1.0",
-    name: "The Ultimate Kingshot Companion",
+    version: "1.0.0",
+    name: "KvK and Event Operations",
     status: "future",
     progress: 0,
     description:
-      "A unified platform for players, alliances and kingdoms, powered by canonical game knowledge and complete community workflows.",
+      "Native Forge coordination tools adapted and expanded from community-proven operational concepts contributed by Sir Flux.",
     features: [
-      "KvK and event operations",
-      "Progression and planning tools",
-      "Alliance and kingdom workspaces",
-      "Transfer Hub",
-      "Community creation and submissions",
-      "Notifications and installable mobile experience",
+      "KvK preparation campaigns and canonical scoring",
+      "Resource and speed-up pledges",
+      "Alliance and kingdom readiness summaries",
+      "Battle-segment attendance and war room",
+      "Royal buff scheduling",
+      "Coordinated rally timing",
+      "Discord integration, reminders and operational history",
+    ],
+  },
+  {
+    version: "1.1.0",
+    name: "Progression, Intelligence and Planning",
+    status: "future",
+    progress: 0,
+    description:
+      "Explainable calculators, forecasts and recommendations powered by published canonical and authorised operational data.",
+    features: [
+      "Building, troop and research planning",
+      "Gear, charm and VIP progression",
+      "Event preparation forecasts",
+      "Alliance and kingdom readiness intelligence",
+      "Explainable recommendations",
     ],
   },
 ];
@@ -123,7 +185,7 @@ function getStatusLabel(status: RoadmapStatus) {
     case "live":
       return "Complete";
     case "development":
-      return "In validation";
+      return "In development";
     case "planned":
       return "Planned";
     default:
@@ -139,14 +201,13 @@ function RoadmapPage() {
           <p className="eyebrow">Product roadmap</p>
           <h1 className="page-title">Build each domain completely</h1>
           <p>
-            The Forge Platform Foundation is complete. Release 0.6.0 now moves
-            through final Hero Domain runtime validation before Forge begins the
-            next domain.
+            Release {APP_VERSION} completes the consolidated domain foundations. Release
+            0.7.2 now moves towards carefully approved, production-ready user experiences.
           </p>
         </div>
         <div className="product-roadmap__hero-actions">
           <Link className="button button--primary" to="/release-notes">Read release notes</Link>
-          <Link className="button button--secondary" to="/companion/heroes">Open Hero Companion</Link>
+          <Link className="button button--secondary" to="/admin/datasets">Open datasets</Link>
         </div>
       </header>
 
@@ -155,20 +216,20 @@ function RoadmapPage() {
           <span className="roadmap-priority-panel__icon">⚒️</span>
           <div>
             <p className="eyebrow">Current development priority</p>
-            <h2>Release 0.6.0 — Hero Domain Complete</h2>
+            <h2>Release 0.7.2 — Production-Ready User Experiences</h2>
             <p>
-              Sprint 8.2 completes Hero guidance, formations, synergies,
-              progression, Widget and Exclusive Gear recommendations, mobile
-              behaviour and final UI polish using published datasets only.
+              The next release will activate selected capabilities only after approval,
+              validation and production-safety checks. Player Identity, Gift Centre,
+              Art Studio and Hero Skills will advance through small, focused milestones.
             </p>
           </div>
         </div>
         <div className="roadmap-priority-panel__tags">
-          <span>Hero Companion</span>
-          <span>Published content</span>
-          <span>Progression guidance</span>
-          <span>Mobile complete</span>
-          <span>Runtime validation</span>
+          <span>Player experience</span>
+          <span>Gift Centre</span>
+          <span>Art Studio</span>
+          <span>Hero Skills</span>
+          <span>Mobile and performance</span>
         </div>
       </section>
 
@@ -200,8 +261,8 @@ function RoadmapPage() {
       <section className="roadmap-community-note">
         <div>
           <p className="eyebrow">Community-led development</p>
-          <h2>Help shape what comes next</h2>
-          <p>Priorities can evolve through evidence and community feedback, but the active domain will be completed before Forge expands again.</p>
+          <h2>Built with community contributions</h2>
+          <p>Forge adapts approved community concepts natively, protects its shared architecture and gives visible credit to contributors such as Sir Flux.</p>
         </div>
         <a className="button button--secondary" href="https://docs.google.com/forms/d/e/1FAIpQLScFO6lIdyTiczPQkSbinR1tGWNXw01opy77VgX1003FF6z86Q/viewform?usp=publish-editor" target="_blank" rel="noreferrer">Send feedback</a>
       </section>

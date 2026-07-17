@@ -46,6 +46,7 @@ export interface PublicationExecutionContext {
 
 export interface PublicationExecutionResult {
   publishedVersionId: string
+  queueOutcomeCommitted?: boolean
   metadata?: Record<string, unknown>
 }
 

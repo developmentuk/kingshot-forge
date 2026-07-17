@@ -25,6 +25,7 @@ import type {
 } from "./recordEditorSchema";
 
 interface RecordEditorFormProps {
+  mode?: "create" | "edit" | "review";
   schema: RecordEditorSchema;
   record: RecordEditorRecord;
   validation: RecordEditorValidationResult;
@@ -37,6 +38,33 @@ interface RecordEditorFormProps {
   ) => void;
   onSave: () => void;
   onCancel: () => void;
+}
+
+function getRecordTitle(
+  schema: RecordEditorSchema,
+  record: RecordEditorRecord,
+  mode: "create" | "edit" | "review",
+): string {
+  const titleValue =
+    record.values[schema.titleField];
+
+  if (
+    typeof titleValue === "string" &&
+    titleValue.trim()
+  ) {
+    return titleValue.trim();
+  }
+
+  if (
+    typeof titleValue === "number" ||
+    typeof titleValue === "boolean"
+  ) {
+    return String(titleValue);
+  }
+
+  return mode === "create"
+    ? `New ${schema.singularLabel}`
+    : record.id;
 }
 
 function getUngroupedFields(
@@ -55,6 +83,7 @@ function getFieldsForSection(
 }
 
 export function RecordEditorForm({
+  mode = "edit",
   schema,
   record,
   validation,
@@ -177,16 +206,26 @@ export function RecordEditorForm({
       <header className="record-editor-form-header">
         <div>
           <p className="record-editor-form-eyebrow">
-            Editing {schema.singularLabel}
+            {mode === "create"
+              ? "Creating"
+              : mode === "review"
+                ? "Reviewing"
+                : "Editing"}{" "}
+            {schema.singularLabel}
           </p>
           <h2>
-            {String(
-              record.values[schema.titleField] ??
-                record.id,
+            {getRecordTitle(
+              schema,
+              record,
+              mode,
             )}
           </h2>
           <p>
-            Update this record using the fields below.
+            {mode === "create"
+              ? "Complete the fields below to create an editorial draft."
+              : mode === "review"
+                ? "Inspect the current values and use the editorial workflow controls below."
+                : "Update this record using the fields below."}
           </p>
         </div>
 
