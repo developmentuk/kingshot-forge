@@ -7,10 +7,11 @@ function ReleaseNotesPage() {
       <header className="release-notes-hero">
         <div>
           <p className="eyebrow">Release notes</p>
-          <h1 className="page-title">Release {APP_VERSION} — Editorial Platform Completion</h1>
+          <h1 className="page-title">Release {APP_VERSION} — Consolidated Domain Foundations</h1>
           <p>
-            This release completes the Editorial Intelligence and Editorial Platform
-            foundations before Player Domain development continues.
+            The largest architectural milestone for Kingshot Forge to date, establishing the
+            production-shaped foundations for Player Identity, Gift Redemption, Art Studio,
+            Hero Skills governance and Verification Centre workflows.
           </p>
         </div>
         <span className="release-notes-version" title={`Commit ${SHORT_COMMIT_SHA}`}>
@@ -22,8 +23,8 @@ function ReleaseNotesPage() {
         <div className="release-entry__heading">
           <div>
             <span className="release-entry__badge">Current release</span>
-            <h2>Sprint 9.2 — Editorial Platform Completion</h2>
-            <p>Milestone-first development on the active release branch</p>
+            <h2>Release 0.7.1 — Consolidated Domain Foundations</h2>
+            <p>Released 17 July 2026</p>
           </div>
           <Link className="button button--secondary" to="/roadmap">
             View roadmap
@@ -32,35 +33,101 @@ function ReleaseNotesPage() {
 
         <div className="release-entry__sections">
           <section>
-            <h3>Release objectives</h3>
+            <h3>Verification Centre</h3>
+            <ul>
+              <li>Editorial verification and dataset governance framework</li>
+              <li>Source evidence, confidence and approval foundations</li>
+              <li>Production-shaped workflows kept safely disabled</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Player Identity</h3>
+            <ul>
+              <li>Character identity and Active Character model</li>
+              <li>Public and private identity boundaries</li>
+              <li>Hero Showcase ownership and verification foundations</li>
+              <li>Privacy-first integration contracts</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Gift Redemption</h3>
+            <ul>
+              <li>Provider abstraction and eligibility engine</li>
+              <li>Consent, safety and redemption workflow contracts</li>
+              <li>Privacy-safe Player Identity integration</li>
+              <li>Automatic redemption remains disabled</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Art Studio</h3>
+            <ul>
+              <li>Community artwork security model</li>
+              <li>Public-safe creator attribution</li>
+              <li>Moderation and publication architecture</li>
+              <li>Community publishing remains disabled</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Hero Skills governance</h3>
+            <ul>
+              <li>Source evidence validation and stable identifiers</li>
+              <li>Editorial approval and dataset governance</li>
+              <li>No Hero Skill data invented or published</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Platform improvements</h3>
+            <ul>
+              <li>Improved modular domain architecture</li>
+              <li>Stronger privacy and capability boundaries</li>
+              <li>Expanded automated validation and integration testing</li>
+              <li>Improved NodeNext and production build validation</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Safety state</h3>
+            <ul>
+              <li>Player Identity, Gift Redemption and Art Studio capabilities remain OFF</li>
+              <li>Hero Skills remain source-gated and unpublished</li>
+              <li>No production migrations were applied</li>
+              <li>No production data, grants or RLS policies were changed</li>
+              <li>No external product providers were contacted</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Looking ahead</h3>
+            <p>
+              Release 0.7.2 will move from platform foundations towards carefully approved,
+              production-ready user experiences built on these systems.
+            </p>
+          </section>
+        </div>
+      </article>
+
+      <article className="release-entry">
+        <div className="release-entry__heading">
+          <div>
+            <h2>Release 0.7.0 — Editorial Platform Completion</h2>
+            <p>Editorial Intelligence and shared platform milestone</p>
+          </div>
+        </div>
+        <div className="release-entry__sections">
+          <section>
+            <h3>Highlights</h3>
             <ul>
               <li>Authoritative Forge project constitution</li>
-              <li>Evidence-based audit of every registered dataset</li>
+              <li>Evidence-based audit of registered datasets</li>
               <li>Complete shared editorial workflows</li>
               <li>Verification Centre and confidence model</li>
               <li>Canonical Hero Skills evidence workflow</li>
               <li>Live dataset health and domain readiness reporting</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>Release identity</h3>
-            <ul>
-              <li>Version is read from the canonical package metadata</li>
-              <li>Production and preview channels are identified automatically</li>
-              <li>Deployed commit metadata is injected by Vercel</li>
-              <li>Visible version labels share one application configuration</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>Quality gates</h3>
-            <ul>
-              <li>Complete repository checks pass</li>
-              <li>The exact branch commit deploys successfully</li>
-              <li>Desktop and mobile workflows are smoke-tested</li>
-              <li>Canonical published data is used by public consumers</li>
-              <li>Documentation and release records match production</li>
             </ul>
           </section>
         </div>
@@ -91,52 +158,6 @@ function ReleaseNotesPage() {
               <li>Draft and rejected records excluded from public pages</li>
               <li>No parallel editorial system or replacement tables</li>
               <li>Loading, unavailable, not-found and empty states</li>
-            </ul>
-          </section>
-        </div>
-      </article>
-
-      <article className="release-entry">
-        <div className="release-entry__heading">
-          <div>
-            <h2>Sprint 8.1 — Hero Skills</h2>
-            <p>Canonical vertical slice</p>
-          </div>
-        </div>
-        <div className="release-entry__sections">
-          <section>
-            <h3>Highlights</h3>
-            <ul>
-              <li>Canonical structured Hero Skill records</li>
-              <li>Schema-driven editing and validation</li>
-              <li>Draft, review, approval and publication</li>
-              <li>Immutable history, comparison and rollback</li>
-              <li>Published-only public Hero Skill projection</li>
-              <li>Server-side permissions and RLS</li>
-            </ul>
-          </section>
-        </div>
-      </article>
-
-      <article className="release-entry">
-        <div className="release-entry__heading">
-          <div>
-            <h2>Foundation Phase</h2>
-            <p>Completed 16 July 2026</p>
-          </div>
-        </div>
-        <div className="release-entry__sections">
-          <section>
-            <h3>Platform completed</h3>
-            <ul>
-              <li>Authentication and Forge role model</li>
-              <li>Supabase persistence and server-side security</li>
-              <li>Kingshot Data Engine and dataset contracts</li>
-              <li>Structured Record Editor</li>
-              <li>Governed editorial workflow</li>
-              <li>Immutable versions, history and rollback</li>
-              <li>Publication queue and audit architecture</li>
-              <li>Optimistic concurrency and conflict recovery</li>
             </ul>
           </section>
         </div>
