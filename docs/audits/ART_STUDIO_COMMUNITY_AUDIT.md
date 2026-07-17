@@ -10,6 +10,34 @@
 - Supabase access used by this audit: read-only metadata and `SELECT` queries only
 - Production writes, storage writes, migration application, deployment and push: none
 
+### Sprint 9.2 resolution addendum
+
+The audit's decision gate was resolved by the approved Sprint 9.2 brief. The
+replacement foundation is documented in
+`docs/architecture/art-studio-community-foundation.md` and proposed by the
+unapplied migration
+`supabase/migrations/20260717130232_art_studio_community_foundation.sql`.
+
+Resolved decisions:
+
+- dedicated Art Studio tables replace—not extend—the legacy contracts;
+- text/Unicode only; images, SVG, HTML, uploads and screenshots remain deferred;
+- published content is an immutable approved revision under a stable slug;
+- attribution is optional except for work submitted for another creator;
+- self-approval, self-publication and self-likes are forbidden;
+- likes are unique per user/artwork;
+- active reports are unique per reporter/artwork/category;
+- reporter identity and raw staff notes are never creator/public projections;
+- `moderation.manage` owns moderation/unpublication and `cms.publish` owns
+  publication;
+- notification delivery and analytics instrumentation remain deferred;
+- no automatic report-count unpublication rule is introduced.
+
+The original stop decision remains correct for the legacy live schema. Sprint
+9.2 authorises only a local, unapplied replacement proposal and provider-neutral
+contracts. It does not authorise schema application or an executable community
+workflow.
+
 This audit is Milestone A of the Art Studio Community work. It records the
 current implementation and the safe boundary for a future implementation. It
 does not claim that submissions, likes, reports or moderation are complete.
