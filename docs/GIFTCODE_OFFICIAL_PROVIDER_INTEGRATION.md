@@ -1,6 +1,7 @@
 # Gift Centre Official Provider Integration Design
 
-**Status:** proposed architecture; ready for Clark and Aegis review
+**Status:** approved architecture; Sprint 9.3 provider foundation implemented
+with live integration disabled
 
 **Workstream:** `feature/giftcode-auto-redeem`
 
@@ -50,19 +51,41 @@ The branch already provides a safe, non-live foundation:
 | Capability | Current state |
 | --- | --- |
 | Manual journey | The Gift Centre identifies the linked Governor, copies a code, and opens the verified official Century Games redemption destination. Forge states that it has not redeemed the code. |
-| Provider boundary | `server/giftcodes/provider.ts` defines a server-local, provider-neutral request/result contract. No API route imports it. |
-| Simulation | `mockProvider.ts` is simulation-only, sends no request, and cannot return success. |
-| Feature flag | `GIFTCODE_REDEMPTION_ENABLED` is enabled only by the exact string `true`; missing or malformed values are disabled. |
+| Provider boundary | `server/giftcodes/provider.ts` defines a server-local, provider-neutral request/result and capability contract. No API route imports it. |
+| Provider selection | An immutable capability registry and dependency-injected factory support simulation, the official skeleton, and future providers without changing factory logic. |
+| Simulation | `simulationProvider.ts` is deterministic, sends no request, and cannot return success. `mockProvider.ts` remains a compatibility alias. |
+| Official provider | `officialProvider.ts` is a non-production skeleton with no transport, signing, cookie, or HTTP implementation. It always returns `not_supported` and `externalRequestSent: false`. |
+| Feature gates | Product, official-provider, and approved-environment gates use exact `true` matching and all default off. Simulation is isolated from live-provider gates. |
 | Eligibility | Pure domain policy checks authentication, a player account, an approved verification status, current consent, and code availability. |
 | Consent | `giftcode-redemption-v1` is required by the current foundation. There is no durable consent record yet. |
 | Identity | Only `community_verified` and `officially_verified` currently satisfy the foundation policy. Player linking alone does not. |
 | Idempotency | Deterministic v1 material uses player-account ID, gift-code ID, and version. It is not yet hashed, persisted, or complete enough for live use. |
 | Retry | The current policy permits at most three total attempts, with two bounded delays. Permanent and invalid-request failures never retry. |
-| Live execution | No live adapter, external mutation request, signing implementation, credential, provider route, or provider cookie handling exists. |
+| Internal events | Pure immutable event contracts cover provider foundation and the approved lifecycle taxonomy, reject sensitive metadata keys, and have no persistence side effect. |
+| Provider health | A deterministic pure scoring model distinguishes disabled, unknown, healthy, degraded, unhealthy, and critical provider states. |
+| Live execution | No live adapter, external mutation request, signing implementation, credential, provider route, or provider cookie handling exists. The official skeleton is not production-ready. |
 | Durability | No redemption table, consent table, queue, background job, audit stream, or checked-in migration exists. |
 
 The design below preserves every current safety property and expands the v1
 policy where durable implementation needs additional context.
+
+### 2.1 Sprint 9.3 foundation boundary
+
+Sprint 9.3 implements only the provider-neutral infrastructure needed before a
+future live adapter milestone:
+
+- capability definitions and an immutable provider-neutral registry;
+- a provider-neutral factory whose registry, builders, and gate evaluator are
+  injected, plus a separate server composition root for concrete providers;
+- completely separate deterministic simulation and official-skeleton modules;
+- three exact-match, disabled-by-default server feature gates;
+- immutable internal domain-event contracts with sensitive-key rejection; and
+- deterministic health scoring over caller-supplied operational windows.
+
+The sprint adds no queue, eligibility integration, Player or Editorial import,
+API route, provider transport, signer, cookie jar, secret, persistence,
+migration, or Supabase write. Constructing the official skeleton cannot make it
+production-ready or permit an external request.
 
 ## 3. Official script flow map
 
@@ -767,6 +790,8 @@ durable state change. Provider transport logs are not the audit record.
 
 ### 17.1 Event taxonomy
 
+- `provider_registered`, `provider_selected`, `provider_selection_rejected`
+- `provider_health_evaluated`, `feature_gate_evaluated`
 - `consent_granted`, `consent_revoked`, `consent_expired`
 - `redemption_requested`, `eligibility_failed`, `redemption_queued`
 - `processing_started`, `provider_session_established`
@@ -1150,8 +1175,10 @@ active-character semantics; Operations owns queue/rate/circuit readiness.
 
 ## 30. Optional code changes and implementation boundary
 
-This milestone needs only this document. No type refinement or test change is
-required because the existing safety tests already enforce the disabled flag,
+The architecture-design milestone needed only this document. Sprint 9.3 now
+implements the permitted non-live type refinements, isolated providers,
+registry/factory infrastructure, feature gates, events, health policy, and unit
+tests. The existing safety tests continue to enforce the disabled flag,
 simulation-only provider, no external request, no success, eligibility,
 idempotency material, and bounded retry foundation.
 
