@@ -77,7 +77,7 @@ function App() {
         <Route path="player/:forgeId" element={<PlayerProfilePage />} />
         <Route path="player/:forgeId/progression" element={<PublicPlayerProgressionPage />} />
         <Route path="my-forge/profile" element={<PlayerProfileEditorPage />} />
-        <Route path="my-forge/player-identity" element={<PrivatePlayerIdentityPage />} />
+        <Route path="/my-forge/player-identity" element={<PrivatePlayerIdentityPage />} />
         <Route path="players/:forgeId" element={<PlayerProfilePage />} />
         <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
