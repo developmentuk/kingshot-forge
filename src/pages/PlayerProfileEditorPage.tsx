@@ -6,8 +6,9 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 import {
-  getMyPlayerProfile,
+  getMyPlayerProfileForAccount,
   saveMyPlayerProfile,
   type EditablePlayerProfile,
 } from '../services/playerProfileService'
@@ -65,6 +66,7 @@ export default function PlayerProfileEditorPage() {
     loading: authLoading,
     signInWithGoogle,
   } = useAuth()
+  const { playerAccount, loadingPlayerAccount } = usePlayerIdentity()
 
   const [profile, setProfile] =
     useState<EditablePlayerProfile | null>(null)
@@ -85,7 +87,7 @@ export default function PlayerProfileEditorPage() {
     let cancelled = false
 
     async function loadEditor() {
-      if (authLoading) {
+      if (authLoading || loadingPlayerAccount) {
         return
       }
 
@@ -116,11 +118,9 @@ export default function PlayerProfileEditorPage() {
         const forgeIdentity =
           identityData as ForgeIdentity
 
-        const result =
-          await getMyPlayerProfile(
-            user.id,
-            forgeIdentity.forge_id,
-          )
+        const result = playerAccount
+          ? await getMyPlayerProfileForAccount(playerAccount, forgeIdentity.forge_id)
+          : null
 
         if (!cancelled) {
           setProfile(result)
@@ -145,7 +145,7 @@ export default function PlayerProfileEditorPage() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user])
+  }, [authLoading, loadingPlayerAccount, playerAccount, user])
 
   const publicProfilePath = useMemo(() => {
     if (!profile?.forgeId) {

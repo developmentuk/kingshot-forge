@@ -141,48 +141,10 @@ export function PrivatePlayerIdentityPage() {
       <div className="player-identity__layout">
         <section
           className="player-identity__main"
-          aria-labelledby="linked-player-title"
         >
           <section className="player-identity__panel">
-            <p className="player-identity__eyebrow">Primary identity</p>
-            <h2 id="linked-player-title">{playerAccount.player_name}</h2>
-
-            <dl className="player-identity__details">
-              <div>
-                <dt>Player ID</dt>
-                <dd>{playerAccount.player_id}</dd>
-              </div>
-              <div>
-                <dt>Kingdom</dt>
-                <dd>{playerAccount.kingdom_id}</dd>
-              </div>
-              <div>
-                <dt>Level</dt>
-                <dd>{formatLevel(playerAccount)}</dd>
-              </div>
-              <div>
-                <dt>Last refreshed</dt>
-                <dd>{formatDate(playerAccount.last_refreshed_at)}</dd>
-              </div>
-            </dl>
-
-            <div className="player-identity__actions">
-              <Link className="player-identity__button" to="/my-forge">
-                Manage linked player
-              </Link>
-              <button
-                className="player-identity__button player-identity__button--secondary"
-                type="button"
-                onClick={() => void refreshPlayerIdentity()}
-              >
-                Refresh identity
-              </button>
-            </div>
-          </section>
-
-          <section className="player-identity__panel">
-            <p className="player-identity__eyebrow">Profile tools</p>
-            <h2>Build your Forge presence</h2>
+            <p className="player-identity__eyebrow">Passport actions</p>
+            <h2>Complete your player record</h2>
             <div className="player-identity__tool-grid">
               <IdentityTool
                 title="Edit Passport"
@@ -202,6 +164,12 @@ export function PrivatePlayerIdentityPage() {
                 to="/my-forge/progression"
                 action="Open progression"
               />
+              <IdentityTool
+                title="Transfer Profile"
+                description="Optional planning for a future kingdom move."
+                to="/my-forge/transfer-profile"
+                action="Open optional transfer"
+              />
             </div>
           </section>
         </section>
@@ -220,22 +188,7 @@ export function PrivatePlayerIdentityPage() {
             ) : null}
           </section>
 
-          <section className="player-identity__panel">
-            <p className="player-identity__eyebrow">Visibility</p>
-            <h2>
-              {playerAccount.is_public
-                ? 'Public profile enabled'
-                : 'Private profile'}
-            </h2>
-            <p>
-              {playerAccount.is_public
-                ? 'Your linked player can be included in your public Forge experience.'
-                : 'Your linked player is currently visible only inside your account.'}
-            </p>
-            <Link className="player-identity__button" to="/my-forge/profile">
-              Manage profile visibility
-            </Link>
-          </section>
+          <Link className="player-identity__button" to="/my-forge/profile">Edit Passport</Link>
         </aside>
       </div>
     </PlayerIdentityPageFrame>
@@ -260,10 +213,16 @@ function IdentitySummary({
           Welcome back, {playerAccount.player_name}
         </h2>
         <p>
-          Kingdom {playerAccount.kingdom_id} · {formatVerification(
-            playerAccount.verification_status,
-          )}
+          Kingdom {playerAccount.kingdom_id} · Town Center {formatLevel(playerAccount)}
         </p>
+        <div className="player-identity__summary-status" aria-label="Passport status">
+          <span>{formatVerification(playerAccount.verification_status)}</span>
+          <span>{playerAccount.is_public ? 'Public Passport' : 'Private Passport'}</span>
+        </div>
+        <dl className="player-identity__summary-details">
+          <div><dt>Player ID</dt><dd>{playerAccount.player_id}</dd></div>
+          <div><dt>Last refreshed</dt><dd>{formatDate(playerAccount.last_refreshed_at)}</dd></div>
+        </dl>
       </div>
       {playerAccount.profile_photo ? (
         <img

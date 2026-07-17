@@ -6,6 +6,16 @@
 
 .player-progression-context {
   margin-bottom: 20px;
+  border-color: rgba(67, 230, 213, 0.28);
+  background: linear-gradient(135deg, rgba(67, 230, 213, 0.07), rgba(17, 24, 39, 0.78));
+}
+
+.player-progression-context p {
+  margin: 0.35rem 0 0;
+}
+
+.player-progression-context h2 {
+  margin: 0.2rem 0 0;
 }
 
 .player-progression-note {
