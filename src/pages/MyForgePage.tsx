@@ -441,7 +441,7 @@ function MyForgePage() {
             <span className="my-forge-feature-card__status my-forge-feature-card__status--available">Open planner →</span>
           </Link>
 
-          <Link className="my-forge-feature-card my-forge-feature-card--link" to="/transfer-profile">
+          <Link className="my-forge-feature-card my-forge-feature-card--link" to="/my-forge/transfer-profile">
             <span className="my-forge-feature-card__icon">
               🔁
             </span>

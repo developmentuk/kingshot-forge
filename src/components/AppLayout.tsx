@@ -36,7 +36,7 @@ const myForgeNavigation: NavigationItem[] = [
   { label: 'Player Identity', shortLabel: 'Identity', icon: '🛡️', path: '/my-forge/player-identity' },
   { label: 'Hero Collection', shortLabel: 'Heroes', icon: '🦸', path: '/my-forge/hero-collection' },
   { label: 'Hero Showcase', shortLabel: 'Showcase', icon: '🏆', path: '/my-forge/heroes' },
-  { label: 'Transfer Profile', shortLabel: 'Transfer', icon: '🎫', path: '/transfer-profile' },
+  { label: 'Transfer Profile', shortLabel: 'Transfer', icon: '🎫', path: '/my-forge/transfer-profile' },
 ]
 
 const libraryNavigation: NavigationItem[] = [

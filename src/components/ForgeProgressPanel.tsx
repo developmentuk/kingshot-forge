@@ -140,7 +140,7 @@ export default function ForgeProgressPanel() {
     { label: 'Player profile', detail: progress.hasProfile ? 'Profile record created' : 'Create your player profile', complete: progress.hasProfile, to: '/my-forge/profile' },
     { label: 'Progression snapshot', detail: progress.hasProgression ? 'Current position recorded' : 'Record your current progression', complete: progress.hasProgression, to: '/my-forge/progression' },
     { label: 'Hero Showcase', detail: `${progress.showcasedHeroes}/6 heroes selected`, complete: progress.showcasedHeroes === 6, to: '/my-forge/heroes' },
-    { label: 'Transfer profile', detail: progress.hasTransferProfile ? 'Transfer planning recorded' : 'Complete transfer planning', complete: progress.hasTransferProfile, to: '/transfer-profile' },
+    { label: 'Transfer profile', detail: progress.hasTransferProfile ? 'Transfer planning recorded' : 'Complete transfer planning', complete: progress.hasTransferProfile, to: '/my-forge/transfer-profile' },
     { label: 'Public visibility', detail: progress.hasPublicVisibility ? 'Profile is public' : 'Review public visibility', complete: progress.hasPublicVisibility, to: '/my-forge/profile' },
   ], [playerAccount, progress])
 

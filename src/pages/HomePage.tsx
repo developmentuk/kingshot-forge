@@ -124,7 +124,7 @@ const forgeTools: ForgeTool[] = [
     description:
       'Create your transfer profile and connect with recruiting kingdoms and alliances.',
     icon: '🎫',
-    path: '/transfer-profile',
+    path: '/my-forge/transfer-profile',
     action: 'Create transfer profile',
     featured: true,
   },

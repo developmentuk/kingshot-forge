@@ -5,6 +5,7 @@ import "./features/admin/recordEditor/recordEditor.css";
 import "./features/admin/verification/verificationCentre.css";
 import "./features/player-identity/playerIdentity.css";
 import "./styles/playerDomain.css";
+import "./styles/playerProgressionPolish.css";
 // Keep Hero Collection polish last so it overrides the legacy Hero card rules.
 import "./styles/heroCollectionPolish.css";
 
@@ -73,6 +74,7 @@ function App() {
         <Route path="roadmap" element={<RoadmapPage />} />
         <Route path="release-notes" element={<ReleaseNotesPage />} />
         <Route path="transfer-profile" element={<TransferProfilePage />} />
+        <Route path="my-forge/transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />
         <Route path="player/:forgeId" element={<PlayerProfilePage />} />
         <Route path="player/:forgeId/progression" element={<PublicPlayerProgressionPage />} />
