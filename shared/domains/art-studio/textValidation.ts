@@ -39,6 +39,6 @@ export function validateTextArtwork(input: {
   if (lines > ART_STUDIO_TEXT_LIMITS.maximumLines) issues.push({ field: 'artwork', message: 'Keep artwork to 100 lines or fewer.' })
   if (input.artwork.split('\n').some((line) => countArtworkCharacters(line) > ART_STUDIO_TEXT_LIMITS.maximumLineCharacters)) issues.push({ field: 'artwork', message: 'Keep each artwork line to 400 characters or fewer.' })
   if (input.tags.length > ART_STUDIO_TEXT_LIMITS.maximumTags || input.tags.some((tag) => !tag || countArtworkCharacters(tag) > ART_STUDIO_TEXT_LIMITS.maximumTagCharacters)) issues.push({ field: 'tags', message: 'Use up to 10 non-empty tags of 32 characters or fewer.' })
-  if (!['profile', 'custom', 'anonymous'].includes(input.attributionType) || (input.attributionType !== 'anonymous' && !input.attributionName?.trim()) || (input.attributionType === 'anonymous' && input.attributionName)) issues.push({ field: 'attribution', message: 'Choose a valid attribution option.' })
+  if (!['profile', 'custom', 'anonymous'].includes(input.attributionType) || (input.attributionType === 'custom' && !input.attributionName?.trim()) || (input.attributionType === 'anonymous' && input.attributionName)) issues.push({ field: 'attribution', message: 'Choose a valid attribution option.' })
   return issues
 }
