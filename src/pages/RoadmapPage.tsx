@@ -80,6 +80,23 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
+    version: "0.7.3",
+    name: "Forge UX Polish",
+    status: "development",
+    progress: 20,
+    priority: "Current milestone",
+    description:
+      "Refine the shared Forge experience with consistent navigation, controls, responsive surfaces, accessible states and restrained interaction polish.",
+    features: [
+      "Shared visual tokens and surface patterns",
+      "Responsive desktop and mobile navigation",
+      "Consistent page headers, buttons and forms",
+      "Loading, empty, error and success state polish",
+      "Focus visibility and reduced-motion support",
+      "My Forge, Player Passport and public-page refinement",
+    ],
+  },
+  {
     version: "0.8.0",
     name: "Player Domain Complete",
     status: "planned",
@@ -201,8 +218,8 @@ function RoadmapPage() {
           <p className="eyebrow">Product roadmap</p>
           <h1 className="page-title">Build each domain completely</h1>
           <p>
-            Release 0.7.1 completed the consolidated domain foundations. Release 0.7.2 now
-            activates carefully approved player-facing experiences on top of them.
+            Release 0.7.2 activated the accepted player-facing journeys. Release 0.7.3 now
+            polishes the shared Forge experience without changing product scope.
           </p>
         </div>
         <div className="product-roadmap__hero-actions">
@@ -216,21 +233,21 @@ function RoadmapPage() {
           <span className="roadmap-priority-panel__icon">⚒️</span>
           <div>
             <p className="eyebrow">Current development priority</p>
-            <h2>Release 0.7.2 — Player-Facing Domain Activation</h2>
+            <h2>Release 0.7.3 — Forge UX Polish</h2>
             <p>
-              Selected capabilities will activate only after approval, validation and
-              production-safety checks. Player Identity, Gift Centre, Art Studio,
-              Verification Centre and Hero Skills will advance through focused milestones.
+              The existing Forge journeys are being refined through focused visual,
+              responsive and accessibility improvements. No new domain or schema change is
+              part of this milestone.
             </p>
           </div>
         </div>
         <div className="roadmap-priority-panel__tags">
-          <span>Player Identity</span>
-          <span>Gift Centre</span>
-          <span>Art Studio</span>
-          <span>Verification Centre</span>
-          <span>Hero Skills</span>
-          <span>Mobile and performance</span>
+          <span>Shared surfaces</span>
+          <span>Navigation</span>
+          <span>Forms and controls</span>
+          <span>Accessibility</span>
+          <span>Responsive layouts</span>
+          <span>Player-facing polish</span>
         </div>
       </section>
 
