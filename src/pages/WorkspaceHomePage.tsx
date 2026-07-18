@@ -1,6 +1,10 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useRole } from '../context/RoleContext'
+import { useAuth } from '../context/AuthContext'
 import { getWorkspace, type ForgeWorkspaceId } from '../navigation/workspaceRegistry'
+import { getMyApplication } from '../services/contributorApplicationService'
+import type { ApplicantApplication } from '../../server/recruitment/contracts'
 
 const workspaceCopy: Record<ForgeWorkspaceId, { eyebrow: string; title: string; intro: string }> = {
   player: { eyebrow: 'Player View', title: 'Forge your Kingshot experience.', intro: 'Your player tools stay together here: identity, companions, community and creative studios.' },
@@ -14,6 +18,9 @@ export default function WorkspaceHomePage({ workspaceId }: { workspaceId: ForgeW
   const workspace = getWorkspace(workspaceId)
   const copy = workspaceCopy[workspaceId]
   const { hasPermission } = useRole()
+  const { user } = useAuth()
+  const [application, setApplication] = useState<ApplicantApplication | null>(null)
+  useEffect(() => { if (workspaceId !== 'contributor' || !user) { setApplication(null); return } void getMyApplication().then(setApplication).catch(() => setApplication(null)) }, [workspaceId, user])
   const items = workspace.groups.flatMap((group) => group.items).filter((item) => !item.permission || hasPermission(item.permission))
 
   return (
@@ -23,6 +30,7 @@ export default function WorkspaceHomePage({ workspaceId }: { workspaceId: ForgeW
         <h1>{copy.title}</h1>
         <p>{copy.intro}</p>
       </header>
+      {workspaceId === 'contributor' && <section className="workspace-home__section" aria-labelledby="contributor-status"><div className="workspace-home__section-heading"><div><p className="eyebrow">Application status</p><h2 id="contributor-status">{application ? application.status.replaceAll('_', ' ') : 'Not applied'}</h2></div><Link className="button button--secondary" to={application ? '/join/my-application' : '/join'}>{application ? 'View My Application' : 'Explore roles'}</Link></div><p>{application ? 'Your application is private to your account. Applicant-visible updates appear in My Application.' : 'Explore flexible, unpaid community roles and start an application when you are ready.'}</p></section>}
       <section className="workspace-home__section" aria-labelledby={`${workspaceId}-workspace-links`}>
         <div className="workspace-home__section-heading">
           <div><p className="eyebrow">Workspace navigation</p><h2 id={`${workspaceId}-workspace-links`}>Available tools</h2></div>
