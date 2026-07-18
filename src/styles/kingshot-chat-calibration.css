@@ -1,0 +1,37 @@
+/*
+ * Kingshot chat-frame calibration
+ *
+ * Kingshot does not publish a fixed CSS or pixel width for chat. The frame is
+ * responsive to the game viewport and UI scale. Measurement from the supplied
+ * 1080px-wide in-game capture places the visible chat card at approximately
+ * 721px, or 66.76% of the viewport. Forge reproduces that ratio on desktop and
+ * caps it at the measured reference width. Small screens retain the existing
+ * edge-to-edge mobile-sheet behaviour.
+ */
+:root {
+  --kingshot-chat-reference-viewport: 1080;
+  --kingshot-chat-reference-width: 721;
+  --kingshot-chat-width-ratio: 66.76vw;
+  --kingshot-chat-width-cap: 721px;
+}
+
+@media (min-width: 701px) {
+  .art-preview-modal__panel {
+    width: min(
+      var(--kingshot-chat-width-cap),
+      var(--kingshot-chat-width-ratio),
+      calc(100vw - 2.5rem)
+    );
+  }
+
+  .art-preview-modal__content {
+    /* The in-game card has roughly 7.5% horizontal inset on each side. */
+    padding-inline: clamp(1.5rem, 5vw, 3.4rem);
+  }
+}
+
+@media (max-width: 700px) {
+  .art-preview-modal__panel {
+    width: 100%;
+  }
+}
