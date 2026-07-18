@@ -89,7 +89,8 @@ deferred follow-up work.
 - shared dark workspace surfaces, switcher and sidebar correction;
 - typed Forge Contributor role catalogue and public `/join` experience;
 - contributor programme and governance policy drafts;
-- secure application workflow, Operations review, onboarding and contributor profile persistence remain planned until their server/RLS contracts are implemented and validated.
+- secure application workflow, Operations review, onboarding and contributor profile persistence foundation;
+- final authenticated browser validation and release hardening remain in development.
 
 ## Milestone 5 — Intelligence & Automation
 

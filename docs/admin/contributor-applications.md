@@ -1,7 +1,7 @@
 # Contributor Applications — Operations inventory
 
-Status: **Planned / not enabled**.
+Status: **Implemented in development**.
 
-The public catalogue is available at `/join`. This Operations surface must not be represented as active until the application table, forced-RLS policies, server-authorized list/detail routes, status-transition service, audit events, internal-note isolation, onboarding state and capability checks exist.
+The public catalogue is available at `/join`; applicant workflows use `/join/apply` and `/join/my-application`. The Operations surface is `/operations/applications` with server pagination, capability-gated detail and protected review actions.
 
-The intended capability keys are `applications.read`, `applications.review`, `applications.request_information`, `applications.change_status`, `applications.view_internal_notes`, `applications.manage_onboarding` and `applications.manage_role_catalogue`. They are not granted by this catalogue foundation.
+The intended capability keys are `applications.read`, `applications.review`, `applications.request_information`, `applications.change_status`, `applications.assign_reviewer`, `applications.view_internal_notes`, `applications.manage_onboarding` and `applications.manage_role_catalogue`. Owner and Administrator receive these capabilities through the migration. Other roles receive none by default.

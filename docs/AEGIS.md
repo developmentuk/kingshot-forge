@@ -395,11 +395,12 @@ Forge Contributor catalogue is typed in `src/data/contributorRoles.ts` and is
 available through `/join` and `/join/:roleSlug`. All roles are explicitly
 unpaid, voluntary hobby/community roles.
 
-The secure application form, application persistence and RLS, Operations
-review centre, audit events and onboarding role assignment remain deferred
-until their server-authoritative contracts are implemented. The public
-catalogue collects no application information. Local build/lint and workspace
-architecture checks pass; authenticated browser and Supabase security
+The secure application form, application persistence and forced RLS,
+Operations review centre, audit events and onboarding foundation are now
+implemented through the recruitment service and protected APIs. The public
+catalogue collects no application information. Acceptance remains separate
+from canonical platform-role assignment. Local build/lint and recruitment
+architecture checks pass; authenticated browser and final Supabase security
 validation remain release gates.
 
 ### Auto Redeem visibility contract
