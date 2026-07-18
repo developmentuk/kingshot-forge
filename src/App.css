@@ -94,7 +94,6 @@
 }
 
 .art-card-preview-button pre,
-.art-preview-modal__content pre,
 .art-studio-submission-preview pre {
   min-width: calc(100% / var(--kingshot-art-scale-x));
 }
@@ -104,10 +103,34 @@
   background: linear-gradient(transparent, rgba(45, 40, 34, .93) 48%);
 }
 
+/* Gallery-style full preview: narrower modal, centred parchment and no
+ * permanent horizontal scrollbar for artwork that already fits. */
+.art-preview-modal__panel {
+  width: min(760px, calc(100vw - 2.5rem));
+}
+
+.art-preview-modal__content {
+  display: flex;
+  min-height: 260px;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.art-preview-modal__content pre {
+  width: max-content;
+  min-width: 0;
+  max-width: none;
+  margin: 0 auto;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
 .kingshot-art-renderer {
   width: max-content;
-  min-width: 100%;
-  margin: 0;
+  min-width: 0;
+  margin: 0 auto;
   color: var(--kingshot-art-ink);
   font-family: var(--kingshot-art-font);
   font-size: .9rem;
@@ -126,7 +149,7 @@
 .kingshot-art-renderer--kingshot {
   display: block;
   transform: scaleX(var(--kingshot-art-scale-x));
-  transform-origin: top left;
+  transform-origin: top center;
 }
 
 .kingshot-art-renderer__line {
@@ -154,4 +177,6 @@
   .art-studio-form-actions { display: grid; grid-template-columns: 1fr; }
   .art-studio-status-row { align-items: stretch; flex-direction: column; }
   .art-studio-status-row .button { width: 100%; }
+  .art-preview-modal__panel { width: 100%; }
+  .art-preview-modal__content { min-height: 220px; padding: 1.25rem; }
 }
