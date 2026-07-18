@@ -310,15 +310,15 @@ Validation completed for this milestone: Player Identity structural validation, 
 
 ## Active Release
 
-### Release 0.7.4 — Community Art Studio
+### Release 0.7.5 — Auto Redeem
 
 Working branch:
 
 ```text
-release/0.7.4-community-art-studio
+release/0.7.5-auto-redeem
 ```
 
-Release objective: complete the Community Art Studio copyable text-art submission, moderation and approved-gallery vertical slice on the existing Forge architecture.
+Release objective: complete the consented, verified-player Auto Redeem vertical slice on the existing Forge architecture, with server-only provider transport, sequential processing, safe outcomes, private history and an admin kill switch while preserving manual redemption.
 
 Milestone order:
 

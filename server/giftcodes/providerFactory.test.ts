@@ -51,7 +51,7 @@ test('default factory selects simulation while official remains gated off', () =
   )
 })
 
-test('explicit gates can select only the non-production official skeleton', () => {
+test('explicit gates select the server-configured official provider boundary', () => {
   const factory = createDefaultGiftCodeProviderFactory({
     [GIFT_CODE_REDEMPTION_FLAG]: 'true',
     [GIFT_CODE_OFFICIAL_PROVIDER_FLAG]: 'true',
@@ -63,13 +63,10 @@ test('explicit gates can select only the non-production official skeleton', () =
 
   assert.equal(provider.id, OFFICIAL_GIFT_CODE_PROVIDER_ID)
   assert.equal(provider.productionReady, false)
-  assert.equal(
-    provider.capabilities.externalRequestsAllowed,
-    false,
-  )
+  assert.equal(provider.capabilities.externalRequestsAllowed, true)
   assert.equal(
     provider.capabilities.redemptionSupport,
-    'not_implemented',
+    'live',
   )
 })
 

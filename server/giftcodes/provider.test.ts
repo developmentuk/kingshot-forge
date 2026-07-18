@@ -10,7 +10,11 @@ import {
   readGiftCodeRedemptionConfig,
 } from './config.ts'
 import { mockGiftCodeRedemptionProvider } from './mockProvider.ts'
-import { officialGiftCodeProviderSkeleton } from './officialProvider.ts'
+import {
+  createSignedFields,
+  normaliseOfficialResponse,
+  officialGiftCodeProviderSkeleton,
+} from './officialProvider.ts'
 
 const request = {
   attemptId: 'attempt-1',
@@ -153,9 +157,29 @@ test('official provider skeleton cannot contact external systems', async () => {
     assert.equal(result.requestDisposition, 'not_sent')
     assert.equal(
       result.safeDiagnosticCode,
-      'official_provider_not_implemented',
+      'provider_not_configured',
     )
   } finally {
     globalThis.fetch = originalFetch
   }
+})
+
+test('official signing is deterministic and alphabetically ordered', () => {
+  const signed = createSignedFields(
+    { cdk: 'CODE', fid: 'PLAYER', time: '123' },
+    'fixture-signing-key',
+  )
+  assert.equal(
+    signed.sign,
+    '1622ae4ea35277aa89541e802fa7b03d',
+  )
+  assert.equal('fixture-signing-key' in signed, false)
+})
+
+test('official response mappings stay provider-safe', () => {
+  assert.equal(normaliseOfficialResponse({ msg: 'SUCCESS' }).status, 'succeeded')
+  assert.equal(normaliseOfficialResponse({ msg: 'RECEIVED', err_code: 40008 }).status, 'already_claimed')
+  assert.equal(normaliseOfficialResponse({ msg: 'TIME ERROR', err_code: 40007 }).status, 'expired')
+  assert.equal(normaliseOfficialResponse({ msg: 'CDK NOT FOUND', err_code: 40014 }).safeDiagnosticCode, 'invalid_code')
+  assert.equal(normaliseOfficialResponse({ msg: 'TIMEOUT RETRY', err_code: 40004 }).failureCategory, 'transient_provider')
 })

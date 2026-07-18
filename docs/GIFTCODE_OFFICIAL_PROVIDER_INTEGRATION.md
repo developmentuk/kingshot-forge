@@ -56,7 +56,7 @@ The branch already provides a safe, non-live foundation:
 | Provider boundary | `server/giftcodes/provider.ts` defines a server-local, provider-neutral request/result and capability contract. No API route imports it. |
 | Provider selection | An immutable capability registry and dependency-injected factory support simulation, the official skeleton, and future providers without changing factory logic. |
 | Simulation | `simulationProvider.ts` is deterministic, sends no request, and cannot return success. `mockProvider.ts` remains a compatibility alias. |
-| Official provider | `officialProvider.ts` is a non-production skeleton with no transport, signing, cookie, or HTTP implementation. It always returns `not_supported` and `externalRequestSent: false`. |
+| Official provider | `officialProvider.ts` is a server-only transport boundary. It remains unavailable unless the server environment contains the provider URLs/signing key, the feature is enabled, and the database provider-health gate is closed. |
 | Feature gates | Product, official-provider, approved-environment, and queue-processing gates use exact `true` matching and all default off. Simulation is isolated from live-provider gates. |
 | Eligibility | Pure domain policy and an injected service compose authoritative actor, Player, publication, consent, gate, provider-health, rate-limit, and security-hold projections. Client Player IDs are not accepted. |
 | Consent | Purpose-, user-, character-, provider-, mode-, environment-, policy-, and digest-bound contracts support deterministic validity and one-way revocation. The proposed table remains unapplied. |

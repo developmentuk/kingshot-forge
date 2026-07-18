@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { usePlayerIdentity } from '../../context/PlayerIdentityContext'
@@ -28,7 +29,7 @@ function getVerificationLabel(status: string) {
 }
 
 export function GiftRedemptionFoundationPanel() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, session, loading: authLoading } = useAuth()
   const {
     playerAccount,
     loadingPlayerAccount,
@@ -37,22 +38,64 @@ export function GiftRedemptionFoundationPanel() {
   const identityLoading =
     authLoading || loadingPlayerAccount
 
+  const [context, setContext] = useState<{
+    player: { name: string; playerId: string; kingdom: number; verificationStatus: string } | null
+    consent: { grantedAt: string; version: string } | null
+    provider: { configured: boolean; enabled: boolean }
+    codes: { active: number; ready: number; processed: number }
+    eligibility: { eligible: boolean; reasons: string[] }
+  } | null>(null)
+  const [consentChecked, setConsentChecked] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  const [results, setResults] = useState<Array<{ code: string; status: string; retryable: boolean; message: string }>>([])
+  const [history, setHistory] = useState<Array<{ id: string; status: string; requested_code_count: number; processed_code_count: number; created_at: string; requests: Array<{ code_publication_id: string; status: string; result_code: string }> }>>([])
+
+  const call = useCallback(async (action: string, init?: RequestInit) => {
+    if (!session?.access_token) return null
+    const response = await fetch(`/api/giftcodes?action=${action}`, { ...init, headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json', ...(init?.headers ?? {}) } })
+    const payload = await response.json().catch(() => null) as { status?: string; data?: unknown; message?: string } | null
+    if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'The Gift Centre request could not be completed.')
+    return payload.data
+  }, [session?.access_token])
+
+  useEffect(() => {
+    if (!session) { setContext(null); return }
+    void call('context').then((data) => setContext(data as typeof context)).catch((error: unknown) => setMessage(error instanceof Error ? error.message : 'Gift Centre status unavailable.'))
+    void call('history').then((data) => setHistory((data as typeof history) ?? [])).catch(() => setHistory([]))
+  }, [call, session])
+
+  async function grant() {
+    setBusy(true); setMessage('')
+    try { await call('consent', { method: 'POST', body: '{}' }); setConsentChecked(false); setContext((await call('context')) as typeof context); setMessage('Consent granted. You can now redeem active codes when ready.') } catch (error) { setMessage(error instanceof Error ? error.message : 'Consent could not be saved.') } finally { setBusy(false) }
+  }
+
+  async function withdraw() {
+    setBusy(true); setMessage('')
+    try { await call('consent', { method: 'DELETE' }); setContext((await call('context')) as typeof context); setMessage('Consent withdrawn. Future redemption is paused.') } catch (error) { setMessage(error instanceof Error ? error.message : 'Consent could not be withdrawn.') } finally { setBusy(false) }
+  }
+
+  async function redeem() {
+    setBusy(true); setMessage('Processing codes one at a time…'); setResults([])
+    try { const data = await call('redeem', { method: 'POST', body: '{}' }) as { results: typeof results } | null; setResults(data?.results ?? []); setContext((await call('context')) as typeof context); setHistory(((await call('history')) as typeof history) ?? []); setMessage('Redemption run complete. Review each result below.') } catch (error) { setMessage(error instanceof Error ? error.message : 'The redemption run could not be completed.') } finally { setBusy(false) }
+  }
+
   return (
     <section
       className="gift-redemption-panel"
       aria-labelledby="gift-redemption-title"
     >
       <div className="gift-redemption-panel__intro">
-        <p className="eyebrow">Manual redemption</p>
+        <p className="eyebrow">Gift Centre · Auto Redeem</p>
 
         <h2 id="gift-redemption-title">
-          Confirm the right Governor
+          Redeem active codes safely
         </h2>
 
         <p>
-          Copy a code below, confirm your linked character,
-          then redeem on the Century Games page. Forge does
-          not submit codes or share your linked Player ID.
+          Auto Redeem submits only the linked, verified Governor and
+          active Gift Codes when you start a run. Forge never asks for
+          or stores a game password, and manual copying remains available.
         </p>
       </div>
 
@@ -152,12 +195,40 @@ export function GiftRedemptionFoundationPanel() {
         </a>
 
         <p>
-          <strong>Automatic redemption is unavailable.</strong>{' '}
-          It will remain disabled until an approved Forge
-          server integration and consent controls are in
-          place.
+            <strong>Manual fallback remains available.</strong>{' '}
+            Automatic redemption is server-controlled and may be paused
+            when the provider is unavailable.
         </p>
       </div>
+
+      {user && context && (
+        <div className="gift-redemption-panel__auto" aria-live="polite">
+          <div className="gift-redemption-panel__summary">
+            <strong>Auto Redeem status</strong>
+            <span>{context.provider.enabled ? 'Available' : context.provider.configured ? 'Paused' : 'Not configured'}</span>
+            <span>{context.codes.ready} ready · {context.codes.processed} already handled · {context.codes.active} active</span>
+          </div>
+          {!context.consent ? (
+            <div>
+              <label>
+                <input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} />
+                I understand Forge will submit my linked Player ID and selected codes, record normalised outcomes and timestamps, will not request a game password, and will process codes only when I start a run.
+              </label>
+              <button type="button" className="button button--primary" disabled={!consentChecked || busy || !context.eligibility.eligible && !context.eligibility.reasons.includes('consent_required')} onClick={() => void grant()}>Grant Auto Redeem consent</button>
+            </div>
+          ) : (
+            <div className="gift-redemption-panel__actions">
+              <p>Consent active since {new Date(context.consent.grantedAt).toLocaleString('en-GB')}.</p>
+              <button type="button" className="button button--primary" disabled={busy || !context.eligibility.eligible} onClick={() => void redeem()}>{busy ? 'Processing…' : 'Redeem available codes'}</button>
+              <button type="button" className="button button--secondary" disabled={busy} onClick={() => void withdraw()}>Withdraw consent</button>
+            </div>
+          )}
+          {!context.eligibility.eligible && <p role="status">Next step: {context.eligibility.reasons[0]?.replaceAll('_', ' ') ?? 'check your linked Governor.'}</p>}
+          {message && <p role="status">{message}</p>}
+          {results.length > 0 && <div><h3>Run results</h3>{results.map((item) => <p key={`${item.code}-${item.status}`}><strong>{item.code}</strong> — {item.status.replaceAll('_', ' ')}{item.retryable ? ' · Try again' : ''}<br /><span>{item.message}</span></p>)}</div>}
+          {history.length > 0 && <div><h3>Private redemption history</h3>{history.map((run) => <div key={run.id}><p><strong>{new Date(run.created_at).toLocaleString('en-GB')}</strong> — {run.status.replaceAll('_', ' ')} · {run.processed_code_count}/{run.requested_code_count} processed</p>{run.requests.map((item) => <span key={`${run.id}-${item.code_publication_id}`} className="gift-redemption-panel__history-item">{item.status.replaceAll('_', ' ')} ({item.result_code})</span>)}</div>)}</div>}
+        </div>
+      )}
     </section>
   )
 }

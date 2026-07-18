@@ -1,7 +1,7 @@
 {
   "name": "kingshot-forge",
   "private": true,
-  "version": "0.7.4",
+  "version": "0.7.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,7 +23,8 @@
     "test:player-identity": "node scripts/test-player-identity.mjs && node scripts/test-player-identity-vertical-slice.mjs",
     "test:art-studio": "node scripts/test-art-studio-foundation.mjs && node scripts/test-art-studio-player-attribution.mjs && node scripts/test-community-art-submission.mjs && node scripts/test-community-art-ux.mjs",
     "test:art-studio-attribution": "node scripts/test-art-studio-player-attribution.mjs",
-    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run lint && npm run build"
+    "test:auto-redeem": "node scripts/test-auto-redeem.mjs",
+    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run test:auto-redeem && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
