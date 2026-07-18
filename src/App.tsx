@@ -61,6 +61,7 @@ import OperationsStatusPage from "./pages/OperationsStatusPage";
 import OperationsDashboardPage from "./pages/OperationsDashboardPage";
 import { UserDetailPage, UserManagementPage } from "./features/operations/UserManagementPage";
 import SettingsPage from "./pages/SettingsPage";
+import { ContributorRolePage, JoinForgePage } from "./pages/JoinForgePage";
 
 function App() {
   return (
@@ -96,6 +97,8 @@ function App() {
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="join" element={<JoinForgePage />} />
+        <Route path="join/:roleSlug" element={<ContributorRolePage />} />
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
 

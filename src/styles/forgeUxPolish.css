@@ -105,6 +105,8 @@
 .app-navigation__link--active {
   box-shadow: inset 3px 0 0 var(--forge-colour-action-primary);
 }
+.app-navigation__link--disabled { cursor: not-allowed; opacity: .58; }
+.navigation-status { margin-left: auto; flex: 0 0 auto; white-space: nowrap; color: #e6b85c; font-size: .68rem; text-transform: capitalize; }
 
 .player-domain-hero,
 .player-profile-editor-heading,
