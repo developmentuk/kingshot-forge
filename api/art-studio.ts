@@ -92,8 +92,8 @@ async function moderateSubmission(request: VercelRequest, response: VercelRespon
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
+  const action = typeof request.query.action === 'string' ? request.query.action : 'gallery'
   try {
-    const action = typeof request.query.action === 'string' ? request.query.action : 'gallery'
     if (request.method === 'GET' && action === 'gallery') return await gallery(response)
     if (request.method === 'GET' && action === 'mine') return await mine(request, response)
     if (request.method === 'GET' && action === 'queue') return await queue(request, response)
@@ -101,6 +101,16 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (request.method === 'POST' && action === 'moderate') return await moderateSubmission(request, response)
     response.setHeader('Allow', 'GET, POST'); fail(response, 405, 'Method not allowed.')
   } catch (error) {
+    const diagnostic = error && typeof error === 'object' ? error as { name?: unknown; message?: unknown; code?: unknown; details?: unknown; hint?: unknown; statusCode?: unknown } : null
+    console.error('[art-studio]', {
+      method: request.method,
+      action,
+      name: error instanceof Error ? error.name : diagnostic?.name,
+      message: error instanceof Error ? error.message : diagnostic?.message,
+      code: diagnostic?.code,
+      details: diagnostic?.details,
+      hint: diagnostic?.hint,
+    })
     const statusCode = typeof error === 'object' && error && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500
     fail(response, statusCode, statusCode === 500 ? 'The Art Studio service is temporarily unavailable.' : 'You do not have permission for this action.')
   }
