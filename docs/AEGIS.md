@@ -318,12 +318,12 @@ Working branch:
 release/0.7.4-community-art-studio
 ```
 
-Release objective: complete the Community Art Studio player submission, private storage, moderation and approved-gallery vertical slice on the existing Forge architecture.
+Release objective: complete the Community Art Studio copyable text-art submission, moderation and approved-gallery vertical slice on the existing Forge architecture.
 
 Milestone order:
 
-1. scoped schema, storage and RLS;
-2. player submission and upload validation;
+1. scoped text-art schema and RLS correction;
+2. player submission and exact-text validation;
 3. status and moderation workflow;
 4. approved-only gallery;
 5. accessibility, responsive states and focused validation;

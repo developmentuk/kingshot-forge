@@ -51,7 +51,7 @@ function ReleaseNotesPage() {
 
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading"><div><span className="release-entry__badge">Current milestone</span><h2>Release 0.7.4 — Community Art Studio</h2><p>Ready for local browser validation · July 2026</p></div><Link className="button button--secondary" to="/roadmap">View roadmap</Link></div>
-        <div className="release-entry__sections"><section><h3>Player workflow</h3><ul><li>Private PNG, JPEG and WebP uploads with preview and replacement</li><li>Attribution, ownership and community-guideline controls</li><li>Personal pending, approved, rejected and published status</li></ul></section><section><h3>Moderation and publication</h3><ul><li>Moderator-only review queue with notes and final actions</li><li>Private originals and short-lived signed delivery URLs</li><li>Published-only public gallery projection</li></ul></section></div>
+        <div className="release-entry__sections"><section><h3>Player workflow</h3><ul><li>Multiline Unicode, emoji and ASCII chat-art editor</li><li>Exact whitespace preview with character and line counts</li><li>Attribution, ownership and community-guideline controls</li></ul></section><section><h3>Moderation and publication</h3><ul><li>Moderator copy/test workflow with compatibility states</li><li>Server-controlled pending, approval, rejection and publication</li><li>Published-only text-art gallery projection</li></ul></section></div>
       </article>
 
       <article className="release-entry release-entry--latest">

@@ -64,8 +64,8 @@ const roadmapReleases: RoadmapRelease[] = [
     priority: "Current release",
     description: "A production-ready player submission, moderation and approved-gallery workflow for community artwork.",
     features: [
-      "Private raster artwork uploads",
-      "Submission validation and attribution controls",
+      "Copyable Unicode and emoji chat-art submissions",
+      "Whitespace-preserving editor and preview",
       "Personal moderation status",
       "Authorised review and publication workflow",
       "Approved-only public gallery",
