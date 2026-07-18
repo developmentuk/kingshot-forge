@@ -310,39 +310,36 @@ Validation completed for this milestone: Player Identity structural validation, 
 
 ## Active Release
 
-### Release 0.7.2 — Player-Facing Domain Activation
+### Release 0.7.3 — Forge UX Polish
 
 Working branch:
 
 ```text
-release/0.7.2-player-facing-activation
+release/0.7.3-forge-ux-polish
 ```
 
-Release objective: activate carefully selected player-facing journeys on top of the completed 0.7.1 domain foundations, while preserving existing architecture, privacy boundaries, canonical publishing rules and production safety.
+Release objective: improve consistency, readability, responsiveness, accessibility and perceived quality across the existing Forge application without adding domains, product features, tables or schema changes.
 
 Milestone order:
 
-1. release integrity and activation-readiness audit;
-2. Player Identity and profile journey activation;
-3. manual Gift Centre activation;
-4. Art Studio gallery, attribution and submission activation;
-5. Verification Centre player-facing clarity improvements;
-6. published-only Hero Skills experience when approved data exists;
-7. homepage, navigation, mobile and accessibility completion;
-8. end-to-end validation, documentation and release preparation.
+1. shared tokens, surfaces and controls;
+2. navigation and responsive shell polish;
+3. loading, empty, error and success state consistency;
+4. player-facing and public-page refinement;
+5. accessibility, reduced motion and visual regression review;
+6. validation, documentation and release preparation.
 
 Release constraints:
 
-- reuse existing domain, editorial, publishing, permission and Verification Centre platforms;
-- consume published datasets only on public surfaces;
-- do not invent, infer or publish unapproved Hero Skill facts;
-- automatic gift redemption remains out of scope until separately approved;
-- do not apply production database changes without Clark's explicit approval;
-- use the connected Supabase project read-only unless a milestone explicitly requires and receives approval for a write;
-- finish and validate one vertical slice before beginning the next;
+- reuse existing domain, editorial, publishing, permission and design-system capabilities;
+- do not add new product features, domains, backend tables or schema changes;
+- preserve published-data, privacy and server-side permission boundaries;
+- do not apply production database changes;
+- use the connected Supabase project read-only;
+- finish and validate one UX slice before beginning the next;
 - do not redesign the architecture or create parallel sources of truth.
 
-Milestone 0 is complete only when release metadata is internally consistent, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for the Player Identity audit.
+This milestone is complete only when the shared UX polish is validated, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for Clark's local browser validation.
 
 ## Session bootstrap
 

@@ -1,0 +1,11 @@
+:root {
+  --forge-ux-surface-panel: var(--forge-colour-bg-surface);
+  --forge-ux-surface-raised: var(--forge-colour-bg-raised);
+  --forge-ux-border-panel: var(--forge-colour-border-default);
+  --forge-ux-border-hover: var(--forge-colour-border-strong);
+  --forge-ux-radius-card: var(--forge-radius-lg);
+  --forge-ux-radius-control: var(--forge-radius-md);
+  --forge-ux-control-height: 2.75rem;
+  --forge-ux-mobile-gutter: 0.85rem;
+  --forge-ux-page-gap: var(--forge-space-6);
+}

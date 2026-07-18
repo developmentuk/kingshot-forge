@@ -10,6 +10,7 @@ import "./styles/playerPlanningPolish.css";
 import "./styles/passportPolish.css";
 // Keep Hero Collection polish last so it overrides the legacy Hero card rules.
 import "./styles/heroCollectionPolish.css";
+import "./styles/forgeUxPolish.css";
 
 import HomePage from "./pages/HomePage";
 import NameStudioPage from "./pages/NameStudioPage";
