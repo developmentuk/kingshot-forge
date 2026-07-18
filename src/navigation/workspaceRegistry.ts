@@ -65,6 +65,7 @@ const playerGroups = [
 const contributorGroups = [
   { title: 'Contribution', items: [
     { label: 'Contributor overview', shortLabel: 'Overview', icon: '✍️', path: '/contributor' },
+    { label: 'My Application', shortLabel: 'Application', icon: '📨', path: '/join/my-application' },
     { label: 'My drafts', shortLabel: 'Drafts', icon: '📝', path: '/contributor/drafts', status: 'planned' as const },
     { label: 'Submission history', shortLabel: 'History', icon: '🗂️', path: '/contributor/submissions', status: 'planned' as const },
     { label: 'Verification Centre', shortLabel: 'Verify', icon: '🧭', path: '/admin/verification', permission: 'cms.view' as ForgePermission },
@@ -98,8 +99,10 @@ const operationsGroups = [
     { label: 'Version History', shortLabel: 'History', icon: '🕒', path: '/admin/history', permission: 'cms.history.view' as ForgePermission, status: 'planned' as const },
     { label: 'Data Engine', shortLabel: 'Engine', icon: '⚙️', path: '/admin/data-engine', permission: 'cms.view' as ForgePermission },
   ] },
+  { title: 'Community operations', items: [
+    { label: 'Contributor Applications', shortLabel: 'Applications', icon: '🤝', path: '/operations/applications', permission: 'applications.read' as ForgePermission },
+  ] },
   { title: 'Player and community operations', items: [
-    { label: 'Contributor Applications', shortLabel: 'Applications', icon: '🤝', path: '/operations/applications', permission: 'platform.users.manage' as ForgePermission, status: 'planned' as const },
     { label: 'User Management', shortLabel: 'Users', icon: '👥', path: '/operations/users', permission: 'users.read' as ForgePermission },
     { label: 'Player Identity', shortLabel: 'Identity', icon: '🛡️', path: '/admin/player-identity', permission: 'platform.users.manage' as ForgePermission, status: 'partial' as const },
     { label: 'Gift Redemption', shortLabel: 'Gifts', icon: '🎁', path: '/admin/gift-redemption', permission: 'cms.view' as ForgePermission },

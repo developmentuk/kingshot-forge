@@ -62,6 +62,10 @@ import OperationsDashboardPage from "./pages/OperationsDashboardPage";
 import { UserDetailPage, UserManagementPage } from "./features/operations/UserManagementPage";
 import SettingsPage from "./pages/SettingsPage";
 import { ContributorRolePage, JoinForgePage } from "./pages/JoinForgePage";
+import ContributorApplicationPage from "./pages/ContributorApplicationPage";
+import MyContributorApplicationPage from "./pages/MyContributorApplicationPage";
+import ContributorApplicationsPage from "./features/operations/ContributorApplicationsPage";
+import ContributorApplicationDetailPage from "./features/operations/ContributorApplicationDetailPage";
 
 function App() {
   return (
@@ -99,12 +103,16 @@ function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="join" element={<JoinForgePage />} />
         <Route path="join/:roleSlug" element={<ContributorRolePage />} />
+        <Route path="join/apply" element={<ContributorApplicationPage />} />
+        <Route path="join/my-application" element={<MyContributorApplicationPage />} />
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
 
         <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
         <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><UserManagementPage /></WorkspaceRoute>} />
         <Route path="operations/users/:userId" element={<WorkspaceRoute workspaceId="operations"><UserDetailPage /></WorkspaceRoute>} />
+        <Route path="operations/applications" element={<WorkspaceRoute workspaceId="operations"><ContributorApplicationsPage /></WorkspaceRoute>} />
+        <Route path="operations/applications/:applicationId" element={<WorkspaceRoute workspaceId="operations"><ContributorApplicationDetailPage /></WorkspaceRoute>} />
         <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Roles and Permissions" /></WorkspaceRoute>} />
         <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Audit Log" /></WorkspaceRoute>} />
         <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Feature Flags" /></WorkspaceRoute>} />

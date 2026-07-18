@@ -109,6 +109,18 @@
 .join-forge__faq details { padding: .7rem 0; border-top: 1px solid #3d3857; }.join-forge__faq details:first-of-type { border-top: 0; }.join-forge__faq summary { cursor: pointer; font-weight: 700; }.join-forge__faq details p { margin-bottom: 0; }
 .join-forge__back { display: inline-block; margin-bottom: 1rem; color: #7ed5d0; }.join-forge__detail-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr); gap: 1rem; }.join-forge__detail-grid h2:not(:first-child) { margin-top: 1.5rem; }.join-forge__cta { border-color: #4ab7b2 !important; }.join-forge__cta .button { margin-top: .5rem; }
 @media (max-width: 760px) { .workspace-switcher__menu { position: fixed; top: 4.4rem; left: .75rem; right: .75rem; width: auto; max-height: calc(100vh - 5.5rem); overflow: auto; }.join-forge__detail-grid { grid-template-columns: 1fr; }.join-forge__section-heading { align-items: start; flex-direction: column; } }
+.join-forge__form { display: grid; gap: 1rem; max-width: 820px; }
+.join-forge__form fieldset { display: grid; gap: .85rem; margin: 0; padding: 1rem; border: 1px solid #3d3857; border-radius: .75rem; background: #211f34; }
+.join-forge__form legend { padding: 0 .35rem; font-weight: 700; color: #f7f4ff; }
+.join-forge__form label { display: grid; gap: .35rem; color: #c8c3dc; font-weight: 600; }
+.join-forge__form input:not([type="checkbox"]), .join-forge__form select, .join-forge__form textarea { width: 100%; min-height: 2.7rem; border: 1px solid #514b70; border-radius: .45rem; padding: .65rem .75rem; background: #171628; color: #f7f4ff; font: inherit; }
+.join-forge__form textarea { min-height: 7rem; resize: vertical; }
+.join-forge__form input:focus-visible, .join-forge__form select:focus-visible, .join-forge__form textarea:focus-visible { border-color: #4ab7b2; outline: 2px solid #4ab7b2; outline-offset: 2px; }
+.checkbox-row { display: flex !important; grid-template-columns: auto 1fr; align-items: start; gap: .6rem !important; font-weight: 400 !important; }
+.checkbox-row input { margin-top: .25rem; accent-color: #4ab7b2; }
+.join-forge__form-actions { display: flex; flex-wrap: wrap; gap: .7rem; }
+.application-page .success-state, .application-page .error-state { max-width: 820px; margin-bottom: 1rem; padding: .8rem 1rem; border-radius: .45rem; }
+.operations-applications .operations-users__filters { max-width: 820px; }
 .operations-users, .operations-user-detail, .settings-page { max-width: 1200px; margin: 0 auto; padding: clamp(1.25rem, 3vw, 3rem) clamp(1rem, 3vw, 2.5rem); }
 .operations-users__header, .operations-user-detail__header { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.5rem; }.operations-users__header h1, .operations-user-detail__header h1, .settings-page h1 { margin: .35rem 0 .5rem; font-size: clamp(2rem, 5vw, 3.4rem); }.operations-users__header p:not(.eyebrow), .operations-user-detail__header p:not(.eyebrow), .settings-page header > p:not(.eyebrow) { color: #687083; }
 .operations-users__filters { display: grid; grid-template-columns: minmax(15rem, 2fr) repeat(2, minmax(9rem, 1fr)); gap: .75rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e0e4ec; border-radius: .8rem; background: #fff; }.operations-users__filters label, .operations-user-detail__actions label, .operations-user-detail__reason { display: grid; gap: .35rem; font-weight: 700; }.operations-users__filters input, .operations-users__filters select, .operations-user-detail select, .operations-user-detail textarea { width: 100%; border: 1px solid #cbd2df; border-radius: .45rem; padding: .65rem; background: #fff; font: inherit; }

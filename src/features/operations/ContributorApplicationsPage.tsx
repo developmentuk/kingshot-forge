@@ -1,0 +1,13 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { listApplications, type ApplicationList } from '../../services/contributorApplicationService'
+
+export default function ContributorApplicationsPage() {
+  const [data, setData] = useState<ApplicationList | null>(null)
+  const [status, setStatus] = useState('')
+  const [search, setSearch] = useState('')
+  const [error, setError] = useState('')
+  const load = () => void listApplications({ page: 1, status: status || undefined, search: search || undefined }).then(setData).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Applications unavailable.'))
+  useEffect(load, [status, search])
+  return <main className="workspace-home operations-applications"><header className="workspace-home__header"><p className="eyebrow">Community Operations</p><h1>Contributor Applications</h1><p>Review applications with capability-gated, server-paginated projections.</p></header><section className="workspace-home__section"><div className="operations-users__filters"><label>Search<input value={search} onChange={(event) => setSearch(event.target.value)} /></label><label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option>{['submitted','under_review','more_information_requested','conversation','accepted','declined','onboarding','active','withdrawn','closed'].map((value) => <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}</select></label></div>{error && <div className="error-state" role="alert">{error}</div>}{!data && !error && <div role="status">Loading applications…</div>}{data && data.items.length === 0 && <div className="empty-state"><h2>No applications</h2><p>No matching applications are available.</p></div>}{data && data.items.length > 0 && <div className="operations-users__table-wrap"><table><caption className="sr-only">Contributor applications</caption><thead><tr><th scope="col">Applicant</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Submitted</th><th scope="col">Reviewer</th></tr></thead><tbody>{data.items.map((item) => <tr key={item.id}><th scope="row"><Link to={`/operations/applications/${item.id}`}>{item.displayName || 'Unnamed applicant'}</Link><small>{item.applicantUserId}</small></th><td>{item.primaryRoleKey}</td><td>{item.status.replaceAll('_', ' ')}</td><td>{item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : 'Draft'}</td><td>{item.assignedReviewerUserId ?? 'Unassigned'}</td></tr>)}</tbody></table><p>Page {data.page} of {data.totalPages} · {data.total} applications</p></div>}</section></main>
+}
