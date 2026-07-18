@@ -28,8 +28,18 @@ export const COMMUNITY_ART_CATEGORIES: Array<'All' | CommunityArtCategory> = ['A
 
 async function api<T>(action: string, init?: RequestInit): Promise<T> {
   const session = (await supabase.auth.getSession()).data.session
-  const response = await fetch(`/api/art-studio?action=${action}`, { ...init, headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}), ...(init?.headers ?? {}) } })
-  const payload = await response.json() as { status: string; data?: T; message?: string }
+  let response: Response
+  try {
+    response = await fetch(`/api/art-studio?action=${action}`, { ...init, headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}), ...(init?.headers ?? {}) } })
+  } catch {
+    throw new Error('We couldn’t submit your artwork. Your draft is still here — please try again.')
+  }
+  let payload: { status: string; data?: T; message?: string }
+  try {
+    payload = await response.json() as { status: string; data?: T; message?: string }
+  } catch {
+    throw new Error('We couldn’t submit your artwork. Your draft is still here — please try again.')
+  }
   if (!response.ok || payload.status !== 'success') throw new Error(payload.message ?? 'Art Studio request failed.')
   return payload.data as T
 }
