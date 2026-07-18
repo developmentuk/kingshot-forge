@@ -1,3 +1,7 @@
+# Contributor recruitment capability note
+
+Recruitment capabilities are not active in Sprint 8.0C’s public catalogue. When implemented, they must be mapped conservatively to authorised Operations actors. Application acceptance must never imply platform-role assignment; Moderator, Administrator, Owner, publishing and production access remain separately protected.
+
 # Role-capability matrix — Release 0.8.0
 
 The matrix is intentionally conservative. A role grants only capabilities

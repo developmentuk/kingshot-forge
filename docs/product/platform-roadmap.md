@@ -84,6 +84,13 @@ Settings. Authenticated runtime, responsive and scale validation remain release
 gates; unified audit, standalone role administration and feature flags are
 deferred follow-up work.
 
+### Sprint 8.0C — Workspace UX and Forge Contributors — In development
+
+- shared dark workspace surfaces, switcher and sidebar correction;
+- typed Forge Contributor role catalogue and public `/join` experience;
+- contributor programme and governance policy drafts;
+- secure application workflow, Operations review, onboarding and contributor profile persistence remain planned until their server/RLS contracts are implemented and validated.
+
 ## Milestone 5 — Intelligence & Automation
 
 - calculators and planning tools from published data

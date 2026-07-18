@@ -386,6 +386,22 @@ events and protect self-lockout, the final Owner and Admin-to-Owner escalation.
 
 The release remains a local branch and is not production-deployed or merged.
 
+### Sprint 8.0C — Workspace UX and Forge Contributors
+
+Sprint 8.0C corrects the shared internal workspace visual contract: dark
+surfaces, compact operational headings, responsive workspace switching,
+readable sidebar status treatment and honest planned destinations. The public
+Forge Contributor catalogue is typed in `src/data/contributorRoles.ts` and is
+available through `/join` and `/join/:roleSlug`. All roles are explicitly
+unpaid, voluntary hobby/community roles.
+
+The secure application form, application persistence and RLS, Operations
+review centre, audit events and onboarding role assignment remain deferred
+until their server-authoritative contracts are implemented. The public
+catalogue collects no application information. Local build/lint and workspace
+architecture checks pass; authenticated browser and Supabase security
+validation remain release gates.
+
 ### Auto Redeem visibility contract
 
 The Auto Redeem interaction remains rendered for authenticated users while context is loading, unavailable, environment-disabled, paused or circuit-open. The action is disabled with a safe explanation and manual official redemption remains available. This presentation rule does not weaken server enforcement of configuration, provider health, verified linkage, consent or active-code eligibility.
