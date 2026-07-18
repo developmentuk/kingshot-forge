@@ -77,7 +77,6 @@ export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = fals
         })}
       </div>
     })}
-    <span className="sr-only">{lines.join('\n')}</span>
   </div>
 }
 
