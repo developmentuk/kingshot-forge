@@ -1,38 +1,14 @@
 import { useEffect, useState } from 'react'
-import { listCommunityArtQueue, moderateCommunityArt, type CommunityArtRecord } from '../../services/communityArtService'
+import { listCommunityArtQueue, moderateCommunityArt, type CommunityArtCompatibility, type CommunityArtRecord } from '../../services/communityArtService'
 
 export function CommunityArtModerationPage() {
   const [queue, setQueue] = useState<CommunityArtRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [working, setWorking] = useState<string | null>(null)
-
-  useEffect(() => {
-    void listCommunityArtQueue().then(setQueue).catch(() => setError('The moderation queue could not be loaded.')).finally(() => setLoading(false))
-  }, [])
-
-  async function act(id: string, action: 'approve' | 'reject' | 'publish') {
-    const note = action === 'reject' ? window.prompt('Reason for rejection') ?? '' : window.prompt('Optional moderation note') ?? ''
-    if (action === 'reject' && !note.trim()) return
-    setWorking(id)
-    try {
-      const updated = await moderateCommunityArt(id, action, note)
-      setQueue((current) => action === 'approve' ? current.map((item) => item.id === id ? updated : item) : current.filter((item) => item.id !== id))
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Moderation action failed.')
-    } finally { setWorking(null) }
-  }
-
-  return <main className="admin-page">
-    <section className="admin-page__header"><p className="admin-page__eyebrow">Community Art Studio</p><h1>Artwork moderation</h1><p>Review pending community artwork before it can be approved or published.</p></section>
-    {error && <div className="error-state" role="alert">{error}</div>}
-    {loading && <div className="loading-state" role="status">Loading moderation queue…</div>}
-    {!loading && queue.length === 0 && <div className="empty-state"><h2>Queue clear</h2><p>No pending or approved artwork needs action.</p></div>}
-    <div className="community-art-moderation-grid">{queue.map((item) => <article className="community-art-moderation-card" key={item.id}>
-      {item.imageUrl && <img src={item.imageUrl} alt={item.title} />}
-      <div><p className="eyebrow">{item.category}</p><h2>{item.title}</h2><p>{item.description}</p><p>Attribution: {item.attribution ?? 'Anonymous'}</p>
-        <div className="community-art-moderation-actions">{item.status === 'pending' && <><button className="button button--primary" disabled={working === item.id} onClick={() => void act(item.id, 'approve')}>Approve</button><button className="button button--secondary" disabled={working === item.id} onClick={() => void act(item.id, 'reject')}>Reject</button></>}{item.status === 'approved' && <button className="button button--primary" disabled={working === item.id} onClick={() => void act(item.id, 'publish')}>Publish</button>}</div>
-      </div>
-    </article>)}</div>
-  </main>
+  useEffect(() => { void listCommunityArtQueue().then(setQueue).catch(() => setError('The moderation queue could not be loaded.')).finally(() => setLoading(false)) }, [])
+  async function act(item: CommunityArtRecord, action: 'approve' | 'reject' | 'publish') { const note = action === 'reject' ? window.prompt('Private moderation reason') ?? '' : window.prompt('Private moderation note (optional)') ?? ''; if (action === 'reject' && !note.trim()) return; const feedback = window.prompt('Optional submitter-facing feedback') ?? ''; setWorking(item.id); try { const updated = await moderateCommunityArt({ id: item.id, action, note, feedback, compatibilityStatus: item.compatibilityStatus }); setQueue((current) => action === 'approve' ? current.map((entry) => entry.id === item.id ? updated : entry) : current.filter((entry) => entry.id !== item.id)) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Moderation action failed.') } finally { setWorking(null) } }
+  async function updateCompatibility(item: CommunityArtRecord, compatibilityStatus: CommunityArtCompatibility) { setWorking(item.id); try { const updated = await moderateCommunityArt({ id: item.id, action: 'update', note: '', feedback: '', compatibilityStatus }); setQueue((current) => current.map((entry) => entry.id === item.id ? { ...entry, compatibilityStatus: updated.compatibilityStatus } : entry)) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Compatibility update failed.') } finally { setWorking(null) } }
+  async function copyArtwork(text: string) { try { await navigator.clipboard.writeText(text) } catch { setError('Copy failed. Select the artwork manually and copy it.') } }
+  return <main className="admin-page"><section className="admin-page__header"><p className="admin-page__eyebrow">Community Art Studio</p><h1>Artwork moderation</h1><p>Copy and test the exact text players will paste into Kingshot before approving publication.</p></section>{error && <div className="error-state" role="alert">{error}</div>}{loading && <div className="loading-state" role="status">Loading moderation queue…</div>}{!loading && queue.length === 0 && <div className="empty-state"><h2>Queue clear</h2><p>No pending or approved artwork needs action.</p></div>}<div className="community-art-moderation-grid">{queue.map((item) => <article className="community-art-moderation-card" key={item.id}><div><p className="eyebrow">{item.category}</p><h2>{item.title}</h2><p>{item.description}</p><pre className="community-art-moderation-preview">{item.artworkText}</pre><p>{item.characterCount} characters · {item.lineCount} lines · {item.sizeClass}</p><label>Compatibility<select value={item.compatibilityStatus} disabled={working === item.id} onChange={(event) => void updateCompatibility(item, event.target.value as CommunityArtCompatibility)}><option value="untested">Untested</option><option value="needs_testing">Needs testing</option><option value="verified">Verified</option><option value="known_issues">Known issues</option></select></label><div className="community-art-moderation-actions"><button className="button button--secondary" disabled={working === item.id} onClick={() => void copyArtwork(item.artworkText)}>Copy artwork</button>{item.status === 'pending' && <><button className="button button--primary" disabled={working === item.id} onClick={() => void act(item, 'approve')}>Approve</button><button className="button button--secondary" disabled={working === item.id} onClick={() => void act(item, 'reject')}>Reject</button></>}{item.status === 'approved' && <button className="button button--primary" disabled={working === item.id} onClick={() => void act(item, 'publish')}>Publish</button>}</div></div></article>)}</div></main>
 }
