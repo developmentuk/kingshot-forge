@@ -1,0 +1,44 @@
+import { Link } from 'react-router-dom'
+import { useRole } from '../context/RoleContext'
+import { getWorkspace, type ForgeWorkspaceId } from '../navigation/workspaceRegistry'
+
+const workspaceCopy: Record<ForgeWorkspaceId, { eyebrow: string; title: string; intro: string }> = {
+  player: { eyebrow: 'Player View', title: 'Forge your Kingshot experience.', intro: 'Your player tools stay together here: identity, companions, community and creative studios.' },
+  contributor: { eyebrow: 'Contributor Centre', title: 'Contribute to the Forge.', intro: 'A focused home for approved contribution and editorial work. Planned tools are marked honestly.' },
+  creator: { eyebrow: 'Creator Centre', title: 'Create with the Forge.', intro: 'Creator workflow foundations are established here; automated platform ingestion is intentionally deferred.' },
+  moderation: { eyebrow: 'Moderation Centre', title: 'Keep the community healthy.', intro: 'Review community work and feedback with the narrow permissions assigned to your account.' },
+  operations: { eyebrow: 'Forge Operations Centre', title: 'Operate the Forge with confidence.', intro: 'Actionable platform operations, governed content workflows and safe player support belong here.' },
+}
+
+export default function WorkspaceHomePage({ workspaceId }: { workspaceId: ForgeWorkspaceId }) {
+  const workspace = getWorkspace(workspaceId)
+  const copy = workspaceCopy[workspaceId]
+  const { hasPermission } = useRole()
+  const items = workspace.groups.flatMap((group) => group.items).filter((item) => !item.permission || hasPermission(item.permission))
+
+  return (
+    <main className="workspace-home">
+      <header className="workspace-home__header">
+        <p className="eyebrow">{copy.eyebrow}</p>
+        <h1>{copy.title}</h1>
+        <p>{copy.intro}</p>
+      </header>
+      <section className="workspace-home__section" aria-labelledby={`${workspaceId}-workspace-links`}>
+        <div className="workspace-home__section-heading">
+          <div><p className="eyebrow">Workspace navigation</p><h2 id={`${workspaceId}-workspace-links`}>Available tools</h2></div>
+          <span className="status-badge">{items.length} destinations</span>
+        </div>
+        <div className="workspace-home__grid">
+          {items.map((item) => (
+            <Link className="workspace-home__card" to={item.path} key={item.path}>
+              <span aria-hidden="true">{item.icon}</span>
+              <div><h3>{item.label}</h3><p>{item.status ? `${item.status[0].toUpperCase()}${item.status.slice(1)} — this area is not presented as complete.` : 'Open workspace tool'}</p></div>
+              <strong aria-hidden="true">→</strong>
+            </Link>
+          ))}
+        </div>
+      </section>
+      <div className="workspace-home__note" role="note"><strong>Access is server-authorized.</strong><span>Workspace visibility only changes presentation. Direct routes and mutations still require their own permissions.</span></div>
+    </main>
+  )
+}

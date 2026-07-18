@@ -60,6 +60,10 @@ import { PrivatePlayerIdentityPage } from "./features/player-identity/PrivatePla
 import { PlayerSupportWorkspacePage } from "./features/player-identity/PlayerSupportWorkspacePage";
 import { GiftRedemptionOperationsPage } from "./features/admin/GiftRedemptionOperationsPage";
 import { RenderEngineCalibrationPage } from "./features/admin/RenderEngineCalibrationPage";
+import WorkspaceRoute from "./components/WorkspaceRoute";
+import WorkspaceHomePage from "./pages/WorkspaceHomePage";
+import OperationsStatusPage from "./pages/OperationsStatusPage";
+import OperationsDashboardPage from "./pages/OperationsDashboardPage";
 
 function App() {
   return (
@@ -98,6 +102,34 @@ function App() {
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
 
+        <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
+        <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="User Management" /></WorkspaceRoute>} />
+        <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Roles and Permissions" /></WorkspaceRoute>} />
+        <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Audit Log" /></WorkspaceRoute>} />
+        <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Feature Flags" /></WorkspaceRoute>} />
+        <Route path="contributor" element={<WorkspaceRoute workspaceId="contributor"><WorkspaceHomePage workspaceId="contributor" /></WorkspaceRoute>} />
+        <Route path="contributor/drafts" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="My drafts" /></WorkspaceRoute>} />
+        <Route path="contributor/submissions" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="Submission history" /></WorkspaceRoute>} />
+        <Route path="creator" element={<WorkspaceRoute workspaceId="creator"><WorkspaceHomePage workspaceId="creator" /></WorkspaceRoute>} />
+        <Route path="creator/content" element={<WorkspaceRoute workspaceId="creator"><OperationsStatusPage title="Creator content" /></WorkspaceRoute>} />
+        <Route path="creator/verification" element={<WorkspaceRoute workspaceId="creator"><OperationsStatusPage title="Creator verification" /></WorkspaceRoute>} />
+        <Route path="moderation" element={<WorkspaceRoute workspaceId="moderation"><WorkspaceHomePage workspaceId="moderation" /></WorkspaceRoute>} />
+        <Route path="moderation/reports" element={<WorkspaceRoute workspaceId="moderation"><OperationsStatusPage title="Reports" /></WorkspaceRoute>} />
+
+        <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
+        <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="User Management" /></WorkspaceRoute>} />
+        <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Roles and Permissions" /></WorkspaceRoute>} />
+        <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Audit Log" /></WorkspaceRoute>} />
+        <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Feature Flags" /></WorkspaceRoute>} />
+        <Route path="contributor" element={<WorkspaceRoute workspaceId="contributor"><WorkspaceHomePage workspaceId="contributor" /></WorkspaceRoute>} />
+        <Route path="contributor/drafts" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="My drafts" /></WorkspaceRoute>} />
+        <Route path="contributor/submissions" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="Submission history" /></WorkspaceRoute>} />
+        <Route path="creator" element={<WorkspaceRoute workspaceId="creator"><WorkspaceHomePage workspaceId="creator" /></WorkspaceRoute>} />
+        <Route path="creator/content" element={<WorkspaceRoute workspaceId="creator"><OperationsStatusPage title="Creator content" /></WorkspaceRoute>} />
+        <Route path="creator/verification" element={<WorkspaceRoute workspaceId="creator"><OperationsStatusPage title="Creator verification" /></WorkspaceRoute>} />
+        <Route path="moderation" element={<WorkspaceRoute workspaceId="moderation"><WorkspaceHomePage workspaceId="moderation" /></WorkspaceRoute>} />
+        <Route path="moderation/reports" element={<WorkspaceRoute workspaceId="moderation"><OperationsStatusPage title="Reports" /></WorkspaceRoute>} />
+
         <Route path="admin" element={<ProtectedRoute permission="cms.view"><AdminDashboardPage /></ProtectedRoute>} />
         <Route path="admin/datasets" element={<ProtectedRoute permission="cms.view"><AdminDatasetsPage /></ProtectedRoute>} />
         <Route path="admin/data/:datasetId" element={<ProtectedRoute permission="cms.view"><AdminDatasetDetailPage /></ProtectedRoute>} />
@@ -107,8 +139,8 @@ function App() {
         <Route path="admin/verification" element={<ProtectedRoute permission="cms.view"><VerificationCentrePage /></ProtectedRoute>} />
         <Route path="admin/verification/runs/:runId" element={<ProtectedRoute permission="cms.view"><VerificationRunPage /></ProtectedRoute>} />
         <Route path="admin/verification/:datasetId" element={<ProtectedRoute permission="cms.view"><DatasetVerificationPage /></ProtectedRoute>} />
-        <Route path="admin/player-identity" element={<PlayerSupportWorkspacePage />} />
-        <Route path="admin/player-identity/:caseId" element={<PlayerSupportWorkspacePage />} />
+        <Route path="admin/player-identity" element={<ProtectedRoute permission="platform.users.manage"><PlayerSupportWorkspacePage /></ProtectedRoute>} />
+        <Route path="admin/player-identity/:caseId" element={<ProtectedRoute permission="platform.users.manage"><PlayerSupportWorkspacePage /></ProtectedRoute>} />
         <Route path="admin/gift-redemption" element={<ProtectedRoute permission="cms.view"><GiftRedemptionOperationsPage /></ProtectedRoute>} />
         <Route path="admin/render-engine" element={<ProtectedRoute permission="cms.view"><RenderEngineCalibrationPage /></ProtectedRoute>} />
         <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Import Manager</h1><p>Import management will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
