@@ -82,7 +82,7 @@ The accepted player-facing journeys are being refined through a focused shared U
 - search and recommendations
 - event automation
 
-Release 0.7.4 Community Art Studio remains a completed, separate contribution workflow. Release 0.7.5 Auto Redeem is in development: it adds explicit consent, verified linked-player eligibility, server-only provider transport, user-triggered sequential processing, safe outcomes and private history while preserving manual Gift Code copying.
+Release 0.7.4 Community Art Studio remains a completed, separate contribution workflow. Release 0.7.5 Auto Redeem is ready for Clark's final production validation: it adds explicit consent, verified linked-player eligibility, server-only provider transport, user-triggered sequential processing, safe outcomes and private history while preserving manual Gift Code copying. It is not live and production provider access remains disabled until the final checks pass.
 
 ## Milestone 6 — Ecosystem & Scale
 

@@ -96,29 +96,29 @@ function HomePage() {
 
       <section className="home-release-banner">
         <div className="home-release-banner__content">
-          <div className="home-release-banner__icon">🎨</div>
+          <div className="home-release-banner__icon">🎁</div>
           <div>
             <div className="home-release-banner__meta">
               <span>Latest release</span>
               <strong>Version {APP_VERSION}</strong>
             </div>
-            <h2>Community Art Studio is live</h2>
+            <h2>Release 0.7.5 is ready for final validation</h2>
             <p>
-              Submit copyable Kingshot chat art, follow its review status, react to published designs
-              and help grow a moderated community gallery.
+              Auto Redeem now has server-authoritative player verification, explicit consent,
+              provider pause controls and private result history. Production enablement remains gated.
             </p>
             <div className="home-release-banner__tags">
-              <span>Submit artwork</span>
-              <span>Creator attribution</span>
-              <span>Community reactions</span>
-              <span>Moderated publishing</span>
+              <span>Verified player link</span>
+              <span>Explicit consent</span>
+              <span>Provider pause gate</span>
+              <span>Private history</span>
             </div>
           </div>
         </div>
 
         <div className="home-release-banner__actions">
           <Link className="button button--primary" to="/art-studio">
-            Explore Community Art
+            Open Gift Centre
           </Link>
           <Link className="button button--secondary" to="/release-notes">
             See what’s new
