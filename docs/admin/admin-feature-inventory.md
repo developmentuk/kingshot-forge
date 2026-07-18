@@ -14,7 +14,9 @@ It does not infer production readiness from a route existing.
 | `/admin/feedback` | Feedback Queue | `FeedbackAdminPage` loads and mutates feedback | Functional but incomplete | Move capability-appropriate actions into Moderation |
 | `/admin/community-art` | Community Art moderation | Queue, filters, approve/reject/publish and notes exist | Functional but incomplete | Validate moderator-only access and audit coverage |
 | `/admin/data-engine` | Data Engine diagnostics | `DataEngineDiagnosticsPage`/panel provides diagnostics | Functional but incomplete | Operations shell and safe unavailable states |
-| `/admin/player-identity` | Player support | `PlayerSupportWorkspacePage` exists | Broken security boundary | Add explicit server-authorized route protection and audit review |
+| `/admin/player-identity` | Player support | `PlayerSupportWorkspacePage` exists | Partial, protected | Complete authenticated runtime and audit review |
+| `/operations/users` | Forge User Management | `UserManagementPage`, server projection and paginated API | Partial, implemented | Run authenticated role/security and scale validation |
+| `/operations/users/:userId` | Forge Identity detail | `UserDetailPage`, linked-player safe summary and audit history | Partial, implemented | Run authenticated mutation and responsive validation |
 | `/admin/gift-redemption` | Gift Redemption operations | Provider health, metrics, catalogue and safe response handling exist | Functional but incomplete | Operations placement; validate all server permissions |
 | `/admin/imports` | Import Manager | Placeholder route says Sprint 6 | UI shell only | Mark planned or implement a bounded vertical slice |
 | `/admin/history` | Version History | Placeholder route says Sprint 6 | UI shell only | Mark planned or implement a bounded vertical slice |
@@ -26,8 +28,8 @@ It does not infer production readiness from a route existing.
 - Route declaration: all entries above exist in `src/App.tsx`.
 - Browser rendering: static component evidence exists for real pages; an
   authenticated browser run is still required for API success and RLS claims.
-- Authorization: most routes use `ProtectedRoute`, but Player Identity is an
-  exception and is a release blocker until corrected.
+- Authorization: direct routes and the User Management API use explicit
+  capability checks; browser workspace visibility remains presentation only.
 - Mutations: real editorial, moderation and Gift operations have mutation code;
   placeholder routes have none.
 - Empty/error states: present in the real feature slices to varying degrees;

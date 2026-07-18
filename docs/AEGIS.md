@@ -371,8 +371,18 @@ permission-protected independently of navigation visibility.
 
 Current 0.8.0 implementation status: the workspace registry, switcher and
 shells are established; existing Admin routes remain compatibility aliases;
-User Management, role mutation UX, unified audit log and feature-flag centre
-are classified as planned until server-authorized vertical slices exist.
+Sprint 8.0B adds the Forge Identity/User Management foundation. Its canonical
+projection is server-only Auth enrichment plus safe profiles, linked Player
+Account summaries, multi-role assignments, status and capability-backed
+workspaces. `/operations/users` and `/operations/users/:userId` are available
+for authorized Operations actors; `/settings` is available in Player View.
+The unified audit log, standalone Roles and Permissions centre and feature-flag
+centre remain 8.0C/follow-up work.
+
+The 8.0B migration is additive, backfills legacy role rows, forces RLS on new
+identity tables, revokes browser table grants and restricts identity RPCs to
+authenticated callers. Role/status mutations require reasons, write audit
+events and protect self-lockout, the final Owner and Admin-to-Owner escalation.
 
 The release remains a local branch and is not production-deployed or merged.
 

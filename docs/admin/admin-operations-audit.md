@@ -50,4 +50,7 @@ Engine are **functional but incomplete**. Import Manager, Version History,
 Global Search and Publish Centre remain **planned/UI-shell-only**. Player
 Identity support is **partial** and now receives an explicit permission guard;
 its safe support projection and mutation audit still require validation. User
-Management, Roles and Permissions, Audit Log and Feature Flags are **planned**.
+Management is **partial/implemented for the 8.0B foundation** with safe
+list/detail views, audited role/status operations and masked linked-player
+summaries. Roles and Permissions, the unified Audit Log and Feature Flags
+remain **planned**.

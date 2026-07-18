@@ -57,7 +57,7 @@ function HomePage() {
               : 'Forge your Kingshot identity.'}
           </h1>
           <p className="forge-hub-hero__description">
-            Create player names, chat messages and copy-ready artwork using characters tested inside Kingshot.
+            Create player names, chat messages and copy-ready artwork using characters tested inside Kingshot. Forge Identity and Operations Centre foundations are in development for authorized platform staff.
           </p>
 
           {playerAccount && (

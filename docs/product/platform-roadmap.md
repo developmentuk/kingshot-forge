@@ -74,6 +74,16 @@ The accepted player-facing journeys are being refined through a focused shared U
 - My Forge, Player Passport and public-page refinement;
 - no new domains, product features, tables or schema changes.
 
+## Release 0.8.0 — Forge Operations Centre — In development
+
+Sprint 8.0A established separated Player, Contributor, Creator, Moderation and
+Operations workspaces. Sprint 8.0B adds the Forge Identity/User Management
+foundation: safe server projections, multi-role capability resolution,
+audited role/status mutations, masked Player Account summaries and Player View
+Settings. Authenticated runtime, responsive and scale validation remain release
+gates; unified audit, standalone role administration and feature flags are
+deferred follow-up work.
+
 ## Milestone 5 — Intelligence & Automation
 
 - calculators and planning tools from published data

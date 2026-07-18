@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 const cards = [
   ['Platform status', 'Release 0.8.0', 'This branch is in development; deployment status is not inferred locally.'],
   ['Content operations', 'Available', 'Dataset catalogue and Verification Centre are implemented; import, publish and history remain partial/planned.'],
-  ['Player operations', 'Partial', 'Gift Redemption and Player Identity support exist; safe User Management is planned.'],
+  ['Player operations', 'Partial', 'Gift Redemption and Player Identity support exist; User Management list/detail foundation is available behind server authorization.'],
   ['Community operations', 'Available', 'Community Art moderation exists behind moderation permission.'],
-  ['Security and governance', 'Partial', 'Role-to-capability reads exist; audited role mutation and unified Audit Log are planned.'],
+  ['Security and governance', 'Partial', 'Multi-role capability reads and audited role/status foundation exist; unified Audit Log remains planned.'],
   ['Responsive validation', 'Pending', 'Authenticated desktop, tablet and mobile validation is still required for this release.'],
 ]
 
