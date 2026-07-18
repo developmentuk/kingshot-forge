@@ -8,13 +8,14 @@ const POLICY_TEXT = 'Forge Auto Redeem submits the linked Player ID and selected
 const POLICY_DIGEST = createHash('sha256').update(POLICY_TEXT).digest('hex')
 const MAX_CODES_PER_RUN = 20
 const MIN_DELAY_MS = 750
+export const CONTROLLED_VALIDATION_CODE = 'HAPPYEMOJIDAY'
 
 type PlayerRow = Readonly<Record<string, unknown>>
 type ActiveCode = Readonly<{ id: string; code: string; expiresAt: string | null; version: string }>
 
 function now() { return new Date().toISOString() }
 function configured() { return readOfficialProviderConfig() }
-function isVerified(value: unknown) { return value === 'community_verified' || value === 'officially_verified' }
+function isVerified(value: unknown) { return value === 'verified' || value === 'community_verified' || value === 'officially_verified' }
 function safePlayer(row: PlayerRow | null) {
   if (!row) return null
   return { id: row.id, name: row.player_name, playerId: row.player_id, kingdom: row.kingdom_id, verificationStatus: row.verification_status }
@@ -119,13 +120,17 @@ function providerToAttempt(provider: Awaited<ReturnType<ReturnType<typeof create
 
 async function waitBetween(previous: number) { const remaining = MIN_DELAY_MS - (Date.now() - previous); if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining)) }
 
-export async function redeemAvailable(userId: string) {
+export async function redeemAvailable(userId: string, options: { allowedCodes?: readonly string[] } = {}) {
   const context = await getAutoRedeemContext(userId)
   if (!context.eligibility.eligible) throw Object.assign(new Error(context.eligibility.reasons.join(',')), { statusCode: 409 })
   const player = await ownedPlayer(userId)
   const consent = player ? await currentConsent(userId, String(player.id)) : null
   if (!player || !consent) throw Object.assign(new Error('Redemption consent is required.'), { statusCode: 409 })
-  const codes = (await activeCodes()).slice(0, MAX_CODES_PER_RUN)
+  const availableCodes = await activeCodes()
+  const codes = (options.allowedCodes
+    ? availableCodes.filter((code) => options.allowedCodes?.includes(code.code))
+    : availableCodes).slice(0, MAX_CODES_PER_RUN)
+  if (codes.length === 0) throw Object.assign(new Error('The requested validation code is not active.'), { statusCode: 409 })
   const admin = getSupabaseAdmin()
   const { data: run, error: runError } = await admin.from('gift_code_redemption_runs').insert({ user_id: userId, player_account_id: player.id, requested_code_count: codes.length }).select('id').single()
   if (runError || !run) throw Object.assign(new Error('Another redemption run may already be in progress.'), { statusCode: 409 })
@@ -135,20 +140,33 @@ export async function redeemAvailable(userId: string) {
   for (const code of codes) {
     const identity = createGiftCodeIdempotencyIdentity({ environment: 'production', providerId: OFFICIAL_GIFT_CODE_PROVIDER_ID, operation: 'redeem', verifiedCharacterInternalId: String(player.id), giftCodePublicationId: code.id, publicationVersion: code.version })
     if (!identity.ok) continue
-    const { data: request, error: requestError } = await admin.from('gift_code_redemption_requests').insert({ run_id: run.id, user_id: userId, player_account_id: player.id, character_ref: player.id, character_revision: consent.character_revision, consent_id: consent.id, provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, provider_mode: 'automatic_selection', environment: 'production', code_publication_id: code.id, publication_version: code.version, idempotency_hash: identity.hash }).select('id').single()
+    const { data: request, error: requestError } = await admin.from('gift_code_redemption_requests').insert({ run_id: run.id, user_id: userId, player_account_id: player.id, character_ref: player.id, character_revision: consent.character_revision, consent_id: consent.id, provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, provider_mode: 'automatic_selection', environment: 'production', code_publication_id: code.id, publication_version: code.version, idempotency_version: 'giftcode-redemption:v2', idempotency_hash: identity.hash }).select('id').single()
     if (requestError || !request) continue
+    const queuedAt = now()
+    const { error: queueError } = await admin.from('gift_code_redemption_requests').update({ status: 'queued', optimistic_version: 2, updated_at: queuedAt }).eq('id', request.id)
+    if (queueError) throw queueError
+    const processingAt = now()
+    const leaseOwner = `run:${run.id}`
+    const { error: processingError } = await admin.from('gift_code_redemption_requests').update({ status: 'processing', optimistic_version: 3, lease_owner: leaseOwner, lease_acquired_at: processingAt, lease_expires_at: new Date(Date.now() + 20_000).toISOString(), updated_at: processingAt }).eq('id', request.id)
+    if (processingError) throw processingError
     await waitBetween(previousRequest); previousRequest = Date.now()
     const attemptId = randomUUID()
     await admin.from('gift_code_redemption_attempts').insert({ id: attemptId, request_id: request.id, user_id: userId, ordinal: 1, provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, lease_owner: `run:${run.id}`, started_at: now(), deadline_at: new Date(Date.now() + 20_000).toISOString(), code_publication_id: code.id, publication_version: code.version, code_snapshot: code.code })
     const providerResult = await provider.redeem({ attemptId, playerAccountId: String(player.id), playerId: String(player.player_id), giftCodeId: code.id, giftCodeVersion: code.version, code: code.code, idempotencyKey: identity.hash, consentVersion: CONSENT_VERSION })
     const mapped = providerToAttempt(providerResult)
     await admin.from('gift_code_redemption_attempts').update({ outcome: mapped.outcome, request_disposition: mapped.requestDisposition, result_code: mapped.resultCode, safe_diagnostic_code: providerResult.safeDiagnosticCode, retryable: mapped.retryable, completed_at: now(), version: 1 }).eq('id', attemptId)
-    await admin.from('gift_code_redemption_requests').update({ status: mapped.requestStatus, result_code: mapped.requestResultCode ?? mapped.resultCode, completed_attempts: 1, optimistic_version: 2, updated_at: now(), terminal_at: mapped.requestStatus === 'succeeded' || mapped.requestStatus === 'already_claimed' || mapped.requestStatus === 'expired' || mapped.requestStatus === 'failed_terminal' || mapped.requestStatus === 'ambiguous' ? now() : null }).eq('id', request.id)
+    const completedAt = now()
+    const { error: completionError } = await admin.from('gift_code_redemption_requests').update({ status: mapped.requestStatus, result_code: mapped.requestResultCode ?? mapped.resultCode, completed_attempts: 1, optimistic_version: 4, lease_owner: null, lease_acquired_at: null, lease_expires_at: null, updated_at: completedAt, terminal_at: mapped.requestStatus === 'succeeded' || mapped.requestStatus === 'already_claimed' || mapped.requestStatus === 'expired' || mapped.requestStatus === 'failed_terminal' || mapped.requestStatus === 'ambiguous' ? completedAt : null }).eq('id', request.id)
+    if (completionError) throw completionError
     results.push({ code: code.code, status: providerResult.status, retryable: mapped.retryable, message: providerResult.safeMessage, attemptedAt: now() })
   }
   const failed = results.some((item) => item.status === 'failed' || item.status === 'not_supported')
   await admin.from('gift_code_redemption_runs').update({ status: results.length === 0 ? 'failed' : failed ? 'partial' : 'completed', processed_code_count: results.length, completed_at: now(), updated_at: now() }).eq('id', run.id)
   return { runId: run.id, results }
+}
+
+export async function redeemControlledValidationCode(userId: string) {
+  return redeemAvailable(userId, { allowedCodes: [CONTROLLED_VALIDATION_CODE] })
 }
 
 export async function redemptionHistory(userId: string) {

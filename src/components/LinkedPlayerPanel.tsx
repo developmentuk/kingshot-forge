@@ -10,6 +10,9 @@ function getVerificationLabel(
   status: PlayerAccount['verification_status'],
 ) {
   switch (status) {
+    case 'verified':
+      return 'Verified player'
+
     case 'community_verified':
       return 'Community verified'
 
@@ -63,6 +66,7 @@ function notifyPlayerIdentityChanged() {
 function LinkedPlayerPanel() {
   const {
     user,
+    session,
     loading: authLoading,
   } = useAuth()
   const {
@@ -142,7 +146,7 @@ function LinkedPlayerPanel() {
   }
 
   async function handleLinkAccount() {
-    if (!user || !previewPlayer) {
+    if (!user || !session?.access_token || !previewPlayer) {
       return
     }
 
@@ -150,82 +154,24 @@ function LinkedPlayerPanel() {
     setMessage('')
     setErrorMessage('')
 
-    const now =
-      new Date().toISOString()
-
-    const { error } = await supabase
-      .from('player_accounts')
-      .insert({
-        user_id: user.id,
-        player_id:
-          previewPlayer.playerId,
-        player_name:
-          previewPlayer.name,
-        kingdom_id:
-          previewPlayer.kingdom,
-        player_level:
-          previewPlayer.level,
-        level_rendered:
-          previewPlayer.levelRendered ||
-          null,
-        level_rendered_detailed:
-          previewPlayer
-            .levelRenderedDetailed ||
-          null,
-        level_image:
-          previewPlayer.levelImage ||
-          null,
-        profile_photo:
-          previewPlayer.profilePhoto ||
-          null,
-        verification_status:
-          'linked',
-        verification_method:
-          'none',
-        last_refreshed_at: now,
-        is_primary: true,
-        is_public: true,
-        updated_at: now,
+    try {
+      const response = await fetch('/api/player/account', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'link',
+          playerId: previewPlayer.playerId,
+        }),
       })
-      .select(
-        `
-          id,
-          user_id,
-          player_id,
-          player_name,
-          kingdom_id,
-          player_level,
-          level_rendered,
-          level_rendered_detailed,
-          level_image,
-          profile_photo,
-          verification_status,
-          verification_method,
-          verified_by,
-          verified_at,
-          last_refreshed_at,
-          is_primary,
-          is_public,
-          created_at,
-          updated_at
-        `,
-      )
-      .single()
-
-    if (error) {
-      if (
-        error.code === '23505' ||
-        error.message
-          .toLowerCase()
-          .includes('duplicate')
-      ) {
-        setErrorMessage(
-          'This player ID is already linked to a Kingshot Forge account.',
-        )
-      } else {
-        setErrorMessage(error.message)
+      const payload = await response.json().catch(() => null) as { status?: string; data?: unknown; message?: string } | null
+      if (!response.ok || payload?.status !== 'success') {
+        throw new Error(payload?.message ?? 'The player could not be linked.')
       }
-
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'The player could not be linked.')
       setLinking(false)
       return
     }
@@ -251,52 +197,19 @@ function LinkedPlayerPanel() {
     setErrorMessage('')
 
     try {
-      const response = await getPlayer(
-        linkedAccount.player_id,
-      )
-
-      const player = response.data
-      const now =
-        new Date().toISOString()
-
-      const { error } =
-        await supabase
-          .from('player_accounts')
-          .update({
-            player_name: player.name,
-            kingdom_id: player.kingdom,
-            player_level: player.level,
-            level_rendered:
-              player.levelRendered ||
-              null,
-            level_rendered_detailed:
-              player
-                .levelRenderedDetailed ||
-              null,
-            level_image:
-              player.levelImage ||
-              null,
-            profile_photo:
-              player.profilePhoto ||
-              null,
-            last_refreshed_at: now,
-            updated_at: now,
-          })
-          .eq(
-            'id',
-            linkedAccount.id,
-          )
-          .eq(
-            'user_id',
-            user.id,
-          )
-
-      if (error) {
-        throw error
-      }
-
+      if (!session?.access_token) throw new Error('Sign in is required to verify this player.')
+      const response = await fetch('/api/player/account', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'revalidate' }),
+      })
+      const payload = await response.json().catch(() => null) as { status?: string; message?: string } | null
+      if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'The player could not be revalidated.')
       setMessage(
-        'Kingshot player data refreshed.',
+        'Player verified through the Kingshot player service.',
       )
 
       notifyPlayerIdentityChanged()
@@ -718,16 +631,22 @@ function LinkedPlayerPanel() {
 
           <div className="linked-player-card__verification">
             <strong>
-              {getVerificationLabel(
-                linkedAccount.verification_status,
-              )}
+              {linkedAccount.verification_status === 'verified'
+                ? 'Verified player'
+                : getVerificationLabel(linkedAccount.verification_status)}
             </strong>
 
             <p>
-              {getVerificationDescription(
-                linkedAccount.verification_status,
-              )}
+              {linkedAccount.verification_status === 'verified'
+                ? 'This Player ID was checked against the Kingshot player service and linked to your Forge account.'
+                : getVerificationDescription(linkedAccount.verification_status)}
             </p>
+
+            {linkedAccount.verified_at && (
+              <p>
+                Verified {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(linkedAccount.verified_at))}
+              </p>
+            )}
           </div>
 
           <label className="linked-player-privacy">
@@ -760,8 +679,10 @@ function LinkedPlayerPanel() {
               }
             >
               {refreshing
-                ? 'Refreshing…'
-                : 'Refresh Player Data'}
+                ? 'Checking player…'
+                : linkedAccount.verification_status === 'verified'
+                  ? 'Refresh Player Data'
+                  : 'Revalidate player'}
             </button>
 
             <button

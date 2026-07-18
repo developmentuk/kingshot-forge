@@ -308,6 +308,10 @@ Public profile reads select only public profile fields and non-sensitive player 
 
 Validation completed for this milestone: Player Identity structural validation, focused and vertical-slice tests, TypeScript production build and lint, targeted route checks, and Data Engine record-shape checks for troops, Truegold and VIP. Legacy progression values are preserved in history and rendered with a review label when they are no longer in the published selector options; no destructive migration is performed. Lint retains the repository's existing seven warnings in unrelated/shared files. Live signed-in route and RLS verification still require a deployment or authenticated browser session with access to the configured Supabase project.
 
+### Release 0.7.5 Player ID verification trust model
+
+For Auto Redeem, Forge verifies that a Player ID is valid through the Kingshot player service and links it to the authenticated Forge account. Forge does not request a game password or claim official account authentication. The trusted server link/revalidation route owns the canonical player fields, `verification_status`, `verification_method` and `verified_at`; browser roles cannot mutate verification columns or verification events. A legacy `linked` row remains ineligible until that same server path revalidates it. Consent and the provider-health pause are independent gates.
+
 ## Active Release
 
 ### Release 0.7.5 — Auto Redeem

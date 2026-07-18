@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../server/auth/requireForgeActor.js'
-import { autoRedeemPolicy, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redemptionHistory, revokeConsent, setProviderOperations } from '../server/giftcodes/autoRedeemService.js'
+import { autoRedeemPolicy, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redeemControlledValidationCode, redemptionHistory, revokeConsent, setProviderOperations } from '../server/giftcodes/autoRedeemService.js'
 
 function body(request: VercelRequest) { return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {} }
 function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
@@ -30,6 +30,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
       const input = body(request)
       if (Object.keys(input).length > 0) { fail(response, 400, 'Auto Redeem does not accept client-controlled code or identity fields.'); return }
       response.status(200).json({ status: 'success', data: await redeemAvailable(actor.userId) }); return
+    }
+    if (request.method === 'POST' && action === 'redeem-controlled-validation') {
+      if (actor.role !== 'owner' && actor.role !== 'admin') { fail(response, 403, 'Administrator access is required.'); return }
+      const input = body(request)
+      if (Object.keys(input).length > 0) { fail(response, 400, 'Controlled validation does not accept client-controlled code or identity fields.'); return }
+      response.status(200).json({ status: 'success', data: await redeemControlledValidationCode(actor.userId) }); return
     }
     response.setHeader('Allow', 'GET, POST, DELETE'); fail(response, 405, 'Method not allowed.')
   } catch (error) {

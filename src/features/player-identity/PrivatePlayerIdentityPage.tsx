@@ -5,6 +5,7 @@ import { usePlayerIdentity } from '../../context/PlayerIdentityContext'
 import { trackForgePlayerEvent } from '../../platform/analytics/forgeAnalytics'
 import type { PlayerAccount } from '../../types/playerAccount'
 import ForgeProgressPanel from '../../components/ForgeProgressPanel'
+import LinkedPlayerPanel from '../../components/LinkedPlayerPanel'
 
 export function PrivatePlayerIdentityPage() {
   const { user, loading: authLoading, signInWithGoogle } = useAuth()
@@ -129,6 +130,8 @@ export function PrivatePlayerIdentityPage() {
             </button>
           </div>
         </section>
+
+        <LinkedPlayerPanel />
       </PlayerIdentityPageFrame>
     )
   }
@@ -137,6 +140,7 @@ export function PrivatePlayerIdentityPage() {
     <PlayerIdentityPageFrame>
       <IdentitySummary playerAccount={playerAccount} />
       <ForgeProgressPanel />
+      <LinkedPlayerPanel />
 
       <div className="player-identity__layout">
         <section
@@ -288,6 +292,8 @@ function formatDate(value: string) {
 
 function formatVerification(status: PlayerAccount['verification_status']) {
   switch (status) {
+    case 'verified':
+      return 'Verified player'
     case 'officially_verified':
       return 'Officially verified'
     case 'community_verified':
@@ -307,6 +313,8 @@ function verificationDescription(
   status: PlayerAccount['verification_status'],
 ) {
   switch (status) {
+    case 'verified':
+      return 'Forge verified this Player ID through the Kingshot player service and linked it to your authenticated Forge account.'
     case 'officially_verified':
       return 'Forge has confirmed this player through an official verification route.'
     case 'community_verified':

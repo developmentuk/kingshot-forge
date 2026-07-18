@@ -1,5 +1,6 @@
 export type PlayerVerificationStatus =
   | 'linked'
+  | 'verified'
   | 'pending'
   | 'community_verified'
   | 'officially_verified'
@@ -8,6 +9,7 @@ export type PlayerVerificationStatus =
 
 export type PlayerVerificationMethod =
   | 'none'
+  | 'kingshot_player_lookup'
   | 'alliance_officer'
   | 'kingdom_moderator'
   | 'forge_admin'

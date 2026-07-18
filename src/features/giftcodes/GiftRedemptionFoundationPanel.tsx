@@ -8,6 +8,9 @@ const OFFICIAL_REDEMPTION_URL =
 
 function getVerificationLabel(status: string) {
   switch (status) {
+    case 'verified':
+      return 'Verified player'
+
     case 'officially_verified':
       return 'Officially verified'
 

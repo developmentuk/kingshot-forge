@@ -1956,6 +1956,7 @@
   text-transform: uppercase;
 }
 
+.linked-player-status--verified,
 .linked-player-status--community_verified,
 .linked-player-status--officially_verified {
   border-color: rgba(88, 200, 132, 0.45);
