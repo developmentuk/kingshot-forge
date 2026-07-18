@@ -10,9 +10,9 @@ import { RELEASE_DISPLAY, SHORT_COMMIT_SHA } from '../config/release'
 import { SearchExperience } from '../features/search/SearchExperience'
 
 function NavigationLink({ item, onNavigate }: { item: WorkspaceNavItem; onNavigate?: () => void }) {
-  return <NavLink to={item.path} end={item.path === '/' || item.path === '/operations'} className={({ isActive }) => isActive ? 'app-navigation__link app-navigation__link--active' : 'app-navigation__link'} onClick={onNavigate}>
-    <span className="app-navigation__icon" aria-hidden="true">{item.icon}</span><span>{item.label}</span>{item.status && <small className="navigation-status">{item.status}</small>}
-  </NavLink>
+  const content = <><span className="app-navigation__icon" aria-hidden="true">{item.icon}</span><span>{item.label}</span>{item.status && <small className="navigation-status">{item.status}</small>}</>
+  if (item.status === 'planned' || item.status === 'unavailable') return <div className="app-navigation__link app-navigation__link--disabled" aria-disabled="true">{content}</div>
+  return <NavLink to={item.path} end={item.path === '/' || item.path === '/operations'} className={({ isActive }) => isActive ? 'app-navigation__link app-navigation__link--active' : 'app-navigation__link'} onClick={onNavigate}>{content}</NavLink>
 }
 
 function NavigationGroup({ title, items, onNavigate }: { title: string; items: ReadonlyArray<WorkspaceNavItem>; onNavigate?: () => void }) {
@@ -71,7 +71,7 @@ function AppLayout() {
       {navigationOpen && <button type="button" className="app-sidebar-backdrop" aria-label="Close navigation" onClick={closeNavigation} />}
       <main className="app-main"><Outlet /></main>
     </div>
-    <footer className="app-footer"><div className="app-footer__inner"><div><strong>Kingshot Forge</strong><p>An unofficial community companion for Kingshot players.</p></div><div className="app-footer__links"><Link to="/roadmap">Roadmap</Link><Link to="/release-notes">Release Notes</Link><button type="button" onClick={() => setFeedbackOpen(true)}>Feedback</button><Link className="app-version-link" to="/release-notes" title={`Commit ${SHORT_COMMIT_SHA}`}>{RELEASE_DISPLAY}</Link></div></div></footer>
+    <footer className="app-footer"><div className="app-footer__inner"><div><strong>Kingshot Forge</strong><p>An unofficial community companion for Kingshot players.</p></div><div className="app-footer__links"><Link to="/join">Join Forge</Link><Link to="/roadmap">Roadmap</Link><Link to="/release-notes">Release Notes</Link><button type="button" onClick={() => setFeedbackOpen(true)}>Feedback</button><Link className="app-version-link" to="/release-notes" title={`Commit ${SHORT_COMMIT_SHA}`}>{RELEASE_DISPLAY}</Link></div></div></footer>
     <nav className="mobile-bottom-navigation" aria-label="Mobile navigation">{mobileNavigation.map((item) => <MobileBottomLink key={item.path} item={item} />)}</nav>
     <button type="button" className="floating-feedback-button" aria-label="Send Kingshot Forge feedback" onClick={() => setFeedbackOpen(true)}>💡</button>
     <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} defaultType="suggestion" />

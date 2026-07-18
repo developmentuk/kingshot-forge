@@ -58,6 +58,7 @@ const playerGroups = [
     { label: 'Codex', shortLabel: 'Codex', icon: '📚', path: '/codex' },
     { label: 'Roadmap', shortLabel: 'Roadmap', icon: '🗺️', path: '/roadmap' },
     { label: 'Release Notes', shortLabel: 'Updates', icon: '🚀', path: '/release-notes' },
+    { label: 'Join Forge', shortLabel: 'Join', icon: '🤝', path: '/join' },
   ] },
 ] as const
 
@@ -98,6 +99,7 @@ const operationsGroups = [
     { label: 'Data Engine', shortLabel: 'Engine', icon: '⚙️', path: '/admin/data-engine', permission: 'cms.view' as ForgePermission },
   ] },
   { title: 'Player and community operations', items: [
+    { label: 'Contributor Applications', shortLabel: 'Applications', icon: '🤝', path: '/operations/applications', permission: 'platform.users.manage' as ForgePermission, status: 'planned' as const },
     { label: 'User Management', shortLabel: 'Users', icon: '👥', path: '/operations/users', permission: 'users.read' as ForgePermission },
     { label: 'Player Identity', shortLabel: 'Identity', icon: '🛡️', path: '/admin/player-identity', permission: 'platform.users.manage' as ForgePermission, status: 'partial' as const },
     { label: 'Gift Redemption', shortLabel: 'Gifts', icon: '🎁', path: '/admin/gift-redemption', permission: 'cms.view' as ForgePermission },

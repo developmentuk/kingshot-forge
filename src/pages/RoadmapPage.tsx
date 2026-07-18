@@ -117,7 +117,30 @@ const roadmapReleases: RoadmapRelease[] = [
   },
   {
     version: "0.8.0",
-    name: "Player Domain Complete",
+    name: "Forge Operations Centre",
+    status: "development",
+    progress: 50,
+    priority: "Active major milestone",
+    description:
+      "Separate Player View from internal tooling with role-aware workspaces, coherent operations navigation and the Forge Identity/User Management foundation.",
+    features: [
+      "Player View separation and workspace switcher",
+      "Forge Operations Centre",
+      "Contributor and Creator Centre shell",
+      "Moderation Centre shell",
+      "Server-authorized User Management list and detail projections",
+      "Multi-role capability resolution and audited role/status mutations",
+      "Player View Settings Centre and safe workspace preference handling",
+      "Admin feature inventory and release security audit",
+      "Responsive internal UX standards",
+      "Forge Contributor role catalogue and public Join Forge pages",
+      "Contributor governance policy drafts",
+      "Secure application workflow and Operations review remain in development",
+    ],
+  },
+  {
+    version: "0.8.1",
+    name: "Automatic Gift Code Processing",
     status: "planned",
     progress: 0,
     description:
