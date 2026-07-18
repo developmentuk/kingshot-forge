@@ -9,6 +9,7 @@ import { RoleProvider } from './context/RoleContext'
 import { PlayerIdentityProvider } from './context/PlayerIdentityContext'
 
 import './index.css'
+import './styles/kingshot-chat-calibration.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
