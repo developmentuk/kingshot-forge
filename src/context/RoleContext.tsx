@@ -43,6 +43,14 @@ export type ForgePermission =
   | 'moderation.manage'
   | 'beta.access'
   | 'contributions.submit'
+  | 'applications.read'
+  | 'applications.review'
+  | 'applications.request_information'
+  | 'applications.change_status'
+  | 'applications.assign_reviewer'
+  | 'applications.view_internal_notes'
+  | 'applications.manage_onboarding'
+  | 'applications.manage_role_catalogue'
 
 type RoleContextValue = {
   role: ForgePlatformRole
