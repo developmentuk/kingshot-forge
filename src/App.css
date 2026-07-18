@@ -56,4 +56,102 @@
 .community-art-admin-filters select, .community-art-moderation-card textarea { min-width: 180px; border: 1px solid #3a485a; border-radius: .55rem; padding: .65rem; color: #f7f2e8; background: #09111b; font: inherit; }
 .community-art-moderation-card textarea { width: 100%; min-height: 70px; resize: vertical; }
 .community-art-moderation-card { min-width: 0; }
-@media (max-width: 700px) { .art-studio-view-switcher > .button { flex: 1 1 100%; } .art-studio-form-actions { display: grid; grid-template-columns: 1fr; } .art-studio-status-row { align-items: stretch; flex-direction: column; } .art-studio-status-row .button { width: 100%; } }
+
+/* Kingshot-calibrated artwork rendering.
+ * Editing remains monospace; every player-facing preview uses the compact,
+ * proportional metrics observed in Kingshot chat screenshots.
+ */
+:root {
+  --kingshot-art-font: Arial, "Noto Sans", "Segoe UI", sans-serif;
+  --kingshot-art-scale-x: .79;
+  --kingshot-art-letter-spacing: -.035em;
+  --kingshot-art-line-height: 1.18;
+  --kingshot-art-paper: #f5eddd;
+  --kingshot-art-ink: #5c554d;
+}
+
+.art-card-preview-button,
+.art-preview-modal__content,
+.art-studio-submission-preview,
+.community-art-moderation-preview {
+  background: var(--kingshot-art-paper) !important;
+}
+
+.art-card-preview-button pre,
+.art-preview-modal__content pre,
+.art-studio-submission-preview pre,
+.community-art-moderation-preview {
+  color: var(--kingshot-art-ink) !important;
+  font-family: var(--kingshot-art-font) !important;
+  font-kerning: normal;
+  font-variant-ligatures: none;
+  font-weight: 400;
+  letter-spacing: var(--kingshot-art-letter-spacing);
+  line-height: var(--kingshot-art-line-height) !important;
+  text-rendering: geometricPrecision;
+  transform: scaleX(var(--kingshot-art-scale-x));
+  transform-origin: top left;
+}
+
+.art-card-preview-button pre,
+.art-preview-modal__content pre,
+.art-studio-submission-preview pre {
+  min-width: calc(100% / var(--kingshot-art-scale-x));
+}
+
+.art-card-preview-button > span {
+  color: #f7f2e8;
+  background: linear-gradient(transparent, rgba(45, 40, 34, .93) 48%);
+}
+
+.kingshot-art-renderer {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  color: var(--kingshot-art-ink);
+  font-family: var(--kingshot-art-font);
+  font-size: .9rem;
+  font-kerning: normal;
+  font-variant-ligatures: none;
+  line-height: var(--kingshot-art-line-height);
+  white-space: pre;
+}
+
+.kingshot-art-renderer--studio {
+  color: #fff0c8;
+  font-family: "Courier New", monospace;
+  line-height: 1.5;
+}
+
+.kingshot-art-renderer--kingshot {
+  display: block;
+  transform: scaleX(var(--kingshot-art-scale-x));
+  transform-origin: top left;
+}
+
+.kingshot-art-renderer__line {
+  display: flex;
+  min-height: 1em;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.kingshot-art-renderer__glyph {
+  display: inline-block;
+  width: var(--ks-glyph-width);
+  min-width: var(--ks-glyph-width);
+  margin-left: var(--ks-glyph-overlap, 0);
+  overflow: visible;
+  text-align: center;
+}
+
+.kingshot-art-renderer__empty { display: inline-block; min-width: .42em; }
+.kingshot-art-renderer--compact { font-size: .78rem; }
+
+@media (max-width: 700px) {
+  :root { --kingshot-art-scale-x: .76; }
+  .art-studio-view-switcher > .button { flex: 1 1 100%; }
+  .art-studio-form-actions { display: grid; grid-template-columns: 1fr; }
+  .art-studio-status-row { align-items: stretch; flex-direction: column; }
+  .art-studio-status-row .button { width: 100%; }
+}
