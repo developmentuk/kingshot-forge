@@ -14,7 +14,10 @@ function KingshotGrid({ artwork, lines, classes, labelledBy, calibration }: { ar
   const grid = useMemo(() => buildFixedCellGrid(lines), [lines])
   return <div className={classes} role="img" aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : 'Fixed-cell artwork preview'} data-source-text={normaliseArtwork(artwork)}>
     {grid.map((row) => <div className="kingshot-cell-grid__row" key={row.row} aria-hidden="true">
-      {row.cells.length === 0 ? <span className="kingshot-cell-grid__cell kingshot-cell-grid__cell--space">&nbsp;</span> : row.cells.map((cell) => <span className={`kingshot-cell-grid__cell kingshot-cell-grid__cell--${cell.family}`} data-grid-column={cell.column} data-grid-row={cell.row} key={`${row.row}-${cell.column}`} style={{ '--forge-glyph-scale': calibration[cell.family].glyphScale, '--forge-glyph-scale-x': calibration[cell.family].horizontalScale, '--forge-glyph-scale-y': calibration[cell.family].verticalScale, '--forge-baseline-offset': `${calibration[cell.family].baselineOffset}px`, '--forge-glyph-family': calibration[cell.family].fontFamily, '--forge-glyph-weight': calibration[cell.family].fontWeight } as React.CSSProperties}><span className="kingshot-cell-grid__glyph">{cell.glyph === ' ' ? '\u00a0' : cell.glyph}</span></span>)}
+      {row.cells.length === 0 ? <span className="kingshot-cell-grid__cell kingshot-cell-grid__cell--space">&nbsp;</span> : row.cells.map((cell) => {
+        const paint = calibration[cell.family]
+        return <span className={`kingshot-cell-grid__cell kingshot-cell-grid__cell--${cell.family}`} data-grid-column={cell.column} data-grid-row={cell.row} key={`${row.row}-${cell.column}`}><span className="kingshot-cell-grid__glyph" style={{ '--forge-glyph-scale': paint.glyphScale, '--forge-glyph-scale-x': paint.horizontalScale, '--forge-glyph-scale-y': paint.verticalScale, '--forge-baseline-offset': `${paint.baselineOffset}px`, '--forge-glyph-family': paint.fontFamily, '--forge-glyph-weight': paint.fontWeight } as React.CSSProperties}>{cell.glyph === ' ' ? '\u00a0' : cell.glyph}</span></span>
+      })}
     </div>)}
   </div>
 }

@@ -50,29 +50,31 @@
   transform-origin: center;
   font-family: var(--forge-glyph-family, inherit);
   font-weight: var(--forge-glyph-weight, 400);
-  transform: translateY(var(--forge-baseline-offset, 0px)) scale(var(--forge-glyph-scale-x, 1), var(--forge-glyph-scale-y, 1));
+  font-family: var(--forge-glyph-family, inherit) !important;
+  font-weight: var(--forge-glyph-weight, 400);
+  transform: translateY(var(--forge-baseline-offset, 0px)) scale(calc(var(--forge-glyph-scale, 1) * var(--forge-glyph-scale-x, 1)), calc(var(--forge-glyph-scale, 1) * var(--forge-glyph-scale-y, 1)));
 }
 
 .kingshot-cell-grid__cell--ascii .kingshot-cell-grid__glyph,
 .kingshot-cell-grid__cell--box-drawing .kingshot-cell-grid__glyph {
-  font-family: "Courier New", Consolas, monospace;
+  font-family: var(--forge-glyph-family, "Courier New", Consolas, monospace) !important;
 }
 
 .kingshot-cell-grid__cell--unicode .kingshot-cell-grid__glyph {
-  font-family: Arial, "Noto Sans", "Segoe UI", sans-serif;
+  font-family: var(--forge-glyph-family, Arial, "Noto Sans", "Segoe UI", sans-serif) !important;
   font-size: .98em;
 }
 
 .kingshot-cell-grid__cell--emoji .kingshot-cell-grid__glyph {
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  font-family: var(--forge-glyph-family, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif) !important;
   font-size: 1.3em;
-  transform: translateY(-.02em) scale(.98);
+  transform: translateY(calc(-.02em + var(--forge-baseline-offset, 0px))) scale(calc(var(--forge-glyph-scale, 1) * var(--forge-glyph-scale-x, 1) * .98), calc(var(--forge-glyph-scale, 1) * var(--forge-glyph-scale-y, 1) * .98));
 }
 
 .kingshot-cell-grid__cell--pixel-circles .kingshot-cell-grid__glyph,
 .kingshot-cell-grid__cell--hearts .kingshot-cell-grid__glyph,
 .kingshot-cell-grid__cell--decorative-symbols .kingshot-cell-grid__glyph {
-  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  font-family: var(--forge-glyph-family, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif) !important;
 }
 
 .kingshot-cell-grid__cell--space .kingshot-cell-grid__glyph {
@@ -82,9 +84,9 @@
 /* Pixel/emoji compositions use the same logical columns, with slightly larger
  * paint and a tiny increase in cell density to match the supplied island/flag captures. */
 .kingshot-art-renderer--pixel {
-  --kingshot-cell-width: .58rem;
-  --kingshot-cell-height: 1.16rem;
-  --kingshot-grid-font-size: 1.02rem;
+  --kingshot-cell-width: var(--forge-cell-width, .58rem);
+  --kingshot-cell-height: var(--forge-cell-height, 1.16rem);
+  --kingshot-grid-font-size: var(--forge-grid-font-size, 1.02rem);
 }
 
 .kingshot-art-renderer--banner {
@@ -92,9 +94,9 @@
 }
 
 .kingshot-art-renderer--compact {
-  --kingshot-cell-width: .5rem;
-  --kingshot-cell-height: .94rem;
-  --kingshot-grid-font-size: .82rem;
+  --kingshot-cell-width: var(--forge-cell-width, .5rem);
+  --kingshot-cell-height: var(--forge-cell-height, .94rem);
+  --kingshot-grid-font-size: var(--forge-grid-font-size, .82rem);
 }
 
 .kingshot-art-renderer--studio {
