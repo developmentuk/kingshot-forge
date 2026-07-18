@@ -14,7 +14,7 @@ Where appropriate, contributors may receive community recognition, a contributor
 
 ## Current foundation
 
-The public role catalogue is available at `/join`. The secure application, review, onboarding and contributor-profile persistence workflow is not yet implemented on this branch. No application personal information is collected by the public catalogue.
+The public role catalogue is available at `/join`; applicant workflows use `/join/apply` and `/join/my-application`. The secure application, review and onboarding workflow is available to signed-in applicants and authorised Operations actors. The public catalogue itself collects no application information. Contributor profile editing and a public contributor directory remain deferred.
 
 ## Principles
 

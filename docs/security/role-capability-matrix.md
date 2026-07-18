@@ -1,6 +1,6 @@
 # Contributor recruitment capability note
 
-Recruitment capabilities are not active in Sprint 8.0C’s public catalogue. When implemented, they must be mapped conservatively to authorised Operations actors. Application acceptance must never imply platform-role assignment; Moderator, Administrator, Owner, publishing and production access remain separately protected.
+Recruitment capabilities are active for Owner and Administrator through the secure application workflow. Moderator, Contributor, Content Creator and Player receive no review capability by default. Application acceptance must never imply platform-role assignment; Moderator, Administrator, Owner, publishing and production access remain separately protected.
 
 # Role-capability matrix — Release 0.8.0
 
