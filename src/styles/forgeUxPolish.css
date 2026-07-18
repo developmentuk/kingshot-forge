@@ -1,5 +1,26 @@
 /* Shared UX polish layered over legacy feature styles. */
 
+:root {
+  --forge-type-page-title: clamp(2.25rem, 4.5vw, 3rem);
+  --forge-type-section-title: clamp(1.5rem, 2.5vw, 2rem);
+  --forge-type-card-title: clamp(1.125rem, 1.8vw, 1.5rem);
+  --forge-type-body: clamp(.875rem, 1vw, 1.0625rem);
+}
+
+:where(.page-title, .section-heading h1, .product-roadmap__hero h1) {
+  font-size: var(--forge-type-page-title);
+  line-height: var(--forge-line-height-tight);
+}
+
+:where(.admin-page h2, .dashboard-card h2, .roadmap-release h2, .roadmap-community-note h2) {
+  font-size: var(--forge-type-section-title);
+  line-height: var(--forge-line-height-tight);
+}
+
+:where(.admin-page p, .dashboard-card p, .roadmap-release__description) {
+  font-size: var(--forge-type-body);
+}
+
 :where(.section-heading, .player-domain-hero, .player-profile-editor-heading, .hero-companion-heading, .forge-hub-hero) {
   max-width: var(--forge-content-max);
 }
