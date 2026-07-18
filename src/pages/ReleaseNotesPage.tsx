@@ -50,6 +50,11 @@ function ReleaseNotesPage() {
       </article>
 
       <article className="release-entry release-entry--latest">
+        <div className="release-entry__heading"><div><span className="release-entry__badge">Current milestone</span><h2>Release 0.7.4 — Community Art Studio</h2><p>Ready for local browser validation · July 2026</p></div><Link className="button button--secondary" to="/roadmap">View roadmap</Link></div>
+        <div className="release-entry__sections"><section><h3>Player workflow</h3><ul><li>Private PNG, JPEG and WebP uploads with preview and replacement</li><li>Attribution, ownership and community-guideline controls</li><li>Personal pending, approved, rejected and published status</li></ul></section><section><h3>Moderation and publication</h3><ul><li>Moderator-only review queue with notes and final actions</li><li>Private originals and short-lived signed delivery URLs</li><li>Published-only public gallery projection</li></ul></section></div>
+      </article>
+
+      <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
             <span className="release-entry__badge">Latest completed release</span>

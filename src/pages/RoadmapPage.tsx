@@ -57,6 +57,21 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
+    version: "0.7.4",
+    name: "Community Art Studio",
+    status: "development",
+    progress: 90,
+    priority: "Current release",
+    description: "A production-ready player submission, moderation and approved-gallery workflow for community artwork.",
+    features: [
+      "Private raster artwork uploads",
+      "Submission validation and attribution controls",
+      "Personal moderation status",
+      "Authorised review and publication workflow",
+      "Approved-only public gallery",
+    ],
+  },
+  {
     version: "0.7.2",
     name: "Player-Facing Domain Activation",
     status: "development",
