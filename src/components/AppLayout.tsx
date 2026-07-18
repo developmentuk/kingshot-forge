@@ -62,6 +62,7 @@ const adminNavigation: NavigationItem[] = [
   { label: 'Publish', shortLabel: 'Publish', icon: '🚀', path: '/admin/publish' },
   { label: 'Data Engine', shortLabel: 'Engine', icon: '⚙️', path: '/admin/data-engine' },
   { label: 'Player Identity', shortLabel: 'Players', icon: '🛡️', path: '/admin/player-identity' },
+  { label: 'Community Art', shortLabel: 'Art', icon: '🎨', path: '/admin/community-art' },
 ]
 
 const mobileNavigation: NavigationItem[] = [
@@ -142,6 +143,8 @@ function AppLayout() {
         return hasPermission('cms.publish')
       case '/admin/history':
         return hasPermission('cms.history.view')
+      case '/admin/community-art':
+        return hasPermission('moderation.manage')
       default:
         return canViewCms
     }

@@ -310,34 +310,36 @@ Validation completed for this milestone: Player Identity structural validation, 
 
 ## Active Release
 
-### Release 0.7.3 — Forge UX Polish
+### Release 0.7.4 — Community Art Studio
 
 Working branch:
 
 ```text
-release/0.7.3-forge-ux-polish
+release/0.7.4-community-art-studio
 ```
 
-Release objective: improve consistency, readability, responsiveness, accessibility and perceived quality across the existing Forge application without adding domains, product features, tables or schema changes.
+Release objective: complete the Community Art Studio copyable text-art submission, moderation and approved-gallery vertical slice on the existing Forge architecture.
 
 Milestone order:
 
-1. shared tokens, surfaces and controls;
-2. navigation and responsive shell polish;
-3. loading, empty, error and success state consistency;
-4. player-facing and public-page refinement;
-5. accessibility, reduced motion and visual regression review;
-6. validation, documentation and release preparation.
+1. scoped text-art schema and RLS correction;
+2. player submission and exact-text validation;
+3. status and moderation workflow;
+4. approved-only gallery;
+5. accessibility, responsive states and focused validation;
+6. documentation and release preparation.
 
 Release constraints:
 
-- reuse existing domain, editorial, publishing, permission and design-system capabilities;
-- do not add new product features, domains, backend tables or schema changes;
+- reuse existing domain, permission and design-system capabilities;
+- keep all database and storage changes limited to Community Art Studio;
 - preserve published-data, privacy and server-side permission boundaries;
-- do not apply production database changes;
-- use the connected Supabase project read-only;
+- apply only the approved Community Art Studio migration and storage policies;
+- use the connected Supabase project for scoped verification;
 - finish and validate one UX slice before beginning the next;
 - do not redesign the architecture or create parallel sources of truth.
+- keep creator attribution public-safe and expose reactions only as published-art aggregates;
+- keep the moderator queue role-gated and never expose private notes or submitter identity in gallery responses.
 
 This milestone is complete only when the shared UX polish is validated, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for Clark's local browser validation.
 

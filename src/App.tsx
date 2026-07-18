@@ -45,6 +45,7 @@ import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
 import { AdminDatasetsPage } from "./features/admin/AdminDatasetsPage";
 import { AdminDatasetDetailPage } from "./features/admin/AdminDatasetDetailPage";
 import { FeedbackAdminPage } from "./features/admin/FeedbackAdminPage";
+import { CommunityArtModerationPage } from "./features/admin/CommunityArtModerationPage";
 import {
   DatasetVerificationPage,
   VerificationCentrePage,
@@ -94,6 +95,7 @@ function App() {
         <Route path="admin/datasets" element={<ProtectedRoute permission="cms.view"><AdminDatasetsPage /></ProtectedRoute>} />
         <Route path="admin/data/:datasetId" element={<ProtectedRoute permission="cms.view"><AdminDatasetDetailPage /></ProtectedRoute>} />
         <Route path="admin/feedback" element={<ProtectedRoute permission="cms.view"><FeedbackAdminPage /></ProtectedRoute>} />
+        <Route path="admin/community-art" element={<ProtectedRoute permission="moderation.manage"><CommunityArtModerationPage /></ProtectedRoute>} />
         <Route path="admin/data-engine" element={<ProtectedRoute permission="cms.view"><DataEngineDiagnosticsPage /></ProtectedRoute>} />
         <Route path="admin/verification" element={<ProtectedRoute permission="cms.view"><VerificationCentrePage /></ProtectedRoute>} />
         <Route path="admin/verification/runs/:runId" element={<ProtectedRoute permission="cms.view"><VerificationRunPage /></ProtectedRoute>} />

@@ -53,6 +53,12 @@ export function AdminDashboardPage() {
           <Link to="/admin/datasets" className="button button--primary">Open datasets</Link>
         </article>
 
+        {hasPermission('moderation.manage') && <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">🎨</span>
+          <div><h2>Community Art</h2><p>Review attribution, test text artwork and manage the approved public gallery.</p></div>
+          <Link to="/admin/community-art" className="button button--primary">Open art queue</Link>
+        </article>}
+
         <article className="admin-dashboard-card">
           <span className="admin-dashboard-card__icon">🧭</span>
           <div>
