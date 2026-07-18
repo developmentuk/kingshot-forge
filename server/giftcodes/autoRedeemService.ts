@@ -13,6 +13,13 @@ export const CONTROLLED_VALIDATION_CODE = 'HAPPYEMOJIDAY'
 type PlayerRow = Readonly<Record<string, unknown>>
 type ActiveCode = Readonly<{ id: string; code: string; expiresAt: string | null; version: string }>
 
+type RedemptionRequestSummary = Readonly<{
+  code_publication_id: string
+  status: string
+  result_code: string | null
+  created_at: string
+}>
+
 function now() { return new Date().toISOString() }
 function configured() { return readOfficialProviderConfig() }
 function isVerified(value: unknown) { return value === 'verified' || value === 'community_verified' || value === 'officially_verified' }
@@ -190,6 +197,50 @@ export async function getProviderOperations() {
   const config = configured()
   const health = await providerHealth()
   return { providerId: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', configured: config !== null, configEnabled: Boolean(config?.enabled), health: health ? { enabled: health.provider_enabled, circuitState: health.circuit_state, status: health.health_status, reason: health.reason_code, changedAt: health.changed_at, updatedAt: health.updated_at } : null }
+}
+
+export async function getAdminGiftCodeCatalogue() {
+  const [codes, operationsResult] = await Promise.all([activeCodes(), getProviderOperations()])
+  const { data: requests, error } = await getSupabaseAdmin()
+    .from('gift_code_redemption_requests')
+    .select('code_publication_id,status,result_code,created_at')
+    .order('created_at', { ascending: false })
+    .limit(500)
+  if (error) throw error
+
+  const byCode = new Map<string, RedemptionRequestSummary[]>()
+  for (const request of (requests ?? []) as RedemptionRequestSummary[]) {
+    const list = byCode.get(String(request.code_publication_id)) ?? []
+    list.push(request)
+    byCode.set(String(request.code_publication_id), list)
+  }
+
+  const catalogue = codes.map((code) => {
+    const history = byCode.get(code.id) ?? []
+    const terminal = history.filter((item) => ['succeeded', 'already_claimed', 'expired', 'failed_terminal'].includes(item.status))
+    const retryable = history.filter((item) => item.status === 'failed_retryable')
+    return {
+      id: code.id,
+      code: code.code,
+      version: code.version,
+      expiresAt: code.expiresAt,
+      lifecycle: 'active' as const,
+      source: 'kingshot-gift-codes',
+      approval: 'canonical-feed',
+      eligibility: operationsResult.configured && operationsResult.configEnabled && operationsResult.health?.enabled === true ? 'provider-eligible' : 'provider-gated',
+      attempts: history.length,
+      completed: terminal.length,
+      rewarded: history.filter((item) => item.status === 'succeeded').length,
+      alreadyClaimed: history.filter((item) => item.status === 'already_claimed').length,
+      failed: history.filter((item) => ['failed_terminal', 'ambiguous'].includes(item.status)).length,
+      skipped: history.filter((item) => item.status === 'expired').length,
+      retryable: retryable.length,
+      lastOutcome: history[0]?.result_code ?? history[0]?.status ?? null,
+      lastAttemptAt: history[0]?.created_at ?? null,
+    }
+  })
+
+  return { ...operationsResult, totals: { activeCodes: catalogue.length, recordedRequests: requests?.length ?? 0 }, catalogue }
 }
 
 export async function setProviderOperations(actorId: string, enabled: boolean, reasonCode: string) {

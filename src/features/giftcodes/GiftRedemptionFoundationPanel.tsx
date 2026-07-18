@@ -44,7 +44,7 @@ export function GiftRedemptionFoundationPanel() {
   const [context, setContext] = useState<{
     player: { name: string; playerId: string; kingdom: number; verificationStatus: string } | null
     consent: { grantedAt: string; version: string } | null
-    provider: { configured: boolean; enabled: boolean }
+    provider: { configured: boolean; enabled: boolean; health?: { status: string; reason: string } }
     codes: { active: number; ready: number; processed: number }
     eligibility: { eligible: boolean; reasons: string[] }
   } | null>(null)
@@ -82,6 +82,14 @@ export function GiftRedemptionFoundationPanel() {
     setBusy(true); setMessage('Processing codes one at a time…'); setResults([])
     try { const data = await call('redeem', { method: 'POST', body: '{}' }) as { results: typeof results } | null; setResults(data?.results ?? []); setContext((await call('context')) as typeof context); setHistory(((await call('history')) as typeof history) ?? []); setMessage('Redemption run complete. Review each result below.') } catch (error) { setMessage(error instanceof Error ? error.message : 'The redemption run could not be completed.') } finally { setBusy(false) }
   }
+
+  const resultTotals = results.reduce((totals, item) => {
+    if (item.status === 'succeeded') totals.rewarded += 1
+    else if (item.status === 'already_claimed') totals.alreadyClaimed += 1
+    else if (item.status === 'failed' || item.status === 'not_supported') totals.failed += 1
+    else totals.skipped += 1
+    return totals
+  }, { rewarded: 0, alreadyClaimed: 0, failed: 0, skipped: 0 })
 
   return (
     <section
@@ -228,9 +236,9 @@ export function GiftRedemptionFoundationPanel() {
                   <button type="button" className="button button--secondary" disabled={busy} onClick={() => void withdraw()}>Withdraw consent</button>
                 </div>
               )}
-              {!context.eligibility.eligible && <p role="status">Next step: {context.eligibility.reasons[0]?.replaceAll('_', ' ') ?? 'check your linked Governor.'}</p>}
+              {!context.eligibility.eligible && <p role="status">{context.provider.health?.status === 'disabled' ? 'Automatic redemption is temporarily paused while the provider is disabled. Manual redemption remains available.' : context.provider.health?.status === 'open' ? 'Automatic redemption is unavailable while provider health is recovering. Manual redemption remains available.' : `Next step: ${context.eligibility.reasons[0]?.replaceAll('_', ' ') ?? 'check your linked Governor.'}`}</p>}
               {message && <p role="status">{message}</p>}
-              {results.length > 0 && <div><h3>Run results</h3>{results.map((item) => <p key={`${item.code}-${item.status}`}><strong>{item.code}</strong> — {item.status.replaceAll('_', ' ')}{item.retryable ? ' · Try again' : ''}<br /><span>{item.message}</span></p>)}</div>}
+              {results.length > 0 && <div><h3>Run results</h3><p>{resultTotals.rewarded} rewarded · {resultTotals.alreadyClaimed} already claimed · {resultTotals.failed} failed · {resultTotals.skipped} skipped</p>{results.map((item) => <p key={`${item.code}-${item.status}`}><strong>{item.code}</strong> — {item.status.replaceAll('_', ' ')}{item.retryable ? ' · Try again' : ''}<br /><span>{item.message}</span></p>)}</div>}
               {history.length > 0 && <div><h3>Private redemption history</h3>{history.map((run) => <div key={run.id}><p><strong>{new Date(run.created_at).toLocaleString('en-GB')}</strong> — {run.status.replaceAll('_', ' ')} · {run.processed_code_count}/{run.requested_code_count} processed</p>{run.requests.map((item) => <span key={`${run.id}-${item.code_publication_id}`} className="gift-redemption-panel__history-item">{item.status.replaceAll('_', ' ')} ({item.result_code})</span>)}</div>)}</div>}
             </>
           ) : (

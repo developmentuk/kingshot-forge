@@ -1219,3 +1219,6 @@ Supabase writes, and deployment.
 
 Until every hard blocker and rollout gate is approved, Forge supports only the
 existing manual journey to the official Century Games redemption destination.
+# Release 0.7.5 operational boundary
+
+The KVK Planner reference informed Forge’s catalogue, outcome and monitoring vocabulary. Forge does not activate its external feed, embedded credentials, proxy-player model or continuous daemon. Release 0.7.5 uses the existing `kingshot-gift-codes` feed and explicit player-triggered runs only. Admin operations expose sanitized provider state and aggregate code metrics; all signing, cookies and raw provider responses remain server-only.

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../server/auth/requireForgeActor.js'
-import { autoRedeemPolicy, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redeemControlledValidationCode, redemptionHistory, revokeConsent, setProviderOperations } from '../server/giftcodes/autoRedeemService.js'
+import { autoRedeemPolicy, getAdminGiftCodeCatalogue, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redeemControlledValidationCode, redemptionHistory, revokeConsent, setProviderOperations } from '../server/giftcodes/autoRedeemService.js'
 
 function body(request: VercelRequest) { return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {} }
 function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
@@ -23,6 +23,10 @@ export default async function handler(request: VercelRequest, response: VercelRe
         if (typeof input.enabled !== 'boolean') { fail(response, 400, 'The enabled field must be boolean.'); return }
         response.status(200).json({ status: 'success', data: await setProviderOperations(actor.userId, input.enabled, typeof input.reasonCode === 'string' ? input.reasonCode : '') }); return
       }
+    }
+    if (request.method === 'GET' && action === 'catalogue') {
+      if (actor.role !== 'owner' && actor.role !== 'admin') { fail(response, 403, 'Administrator access is required.'); return }
+      response.status(200).json({ status: 'success', data: await getAdminGiftCodeCatalogue() }); return
     }
     if (request.method === 'POST' && action === 'consent') { response.status(201).json({ status: 'success', data: await grantConsent(actor.userId) }); return }
     if (request.method === 'DELETE' && action === 'consent') { await revokeConsent(actor.userId); response.status(204).end(); return }
