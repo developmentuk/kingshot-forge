@@ -39,6 +39,33 @@
   line-height: var(--kingshot-preview-line-height);
 }
 
+/* ASCII art must retain a stable grid. Auto-detected ASCII therefore uses a
+ * compact monospace game preview rather than proportional glyph correction. */
+.kingshot-art-renderer--kingshot.kingshot-art-renderer--ascii {
+  color: var(--kingshot-art-ink);
+  font-family: "Courier New", Consolas, monospace;
+  font-size: .76rem;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  letter-spacing: -.025em;
+  line-height: 1.06;
+  white-space: pre;
+  transform: scaleX(.91);
+  transform-origin: top center;
+}
+
+.kingshot-art-renderer--pixel {
+  font-size: .87rem;
+}
+
+.kingshot-art-renderer--banner {
+  letter-spacing: -.02em;
+}
+
+.kingshot-art-renderer--mixed {
+  --kingshot-preview-scale-x: .82;
+}
+
 .kingshot-art-renderer__empty {
   min-width: .36em;
 }
@@ -70,6 +97,11 @@
   :root {
     --kingshot-preview-font-size: .8rem;
     --kingshot-preview-scale-x: .74;
+  }
+
+  .kingshot-art-renderer--kingshot.kingshot-art-renderer--ascii {
+    font-size: .72rem;
+    transform: scaleX(.88);
   }
 
   .art-preview-modal__panel {
