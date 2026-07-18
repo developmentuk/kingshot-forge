@@ -87,7 +87,7 @@ export function AuthProvider({
 
   async function signInWithGoogle() {
     const redirectTo =
-      `${window.location.origin}/my-forge`
+      `${window.location.origin}${window.location.pathname}`
 
     const { error } =
       await supabase.auth.signInWithOAuth({
