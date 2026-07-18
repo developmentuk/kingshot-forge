@@ -13,6 +13,42 @@
   --kingshot-chat-reference-width: 721;
   --kingshot-chat-width-ratio: 66.76vw;
   --kingshot-chat-width-cap: 721px;
+  --kingshot-preview-font-size: .82rem;
+  --kingshot-preview-line-height: 1.08;
+  --kingshot-preview-scale-x: .76;
+}
+
+/*
+ * Forge Render Engine presentation.
+ * The renderer owns glyph widths while these rules reproduce the game-like
+ * scale, tighter line rhythm and true artwork-block centring.
+ */
+.kingshot-art-renderer--kingshot {
+  width: max-content;
+  min-width: 0;
+  max-width: none;
+  margin-inline: auto;
+  font-size: var(--kingshot-preview-font-size);
+  line-height: var(--kingshot-preview-line-height);
+  transform: scaleX(var(--kingshot-preview-scale-x));
+  transform-origin: top center;
+}
+
+.kingshot-art-renderer--kingshot .kingshot-art-renderer__line {
+  min-height: var(--kingshot-preview-line-height);
+  line-height: var(--kingshot-preview-line-height);
+}
+
+.kingshot-art-renderer__empty {
+  min-width: .36em;
+}
+
+.art-preview-modal__content {
+  justify-content: center;
+}
+
+.art-preview-modal__content > .kingshot-art-renderer {
+  flex: 0 0 auto;
 }
 
 @media (min-width: 701px) {
@@ -31,6 +67,11 @@
 }
 
 @media (max-width: 700px) {
+  :root {
+    --kingshot-preview-font-size: .8rem;
+    --kingshot-preview-scale-x: .74;
+  }
+
   .art-preview-modal__panel {
     width: 100%;
   }
