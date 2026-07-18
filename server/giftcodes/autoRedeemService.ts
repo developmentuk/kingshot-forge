@@ -23,6 +23,16 @@ type RedemptionRequestSummary = Readonly<{
 function now() { return new Date().toISOString() }
 function configured() { return readOfficialProviderConfig() }
 function isVerified(value: unknown) { return value === 'verified' || value === 'community_verified' || value === 'officially_verified' }
+
+async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timeout)
+  }
+}
 function safePlayer(row: PlayerRow | null) {
   if (!row) return null
   return { id: row.id, name: row.player_name, playerId: row.player_id, kingdom: row.kingdom_id, verificationStatus: row.verification_status }
@@ -38,7 +48,7 @@ async function activeCodes(): Promise<ActiveCode[]> {
   const base = process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim()
   const key = process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
   if (!base || !key) return []
-  const response = await fetch(`${base.replace(/\/$/, '')}/functions/v1/kingshot-gift-codes`, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }, signal: AbortSignal.timeout(10_000) })
+  const response = await fetchWithTimeout(`${base.replace(/\/$/, '')}/functions/v1/kingshot-gift-codes`, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' } }, 10_000)
   if (!response.ok) return []
   const body = await response.json().catch(() => null) as Record<string, unknown> | null
   const data = body?.data as Record<string, unknown> | undefined

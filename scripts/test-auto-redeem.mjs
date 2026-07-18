@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
 import { createServer } from 'vite'
+
+const workflowSource = fs.readFileSync('server/giftcodes/autoRedeemService.ts', 'utf8')
+assert.doesNotMatch(workflowSource, /AbortSignal\.timeout/)
+assert.match(workflowSource, /new AbortController\(\)/)
 
 const vite = await createServer({ appType: 'custom', logLevel: 'silent', server: { middlewareMode: true } })
 try {
