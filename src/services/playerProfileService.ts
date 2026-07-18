@@ -7,6 +7,7 @@ import type { PlayerAccount } from '../types/playerAccount'
 
 type PlayerVerificationStatus =
   | 'linked'
+  | 'verified'
   | 'pending'
   | 'community_verified'
   | 'officially_verified'

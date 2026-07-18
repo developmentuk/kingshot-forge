@@ -27,6 +27,7 @@ function formatRole(role: string | null | undefined) {
 function getVerificationLabel(
   status:
     | 'linked'
+    | 'verified'
     | 'pending'
     | 'community_verified'
     | 'officially_verified'
@@ -35,6 +36,8 @@ function getVerificationLabel(
     | undefined,
 ) {
   switch (status) {
+    case 'verified':
+      return 'Verified player'
     case 'officially_verified':
       return 'Officially verified'
 
@@ -61,6 +64,7 @@ function getVerificationLabel(
 function getVerificationClass(
   status:
     | 'linked'
+    | 'verified'
     | 'pending'
     | 'community_verified'
     | 'officially_verified'
@@ -69,6 +73,8 @@ function getVerificationClass(
     | undefined,
 ) {
   switch (status) {
+    case 'verified':
+      return 'forge-passport-status forge-passport-status--verified'
     case 'officially_verified':
     case 'community_verified':
       return 'forge-passport-status forge-passport-status--verified'

@@ -63,6 +63,14 @@ const adminNavigation: NavigationItem[] = [
   { label: 'Data Engine', shortLabel: 'Engine', icon: '⚙️', path: '/admin/data-engine' },
   { label: 'Player Identity', shortLabel: 'Players', icon: '🛡️', path: '/admin/player-identity' },
   { label: 'Community Art', shortLabel: 'Art', icon: '🎨', path: '/admin/community-art' },
+  { label: 'Gift Redemption', shortLabel: 'Gifts', icon: '🎁', path: '/admin/gift-redemption' },
+]
+
+const adminNavigationGroups: ReadonlyArray<Readonly<{ title: string; paths: string[] }>> = [
+  { title: 'Overview', paths: ['/admin'] },
+  { title: 'Content operations', paths: ['/admin/datasets', '/admin/imports', '/admin/search', '/admin/history', '/admin/publish', '/admin/data-engine'] },
+  { title: 'Player operations', paths: ['/admin/player-identity', '/admin/gift-redemption'] },
+  { title: 'Community operations', paths: ['/admin/feedback', '/admin/community-art'] },
 ]
 
 const mobileNavigation: NavigationItem[] = [
@@ -149,6 +157,9 @@ function AppLayout() {
         return canViewCms
     }
   })
+  const visibleAdminNavigationGroups = adminNavigationGroups
+    .map((group) => ({ ...group, items: visibleAdminNavigation.filter((item) => group.paths.includes(item.path)) }))
+    .filter((group) => group.items.length > 0)
 
   useEffect(() => {
     setNavigationOpen(false)
@@ -232,9 +243,9 @@ function AppLayout() {
             <NavigationGroup title="Kingshot companion" items={companionNavigation} onNavigate={closeNavigation} />
             <NavigationGroup title="Library" items={libraryNavigation} onNavigate={closeNavigation} />
             <NavigationGroup title="Community and updates" items={platformNavigation} onNavigate={closeNavigation} />
-            {user && !loadingRole && canViewCms && visibleAdminNavigation.length > 0 && (
-              <NavigationGroup title="Forge Admin" items={visibleAdminNavigation} onNavigate={closeNavigation} />
-            )}
+            {user && !loadingRole && canViewCms && visibleAdminNavigationGroups.map((group) => (
+              <NavigationGroup key={group.title} title={group.title} items={group.items} onNavigate={closeNavigation} />
+            ))}
           </nav>
 
           <div className="app-sidebar__footer">

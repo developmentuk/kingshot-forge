@@ -5,7 +5,7 @@ import {
 import {
   OFFICIAL_GIFT_CODE_PROVIDER_ID,
   officialGiftCodeProviderCapabilities,
-  officialGiftCodeProviderSkeleton,
+  createOfficialGiftCodeProvider,
 } from './officialProvider.ts'
 import type {
   GiftCodeProviderDefinition,
@@ -59,7 +59,7 @@ export function createDefaultGiftCodeProviderFactory(
     ],
     [
       OFFICIAL_GIFT_CODE_PROVIDER_ID,
-      () => officialGiftCodeProviderSkeleton,
+      () => createOfficialGiftCodeProvider(undefined),
     ],
   ])
 

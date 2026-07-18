@@ -21,6 +21,47 @@ function ReleaseNotesPage() {
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
+            <span className="release-entry__badge">Ready for Clark’s final production validation</span>
+            <h2>Release 0.7.5 — Auto Redeem</h2>
+            <p>Release candidate · production provider remains disabled</p>
+          </div>
+          <Link className="button button--secondary" to="/gift-codes">
+            Open Gift Centre
+          </Link>
+        </div>
+        <div className="release-entry__sections">
+          <section>
+            <h3>Safe player verification</h3>
+            <ul>
+              <li>Server-authoritative Kingshot Player ID lookup and linking</li>
+              <li>Explicit trust wording without ownership or official-authentication claims</li>
+              <li>Protected verification fields and safe browser projections</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Controlled Auto Redeem</h3>
+            <ul>
+              <li>Explicit, revocable consent for a verified linked player</li>
+              <li>Administrator provider pause control with server-only credentials</li>
+              <li>Sequential requests, private history and duplicate protection</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Release readiness</h3>
+            <ul>
+              <li>Controlled validation completed with one approved test code</li>
+              <li>Production environment checklist documented without secret values</li>
+              <li>Production deployment and provider enablement remain gated</li>
+              <li>Forge Operations Centre groups Admin work by operational domain</li>
+              <li>Admin Gift Redemption catalogue and metrics remain visible while the provider is paused</li>
+            </ul>
+          </section>
+        </div>
+      </article>
+
+      <article className="release-entry release-entry--latest">
+        <div className="release-entry__heading">
+          <div>
             <span className="release-entry__badge">Latest completed release</span>
             <h2>Release 0.7.4 — Community Art Studio</h2>
             <p>Released 18 July 2026</p>

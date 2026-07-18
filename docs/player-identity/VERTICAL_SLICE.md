@@ -1,6 +1,18 @@
-# Player Identity disabled vertical slice
+# Player Identity vertical slice
 
-**Status:** Implemented locally behind exact-match feature gates; all architectural decisions remain **Proposed**. No production persistence, verification provider, public exposure, capability grant, or migration is approved.
+**Status:** The broader Player Identity contract remains feature-gated. Release 0.7.5 uses the existing `player_accounts` relationship for a narrow, server-validated Kingshot lookup trust signal.
+
+## Release 0.7.5 verification trust model
+
+Forge considers a player **verified** when an authenticated Forge user deliberately links a Player ID, the trusted server path successfully resolves that ID through the Kingshot player service, and Forge creates or confirms the relationship for that user. This verifies that the Player ID is valid and linked to the authenticated Forge account; it is not cryptographic proof, exclusive legal ownership proof, password verification or official Century Games account authentication.
+
+The canonical states for this release are:
+
+- **Unlinked:** no player relationship exists.
+- **Linked and verified:** the trusted server lookup succeeded and recorded `verification_status=verified`, `verification_method=kingshot_player_lookup` and a server timestamp.
+- **Invalid or stale:** lookup failed or the existing legacy link requires revalidation.
+
+Legacy `linked` rows are not bulk-promoted. They must be revalidated through the same server path.
 
 ## Architecture
 
@@ -12,7 +24,7 @@ The deterministic `InMemoryPlayerIdentityStore` is marked synthetic and is used 
 
 ### Linked characters
 
-The private route lists current and historical states, verification separately, Primary status, Active eligibility, and finite limit use. Proposals validate the external reference and display name, enforce the configured limit and always begin `unverified`. Duplicate, stale, revoked, disputed and removed states use stable result codes. Verification actions remain provider-disabled.
+The legacy player-facing link flow validates the Player ID in the browser for preview only; the successful link is repeated and committed by `/api/player/account` after authenticated server-side lookup. Client payloads cannot supply identity fields or verification fields. Duplicate, stale, revoked, disputed and removed states use stable result codes.
 
 ### Primary Character
 

@@ -56,7 +56,7 @@ The branch already provides a safe, non-live foundation:
 | Provider boundary | `server/giftcodes/provider.ts` defines a server-local, provider-neutral request/result and capability contract. No API route imports it. |
 | Provider selection | An immutable capability registry and dependency-injected factory support simulation, the official skeleton, and future providers without changing factory logic. |
 | Simulation | `simulationProvider.ts` is deterministic, sends no request, and cannot return success. `mockProvider.ts` remains a compatibility alias. |
-| Official provider | `officialProvider.ts` is a non-production skeleton with no transport, signing, cookie, or HTTP implementation. It always returns `not_supported` and `externalRequestSent: false`. |
+| Official provider | `officialProvider.ts` is a server-only transport boundary. It remains unavailable unless the server environment contains the provider URLs/signing key, the feature is enabled, and the database provider-health gate is closed. |
 | Feature gates | Product, official-provider, approved-environment, and queue-processing gates use exact `true` matching and all default off. Simulation is isolated from live-provider gates. |
 | Eligibility | Pure domain policy and an injected service compose authoritative actor, Player, publication, consent, gate, provider-health, rate-limit, and security-hold projections. Client Player IDs are not accepted. |
 | Consent | Purpose-, user-, character-, provider-, mode-, environment-, policy-, and digest-bound contracts support deterministic validity and one-way revocation. The proposed table remains unapplied. |
@@ -1219,3 +1219,6 @@ Supabase writes, and deployment.
 
 Until every hard blocker and rollout gate is approved, Forge supports only the
 existing manual journey to the official Century Games redemption destination.
+# Release 0.7.5 operational boundary
+
+The KVK Planner reference informed Forge’s catalogue, outcome and monitoring vocabulary. Forge does not activate its external feed, embedded credentials, proxy-player model or continuous daemon. Release 0.7.5 uses the existing `kingshot-gift-codes` feed and explicit player-triggered runs only. Admin operations expose sanitized provider state and aggregate code metrics; all signing, cookies and raw provider responses remain server-only.

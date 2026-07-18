@@ -48,10 +48,8 @@ test('default capability registry exposes isolated provider definitions', () => 
     'simulation_only',
   )
   assert.equal(
-    registry.require(
-      OFFICIAL_GIFT_CODE_PROVIDER_ID,
-    ).capabilities.externalRequestsAllowed,
-    false,
+    registry.require(OFFICIAL_GIFT_CODE_PROVIDER_ID).capabilities.externalRequestsAllowed,
+    true,
   )
 })
 

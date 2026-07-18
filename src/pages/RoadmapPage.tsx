@@ -101,10 +101,10 @@ const roadmapReleases: RoadmapRelease[] = [
     version: "0.7.5",
     name: "Auto Redeem",
     status: "development",
-    progress: 0,
-    priority: "Current community priority",
+    progress: 100,
+    priority: "Ready for Clark’s final production validation",
     description:
-      "Deliver safe, consented gift-code redemption for linked Kingshot players with clear results, history and abuse controls.",
+      "Locally validated release candidate for safe, consented gift-code redemption; production enablement remains gated pending Clark’s final validation.",
     features: [
       "Governed active gift-code registry",
       "Explicit linked-player consent",
@@ -212,12 +212,11 @@ function RoadmapPage() {
         <div>
           <span className="roadmap-priority-panel__icon">🎁</span>
           <div>
-            <p className="eyebrow">Current development priority</p>
+            <p className="eyebrow">Release candidate status</p>
             <h2>Release 0.7.5 — Auto Redeem</h2>
             <p>
-              Build a secure, transparent redemption journey that lets a linked player run
-              active gift codes and understand every result without exposing credentials or
-              weakening Forge safety boundaries.
+              Release candidate ready for Clark’s final production validation. The secure,
+              transparent redemption journey remains paused until production checks pass.
             </p>
           </div>
         </div>

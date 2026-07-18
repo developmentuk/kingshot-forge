@@ -308,17 +308,21 @@ Public profile reads select only public profile fields and non-sensitive player 
 
 Validation completed for this milestone: Player Identity structural validation, focused and vertical-slice tests, TypeScript production build and lint, targeted route checks, and Data Engine record-shape checks for troops, Truegold and VIP. Legacy progression values are preserved in history and rendered with a review label when they are no longer in the published selector options; no destructive migration is performed. Lint retains the repository's existing seven warnings in unrelated/shared files. Live signed-in route and RLS verification still require a deployment or authenticated browser session with access to the configured Supabase project.
 
+### Release 0.7.5 Player ID verification trust model
+
+For Auto Redeem, Forge verifies that a Player ID is valid through the Kingshot player service and links it to the authenticated Forge account. Forge does not request a game password or claim official account authentication. The trusted server link/revalidation route owns the canonical player fields, `verification_status`, `verification_method` and `verified_at`; browser roles cannot mutate verification columns or verification events. A legacy `linked` row remains ineligible until that same server path revalidates it. Consent and the provider-health pause are independent gates.
+
 ## Active Release
 
-### Release 0.7.4 — Community Art Studio
+### Release 0.7.5 — Auto Redeem
 
 Working branch:
 
 ```text
-release/0.7.4-community-art-studio
+release/0.7.5-auto-redeem
 ```
 
-Release objective: complete the Community Art Studio copyable text-art submission, moderation and approved-gallery vertical slice on the existing Forge architecture.
+Release objective: complete the consented, verified-player Auto Redeem vertical slice on the existing Forge architecture, with server-only provider transport, sequential processing, safe outcomes, private history and an admin kill switch while preserving manual redemption.
 
 Milestone order:
 
@@ -341,7 +345,11 @@ Release constraints:
 - keep creator attribution public-safe and expose reactions only as published-art aggregates;
 - keep the moderator queue role-gated and never expose private notes or submitter identity in gallery responses.
 
-This milestone is complete only when the shared UX polish is validated, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for Clark's local browser validation.
+This milestone is complete only when the shared UX polish is validated, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for Clark's final production validation.
+
+### Auto Redeem visibility contract
+
+The Auto Redeem interaction remains rendered for authenticated users while context is loading, unavailable, environment-disabled, paused or circuit-open. The action is disabled with a safe explanation and manual official redemption remains available. This presentation rule does not weaken server enforcement of configuration, provider health, verified linkage, consent or active-code eligibility.
 
 ## Session bootstrap
 

@@ -59,6 +59,12 @@ export function AdminDashboardPage() {
           <Link to="/admin/community-art" className="button button--primary">Open art queue</Link>
         </article>}
 
+        {(role === 'owner' || role === 'admin') && <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">🎁</span>
+          <div><h2>Gift Redemption</h2><p>Inspect provider health and pause or resume the server-enforced Auto Redeem gate.</p></div>
+          <Link to="/admin/gift-redemption" className="button button--primary">Open operations</Link>
+        </article>}
+
         <article className="admin-dashboard-card">
           <span className="admin-dashboard-card__icon">🧭</span>
           <div>
