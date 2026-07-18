@@ -12,6 +12,7 @@ import "./styles/passportPolish.css";
 import "./styles/heroCollectionPolish.css";
 import "./styles/forgeUxPolish.css";
 import "./styles/kingshotSimulator.css";
+import "./features/admin/renderEngineCalibration.css";
 
 import HomePage from "./pages/HomePage";
 import NameStudioPage from "./pages/NameStudioPage";
@@ -56,6 +57,7 @@ import ProtectedRoute from "./components/admin/ProtectedRoute";
 import { PrivatePlayerIdentityPage } from "./features/player-identity/PrivatePlayerIdentityPage";
 import { PlayerSupportWorkspacePage } from "./features/player-identity/PlayerSupportWorkspacePage";
 import { GiftRedemptionOperationsPage } from "./features/admin/GiftRedemptionOperationsPage";
+import { RenderEngineCalibrationPage } from "./features/admin/RenderEngineCalibrationPage";
 
 function App() {
   return (
@@ -105,6 +107,7 @@ function App() {
         <Route path="admin/player-identity" element={<PlayerSupportWorkspacePage />} />
         <Route path="admin/player-identity/:caseId" element={<PlayerSupportWorkspacePage />} />
         <Route path="admin/gift-redemption" element={<ProtectedRoute permission="cms.view"><GiftRedemptionOperationsPage /></ProtectedRoute>} />
+        <Route path="admin/render-engine" element={<ProtectedRoute permission="cms.view"><RenderEngineCalibrationPage /></ProtectedRoute>} />
         <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Import Manager</h1><p>Import management will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
         <Route path="admin/history" element={<ProtectedRoute permission="cms.history.view"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Version History</h1><p>Dataset and record history will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
         <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Global Search</h1><p>Search across every Forge dataset from one place.</p></div></section></main></ProtectedRoute>} />

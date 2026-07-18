@@ -64,13 +64,14 @@ const adminNavigation: NavigationItem[] = [
   { label: 'Player Identity', shortLabel: 'Players', icon: '🛡️', path: '/admin/player-identity' },
   { label: 'Community Art', shortLabel: 'Art', icon: '🎨', path: '/admin/community-art' },
   { label: 'Gift Redemption', shortLabel: 'Gifts', icon: '🎁', path: '/admin/gift-redemption' },
+  { label: 'Render Engine', shortLabel: 'Render', icon: '🧪', path: '/admin/render-engine' },
 ]
 
 const adminNavigationGroups: ReadonlyArray<Readonly<{ title: string; paths: string[] }>> = [
   { title: 'Overview', paths: ['/admin'] },
   { title: 'Content operations', paths: ['/admin/datasets', '/admin/imports', '/admin/search', '/admin/history', '/admin/publish', '/admin/data-engine'] },
   { title: 'Player operations', paths: ['/admin/player-identity', '/admin/gift-redemption'] },
-  { title: 'Community operations', paths: ['/admin/feedback', '/admin/community-art'] },
+  { title: 'Community operations', paths: ['/admin/feedback', '/admin/community-art', '/admin/render-engine'] },
 ]
 
 const mobileNavigation: NavigationItem[] = [

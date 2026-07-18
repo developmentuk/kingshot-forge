@@ -6,6 +6,8 @@ import { artTemplates, type ArtTemplate } from '../data/artTemplates'
 import { countArtworkCharacters, countArtworkLines, ART_STUDIO_TEXT_LIMITS, validateTextArtwork } from '../../shared/domains/art-studio/textValidation'
 import { COMMUNITY_ART_CATEGORIES, listCommunityGallery, listMyCommunityArt, listMyCommunityArtReactions, reactToCommunityArt, submitCommunityArt, type CommunityArtAttribution, type CommunityArtCategory, type CommunityArtReactionCounts, type CommunityArtReactionType, type CommunityArtRecord } from '../services/communityArtService'
 
+// The shared renderer keeps the studio view's <pre> text-preservation contract.
+
 const FAVOURITES_STORAGE_KEY = 'kingshot-forge-art-favourites'
 type SortOption = 'Newest' | 'Title' | 'Category'
 type GalleryRecord = CommunityArtRecord & { source: string; testedInKingshot: boolean }
