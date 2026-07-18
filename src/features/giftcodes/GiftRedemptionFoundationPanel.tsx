@@ -204,32 +204,45 @@ export function GiftRedemptionFoundationPanel() {
         </p>
       </div>
 
-      {user && context && (
+      {user && (
         <div className="gift-redemption-panel__auto" aria-live="polite">
-          <div className="gift-redemption-panel__summary">
-            <strong>Auto Redeem status</strong>
-            <span>{context.provider.enabled ? 'Available' : context.provider.configured ? 'Paused' : 'Not configured'}</span>
-            <span>{context.codes.ready} ready · {context.codes.processed} already handled · {context.codes.active} active</span>
-          </div>
-          {!context.consent ? (
-            <div>
-              <label>
-                <input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} />
-                I understand Forge will submit my linked Player ID and selected codes, record normalised outcomes and timestamps, will not request a game password, and will process codes only when I start a run.
-              </label>
-              <button type="button" className="button button--primary" disabled={!consentChecked || busy || !context.eligibility.eligible && !context.eligibility.reasons.includes('consent_required')} onClick={() => void grant()}>Grant Auto Redeem consent</button>
-            </div>
+          {context ? (
+            <>
+              <div className="gift-redemption-panel__summary">
+                <strong>Auto Redeem status</strong>
+                <span>{context.provider.enabled ? 'Available' : context.provider.configured ? 'Paused' : 'Not configured'}</span>
+                <span>{context.codes.ready} ready · {context.codes.processed} already handled · {context.codes.active} active</span>
+              </div>
+              {!context.consent ? (
+                <div>
+                  <label>
+                    <input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} />
+                    I understand Forge will submit my linked Player ID and selected codes, record normalised outcomes and timestamps, will not request a game password, and will process codes only when I start a run.
+                  </label>
+                  <button type="button" className="button button--primary" disabled={!consentChecked || busy || !context.eligibility.eligible && !context.eligibility.reasons.includes('consent_required')} onClick={() => void grant()}>Grant Auto Redeem consent</button>
+                </div>
+              ) : (
+                <div className="gift-redemption-panel__actions">
+                  <p>Consent active since {new Date(context.consent.grantedAt).toLocaleString('en-GB')}.</p>
+                  <button type="button" className="button button--primary" disabled={busy || !context.eligibility.eligible} onClick={() => void redeem()}>{busy ? 'Processing…' : 'Redeem available codes'}</button>
+                  <button type="button" className="button button--secondary" disabled={busy} onClick={() => void withdraw()}>Withdraw consent</button>
+                </div>
+              )}
+              {!context.eligibility.eligible && <p role="status">Next step: {context.eligibility.reasons[0]?.replaceAll('_', ' ') ?? 'check your linked Governor.'}</p>}
+              {message && <p role="status">{message}</p>}
+              {results.length > 0 && <div><h3>Run results</h3>{results.map((item) => <p key={`${item.code}-${item.status}`}><strong>{item.code}</strong> — {item.status.replaceAll('_', ' ')}{item.retryable ? ' · Try again' : ''}<br /><span>{item.message}</span></p>)}</div>}
+              {history.length > 0 && <div><h3>Private redemption history</h3>{history.map((run) => <div key={run.id}><p><strong>{new Date(run.created_at).toLocaleString('en-GB')}</strong> — {run.status.replaceAll('_', ' ')} · {run.processed_code_count}/{run.requested_code_count} processed</p>{run.requests.map((item) => <span key={`${run.id}-${item.code_publication_id}`} className="gift-redemption-panel__history-item">{item.status.replaceAll('_', ' ')} ({item.result_code})</span>)}</div>)}</div>}
+            </>
           ) : (
-            <div className="gift-redemption-panel__actions">
-              <p>Consent active since {new Date(context.consent.grantedAt).toLocaleString('en-GB')}.</p>
-              <button type="button" className="button button--primary" disabled={busy || !context.eligibility.eligible} onClick={() => void redeem()}>{busy ? 'Processing…' : 'Redeem available codes'}</button>
-              <button type="button" className="button button--secondary" disabled={busy} onClick={() => void withdraw()}>Withdraw consent</button>
-            </div>
+            <>
+              <div className="gift-redemption-panel__summary">
+                <strong>Auto Redeem status</strong>
+                <span>{message ? 'Unavailable' : 'Checking availability…'}</span>
+              </div>
+              <button type="button" className="button button--primary" disabled>Redeem available codes</button>
+              <p role="status">{message || 'Checking provider availability. Redemption remains disabled until status is confirmed.'}</p>
+            </>
           )}
-          {!context.eligibility.eligible && <p role="status">Next step: {context.eligibility.reasons[0]?.replaceAll('_', ' ') ?? 'check your linked Governor.'}</p>}
-          {message && <p role="status">{message}</p>}
-          {results.length > 0 && <div><h3>Run results</h3>{results.map((item) => <p key={`${item.code}-${item.status}`}><strong>{item.code}</strong> — {item.status.replaceAll('_', ' ')}{item.retryable ? ' · Try again' : ''}<br /><span>{item.message}</span></p>)}</div>}
-          {history.length > 0 && <div><h3>Private redemption history</h3>{history.map((run) => <div key={run.id}><p><strong>{new Date(run.created_at).toLocaleString('en-GB')}</strong> — {run.status.replaceAll('_', ' ')} · {run.processed_code_count}/{run.requested_code_count} processed</p>{run.requests.map((item) => <span key={`${run.id}-${item.code_publication_id}`} className="gift-redemption-panel__history-item">{item.status.replaceAll('_', ' ')} ({item.result_code})</span>)}</div>)}</div>}
         </div>
       )}
     </section>
