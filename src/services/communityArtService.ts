@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase'
 export type CommunityArtCategory = 'Cats' | 'Animals' | 'Characters' | 'Announcements' | 'Battle' | 'KvK' | 'Alliance' | 'Flags' | 'Pixel Art' | 'Nature' | 'Funny' | 'Gaming' | 'Seasonal' | 'Other'
 export type CommunityArtAttribution = 'profile' | 'custom' | 'anonymous'
 export type CommunityArtCompatibility = 'untested' | 'needs_testing' | 'verified' | 'known_issues'
+export type CommunityArtReactionType = 'like' | 'heart' | 'smile' | 'wow'
+export type CommunityArtReactionCounts = Record<CommunityArtReactionType, number>
 export type CommunityArtRecord = {
   id: string
   title: string
@@ -22,6 +24,13 @@ export type CommunityArtRecord = {
   submitterFeedback?: string | null
   source?: string
   testedInKingshot?: boolean
+  reactionCounts: CommunityArtReactionCounts
+  myReaction: CommunityArtReactionType | null
+  submitterContext?: {
+    userId: string
+    attributionType: CommunityArtAttribution
+    attributionName: string | null
+  }
 }
 
 export const COMMUNITY_ART_CATEGORIES: Array<'All' | CommunityArtCategory> = ['All', 'Cats', 'Animals', 'Characters', 'Announcements', 'Battle', 'KvK', 'Alliance', 'Flags', 'Pixel Art', 'Nature', 'Funny', 'Gaming', 'Seasonal', 'Other']
@@ -47,6 +56,8 @@ async function api<T>(action: string, init?: RequestInit): Promise<T> {
 export function listCommunityGallery() { return api<CommunityArtRecord[]>('gallery') }
 export function listMyCommunityArt() { return api<CommunityArtRecord[]>('mine') }
 export function listCommunityArtQueue() { return api<CommunityArtRecord[]>('queue') }
+export function listMyCommunityArtReactions() { return api<Array<{ artworkId: string; reactionType: CommunityArtReactionType }>>('my-reactions') }
+export function reactToCommunityArt(input: { artworkId: string; reactionType: CommunityArtReactionType | null }) { return api<{ artworkId: string; reactionCounts: CommunityArtReactionCounts; myReaction: CommunityArtReactionType | null }>('react', { method: 'POST', body: JSON.stringify(input) }) }
 
 export function submitCommunityArt(input: {
   title: string

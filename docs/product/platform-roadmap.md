@@ -82,6 +82,8 @@ The accepted player-facing journeys are being refined through a focused shared U
 - search and recommendations
 - event automation
 
+Release 0.7.4 Community Art Studio is the first scoped contribution workflow in the player/community platform: text-only submissions, moderator review, approved-only publication, attribution and published-art reactions. It remains separate from CMS datasets and does not enable Auto Redeem.
+
 ## Milestone 6 — Ecosystem & Scale
 
 - stable public APIs

@@ -338,6 +338,8 @@ Release constraints:
 - use the connected Supabase project for scoped verification;
 - finish and validate one UX slice before beginning the next;
 - do not redesign the architecture or create parallel sources of truth.
+- keep creator attribution public-safe and expose reactions only as published-art aggregates;
+- keep the moderator queue role-gated and never expose private notes or submitter identity in gallery responses.
 
 This milestone is complete only when the shared UX polish is validated, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for Clark's local browser validation.
 
