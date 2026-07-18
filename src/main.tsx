@@ -10,6 +10,7 @@ import { PlayerIdentityProvider } from './context/PlayerIdentityContext'
 
 import './index.css'
 import './styles/kingshot-chat-calibration.css'
+import './styles/kingshot-art-renderer.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
