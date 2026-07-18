@@ -9,6 +9,22 @@ type Catalogue = {
   catalogue: Array<{ id: string; code: string; version: string; expiresAt: string | null; lifecycle: string; source: string; approval: string; eligibility: string; attempts: number; completed: number; rewarded: number; alreadyClaimed: number; failed: number; skipped: number; retryable: number; lastOutcome: string | null; lastAttemptAt: string | null }>
 }
 
+type ApiPayload<T> = { status?: string; data?: T; message?: string }
+
+async function readApiPayload<T>(response: Response): Promise<ApiPayload<T>> {
+  const text = await response.text()
+  if (!text.trim()) return {}
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.toLowerCase().includes('application/json')) {
+    throw new Error(`The Admin service returned an unexpected response (HTTP ${response.status}).`)
+  }
+  try {
+    return JSON.parse(text) as ApiPayload<T>
+  } catch {
+    throw new Error(`The Admin service returned invalid JSON (HTTP ${response.status}).`)
+  }
+}
+
 export function GiftRedemptionOperationsPage() {
   const { session } = useAuth()
   const [operations, setOperations] = useState<Catalogue | null>(null)
@@ -18,19 +34,32 @@ export function GiftRedemptionOperationsPage() {
   const load = useCallback(async () => {
     if (!session?.access_token) return
     const response = await fetch('/api/giftcodes?action=catalogue', { headers: { Authorization: `Bearer ${session.access_token}` } })
-    const payload = await response.json() as { data?: Catalogue; message?: string }
-    if (!response.ok) throw new Error(payload.message ?? 'Operations status unavailable.')
-    setOperations(payload.data ?? null)
+    const payload = await readApiPayload<Catalogue>(response)
+    if (!response.ok || payload.status !== 'success' || !payload.data) throw new Error(payload.message ?? 'Catalogue is temporarily unavailable.')
+    setOperations(payload.data)
   }, [session?.access_token])
 
-  useEffect(() => { void load().catch((error: unknown) => setMessage(error instanceof Error ? error.message : 'Operations status unavailable.')) }, [load])
+  useEffect(() => {
+    void load().catch(async () => {
+      if (!session?.access_token) return
+      try {
+        const response = await fetch('/api/giftcodes?action=operations', { headers: { Authorization: `Bearer ${session.access_token}` } })
+        const payload = await readApiPayload<Catalogue>(response)
+        if (!response.ok || payload.status !== 'success' || !payload.data) throw new Error()
+        setOperations({ ...payload.data, totals: payload.data.totals ?? { activeCodes: 0, recordedRequests: 0 }, catalogue: payload.data.catalogue ?? [] })
+        setMessage('The code catalogue is temporarily unavailable; provider controls remain available.')
+      } catch {
+        setMessage('Admin provider status is temporarily unavailable. Please try again.')
+      }
+    })
+  }, [load, session?.access_token])
 
   async function setEnabled(enabled: boolean) {
     if (!session?.access_token) return
     setMessage('Saving provider state…')
     const response = await fetch('/api/giftcodes?action=operations', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled, reasonCode: enabled ? 'admin_enabled' : 'admin_paused' }) })
-    const payload = await response.json() as { data?: Catalogue['health']; message?: string }
-    if (!response.ok) throw new Error(payload.message ?? 'Provider state could not be saved.')
+    const payload = await readApiPayload<Catalogue['health']>(response)
+    if (!response.ok || payload.status !== 'success') throw new Error(payload.message ?? 'Provider state could not be saved.')
     await load()
     setMessage(enabled ? 'Auto Redeem enabled at the provider gate.' : 'Auto Redeem paused at the provider gate.')
   }

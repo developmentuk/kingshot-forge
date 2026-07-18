@@ -8,6 +8,7 @@ for (const [label, source, needles] of [
   ['admin catalogue API', api, ['action === \'catalogue\'', 'Administrator access is required.', 'getAdminGiftCodeCatalogue']],
   ['aggregate catalogue service', service, ['recordedRequests', 'retryable', 'lastOutcome']],
   ['admin catalogue UI', page, ['Code catalogue', 'Retryable outcomes', 'aggregate outcomes only']],
+  ['safe response parsing', page, ['response.text()', 'content-type', 'unexpected response']],
 ]) {
   for (const needle of needles) {
     if (!source.includes(needle)) throw new Error(`${label} missing contract: ${needle}`)

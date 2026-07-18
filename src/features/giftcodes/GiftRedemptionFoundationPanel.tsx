@@ -6,6 +6,9 @@ import { usePlayerIdentity } from '../../context/PlayerIdentityContext'
 const OFFICIAL_REDEMPTION_URL =
   'https://ks-giftcode.centurygame.com/'
 
+const PROVIDER_UNAVAILABLE_MESSAGE =
+  'Auto Redeem is currently unavailable. Automatic redemption has been disabled by Forge administrators. Manual Copy Code and official redemption remain available.'
+
 function getVerificationLabel(status: string) {
   switch (status) {
     case 'verified':
@@ -64,7 +67,7 @@ export function GiftRedemptionFoundationPanel() {
 
   useEffect(() => {
     if (!session) { setContext(null); return }
-    void call('context').then((data) => setContext(data as typeof context)).catch((error: unknown) => setMessage(error instanceof Error ? error.message : 'Gift Centre status unavailable.'))
+    void call('context').then((data) => setContext(data as typeof context)).catch(() => setMessage(PROVIDER_UNAVAILABLE_MESSAGE))
     void call('history').then((data) => setHistory((data as typeof history) ?? [])).catch(() => setHistory([]))
   }, [call, session])
 
@@ -236,7 +239,7 @@ export function GiftRedemptionFoundationPanel() {
                   <button type="button" className="button button--secondary" disabled={busy} onClick={() => void withdraw()}>Withdraw consent</button>
                 </div>
               )}
-              {!context.eligibility.eligible && <p role="status">{context.provider.health?.status === 'disabled' ? 'Automatic redemption is temporarily paused while the provider is disabled. Manual redemption remains available.' : context.provider.health?.status === 'open' ? 'Automatic redemption is unavailable while provider health is recovering. Manual redemption remains available.' : `Next step: ${context.eligibility.reasons[0]?.replaceAll('_', ' ') ?? 'check your linked Governor.'}`}</p>}
+              {!context.eligibility.eligible && <p role="status">{!context.provider.enabled ? PROVIDER_UNAVAILABLE_MESSAGE : context.provider.health?.status === 'open' ? 'Auto Redeem is currently unavailable while provider health is recovering. Manual Copy Code and official redemption remain available.' : `Next step: ${context.eligibility.reasons[0]?.replaceAll('_', ' ') ?? 'check your linked Governor.'}`}</p>}
               {message && <p role="status">{message}</p>}
               {results.length > 0 && <div><h3>Run results</h3><p>{resultTotals.rewarded} rewarded · {resultTotals.alreadyClaimed} already claimed · {resultTotals.failed} failed · {resultTotals.skipped} skipped</p>{results.map((item) => <p key={`${item.code}-${item.status}`}><strong>{item.code}</strong> — {item.status.replaceAll('_', ' ')}{item.retryable ? ' · Try again' : ''}<br /><span>{item.message}</span></p>)}</div>}
               {history.length > 0 && <div><h3>Private redemption history</h3>{history.map((run) => <div key={run.id}><p><strong>{new Date(run.created_at).toLocaleString('en-GB')}</strong> — {run.status.replaceAll('_', ' ')} · {run.processed_code_count}/{run.requested_code_count} processed</p>{run.requests.map((item) => <span key={`${run.id}-${item.code_publication_id}`} className="gift-redemption-panel__history-item">{item.status.replaceAll('_', ' ')} ({item.result_code})</span>)}</div>)}</div>}
@@ -248,7 +251,7 @@ export function GiftRedemptionFoundationPanel() {
                 <span>{message ? 'Unavailable' : 'Checking availability…'}</span>
               </div>
               <button type="button" className="button button--primary" disabled>Redeem available codes</button>
-              <p role="status">{message || 'Checking provider availability. Redemption remains disabled until status is confirmed.'}</p>
+              <p role="status">{message || 'Auto Redeem is currently unavailable while Forge checks provider availability. Manual Copy Code and official redemption remain available.'}</p>
             </>
           )}
         </div>

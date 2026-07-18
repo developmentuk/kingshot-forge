@@ -5,7 +5,7 @@ const source = fs.readFileSync('src/features/giftcodes/GiftRedemptionFoundationP
 
 assert.match(source, /\{user && \(/)
 assert.match(source, /\{context \? \(/)
-assert.match(source, /Checking provider availability\. Redemption remains disabled until status is confirmed\./)
+assert.match(source, /Auto Redeem is currently unavailable\. Automatic redemption has been disabled by Forge administrators\./)
 assert.match(source, /<button type="button" className="button button--primary" disabled>Redeem available codes<\/button>/)
 assert.doesNotMatch(source, /\{user && context && \(/)
 
