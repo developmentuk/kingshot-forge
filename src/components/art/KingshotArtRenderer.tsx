@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import type { CSSProperties } from 'react'
 
 export type ArtworkRenderMode = 'kingshot' | 'studio'
 export type ArtworkRenderProfile = 'pixel' | 'ascii' | 'banner' | 'mixed'
@@ -28,18 +27,19 @@ export type KingshotArtRendererProps = {
   profile?: ArtworkRenderProfile | 'auto'
 }
 
-type GlyphProfile = { width: number }
-type GlyphKind = 'emoji' | 'box' | 'ascii' | 'unicode'
+type GlyphKind = 'space' | 'emoji' | 'box' | 'ascii' | 'unicode'
 
-const SPACE_WIDTH = 0.36
-const TAB_WIDTH = SPACE_WIDTH * 4
-const EXTRA_NARROW_GLYPHS = new Set(['|', '│', '┃', '║', '¦', '!', 'i', 'l', 'I', '·', '•', "'", '`', ':', ';'])
-const BRACKET_GLYPHS = new Set(['(', ')', '[', ']', '{', '}'])
-const DIAGONAL_GLYPHS = new Set(['/', '\\', '╱', '╲', '⟋', '⟍'])
-const HORIZONTAL_GLYPHS = new Set(['-', '─', '━', '═', '_', '¯', '‾'])
-const WIDE_GLYPHS = new Set(['M', 'W', 'm', 'w', '田', '國', '国', '█', '▓', '▒', '░'])
-const JOINING_LEFT = new Set(['╲', '\\', ')', ']', '}', '〉', '》', '」', '』'])
-const JOINING_RIGHT = new Set(['╱', '/', '(', '[', '{', '〈', '《', '「', '『'])
+type GridCell = {
+  glyph: string
+  kind: GlyphKind
+  column: number
+}
+
+type GridRow = {
+  cells: GridCell[]
+  row: number
+}
+
 const ASCII_STRUCTURE = /[|/\\_\-=+()[\]{}<>]/g
 const BOX_DRAWING = /[─━│┃┌┐└┘├┤┬┴┼╔╗╚╝╠╣╦╩╬═║]/gu
 const BLOCK_ART = /[█▓▒░■□▪▫●○🔴🔵⚪🟢🟡🟣🟠🟤]/gu
@@ -61,14 +61,32 @@ function segmentText(value: string): string[] {
 }
 
 function glyphKind(glyph: string): GlyphKind {
+  if (glyph === ' ' || glyph === '\t') return 'space'
   if (EMOJI_GLYPH.test(glyph)) return 'emoji'
   if (BOX_GLYPH.test(glyph)) return 'box'
   if (/^[\u0000-\u007f]$/u.test(glyph)) return 'ascii'
   return 'unicode'
 }
 
+function normaliseTabs(value: string): string {
+  return value.replace(/\t/g, '    ')
+}
+
+function renderedLines(artwork: string, maxLines?: number): string[] {
+  const lines = normaliseTabs(artwork.replace(/\r\n?/g, '\n')).split('\n')
+  if (!maxLines || lines.length <= maxLines) return lines
+  return [...lines.slice(0, maxLines), '…']
+}
+
+function buildGrid(lines: string[]): GridRow[] {
+  return lines.map((line, row) => ({
+    row,
+    cells: segmentText(line).map((glyph, column) => ({ glyph, kind: glyphKind(glyph), column })),
+  }))
+}
+
 export function analyseArtworkDetailed(artwork: string): ArtworkAnalysis {
-  const normalized = artwork.replace(/\r\n?/g, '\n')
+  const normalized = normaliseTabs(artwork.replace(/\r\n?/g, '\n'))
   const lines = normalized.split('\n')
   const nonWhitespace = normalized.replace(/\s/g, '')
   const length = Math.max(segmentText(nonWhitespace).length, 1)
@@ -105,17 +123,16 @@ export function analyseArtworkDetailed(artwork: string): ArtworkAnalysis {
   if (/[^\u0000-\u007f]/u.test(normalized)) features.push('Unicode characters')
 
   const warnings: string[] = []
-  if (widestLine > 42) warnings.push('Wide lines may scroll on smaller phones.')
-  if (profile === 'mixed') warnings.push('Mixed character systems can vary slightly by device.')
-  if (profile === 'ascii' && /\t/u.test(normalized)) warnings.push('Tabs may render differently; spaces are safer.')
+  if (widestLine > 50) warnings.push('Wide lines may scroll on smaller phones.')
+  if (profile === 'mixed') warnings.push('Mixed glyphs share a fixed Kingshot cell grid; colour and baseline can still vary by device.')
+  if (/\t/u.test(artwork)) warnings.push('Tabs were normalised to four spaces for a stable preview.')
   if (lines.length > 16) warnings.push('Tall artwork may require scrolling in chat.')
 
-  const widthPenalty = Math.max(0, widestLine - 36) * 1.2
-  const mixedPenalty = profile === 'mixed' ? 8 : 0
-  const warningPenalty = warnings.length * 3
+  const widthPenalty = Math.max(0, widestLine - 44)
+  const mixedPenalty = profile === 'mixed' ? 5 : 0
+  const warningPenalty = warnings.length * 2
   const compatibilityScore = Math.max(55, Math.min(99, Math.round(97 - widthPenalty - mixedPenalty - warningPenalty)))
-  const estimatedWidthPercent = Math.min(100, Math.max(12, Math.round((widestLine / 44) * 100)))
-  const rendererLabel = profile === 'pixel' ? 'Kingshot Pixel' : profile === 'ascii' ? 'Kingshot ASCII' : profile === 'banner' ? 'Kingshot Banner' : 'Kingshot Composer'
+  const estimatedWidthPercent = Math.min(100, Math.max(12, Math.round((widestLine / 50) * 100)))
 
   return {
     profile,
@@ -127,7 +144,7 @@ export function analyseArtworkDetailed(artwork: string): ArtworkAnalysis {
     widestLine,
     features,
     warnings,
-    rendererLabel,
+    rendererLabel: 'Kingshot Cell Grid',
   }
 }
 
@@ -135,63 +152,14 @@ export function analyseArtwork(artwork: string): ArtworkRenderProfile {
   return analyseArtworkDetailed(artwork).profile
 }
 
-function glyphProfile(glyph: string): GlyphProfile {
-  if (glyph === ' ') return { width: SPACE_WIDTH }
-  if (glyph === '\t') return { width: TAB_WIDTH }
-  if (EXTRA_NARROW_GLYPHS.has(glyph)) return { width: 0.39 }
-  if (BRACKET_GLYPHS.has(glyph)) return { width: 0.43 }
-  if (DIAGONAL_GLYPHS.has(glyph)) return { width: 0.48 }
-  if (HORIZONTAL_GLYPHS.has(glyph)) return { width: 0.64 }
-  if (WIDE_GLYPHS.has(glyph)) return { width: 0.94 }
-  if (/^[A-Z0-9]$/u.test(glyph)) return { width: 0.66 }
-  if (/^[a-z]$/u.test(glyph)) return { width: 0.55 }
-  return { width: 0.68 }
-}
-
-function renderedLines(artwork: string, maxLines?: number): string[] {
-  const lines = artwork.replace(/\r\n?/g, '\n').split('\n')
-  if (!maxLines || lines.length <= maxLines) return lines
-  return [...lines.slice(0, maxLines), '…']
-}
-
-function ComposedLine({ line, lineIndex }: { line: string; lineIndex: number }) {
-  const glyphs = segmentText(line)
-  return <div className="kingshot-composer__line" key={`${lineIndex}-${line}`} aria-hidden="true">
-    {glyphs.length === 0 ? <span className="kingshot-art-renderer__empty">&nbsp;</span> : glyphs.map((glyph, glyphIndex) => <span className={`kingshot-composer__glyph kingshot-composer__glyph--${glyphKind(glyph)}`} key={`${glyphIndex}-${glyph}`}>{glyph === ' ' ? '\u00a0' : glyph}</span>)}
-  </div>
-}
-
-function RenderedArtwork({ lines, classes, labelledBy, resolvedProfile }: { lines: string[]; classes: string; labelledBy?: string; resolvedProfile: ArtworkRenderProfile }) {
-  if (resolvedProfile === 'ascii') {
-    return <pre className={classes} aria-labelledby={labelledBy} data-render-profile={resolvedProfile}>{lines.join('\n')}</pre>
-  }
-
-  if (resolvedProfile === 'mixed') {
-    return <div className={classes} role="img" aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : 'mixed artwork preview'} data-render-profile={resolvedProfile}>
-      {lines.map((line, lineIndex) => <ComposedLine line={line} lineIndex={lineIndex} key={`${lineIndex}-${line}`} />)}
-    </div>
-  }
-
-  return <div className={classes} role="img" aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : `${resolvedProfile} artwork preview`} data-render-profile={resolvedProfile}>
-    {lines.map((line, lineIndex) => {
-      const glyphs = segmentText(line)
-      return <div className="kingshot-art-renderer__line" key={`${lineIndex}-${line}`} aria-hidden="true">
-        {glyphs.length === 0 ? <span className="kingshot-art-renderer__empty">&nbsp;</span> : glyphs.map((glyph, glyphIndex) => {
-          const previous = glyphs[glyphIndex - 1]
-          const next = glyphs[glyphIndex + 1]
-          const glyphMetrics = glyphProfile(glyph)
-          let overlap = 0
-          if (DIAGONAL_GLYPHS.has(glyph) && (DIAGONAL_GLYPHS.has(previous) || DIAGONAL_GLYPHS.has(next))) overlap = -0.085
-          if (JOINING_LEFT.has(glyph) || JOINING_RIGHT.has(glyph)) overlap = Math.min(overlap, -0.045)
-          if (HORIZONTAL_GLYPHS.has(glyph) && HORIZONTAL_GLYPHS.has(previous)) overlap = Math.min(overlap, -0.025)
-          const style = {
-            '--ks-glyph-width': `${glyphMetrics.width}em`,
-            '--ks-glyph-overlap': `${overlap}em`,
-          } as CSSProperties
-          return <span className="kingshot-art-renderer__glyph" style={style} key={`${glyphIndex}-${glyph}`}>{glyph === ' ' ? '\u00a0' : glyph}</span>
-        })}
-      </div>
-    })}
+function KingshotGrid({ lines, classes, labelledBy, profile }: { lines: string[]; classes: string; labelledBy?: string; profile: ArtworkRenderProfile }) {
+  const rows = useMemo(() => buildGrid(lines), [lines])
+  return <div className={classes} role="img" aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : `${profile} artwork preview`} data-render-profile={profile}>
+    {rows.map((row) => <div className="kingshot-cell-grid__row" key={row.row} aria-hidden="true">
+      {row.cells.length === 0
+        ? <span className="kingshot-cell-grid__cell kingshot-cell-grid__cell--space">&nbsp;</span>
+        : row.cells.map((cell) => <span className={`kingshot-cell-grid__cell kingshot-cell-grid__cell--${cell.kind}`} key={`${row.row}-${cell.column}-${cell.glyph}`}><span className="kingshot-cell-grid__glyph">{cell.glyph === ' ' ? '\u00a0' : cell.glyph}</span></span>)}
+    </div>)}
   </div>
 }
 
@@ -200,13 +168,13 @@ export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = fals
   const lines = useMemo(() => renderedLines(artwork, maxLines), [artwork, maxLines])
   const analysis = useMemo(() => analyseArtworkDetailed(artwork), [artwork])
   const resolvedProfile = profile === 'auto' ? analysis.profile : profile
-  const classes = ['kingshot-art-renderer', `kingshot-art-renderer--${mode}`, `kingshot-art-renderer--${resolvedProfile}`, compact ? 'kingshot-art-renderer--compact' : '', className].filter(Boolean).join(' ')
+  const classes = ['kingshot-art-renderer', `kingshot-art-renderer--${mode}`, `kingshot-art-renderer--${resolvedProfile}`, 'kingshot-cell-grid', compact ? 'kingshot-art-renderer--compact' : '', className].filter(Boolean).join(' ')
 
   if (mode === 'studio') {
     return <pre className={classes} aria-labelledby={labelledBy}>{lines.join('\n')}</pre>
   }
 
-  const artworkNode = <RenderedArtwork lines={lines} classes={classes} labelledBy={labelledBy} resolvedProfile={resolvedProfile} />
+  const artworkNode = <KingshotGrid lines={lines} classes={classes} labelledBy={labelledBy} profile={resolvedProfile} />
   if (!labelledBy || compact) return artworkNode
 
   return <section className={`forge-render-engine forge-render-engine--${device}`} aria-label="Forge artwork analysis">
@@ -223,9 +191,9 @@ export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = fals
     </div>
     <div className="forge-render-engine__analysis">
       <div><span>Artwork type</span><strong>{analysis.profile.toUpperCase()}</strong></div>
-      <div><span>Confidence</span><strong>{analysis.confidence}%</strong></div>
+      <div><span>Match score</span><strong>{analysis.confidence}%</strong></div>
       <div><span>Renderer</span><strong>{analysis.rendererLabel}</strong></div>
-      <div><span>Estimated chat width</span><strong>{analysis.estimatedWidthPercent}%</strong></div>
+      <div><span>Chat width used</span><strong>{analysis.estimatedWidthPercent}%</strong></div>
       <div><span>Compatibility</span><strong>{analysis.compatibilityScore}/100</strong></div>
       <div><span>Dimensions</span><strong>{analysis.widestLine} × {analysis.lineCount}</strong></div>
     </div>
