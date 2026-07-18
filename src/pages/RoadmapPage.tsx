@@ -175,6 +175,21 @@ const roadmapReleases: RoadmapRelease[] = [
       "Royal buff and rally coordination",
     ],
   },
+  {
+    version: "Future",
+    name: "Forge Screenshot Intelligence Engine",
+    status: "future",
+    progress: 0,
+    priority: "Future platform capability",
+    description:
+      "A future human-reviewed screenshot intelligence capability. It is explicitly out of scope for Release 0.7.0 Sprint 9.2.",
+    features: [
+      "Kingshot screenshot classification",
+      "OCR-assisted player-stat, hero and progression import",
+      "Artwork extraction and automatic image alignment",
+      "Renderer comparison with human review and confidence scoring",
+    ],
+  },
 ];
 
 function getStatusLabel(status: RoadmapStatus) {

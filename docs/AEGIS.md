@@ -351,13 +351,13 @@ This milestone is complete only when the shared UX polish is validated, historic
 
 The Auto Redeem interaction remains rendered for authenticated users while context is loading, unavailable, environment-disabled, paused or circuit-open. The action is disabled with a safe explanation and manual official redemption remains available. This presentation rule does not weaken server enforcement of configuration, provider health, verified linkage, consent or active-code eligibility.
 
-### Release 0.7.0 Sprint 9 — Forge Render Engine Foundation
+### Release 0.7.0 Sprint 9.2 — Forge Render Engine Calibration Lab validation
 
 Working branch: `feature/kingshot-art-renderer`.
 
-Milestones 1–7 are implemented locally: the renderer is backed by the typed `src/render-engine/` subsystem, the admin Calibration Lab is available at `/admin/render-engine`, benchmark metadata and calibration documentation are present, and no persistence or Supabase write was added. The branch is ready for human visual validation of the fixed-cell previews and screenshot comparison workspace.
+The corrective validation sprint is implemented locally: calibration values now reach per-glyph styles, family relevance and unavailable benchmark states are explicit, the workspace is compact and readable, and the admin Calibration Lab remains available at `/admin/render-engine`. No persistence or Supabase write was added. The branch is ready for another human visual validation pass.
 
-Validation commands: `npm run test:render-engine`, `npm run build`, `npm run lint`, and the existing `npm run check` suite. The benchmark registry deliberately marks missing source records as metadata-only and records no image-comparison percentages. Calibration and reference screenshots remain browser-local.
+Validation commands: `npm run test:render-engine`, `npm run build`, `npm run lint`, and the existing `npm run check` suite. The benchmark registry deliberately marks missing source records as metadata-only and records no image-comparison percentages. Calibration and reference screenshots remain browser-local. The future Forge Screenshot Intelligence Engine is documented but not implemented.
 
 Handover: preserve the existing Art Studio renderer adapter and copied artwork text; verify desktop and mobile previews, each device profile, local screenshot upload, overlay opacity and permission denial manually before accepting the milestone. Do not merge to `main`, deploy, or introduce persistence in this sprint.
 

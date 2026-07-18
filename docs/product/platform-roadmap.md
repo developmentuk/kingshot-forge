@@ -84,6 +84,10 @@ The accepted player-facing journeys are being refined through a focused shared U
 
 Release 0.7.4 Community Art Studio remains a completed, separate contribution workflow. Release 0.7.5 Auto Redeem is ready for Clark's final production validation: it adds explicit consent, verified linked-player eligibility, server-only provider transport, user-triggered sequential processing, safe outcomes and private history while preserving manual Gift Code copying. It is not live and production provider access remains disabled until the final checks pass.
 
+### Future platform initiative — Forge Screenshot Intelligence Engine
+
+Future work only; explicitly out of scope for Release 0.7.0 Sprint 9.2. This proposed capability may eventually support Kingshot screenshot classification, OCR-assisted data extraction, player-stat import, hero and progression import, artwork extraction, automatic image alignment, renderer comparison, and human review with confidence scoring. No OCR, computer-vision dependency, automatic matching or scoring is introduced by the current Render Engine work.
+
 ## Milestone 6 — Ecosystem & Scale
 
 - stable public APIs

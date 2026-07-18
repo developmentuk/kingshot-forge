@@ -103,4 +103,6 @@ The artwork analyser remains separate from rendering. It can classify artwork, e
 - `benchmarks/` owns benchmark metadata and links to existing artwork records where available.
 - `simulator/` contains style translation for future simulator consumers.
 
-The admin Calibration Lab is available at `/admin/render-engine` behind the existing `cms.view` permission. It does not persist slider changes and local reference screenshots are held only by the browser session.
+The admin Calibration Lab is available at `/admin/render-engine` behind the existing `cms.view` permission. It does not persist slider changes and local reference screenshots are held only by the browser session. The lab reports family relevance and intentionally disables controls for unavailable benchmark artwork rather than presenting an empty render.
+
+The proposed Forge Screenshot Intelligence Engine is future work only. Screenshot classification, OCR, artwork extraction, automatic alignment, comparison scoring and confidence-reviewed imports are not implemented in Release 0.7.0 Sprint 9.2.

@@ -11,4 +11,4 @@ The typed registry in `src/render-engine/benchmarks/` contains the initial bench
 
 Each entry records an ID, expected class, renderer, target device, notes and validation status. Existing Art Studio records are referenced by ID where present. Metadata-only benchmarks remain explicit until their approved source artwork is added. No image-comparison scores are fabricated.
 
-Benchmark workflow: choose a record, confirm fixed-cell dimensions and glyph-family counts, compare a local screenshot side by side or with a manually controlled overlay, then record human findings outside the app. OCR and automatic image matching are intentionally deferred.
+Benchmark workflow: choose a record, confirm fixed-cell dimensions and glyph-family counts, compare a local screenshot side by side or with a manually controlled overlay, then record human findings outside the app. Metadata-only records show an intentional unavailable state and disable calibration controls. OCR, automatic image matching and accuracy scoring are intentionally deferred to the future Forge Screenshot Intelligence Engine.
