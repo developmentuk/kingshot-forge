@@ -25,7 +25,8 @@
     "test:art-studio-attribution": "node scripts/test-art-studio-player-attribution.mjs",
     "test:auto-redeem": "node scripts/test-auto-redeem.mjs && node scripts/test-auto-redeem-ui.mjs && node scripts/test-auto-redeem-admin.mjs",
     "test:workspaces": "node scripts/test-workspace-architecture.mjs",
-    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run test:auto-redeem && npm run test:workspaces && npm run lint && npm run build"
+    "test:forge-identity": "node scripts/test-forge-identity.mjs",
+    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run test:auto-redeem && npm run test:workspaces && npm run test:forge-identity && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",

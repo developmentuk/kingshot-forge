@@ -27,6 +27,12 @@ implements ArtStudioCapabilityResolver {
     actor: ArtStudioActor,
     capability: ArtStudioCapability,
   ): Promise<boolean> {
+    // Server-resolved actors are the canonical multi-role authority. Keep the
+    // resolver client-compatible for domain callers that only provide a user
+    // id, but never reduce an already-resolved actor back to the legacy row.
+    if ("capabilities" in actor && Array.isArray(actor.capabilities)) {
+      return actor.capabilities.includes(capability);
+    }
     const {
       data: roleData,
       error: roleError,

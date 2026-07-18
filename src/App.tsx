@@ -59,6 +59,8 @@ import WorkspaceRoute from "./components/WorkspaceRoute";
 import WorkspaceHomePage from "./pages/WorkspaceHomePage";
 import OperationsStatusPage from "./pages/OperationsStatusPage";
 import OperationsDashboardPage from "./pages/OperationsDashboardPage";
+import { UserDetailPage, UserManagementPage } from "./features/operations/UserManagementPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
   return (
@@ -93,11 +95,13 @@ function App() {
         <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
 
         <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
-        <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="User Management" /></WorkspaceRoute>} />
+        <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><UserManagementPage /></WorkspaceRoute>} />
+        <Route path="operations/users/:userId" element={<WorkspaceRoute workspaceId="operations"><UserDetailPage /></WorkspaceRoute>} />
         <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Roles and Permissions" /></WorkspaceRoute>} />
         <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Audit Log" /></WorkspaceRoute>} />
         <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Feature Flags" /></WorkspaceRoute>} />

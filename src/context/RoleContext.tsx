@@ -20,6 +20,16 @@ export type ForgePlatformRole =
   | 'viewer'
 
 export type ForgePermission =
+  | 'users.read'
+  | 'users.read_sensitive'
+  | 'users.manage_status'
+  | 'users.manage_roles'
+  | 'users.view_audit'
+  | 'roles.assign_standard'
+  | 'roles.assign_privileged'
+  | 'roles.assign_owner'
+  | 'roles.revoke'
+  | 'audit.read'
   | 'cms.view'
   | 'cms.records.create'
   | 'cms.records.edit'
@@ -36,6 +46,7 @@ export type ForgePermission =
 
 type RoleContextValue = {
   role: ForgePlatformRole
+  roles: ForgePlatformRole[]
   permissions: ForgePermission[]
   loadingRole: boolean
   roleError: string | null
@@ -62,11 +73,8 @@ type RoleProviderProps = {
   children: ReactNode
 }
 
-type ForgeUserRoleRow = {
-  role: ForgePlatformRole
-}
-
 type ForgeRolePermissionRow = {
+  role: ForgePlatformRole
   permission_key: ForgePermission
 }
 
@@ -77,6 +85,8 @@ export function RoleProvider({
 
   const [role, setRole] =
     useState<ForgePlatformRole>('viewer')
+
+  const [roles, setRoles] = useState<ForgePlatformRole[]>(['viewer'])
 
   const [permissions, setPermissions] = useState<
     ForgePermission[]
@@ -91,6 +101,7 @@ export function RoleProvider({
   const refreshRole = useCallback(async () => {
     if (!user) {
       setRole('viewer')
+      setRoles(['viewer'])
       setPermissions([])
       setRoleError(null)
       setLoadingRole(false)
@@ -100,22 +111,16 @@ export function RoleProvider({
     setLoadingRole(true)
     setRoleError(null)
 
-    const {
-      data: roleData,
-      error: roleQueryError,
-    } = await supabase
-      .from('forge_user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const { data: accessData, error: accessError } = await supabase.rpc('get_my_forge_access')
 
-    if (roleQueryError) {
+    if (accessError) {
       console.error(
         'Unable to load Forge platform role:',
-        roleQueryError.message,
+        accessError.message,
       )
 
       setRole('viewer')
+      setRoles(['viewer'])
       setPermissions([])
       setRoleError(
         'Unable to load your Forge permissions.',
@@ -124,38 +129,13 @@ export function RoleProvider({
       return
     }
 
-    const resolvedRole =
-      (roleData as ForgeUserRoleRow | null)?.role ??
-      'viewer'
-
-    const {
-      data: permissionData,
-      error: permissionQueryError,
-    } = await supabase
-      .from('forge_role_permissions')
-      .select('permission_key')
-      .eq('role', resolvedRole)
-
-    if (permissionQueryError) {
-      console.error(
-        'Unable to load Forge role permissions:',
-        permissionQueryError.message,
-      )
-
-      setRole(resolvedRole)
-      setPermissions([])
-      setRoleError(
-        'Your role was loaded, but its permissions could not be loaded.',
-      )
-      setLoadingRole(false)
-      return
-    }
-
-    const resolvedPermissions = (
-      (permissionData ?? []) as ForgeRolePermissionRow[]
-    ).map((item) => item.permission_key)
+    const accessRows = (accessData ?? []) as ForgeRolePermissionRow[]
+    const resolvedRoles = [...new Set(accessRows.map((item) => item.role))]
+    const resolvedRole = resolvedRoles.includes('owner') ? 'owner' : resolvedRoles.includes('admin') ? 'admin' : resolvedRoles[0] ?? 'viewer'
+    const resolvedPermissions = [...new Set(accessRows.map((item) => item.permission_key))]
 
     setRole(resolvedRole)
+    setRoles(resolvedRoles.length > 0 ? resolvedRoles : ['viewer'])
     setPermissions(resolvedPermissions)
     setLoadingRole(false)
   }, [user])
@@ -177,6 +157,7 @@ export function RoleProvider({
   const value = useMemo<RoleContextValue>(
     () => ({
       role,
+      roles,
       permissions,
       loadingRole,
       roleError,
@@ -201,6 +182,7 @@ export function RoleProvider({
     }),
     [
       role,
+      roles,
       permissions,
       loadingRole,
       roleError,

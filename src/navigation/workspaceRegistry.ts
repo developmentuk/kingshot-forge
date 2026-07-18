@@ -40,6 +40,7 @@ const playerGroups = [
     { label: 'Hero Showcase', shortLabel: 'Showcase', icon: '🏆', path: '/my-forge/heroes' },
     { label: 'Personal Progression', shortLabel: 'Progression', icon: '📈', path: '/my-forge/progression' },
     { label: 'Transfer Profile', shortLabel: 'Transfer', icon: '🎫', path: '/my-forge/transfer-profile' },
+    { label: 'Settings', shortLabel: 'Settings', icon: '⚙️', path: '/settings' },
   ] },
   { title: 'Kingshot companion', items: [
     { label: 'Hero Companion', shortLabel: 'Heroes', icon: '🦸', path: '/companion/heroes' },
@@ -97,7 +98,7 @@ const operationsGroups = [
     { label: 'Data Engine', shortLabel: 'Engine', icon: '⚙️', path: '/admin/data-engine', permission: 'cms.view' as ForgePermission },
   ] },
   { title: 'Player and community operations', items: [
-    { label: 'User Management', shortLabel: 'Users', icon: '👥', path: '/operations/users', permission: 'platform.users.manage' as ForgePermission, status: 'planned' as const },
+    { label: 'User Management', shortLabel: 'Users', icon: '👥', path: '/operations/users', permission: 'users.read' as ForgePermission },
     { label: 'Player Identity', shortLabel: 'Identity', icon: '🛡️', path: '/admin/player-identity', permission: 'platform.users.manage' as ForgePermission, status: 'partial' as const },
     { label: 'Gift Redemption', shortLabel: 'Gifts', icon: '🎁', path: '/admin/gift-redemption', permission: 'cms.view' as ForgePermission },
     { label: 'Community Art', shortLabel: 'Art', icon: '🎨', path: '/admin/community-art', permission: 'moderation.manage' as ForgePermission },
@@ -112,7 +113,7 @@ const operationsGroups = [
 export const forgeWorkspaces: ReadonlyArray<ForgeWorkspace> = [
   { id: 'player', label: 'Player View', description: 'Player and public Forge tools.', homePath: '/', canAccess: () => true, groups: playerGroups },
   { id: 'contributor', label: 'Contributor Centre', description: 'Contribution and editorial tools for approved contributors.', homePath: '/contributor', canAccess: ({ user, hasPermission }) => user && (hasPermission('contributions.submit') || hasPermission('cms.records.edit')), groups: contributorGroups },
-  { id: 'creator', label: 'Creator Centre', description: 'Creator profile and content workflow tools.', homePath: '/creator', canAccess: ({ user, role }) => user && role === 'content_creator', groups: creatorGroups },
+  { id: 'creator', label: 'Creator Centre', description: 'Creator profile and content workflow tools.', homePath: '/creator', canAccess: ({ user, role, hasPermission }) => user && (role === 'content_creator' || hasPermission('contributions.submit') || hasPermission('cms.records.edit')), groups: creatorGroups },
   { id: 'moderation', label: 'Moderation Centre', description: 'Community review and moderation queues.', homePath: '/moderation', canAccess: ({ user, hasPermission }) => user && hasPermission('moderation.manage'), groups: moderationGroups },
   { id: 'operations', label: 'Forge Operations Centre', description: 'Platform, player, content and security operations.', homePath: '/operations', canAccess: ({ user, role, hasPermission }) => user && (role === 'owner' || role === 'admin' || hasPermission('platform.users.manage') || hasPermission('cms.view')), groups: operationsGroups },
 ]
