@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 
 export type ArtworkRenderMode = 'kingshot' | 'studio'
 
-type KingshotArtRendererProps = {
+export type KingshotArtRendererProps = {
   artwork: string
   mode?: ArtworkRenderMode
   compact?: boolean
@@ -14,10 +14,19 @@ type KingshotArtRendererProps = {
 
 type GlyphProfile = {
   width: number
-  shift?: number
 }
 
-const NARROW_GLYPHS = new Set(['|', '│', '┃', '║', '¦', '!', 'i', 'l', 'I', '·', '•', "'", '`', ':', ';', '(', ')', '[', ']', '{', '}'])
+/*
+ * Forge Render Engine calibration.
+ *
+ * These widths model the compact proportional spacing seen in Kingshot chat.
+ * The original text is never changed; these values affect preview layout only.
+ */
+const SPACE_WIDTH = 0.36
+const TAB_WIDTH = SPACE_WIDTH * 4
+
+const EXTRA_NARROW_GLYPHS = new Set(['|', '│', '┃', '║', '¦', '!', 'i', 'l', 'I', '·', '•', "'", '`', ':', ';'])
+const BRACKET_GLYPHS = new Set(['(', ')', '[', ']', '{', '}'])
 const DIAGONAL_GLYPHS = new Set(['/', '\\', '╱', '╲', '⟋', '⟍'])
 const HORIZONTAL_GLYPHS = new Set(['-', '─', '━', '═', '_', '¯', '‾'])
 const WIDE_GLYPHS = new Set(['M', 'W', 'm', 'w', '田', '國', '国', '█', '▓', '▒', '░'])
@@ -25,15 +34,16 @@ const JOINING_LEFT = new Set(['╲', '\\', ')', ']', '}', '〉', '》', '」', '
 const JOINING_RIGHT = new Set(['╱', '/', '(', '[', '{', '〈', '《', '「', '『'])
 
 function glyphProfile(glyph: string): GlyphProfile {
-  if (glyph === ' ') return { width: 0.42 }
-  if (glyph === '\t') return { width: 1.68 }
-  if (DIAGONAL_GLYPHS.has(glyph)) return { width: 0.52 }
-  if (NARROW_GLYPHS.has(glyph)) return { width: 0.46 }
-  if (HORIZONTAL_GLYPHS.has(glyph)) return { width: 0.7 }
-  if (WIDE_GLYPHS.has(glyph)) return { width: 0.98 }
-  if (/^[A-Z0-9]$/u.test(glyph)) return { width: 0.7 }
-  if (/^[a-z]$/u.test(glyph)) return { width: 0.58 }
-  return { width: 0.72 }
+  if (glyph === ' ') return { width: SPACE_WIDTH }
+  if (glyph === '\t') return { width: TAB_WIDTH }
+  if (EXTRA_NARROW_GLYPHS.has(glyph)) return { width: 0.39 }
+  if (BRACKET_GLYPHS.has(glyph)) return { width: 0.43 }
+  if (DIAGONAL_GLYPHS.has(glyph)) return { width: 0.48 }
+  if (HORIZONTAL_GLYPHS.has(glyph)) return { width: 0.64 }
+  if (WIDE_GLYPHS.has(glyph)) return { width: 0.94 }
+  if (/^[A-Z0-9]$/u.test(glyph)) return { width: 0.66 }
+  if (/^[a-z]$/u.test(glyph)) return { width: 0.55 }
+  return { width: 0.68 }
 }
 
 function segmentText(value: string): string[] {
@@ -67,12 +77,16 @@ export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = fals
           const next = glyphs[glyphIndex + 1]
           const profile = glyphProfile(glyph)
           let overlap = 0
-          if (DIAGONAL_GLYPHS.has(glyph) && (DIAGONAL_GLYPHS.has(previous) || DIAGONAL_GLYPHS.has(next))) overlap = -0.07
-          if (JOINING_LEFT.has(glyph) || JOINING_RIGHT.has(glyph)) overlap = Math.min(overlap, -0.035)
+
+          if (DIAGONAL_GLYPHS.has(glyph) && (DIAGONAL_GLYPHS.has(previous) || DIAGONAL_GLYPHS.has(next))) overlap = -0.085
+          if (JOINING_LEFT.has(glyph) || JOINING_RIGHT.has(glyph)) overlap = Math.min(overlap, -0.045)
+          if (HORIZONTAL_GLYPHS.has(glyph) && HORIZONTAL_GLYPHS.has(previous)) overlap = Math.min(overlap, -0.025)
+
           const style = {
             '--ks-glyph-width': `${profile.width}em`,
             '--ks-glyph-overlap': `${overlap}em`,
           } as CSSProperties
+
           return <span className="kingshot-art-renderer__glyph" style={style} key={`${glyphIndex}-${glyph}`}>{glyph === ' ' ? '\u00a0' : glyph}</span>
         })}
       </div>
