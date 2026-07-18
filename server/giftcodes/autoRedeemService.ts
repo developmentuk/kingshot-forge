@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { getSupabaseAdmin } from '../database/supabaseAdmin.ts'
-import { createOfficialGiftCodeProvider, OFFICIAL_GIFT_CODE_PROVIDER_ID, readOfficialProviderConfig } from './officialProvider.ts'
-import { createGiftCodeIdempotencyIdentity } from './workflow/idempotency.ts'
+import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
+import { createOfficialGiftCodeProvider, OFFICIAL_GIFT_CODE_PROVIDER_ID, readOfficialProviderConfig } from './officialProvider.js'
+import { createGiftCodeIdempotencyIdentity } from './workflow/idempotency.js'
 
 const CONSENT_VERSION = 'giftcode-redemption-v1'
 const POLICY_TEXT = 'Forge Auto Redeem submits the linked Player ID and selected active Gift Codes to the Kingshot provider, records normalized outcomes and timestamps, never requests a game password, and only processes codes after a user-triggered run.'
@@ -250,7 +250,9 @@ export async function getProviderOperations() {
 }
 
 export async function getAdminGiftCodeCatalogue() {
-  const [codes, operationsResult] = await Promise.all([activeCodes(), getProviderOperations()])
+  // Catalogue reads are deliberately independent from provider health. An
+  // unavailable provider must not hide the canonical active-code feed.
+  const codes = await activeCodes()
   const { data: requests, error } = await getSupabaseAdmin()
     .from('gift_code_redemption_requests')
     .select('code_publication_id,status,result_code,created_at')
@@ -277,7 +279,7 @@ export async function getAdminGiftCodeCatalogue() {
       lifecycle: 'active' as const,
       source: 'kingshot-gift-codes',
       approval: 'canonical-feed',
-      eligibility: operationsResult.configured && operationsResult.configEnabled && operationsResult.health?.enabled === true ? 'provider-eligible' : 'provider-gated',
+      eligibility: 'provider-gated' as const,
       attempts: history.length,
       completed: terminal.length,
       rewarded: history.filter((item) => item.status === 'succeeded').length,
@@ -290,15 +292,14 @@ export async function getAdminGiftCodeCatalogue() {
     }
   })
 
-  return { ...operationsResult, totals: { activeCodes: catalogue.length, recordedRequests: requests?.length ?? 0 }, catalogue }
+  return { totals: { activeCodes: catalogue.length, recordedRequests: requests?.length ?? 0 }, catalogue }
 }
 
 export async function getAdminGiftCodeMetrics(): Promise<GiftCodeAdminMetrics> {
-  const [codes, requestsResult, attemptsResult, operationsResult] = await Promise.all([
+  const [codes, requestsResult, attemptsResult] = await Promise.all([
     activeCodes(),
     getSupabaseAdmin().from('gift_code_redemption_requests').select('status,result_code,created_at').order('created_at', { ascending: false }).limit(500),
     getSupabaseAdmin().from('gift_code_redemption_attempts').select('outcome,result_code,created_at').order('created_at', { ascending: false }).limit(500),
-    getProviderOperations(),
   ])
   if (requestsResult.error) throw requestsResult.error
   if (attemptsResult.error) throw attemptsResult.error
@@ -310,10 +311,9 @@ export async function getAdminGiftCodeMetrics(): Promise<GiftCodeAdminMetrics> {
   const skipped = requests.filter((item) => item.status === 'expired').length
   const transientFailures = requests.filter((item) => item.status === 'failed_retryable').length
   const completed = redeemed + alreadyClaimed + failed + skipped
-  const eligible = operationsResult.configured && operationsResult.configEnabled && operationsResult.health?.enabled === true
   return {
     activeCodes: codes.length,
-    eligibleCodes: eligible ? codes.length : 0,
+    eligibleCodes: 0,
     totalRequests: requests.length,
     totalAttempts: attempts.length,
     redeemed,
@@ -328,6 +328,13 @@ export async function getAdminGiftCodeMetrics(): Promise<GiftCodeAdminMetrics> {
 }
 
 export async function setProviderOperations(actorId: string, enabled: boolean, reasonCode: string) {
+  const config = configured()
+  // The environment kill switch is authoritative. Admin state cannot enable
+  // a provider while the release flag is false.
+  if (enabled && !config?.enabled) {
+    const current = await providerHealth()
+    return current ?? { provider_enabled: false, circuit_state: 'open', health_status: 'disabled', reason_code: 'environment_disabled', changed_at: null, updated_at: null }
+  }
   const status = enabled ? 'unknown' : 'disabled'
   const { data, error } = await getSupabaseAdmin().from('gift_code_provider_health').upsert({ provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', provider_enabled: enabled, circuit_state: enabled ? 'closed' : 'open', health_status: status, health_score: enabled ? null : null, reason_code: reasonCode.trim() || (enabled ? 'admin_enabled' : 'admin_paused'), changed_by: actorId, changed_at: now(), updated_at: now() }, { onConflict: 'provider_id,environment' }).select('provider_enabled,circuit_state,health_status,reason_code,changed_at,updated_at').single()
   if (error) throw error

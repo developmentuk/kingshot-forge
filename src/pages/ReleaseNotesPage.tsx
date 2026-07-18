@@ -52,6 +52,8 @@ function ReleaseNotesPage() {
               <li>Controlled validation completed with one approved test code</li>
               <li>Production environment checklist documented without secret values</li>
               <li>Production deployment and provider enablement remain gated</li>
+              <li>Forge Operations Centre groups Admin work by operational domain</li>
+              <li>Admin Gift Redemption catalogue and metrics remain visible while the provider is paused</li>
             </ul>
           </section>
         </div>
