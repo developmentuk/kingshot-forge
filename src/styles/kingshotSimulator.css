@@ -1,9 +1,11 @@
 /* Forge Render Engine 2.0: fixed-cell Kingshot chat calibration. */
 
 :root {
-  --kingshot-cell-width: .72rem;
-  --kingshot-cell-height: 1.02rem;
-  --kingshot-grid-font-size: .9rem;
+  /* Kingshot packs columns tightly while drawing the glyph itself relatively large.
+   * Keep cell geometry fixed; only the paint inside each cell varies by family. */
+  --kingshot-cell-width: .56rem;
+  --kingshot-cell-height: 1.12rem;
+  --kingshot-grid-font-size: 1rem;
 }
 
 .kingshot-cell-grid {
@@ -55,33 +57,35 @@
 
 .kingshot-cell-grid__cell--unicode .kingshot-cell-grid__glyph {
   font-family: Arial, "Noto Sans", "Segoe UI", sans-serif;
-  font-size: .94em;
+  font-size: .98em;
 }
 
 .kingshot-cell-grid__cell--emoji .kingshot-cell-grid__glyph {
   font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
-  font-size: 1.18em;
-  transform: translateY(-.02em) scale(.94);
+  font-size: 1.3em;
+  transform: translateY(-.02em) scale(.98);
 }
 
 .kingshot-cell-grid__cell--space .kingshot-cell-grid__glyph {
   visibility: hidden;
 }
 
+/* Pixel/emoji compositions use the same logical columns, with slightly larger
+ * paint and a tiny increase in cell density to match the supplied island/flag captures. */
 .kingshot-art-renderer--pixel {
-  --kingshot-cell-width: .76rem;
-  --kingshot-cell-height: 1.04rem;
-  --kingshot-grid-font-size: .94rem;
+  --kingshot-cell-width: .58rem;
+  --kingshot-cell-height: 1.16rem;
+  --kingshot-grid-font-size: 1.02rem;
 }
 
 .kingshot-art-renderer--banner {
-  --kingshot-cell-width: .73rem;
+  --kingshot-cell-width: .57rem;
 }
 
 .kingshot-art-renderer--compact {
-  --kingshot-cell-width: .62rem;
-  --kingshot-cell-height: .88rem;
-  --kingshot-grid-font-size: .76rem;
+  --kingshot-cell-width: .5rem;
+  --kingshot-cell-height: .94rem;
+  --kingshot-grid-font-size: .82rem;
 }
 
 .kingshot-art-renderer--studio {
@@ -174,18 +178,21 @@
 .forge-render-engine--desktop .forge-render-engine__simulator { max-width: 43rem; }
 
 .forge-render-engine--phone {
-  --kingshot-cell-width: .72rem;
-  --kingshot-cell-height: 1.02rem;
+  --kingshot-cell-width: .56rem;
+  --kingshot-cell-height: 1.12rem;
+  --kingshot-grid-font-size: 1rem;
 }
 
 .forge-render-engine--tablet {
-  --kingshot-cell-width: .76rem;
-  --kingshot-cell-height: 1.06rem;
+  --kingshot-cell-width: .59rem;
+  --kingshot-cell-height: 1.16rem;
+  --kingshot-grid-font-size: 1.03rem;
 }
 
 .forge-render-engine--desktop {
-  --kingshot-cell-width: .8rem;
-  --kingshot-cell-height: 1.1rem;
+  --kingshot-cell-width: .62rem;
+  --kingshot-cell-height: 1.2rem;
+  --kingshot-grid-font-size: 1.06rem;
 }
 
 .forge-render-engine--phone .forge-render-engine__bubble { padding-inline: 1.25rem; }
@@ -194,9 +201,9 @@
 
 @media (max-width: 700px) {
   :root {
-    --kingshot-cell-width: .63rem;
-    --kingshot-cell-height: .91rem;
-    --kingshot-grid-font-size: .8rem;
+    --kingshot-cell-width: .5rem;
+    --kingshot-cell-height: 1rem;
+    --kingshot-grid-font-size: .9rem;
   }
 
   .forge-render-engine__simulator {
