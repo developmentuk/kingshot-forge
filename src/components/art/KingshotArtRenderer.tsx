@@ -29,6 +29,7 @@ export type KingshotArtRendererProps = {
 }
 
 type GlyphProfile = { width: number }
+type GlyphKind = 'emoji' | 'box' | 'ascii' | 'unicode'
 
 const SPACE_WIDTH = 0.36
 const TAB_WIDTH = SPACE_WIDTH * 4
@@ -44,6 +45,8 @@ const BOX_DRAWING = /[─━│┃┌┐└┘├┤┬┴┼╔╗╚╝╠╣�
 const BLOCK_ART = /[█▓▒░■□▪▫●○🔴🔵⚪🟢🟡🟣🟠🟤]/gu
 const EMOJI_LIKE = /\p{Extended_Pictographic}/gu
 const DECORATIVE_UNICODE = /[★☆✦✧✩✪✫✬✭✮✯✰◆◇◈❖❈❉❊❋✿❀]/gu
+const BOX_GLYPH = /^[─━│┃┌┐└┘├┤┬┴┼╔╗╚╝╠╣╦╩╬═║]$/u
+const EMOJI_GLYPH = /^\p{Extended_Pictographic}$/u
 
 function countMatches(value: string, pattern: RegExp): number {
   return value.match(pattern)?.length ?? 0
@@ -55,6 +58,13 @@ function segmentText(value: string): string[] {
     return Array.from(segmenter.segment(value), (item) => item.segment)
   }
   return Array.from(value)
+}
+
+function glyphKind(glyph: string): GlyphKind {
+  if (EMOJI_GLYPH.test(glyph)) return 'emoji'
+  if (BOX_GLYPH.test(glyph)) return 'box'
+  if (/^[\u0000-\u007f]$/u.test(glyph)) return 'ascii'
+  return 'unicode'
 }
 
 export function analyseArtworkDetailed(artwork: string): ArtworkAnalysis {
@@ -105,7 +115,7 @@ export function analyseArtworkDetailed(artwork: string): ArtworkAnalysis {
   const warningPenalty = warnings.length * 3
   const compatibilityScore = Math.max(55, Math.min(99, Math.round(97 - widthPenalty - mixedPenalty - warningPenalty)))
   const estimatedWidthPercent = Math.min(100, Math.max(12, Math.round((widestLine / 44) * 100)))
-  const rendererLabel = profile === 'pixel' ? 'Kingshot Pixel' : profile === 'ascii' ? 'Forge ASCII' : profile === 'banner' ? 'Forge Banner' : 'Forge Hybrid'
+  const rendererLabel = profile === 'pixel' ? 'Kingshot Pixel' : profile === 'ascii' ? 'Kingshot ASCII' : profile === 'banner' ? 'Kingshot Banner' : 'Kingshot Composer'
 
   return {
     profile,
@@ -144,9 +154,22 @@ function renderedLines(artwork: string, maxLines?: number): string[] {
   return [...lines.slice(0, maxLines), '…']
 }
 
+function ComposedLine({ line, lineIndex }: { line: string; lineIndex: number }) {
+  const glyphs = segmentText(line)
+  return <div className="kingshot-composer__line" key={`${lineIndex}-${line}`} aria-hidden="true">
+    {glyphs.length === 0 ? <span className="kingshot-art-renderer__empty">&nbsp;</span> : glyphs.map((glyph, glyphIndex) => <span className={`kingshot-composer__glyph kingshot-composer__glyph--${glyphKind(glyph)}`} key={`${glyphIndex}-${glyph}`}>{glyph === ' ' ? '\u00a0' : glyph}</span>)}
+  </div>
+}
+
 function RenderedArtwork({ lines, classes, labelledBy, resolvedProfile }: { lines: string[]; classes: string; labelledBy?: string; resolvedProfile: ArtworkRenderProfile }) {
   if (resolvedProfile === 'ascii') {
     return <pre className={classes} aria-labelledby={labelledBy} data-render-profile={resolvedProfile}>{lines.join('\n')}</pre>
+  }
+
+  if (resolvedProfile === 'mixed') {
+    return <div className={classes} role="img" aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : 'mixed artwork preview'} data-render-profile={resolvedProfile}>
+      {lines.map((line, lineIndex) => <ComposedLine line={line} lineIndex={lineIndex} key={`${lineIndex}-${line}`} />)}
+    </div>
   }
 
   return <div className={classes} role="img" aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : `${resolvedProfile} artwork preview`} data-render-profile={resolvedProfile}>
@@ -190,7 +213,14 @@ export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = fals
     <div className="forge-render-engine__device-controls" role="group" aria-label="Preview device">
       {(['phone', 'tablet', 'desktop'] as ArtworkDevicePreset[]).map((preset) => <button key={preset} type="button" className={device === preset ? 'forge-render-engine__device forge-render-engine__device--active' : 'forge-render-engine__device'} aria-pressed={device === preset} onClick={() => setDevice(preset)}>{preset === 'phone' ? 'Phone' : preset === 'tablet' ? 'Tablet' : 'Desktop'}</button>)}
     </div>
-    <div className="forge-render-engine__viewport"><div className="forge-render-engine__art">{artworkNode}</div></div>
+    <div className="forge-render-engine__simulator">
+      <div className="forge-render-engine__bubble">
+        <div className="forge-render-engine__art">{artworkNode}</div>
+        <span className="forge-render-engine__bubble-corner" aria-hidden="true" />
+      </div>
+      <div className="forge-render-engine__avatar" aria-hidden="true">F</div>
+      <time className="forge-render-engine__timestamp">23:13</time>
+    </div>
     <div className="forge-render-engine__analysis">
       <div><span>Artwork type</span><strong>{analysis.profile.toUpperCase()}</strong></div>
       <div><span>Confidence</span><strong>{analysis.confidence}%</strong></div>
