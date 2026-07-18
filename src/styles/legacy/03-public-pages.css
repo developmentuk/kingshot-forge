@@ -864,6 +864,30 @@
   color: #dce2eb;
 }
 
+.gift-redemption-panel__summary {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.gift-redemption-panel__summary-label {
+  color: #8996a8;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gift-redemption-panel__summary strong {
+  color: #fff0c8;
+  font-size: 1.05rem;
+}
+
+.gift-redemption-panel__summary-detail {
+  color: #a8b2c1;
+  font-size: 0.76rem;
+}
+
 .gift-code-grid {
   display: grid;
   grid-template-columns:

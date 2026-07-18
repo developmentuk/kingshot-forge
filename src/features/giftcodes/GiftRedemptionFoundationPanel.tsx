@@ -34,6 +34,34 @@ function getVerificationLabel(status: string) {
   }
 }
 
+type AutoRedeemContext = {
+  player: { name: string; playerId: string; kingdom: number; verificationStatus: string } | null
+  consent: { grantedAt: string; version: string } | null
+  provider: { configured: boolean; configEnabled: boolean; enabled: boolean; health?: { status: string; reason: string; circuitState: string } }
+  codes: { active: number; ready: number; processed: number }
+  eligibility: { eligible: boolean; reasons: string[] }
+}
+
+function humanStatus(context: AutoRedeemContext | null, busy: boolean, message: string) {
+  if (busy) return 'Redeeming'
+  if (!context) return message ? 'Unavailable' : 'Checking availability'
+  if (!context.provider.configured || !context.provider.configEnabled) return 'Unavailable'
+  if (context.provider.health?.circuitState === 'open') return 'Temporarily unavailable'
+  if (!context.provider.enabled) return 'Paused'
+  if (!context.consent) return 'Review consent'
+  return context.eligibility.eligible ? 'Ready' : 'Action required'
+}
+
+function actionLabel(context: AutoRedeemContext | null, busy: boolean, message: string) {
+  const status = humanStatus(context, busy, message)
+  if (status === 'Redeeming') return 'Redeeming codes…'
+  if (status === 'Unavailable' || status === 'Temporarily unavailable') return 'Auto Redeem unavailable'
+  if (status === 'Paused') return 'Provider paused'
+  if (status === 'Review consent') return 'Review consent'
+  if (status === 'Action required') return 'Link a player first'
+  return 'Redeem available codes'
+}
+
 export function GiftRedemptionFoundationPanel() {
   const { user, session, loading: authLoading } = useAuth()
   const {
@@ -44,13 +72,7 @@ export function GiftRedemptionFoundationPanel() {
   const identityLoading =
     authLoading || loadingPlayerAccount
 
-  const [context, setContext] = useState<{
-    player: { name: string; playerId: string; kingdom: number; verificationStatus: string } | null
-    consent: { grantedAt: string; version: string } | null
-    provider: { configured: boolean; enabled: boolean; health?: { status: string; reason: string } }
-    codes: { active: number; ready: number; processed: number }
-    eligibility: { eligible: boolean; reasons: string[] }
-  } | null>(null)
+  const [context, setContext] = useState<AutoRedeemContext | null>(null)
   const [consentChecked, setConsentChecked] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
@@ -111,6 +133,7 @@ export function GiftRedemptionFoundationPanel() {
           active Gift Codes when you start a run. Forge never asks for
           or stores a game password, and manual copying remains available.
         </p>
+        <p>Your linked Player ID was verified through the Kingshot player service.</p>
       </div>
 
       <div
@@ -220,9 +243,9 @@ export function GiftRedemptionFoundationPanel() {
           {context ? (
             <>
               <div className="gift-redemption-panel__summary">
-                <strong>Auto Redeem status</strong>
-                <span>{context.provider.enabled ? 'Available' : context.provider.configured ? 'Paused' : 'Not configured'}</span>
-                <span>{context.codes.ready} ready · {context.codes.processed} already handled · {context.codes.active} active</span>
+                <span className="gift-redemption-panel__summary-label">Auto Redeem status</span>
+                <strong>{humanStatus(context, busy, message)}</strong>
+                <span className="gift-redemption-panel__summary-detail">{context.codes.ready} ready · {context.codes.processed} already handled · {context.codes.active} active</span>
               </div>
               {!context.consent ? (
                 <div>
@@ -235,7 +258,7 @@ export function GiftRedemptionFoundationPanel() {
               ) : (
                 <div className="gift-redemption-panel__actions">
                   <p>Consent active since {new Date(context.consent.grantedAt).toLocaleString('en-GB')}.</p>
-                  <button type="button" className="button button--primary" disabled={busy || !context.eligibility.eligible} onClick={() => void redeem()}>{busy ? 'Processing…' : 'Redeem available codes'}</button>
+                  <button type="button" className="button button--primary" disabled={busy || !context.eligibility.eligible} onClick={() => void redeem()}>{actionLabel(context, busy, message)}</button>
                   <button type="button" className="button button--secondary" disabled={busy} onClick={() => void withdraw()}>Withdraw consent</button>
                 </div>
               )}
@@ -247,10 +270,10 @@ export function GiftRedemptionFoundationPanel() {
           ) : (
             <>
               <div className="gift-redemption-panel__summary">
-                <strong>Auto Redeem status</strong>
-                <span>{message ? 'Unavailable' : 'Checking availability…'}</span>
+                <span className="gift-redemption-panel__summary-label">Auto Redeem status</span>
+                <strong>{humanStatus(null, busy, message)}</strong>
               </div>
-              <button type="button" className="button button--primary" disabled>Redeem available codes</button>
+              <button type="button" className="button button--primary" disabled>{actionLabel(null, busy, message)}</button>
               <p role="status">{message || 'Auto Redeem is currently unavailable while Forge checks provider availability. Manual Copy Code and official redemption remain available.'}</p>
             </>
           )}

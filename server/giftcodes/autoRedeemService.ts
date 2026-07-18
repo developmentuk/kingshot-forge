@@ -20,6 +20,36 @@ type RedemptionRequestSummary = Readonly<{
   created_at: string
 }>
 
+export type GiftCodeProviderOperations = Readonly<{
+  providerId: string
+  environment: string
+  configured: boolean
+  configEnabled: boolean
+  health: Readonly<{
+    enabled: boolean
+    circuitState: string
+    status: string
+    reason: string
+    changedAt: string | null
+    updatedAt: string | null
+  }> | null
+}>
+
+export type GiftCodeAdminMetrics = Readonly<{
+  activeCodes: number
+  eligibleCodes: number
+  totalRequests: number
+  totalAttempts: number
+  redeemed: number
+  alreadyClaimed: number
+  failed: number
+  skipped: number
+  transientFailures: number
+  recentSuccessRate: number | null
+  lastSuccessfulProviderCall: string | null
+  lastFailure: string | null
+}>
+
 function now() { return new Date().toISOString() }
 function configured() { return readOfficialProviderConfig() }
 function isVerified(value: unknown) { return value === 'verified' || value === 'community_verified' || value === 'officially_verified' }
@@ -48,11 +78,21 @@ async function activeCodes(): Promise<ActiveCode[]> {
   const base = process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim()
   const key = process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
   if (!base || !key) return []
-  const response = await fetchWithTimeout(`${base.replace(/\/$/, '')}/functions/v1/kingshot-gift-codes`, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' } }, 10_000)
-  if (!response.ok) return []
-  const body = await response.json().catch(() => null) as Record<string, unknown> | null
-  const data = body?.data as Record<string, unknown> | undefined
-  const rows = Array.isArray(data?.giftCodes) ? data.giftCodes : []
+  try {
+    const response = await fetchWithTimeout(`${base.replace(/\/$/, '')}/functions/v1/kingshot-gift-codes`, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' } }, 10_000)
+    if (!response.ok) return []
+    const contentType = response.headers.get('content-type') ?? ''
+    if (!contentType.toLowerCase().includes('application/json')) return []
+    const body = await response.json().catch(() => null) as Record<string, unknown> | null
+    const data = body?.data as Record<string, unknown> | undefined
+    const rows = Array.isArray(data?.giftCodes) ? data.giftCodes : []
+    return normaliseActiveCodes(rows)
+  } catch {
+    return []
+  }
+}
+
+function normaliseActiveCodes(rows: unknown[]): ActiveCode[] {
   const current = Date.now()
   return rows.flatMap((raw): ActiveCode[] => {
     if (!raw || typeof raw !== 'object') return []
@@ -106,7 +146,7 @@ export async function getAutoRedeemContext(userId: string | null) {
   }
   const provider = configured()
   const ready = Math.max(0, codes.length - processed)
-  return { authenticated: true, provider: { configured: provider !== null, enabled: providerReady(provider, health), health: health ? { status: health.health_status, reason: health.reason_code } : { status: 'disabled', reason: 'provider_health_not_enabled' } }, player: safePlayer(player), consent: consent ? { grantedAt: consent.granted_at, version: consent.policy_version } : null, codes: { active: codes.length, ready, processed }, eligibility: eligibility({ player, consent, providerReady: providerReady(provider, health), codeCount: ready }) }
+  return { authenticated: true, provider: { configured: provider !== null, configEnabled: Boolean(provider?.enabled), enabled: providerReady(provider, health), health: health ? { status: health.health_status, reason: health.reason_code, circuitState: health.circuit_state } : { status: 'disabled', reason: 'provider_health_not_enabled', circuitState: 'open' } }, player: safePlayer(player), consent: consent ? { grantedAt: consent.granted_at, version: consent.policy_version } : null, codes: { active: codes.length, ready, processed }, eligibility: eligibility({ player, consent, providerReady: providerReady(provider, health), codeCount: ready }) }
 }
 
 export async function grantConsent(userId: string) {
@@ -206,7 +246,7 @@ export async function redemptionHistory(userId: string) {
 export async function getProviderOperations() {
   const config = configured()
   const health = await providerHealth()
-  return { providerId: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', configured: config !== null, configEnabled: Boolean(config?.enabled), health: health ? { enabled: health.provider_enabled, circuitState: health.circuit_state, status: health.health_status, reason: health.reason_code, changedAt: health.changed_at, updatedAt: health.updated_at } : null }
+  return { providerId: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', configured: config !== null, configEnabled: Boolean(config?.enabled), health: health ? { enabled: health.provider_enabled === true, circuitState: String(health.circuit_state ?? 'open'), status: String(health.health_status ?? 'unknown'), reason: String(health.reason_code ?? 'provider_health_unavailable'), changedAt: String(health.changed_at ?? '') || null, updatedAt: String(health.updated_at ?? '') || null } : null } satisfies GiftCodeProviderOperations
 }
 
 export async function getAdminGiftCodeCatalogue() {
@@ -251,6 +291,40 @@ export async function getAdminGiftCodeCatalogue() {
   })
 
   return { ...operationsResult, totals: { activeCodes: catalogue.length, recordedRequests: requests?.length ?? 0 }, catalogue }
+}
+
+export async function getAdminGiftCodeMetrics(): Promise<GiftCodeAdminMetrics> {
+  const [codes, requestsResult, attemptsResult, operationsResult] = await Promise.all([
+    activeCodes(),
+    getSupabaseAdmin().from('gift_code_redemption_requests').select('status,result_code,created_at').order('created_at', { ascending: false }).limit(500),
+    getSupabaseAdmin().from('gift_code_redemption_attempts').select('outcome,result_code,created_at').order('created_at', { ascending: false }).limit(500),
+    getProviderOperations(),
+  ])
+  if (requestsResult.error) throw requestsResult.error
+  if (attemptsResult.error) throw attemptsResult.error
+  const requests = requestsResult.data ?? []
+  const attempts = attemptsResult.data ?? []
+  const redeemed = requests.filter((item) => item.status === 'succeeded').length
+  const alreadyClaimed = requests.filter((item) => item.status === 'already_claimed').length
+  const failed = requests.filter((item) => ['failed_terminal', 'ambiguous'].includes(item.status)).length
+  const skipped = requests.filter((item) => item.status === 'expired').length
+  const transientFailures = requests.filter((item) => item.status === 'failed_retryable').length
+  const completed = redeemed + alreadyClaimed + failed + skipped
+  const eligible = operationsResult.configured && operationsResult.configEnabled && operationsResult.health?.enabled === true
+  return {
+    activeCodes: codes.length,
+    eligibleCodes: eligible ? codes.length : 0,
+    totalRequests: requests.length,
+    totalAttempts: attempts.length,
+    redeemed,
+    alreadyClaimed,
+    failed,
+    skipped,
+    transientFailures,
+    recentSuccessRate: completed > 0 ? redeemed / completed : null,
+    lastSuccessfulProviderCall: requests.find((item) => item.status === 'succeeded')?.created_at ?? null,
+    lastFailure: requests.find((item) => ['failed_terminal', 'failed_retryable', 'ambiguous'].includes(item.status))?.created_at ?? null,
+  }
 }
 
 export async function setProviderOperations(actorId: string, enabled: boolean, reasonCode: string) {
