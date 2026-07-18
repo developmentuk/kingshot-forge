@@ -33,10 +33,7 @@ function moderatorRecord(row: Record<string, unknown>): Record<string, unknown> 
 async function actor(request: VercelRequest): Promise<ForgeActor> { return requireForgeActor(request) }
 async function moderator(request: VercelRequest) {
   const currentActor = await actor(request)
-  const admin = getSupabaseAdmin()
-  const { data: roleData, error: roleError } = await admin.from('forge_user_roles').select('role').eq('user_id', currentActor.userId).maybeSingle()
-  const { data: permission, error: permissionError } = roleData?.role ? await admin.from('forge_role_permissions').select('permission_key').eq('role', roleData.role).eq('permission_key', 'moderation.manage').maybeSingle() : { data: null, error: null }
-  if (roleError || permissionError || !permission) throw Object.assign(new Error('Moderator access is required.'), { statusCode: 403 })
+  if (!currentActor.capabilities.includes('moderation.manage')) throw Object.assign(new Error('Moderator access is required.'), { statusCode: 403 })
   return currentActor
 }
 const columns = 'id,title,description,category,tags,artwork_text,attribution_name,status,compatibility_status,character_count,line_count,created_at,moderated_at,published_at'
