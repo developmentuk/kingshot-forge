@@ -1,3 +1,19 @@
+/*
+ * Forge legacy application styles.
+ *
+ * Keep the established cascade intact. Community Art Studio rules below are
+ * intentionally scoped and layered after the shared application styles.
+ */
+@import './styles/legacy/01-application-shell.css';
+@import './styles/legacy/02-studios.css';
+@import './styles/legacy/03-public-pages.css';
+@import './styles/legacy/04-community.css';
+@import './styles/legacy/05-transfer-and-profiles.css';
+@import './styles/legacy/06-profile-editor.css';
+@import './styles/legacy/07-heroes.css';
+@import './styles/legacy/08-admin.css';
+@import './styles/editorial-admin.css';
+
 .art-studio-view-switcher { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1rem 0 1.25rem; }
 .art-studio-live-message { color: #9fe1b7; font-weight: 700; }
 .art-studio-submission-shell, .art-studio-status-panel, .art-studio-auth-card { border: 1px solid #2b394a; border-radius: 1rem; padding: 1.25rem; background: linear-gradient(180deg, rgba(255,255,255,.025), transparent), rgba(18,26,37,.9); color: #f7f2e8; }
