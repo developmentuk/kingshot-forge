@@ -312,11 +312,11 @@ Validation completed for this milestone: Player Identity structural validation, 
 
 For Auto Redeem, Forge verifies that a Player ID is valid through the Kingshot player service and links it to the authenticated Forge account. Forge does not request a game password or claim official account authentication. The trusted server link/revalidation route owns the canonical player fields, `verification_status`, `verification_method` and `verified_at`; browser roles cannot mutate verification columns or verification events. A legacy `linked` row remains ineligible until that same server path revalidates it. Consent and the provider-health pause are independent gates.
 
-## Active Release
+## Historical release reference
 
 ### Release 0.7.5 — Auto Redeem
 
-Working branch:
+Historical working branch:
 
 ```text
 release/0.7.5-auto-redeem
@@ -345,7 +345,36 @@ Release constraints:
 - keep creator attribution public-safe and expose reactions only as published-art aggregates;
 - keep the moderator queue role-gated and never expose private notes or submitter identity in gallery responses.
 
-This milestone is complete only when the shared UX polish is validated, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for Clark's final production validation.
+The 0.7.5 release record remains immutable. Its production enablement and
+final validation status are historical context for the 0.8.0 work.
+
+## Active Release
+
+### Release 0.8.0 — Forge Operations Centre
+
+Working branch:
+
+```text
+release/0.8.0-operations-centre
+```
+
+Release objective: separate Player View from internal operational tooling and
+establish role-aware Contributor, Creator, Moderation and Forge Operations
+workspaces without weakening server authorization, RLS, Player Identity,
+editorial workflow, audit history or Auto Redeem safety.
+
+The navigation contract is registry-driven: each workspace owns its menu,
+workspace visibility is derived from current authenticated capabilities, and a
+stored last-workspace preference can only select among currently authorized
+workspaces. New sessions default to Player View. Direct routes remain
+permission-protected independently of navigation visibility.
+
+Current 0.8.0 implementation status: the workspace registry, switcher and
+shells are established; existing Admin routes remain compatibility aliases;
+User Management, role mutation UX, unified audit log and feature-flag centre
+are classified as planned until server-authorized vertical slices exist.
+
+The release remains a local branch and is not production-deployed or merged.
 
 ### Auto Redeem visibility contract
 

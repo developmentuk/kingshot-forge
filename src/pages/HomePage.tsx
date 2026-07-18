@@ -96,29 +96,29 @@ function HomePage() {
 
       <section className="home-release-banner">
         <div className="home-release-banner__content">
-          <div className="home-release-banner__icon">🎁</div>
+          <div className="home-release-banner__icon">🛠️</div>
           <div>
             <div className="home-release-banner__meta">
               <span>Latest release</span>
               <strong>Version {APP_VERSION}</strong>
             </div>
-            <h2>Release 0.7.5 is ready for final validation</h2>
+            <h2>Forge Operations Centre is in development</h2>
             <p>
-              Auto Redeem now has server-authoritative player verification, explicit consent,
-              provider pause controls and private result history. Production enablement remains gated.
+              Forge is building a dedicated Operations Centre with role-aware workspaces,
+              User Management and a cleaner Player experience.
             </p>
             <div className="home-release-banner__tags">
-              <span>Verified player link</span>
-              <span>Explicit consent</span>
-              <span>Provider pause gate</span>
-              <span>Private history</span>
+              <span>Player View</span>
+              <span>Operations Centre</span>
+              <span>Role-aware workspaces</span>
+              <span>User Management</span>
             </div>
           </div>
         </div>
 
         <div className="home-release-banner__actions">
-          <Link className="button button--primary" to="/art-studio">
-            Open Gift Centre
+          <Link className="button button--primary" to="/roadmap">
+            Explore roadmap
           </Link>
           <Link className="button button--secondary" to="/release-notes">
             See what’s new

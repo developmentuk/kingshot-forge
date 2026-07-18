@@ -117,18 +117,29 @@ const roadmapReleases: RoadmapRelease[] = [
   },
   {
     version: "0.8.0",
-    name: "Player Domain Complete",
+    name: "Forge Operations Centre",
+    status: "development",
+    progress: 20,
+    priority: "Active major milestone",
+    description:
+      "Separate Player View from internal tooling with role-aware workspaces, coherent operations navigation and safe management foundations.",
+    features: [
+      "Player View separation and workspace switcher",
+      "Forge Operations Centre",
+      "Contributor and Creator Centre shell",
+      "Moderation Centre shell",
+      "User Management and role capability UX",
+      "Admin feature inventory and audit log",
+      "Responsive internal UX standards",
+    ],
+  },
+  {
+    version: "0.8.1",
+    name: "Automatic Gift Code Processing",
     status: "planned",
     progress: 0,
-    description:
-      "Complete verified player identity and linked-account foundations required by personal and operational Forge services.",
-    features: [
-      "Verified player profiles",
-      "Linked Kingshot identity",
-      "Kingdom and alliance history",
-      "Personal dashboard and favourites",
-      "Consent and account controls",
-    ],
+    description: "Durable, consented background gift-code processing after the Operations Centre release.",
+    features: ["Ongoing user consent", "Durable queue", "Approved-code trigger", "Vercel Cron", "Bounded batches and retries", "Queue monitoring and notifications", "Idempotent user/code processing"],
   },
   {
     version: "0.9.0",
