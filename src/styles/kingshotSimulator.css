@@ -3,9 +3,9 @@
 :root {
   /* Kingshot packs columns tightly while drawing the glyph itself relatively large.
    * Keep cell geometry fixed; only the paint inside each cell varies by family. */
-  --kingshot-cell-width: .56rem;
-  --kingshot-cell-height: 1.12rem;
-  --kingshot-grid-font-size: 1rem;
+  --kingshot-cell-width: var(--forge-cell-width, .56rem);
+  --kingshot-cell-height: var(--forge-cell-height, 1.12rem);
+  --kingshot-grid-font-size: var(--forge-grid-font-size, 1rem);
 }
 
 .kingshot-cell-grid {
@@ -48,10 +48,13 @@
   max-width: none;
   line-height: 1;
   transform-origin: center;
+  font-family: var(--forge-glyph-family, inherit);
+  font-weight: var(--forge-glyph-weight, 400);
+  transform: translateY(var(--forge-baseline-offset, 0px)) scale(var(--forge-glyph-scale-x, 1), var(--forge-glyph-scale-y, 1));
 }
 
 .kingshot-cell-grid__cell--ascii .kingshot-cell-grid__glyph,
-.kingshot-cell-grid__cell--box .kingshot-cell-grid__glyph {
+.kingshot-cell-grid__cell--box-drawing .kingshot-cell-grid__glyph {
   font-family: "Courier New", Consolas, monospace;
 }
 
@@ -64,6 +67,12 @@
   font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
   font-size: 1.3em;
   transform: translateY(-.02em) scale(.98);
+}
+
+.kingshot-cell-grid__cell--pixel-circles .kingshot-cell-grid__glyph,
+.kingshot-cell-grid__cell--hearts .kingshot-cell-grid__glyph,
+.kingshot-cell-grid__cell--decorative-symbols .kingshot-cell-grid__glyph {
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
 }
 
 .kingshot-cell-grid__cell--space .kingshot-cell-grid__glyph {
