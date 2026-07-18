@@ -15,128 +15,24 @@ type ForgeTool = {
 }
 
 const forgeTools: ForgeTool[] = [
-  {
-    title: 'Name Forge',
-    description:
-      'Create distinctive, emoji-free Kingshot player names.',
-    icon: '👑',
-    path: '/name-studio',
-    action: 'Forge a name',
-    featured: true,
-  },
-  {
-    title: 'Art Forge',
-    description:
-      'Browse and copy community artwork for Kingshot chat.',
-    icon: '🎨',
-    path: '/art-studio',
-    action: 'Browse artwork',
-    featured: true,
-  },
-  {
-    title: 'Chat Forge',
-    description:
-      'Build announcements, rally calls and alliance messages.',
-    icon: '💬',
-    path: '/chat-studio',
-    action: 'Create a message',
-  },
-  {
-    title: 'Character Library',
-    description:
-      'Explore scripts, ornaments and characters tested in Kingshot.',
-    icon: '📚',
-    path: '/characters',
-    action: 'Browse characters',
-  },
-  {
-    title: 'Compatibility Lab',
-    description:
-      'Check whether characters are known to work inside the game.',
-    icon: '🧪',
-    path: '/compatibility',
-    action: 'Open the lab',
-  },
-  {
-    title: 'My Forge',
-    description:
-      'View your favourite artwork, name styles and saved items.',
-    icon: '⭐',
-    path: '/my-forge',
-    action: 'View My Forge',
-  },
-  {
-    title: 'Gift Codes',
-    description:
-      'View and copy currently active Kingshot gift codes.',
-    icon: '🎁',
-    path: '/gift-codes',
-    action: 'View active codes',
-    featured: true,
-  },
-  {
-    title: 'Player Lookup',
-    description:
-      'Find a player’s current kingdom, level and profile.',
-    icon: '👤',
-    path: '/player-lookup',
-    action: 'Find a player',
-    featured: true,
-  },
-  {
-    title: 'Kingdom Explorer',
-    description:
-      'Check a kingdom’s opening date, estimated age and status.',
-    icon: '🏰',
-    path: '/kingdom-explorer',
-    action: 'Explore a kingdom',
-    featured: true,
-  },
-  {
-    title: 'Kvk Tracker',
-    description:
-      'Explore prep results, castle winners and kingdom match history.',
-    icon: '⚔️',
-    path: '/kvk-tracker',
-    action: 'Search KvK results',
-    featured: true,
-  },
-  {
-    title: 'Kingdom Community',
-    description:
-      'Find registered players and community information for a Kingshot kingdom.',
-    icon: '🌍',
-    path: '/kingdom-community',
-    action: 'Explore a community',
-    featured: true,
-  },
-  {
-    title: 'Alliance Directory',
-    description:
-      'Browse and join active alliances in Kingshot.',
-    icon: '🛡️',
-    path: '/alliance-directory',
-    action: 'View alliances',
-    featured: true,
-  },
-  {
-    title: 'Transfer Hub',
-    description:
-      'Create your transfer profile and connect with recruiting kingdoms and alliances.',
-    icon: '🎫',
-    path: '/my-forge/transfer-profile',
-    action: 'Create transfer profile',
-    featured: true,
-  },
+  { title: 'Name Forge', description: 'Create distinctive, emoji-free Kingshot player names.', icon: '👑', path: '/name-studio', action: 'Forge a name', featured: true },
+  { title: 'Art Forge', description: 'Browse, submit and react to copy-ready community artwork.', icon: '🎨', path: '/art-studio', action: 'Open Art Studio', featured: true },
+  { title: 'Chat Forge', description: 'Build announcements, rally calls and alliance messages.', icon: '💬', path: '/chat-studio', action: 'Create a message' },
+  { title: 'Character Library', description: 'Explore scripts, ornaments and characters tested in Kingshot.', icon: '📚', path: '/characters', action: 'Browse characters' },
+  { title: 'Compatibility Lab', description: 'Check whether characters are known to work inside the game.', icon: '🧪', path: '/compatibility', action: 'Open the lab' },
+  { title: 'My Forge', description: 'View your player tools, favourites and saved items.', icon: '⭐', path: '/my-forge', action: 'View My Forge' },
+  { title: 'Gift Codes', description: 'View and copy currently active Kingshot gift codes.', icon: '🎁', path: '/gift-codes', action: 'View active codes', featured: true },
+  { title: 'Player Lookup', description: 'Find a player’s current kingdom, level and profile.', icon: '👤', path: '/player-lookup', action: 'Find a player', featured: true },
+  { title: 'Kingdom Explorer', description: 'Check a kingdom’s opening date, estimated age and status.', icon: '🏰', path: '/kingdom-explorer', action: 'Explore a kingdom', featured: true },
+  { title: 'Kvk Tracker', description: 'Explore prep results, castle winners and kingdom match history.', icon: '⚔️', path: '/kvk-tracker', action: 'Search KvK results', featured: true },
+  { title: 'Kingdom Community', description: 'Find registered players and community information for a Kingshot kingdom.', icon: '🌍', path: '/kingdom-community', action: 'Explore a community', featured: true },
+  { title: 'Alliance Directory', description: 'Browse and join active alliances in Kingshot.', icon: '🛡️', path: '/alliance-directory', action: 'View alliances', featured: true },
+  { title: 'Transfer Hub', description: 'Create your transfer profile and connect with recruiting kingdoms and alliances.', icon: '🎫', path: '/my-forge/transfer-profile', action: 'Create transfer profile', featured: true },
 ]
 
 function HomePage() {
   const { user, loading } = useAuth()
-
-  const {
-    playerAccount,
-    loadingPlayerAccount,
-  } = usePlayerIdentity()
+  const { playerAccount, loadingPlayerAccount } = usePlayerIdentity()
 
   const displayName =
     playerAccount?.player_name ??
@@ -145,136 +41,87 @@ function HomePage() {
     user?.email?.split('@')[0] ??
     'Forger'
 
-  const testedArtworkCount = artTemplates.filter(
-    (template) => template.testedInKingshot,
-  ).length
-
+  const testedArtworkCount = artTemplates.filter((template) => template.testedInKingshot).length
   const communityArtworkCount = artTemplates.filter(
-    (template) =>
-      template.source === 'Alliance Submission' ||
-      template.source === 'Community Submission',
+    (template) => template.source === 'Alliance Submission' || template.source === 'Community Submission',
   ).length
 
   return (
     <section className="forge-hub">
       <header className="forge-hub-hero">
         <div className="forge-hub-hero__content">
-          <p className="eyebrow">
-            Unofficial Kingshot community toolkit
-          </p>
-
+          <p className="eyebrow">Unofficial Kingshot community toolkit</p>
           <h1>
             {user && !loading && !loadingPlayerAccount
               ? `Welcome back, ${displayName}.`
               : 'Forge your Kingshot identity.'}
           </h1>
-
           <p className="forge-hub-hero__description">
-            Create player names, chat messages and copy-ready
-            artwork using characters tested inside Kingshot.
+            Create player names, chat messages and copy-ready artwork using characters tested inside Kingshot.
           </p>
 
           {playerAccount && (
             <div className="forge-hub-player-identity">
-              {playerAccount.profile_photo && (
-                <img
-                  src={playerAccount.profile_photo}
-                  alt=""
-                />
-              )}
-
+              {playerAccount.profile_photo && <img src={playerAccount.profile_photo} alt="" />}
               <div>
                 <strong>{playerAccount.player_name}</strong>
-
                 <span>
                   Kingdom {playerAccount.kingdom_id}
                   {' · '}
                   {playerAccount.level_rendered_detailed ||
                     playerAccount.level_rendered ||
-                    (playerAccount.player_level
-                      ? `Level ${playerAccount.player_level}`
-                      : 'Level unavailable')}
+                    (playerAccount.player_level ? `Level ${playerAccount.player_level}` : 'Level unavailable')}
                 </span>
               </div>
             </div>
           )}
 
           <div className="forge-hub-hero__actions">
-            <Link
-              className="button button--primary"
-              to="/name-studio"
-            >
-              👑 Open Name Forge
+            <Link className="button button--primary" to="/art-studio">
+              🎨 Open Community Art Studio
             </Link>
-
-            <Link
-              className="button button--secondary"
-              to="/art-studio"
-            >
-              🎨 Browse Art Forge
+            <Link className="button button--secondary" to="/name-studio">
+              👑 Open Name Forge
             </Link>
           </div>
         </div>
 
         <div className="forge-hub-status">
-          <span className="forge-hub-status__badge">
-            Beta
-          </span>
-
+          <span className="forge-hub-status__badge">Beta</span>
           <strong>Community-powered</strong>
-
-          <p>
-            Kingshot Forge is growing through player testing,
-            feedback and submitted content.
-          </p>
-
-          <Link to="/roadmap">
-            View development roadmap →
-          </Link>
+          <p>Kingshot Forge is growing through player testing, feedback and submitted content.</p>
+          <Link to="/roadmap">View development roadmap →</Link>
         </div>
       </header>
 
       <section className="home-release-banner">
         <div className="home-release-banner__content">
-          <div className="home-release-banner__icon">
-            🚀
-          </div>
-
+          <div className="home-release-banner__icon">🎨</div>
           <div>
             <div className="home-release-banner__meta">
-              <span>Current deployment</span>
+              <span>Latest release</span>
               <strong>Version {APP_VERSION}</strong>
             </div>
-
-            <h2>Domain foundations are complete</h2>
-
+            <h2>Community Art Studio is live</h2>
             <p>
-              Release 0.7.1 established the governed foundations for Player Identity,
-              Gift Redemption, Art Studio, Hero Skills and Verification Centre workflows.
+              Submit copyable Kingshot chat art, follow its review status, react to published designs
+              and help grow a moderated community gallery.
             </p>
-
             <div className="home-release-banner__tags">
-              <span>Player Identity</span>
-              <span>Gift Redemption</span>
-              <span>Art Studio</span>
-              <span>Verification Centre</span>
+              <span>Submit artwork</span>
+              <span>Creator attribution</span>
+              <span>Community reactions</span>
+              <span>Moderated publishing</span>
             </div>
           </div>
         </div>
 
         <div className="home-release-banner__actions">
-          <Link
-            className="button button--primary"
-            to="/release-notes"
-          >
-            See what’s new
+          <Link className="button button--primary" to="/art-studio">
+            Explore Community Art
           </Link>
-
-          <Link
-            className="button button--secondary"
-            to="/roadmap"
-          >
-            View roadmap
+          <Link className="button button--secondary" to="/release-notes">
+            See what’s new
           </Link>
         </div>
       </section>
@@ -286,33 +133,19 @@ function HomePage() {
             <h2>Explore Kingshot Forge</h2>
           </div>
         </div>
-
         <div className="forge-tool-grid">
           {forgeTools.map((tool) => (
             <Link
-              className={
-                tool.featured
-                  ? 'forge-tool-card forge-tool-card--featured'
-                  : 'forge-tool-card'
-              }
+              className={tool.featured ? 'forge-tool-card forge-tool-card--featured' : 'forge-tool-card'}
               to={tool.path}
               key={tool.title}
             >
-              <span
-                className="forge-tool-card__icon"
-                aria-hidden="true"
-              >
-                {tool.icon}
-              </span>
-
+              <span className="forge-tool-card__icon" aria-hidden="true">{tool.icon}</span>
               <div>
                 <h3>{tool.title}</h3>
                 <p>{tool.description}</p>
               </div>
-
-              <span className="forge-tool-card__action">
-                {tool.action} →
-              </span>
+              <span className="forge-tool-card__action">{tool.action} →</span>
             </Link>
           ))}
         </div>
@@ -325,85 +158,41 @@ function HomePage() {
             <h2>Current library</h2>
           </div>
         </div>
-
         <div className="forge-stat-grid">
-          <div className="forge-stat-card">
-            <strong>{artTemplates.length}</strong>
-            <span>Artwork designs</span>
-          </div>
-
-          <div className="forge-stat-card">
-            <strong>{communityArtworkCount}</strong>
-            <span>Community submissions</span>
-          </div>
-
-          <div className="forge-stat-card">
-            <strong>{testedArtworkCount}</strong>
-            <span>Tested artworks</span>
-          </div>
-
-          <div className="forge-stat-card">
-            <strong>{nameVariants.length}</strong>
-            <span>Name styles</span>
-          </div>
+          <div className="forge-stat-card"><strong>{artTemplates.length}</strong><span>Artwork designs</span></div>
+          <div className="forge-stat-card"><strong>{communityArtworkCount}</strong><span>Community submissions</span></div>
+          <div className="forge-stat-card"><strong>{testedArtworkCount}</strong><span>Tested artworks</span></div>
+          <div className="forge-stat-card"><strong>{nameVariants.length}</strong><span>Name styles</span></div>
         </div>
       </section>
 
       <section className="forge-hub-community">
         <div>
           <p className="eyebrow">Community platform</p>
-
           <h2>Help build the Forge</h2>
-
           <p>
-            Sign in to access your Forge profile and connected player identity.
-            Community features will activate only after their safety and publishing checks pass.
+            Sign in to submit artwork, react to community designs and access your linked-player Forge tools.
           </p>
         </div>
-
         <div className="forge-hub-community__actions">
           {user ? (
-            <Link
-              className="button button--primary"
-              to="/my-forge"
-            >
-              Open My Forge
-            </Link>
+            <Link className="button button--primary" to="/art-studio?action=submit">Submit artwork</Link>
           ) : (
-            <span className="forge-hub-community__note">
-              Sign in from the menu to prepare your Forge profile.
-            </span>
+            <span className="forge-hub-community__note">Sign in from the menu to contribute.</span>
           )}
-
-          <Link
-            className="button button--secondary"
-            to="/roadmap"
-          >
-            See what is coming
-          </Link>
+          <Link className="button button--secondary" to="/roadmap">See what is coming</Link>
         </div>
       </section>
 
       <section className="forge-hub-support">
         <div>
           <span aria-hidden="true">☕</span>
-
           <div>
             <strong>Support Kingshot Forge</strong>
-
-            <p>
-              Support helps fund testing, hosting and new community
-              features.
-            </p>
+            <p>Support helps fund testing, hosting and new community features.</p>
           </div>
         </div>
-
-        <a
-          className="button button--coffee"
-          href="https://buymeacoffee.com/jrcs1981"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a className="button button--coffee" href="https://buymeacoffee.com/jrcs1981" target="_blank" rel="noreferrer">
           Buy me a coffee
         </a>
       </section>
