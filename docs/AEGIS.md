@@ -8,7 +8,7 @@
 - Product owner: **Clark**
 - Engineering partner: **Aegis**
 - Repository: `developmentuk/kingshot-forge`
-- Production: `https://kingshot-forge.vercel.app/`
+- Production: `https://ksforge.app/`
 - Supabase project: `hrvdhjscwitqpwjhnjkm`
 - Google Analytics measurement ID: `G-8L3HYETN51`
 - GitHub is the canonical source for code and documentation.

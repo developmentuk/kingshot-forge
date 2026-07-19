@@ -1,9 +1,13 @@
 # Forge Recovery Matrix — Sprints R1–R4
 
-Status: **R7 Search & Knowledge acceptance complete; exact preview verified**
+Status: **RC1 assessed — Not Ready for Version 1.0**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 R4 validation head: `bfbd89ec5a230ab50c01dedd3134201d2ab759bc`
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
+
+The sprint rows below preserve point-in-time recovery evidence. The
+**RC1 readiness reconciliation** section at the end of this document is the
+authoritative current status after R8B and the Version 1.0 readiness audit.
 
 Readiness uses evidence, not estimates. “Not ready” means a release gate remains; it does not mean the recovered code is absent.
 
@@ -148,4 +152,51 @@ R8 evidence is recorded in `docs/recovery/SPRINT-R8-PLAYER-PLATFORM-RECOVERY.md`
 
 ## Remaining release evidence
 
-Version 1.0 still requires the remaining platform recovery items listed above, including Render Engine and Creative Platform recovery, broader runtime observability and any secondary planned routes. R4 authenticated Workspace/Operations validation and the exact candidate deployment are complete.
+The R1–R8B recovery work is now audited. Render Engine, Creative Platform and
+Search/Knowledge recovery are accepted; the remaining release gates are the
+R8B cross-user evidence, incomplete Editorial/CMS import and publication
+workflows, and production release acceptance. See the authoritative RC1
+reconciliation below.
+
+## RC1 readiness reconciliation (authoritative)
+
+| Area | Status | Evidence and release meaning |
+| --- | --- | --- |
+| Workspace Platform | **Green** | R4 authenticated role fixtures, workspace switching, route guards and responsive checks passed. |
+| Operations Centre | **Green** | R4 admin, moderator, contributor and player route matrix passed; planned destinations remain disabled/status-only. |
+| Authentication | **Green** | R4 authenticated fixture lifecycle and session switching passed; no authentication bypass was used. |
+| Permissions and RLS | **Amber** | Server capability gates and live RLS inspection passed in R4/R8B, but R8B User A/User B isolation has not been exercised. |
+| Render Engine | **Green** | R5/R6 parser, renderer, calibration persistence, malformed-value recovery and responsive owner preview passed. |
+| Creative Platform | **Green** | R6 owner acceptance passed for Art Studio, moderation preview, submission preview and protected calibration routes. |
+| Search | **Green** | R7 published/public boundary, Search Explorer, relationship navigation and responsive preview passed. |
+| Knowledge Platform | **Green** | R7 persistent projections and published relationship consumption passed; freshness remains an operational follow-up. |
+| Hero Domain | **Amber** | Local contracts and R8 owner path passed; broader second-user and production acceptance are outstanding. |
+| Player Platform | **Amber** | Identity, profiles, progression snapshots, heroes, transfer and public projections are implemented, but R8B acceptance is incomplete. |
+| My Forge | **Amber** | Owner session verified persistent favourite rendering and restoration; account-isolation evidence remains open. |
+| Persistent Favourites | **Red** | R8B proves User A add/remove and persistence, but not User B isolation or signed-out rejection on the protected exact preview. |
+| Transfer Hub | **Amber** | R8B code/RLS boundary and public `looking` filter are evidenced; complete cross-user runtime proof remains open. |
+| Community Art | **Green** | R4/R6 authenticated moderation and R6 renderer/submission preview evidence passed; no duplicate submission system was introduced. |
+| Editorial Platform | **Red** | AEGIS requires governed import → verify → publish behaviour; the roadmap and routes show the persistent CMS publication journey is incomplete. |
+| Data Engine | **Amber** | Dataset catalogue, diagnostics and verification foundations exist; production-scale import/publish operations remain incomplete. |
+| Dataset Registry | **Green** | Registry and dataset contracts are present and covered by the existing validation suite. |
+| Admin CMS | **Amber** | Dataset, verification and search administration are available, while Import Manager, Publish Centre and Version History remain explicitly planned. |
+| Verification workflows | **Green** | Verification Centre routes, contracts and focused validation pass; publication completion is a separate blocker. |
+| Import workflows | **Red** | `/admin/imports` is an intentional planned/status surface, not an implemented import workflow. |
+| Publishing workflows | **Red** | `/admin/publish` is an intentional planned/status surface, not an implemented publication workflow. |
+| Feature Flags | **Amber** | Identity flags are exact-match environment gates and default off; the Operations Feature Flags console remains planned. |
+| Audit Logging | **Amber** | Identity/recruitment mutations are audited, but the unified Audit Log surface remains planned. |
+| Notifications | **Amber** | ADR-0113 defines the boundary; no complete notification product is exposed and implementation is deferred. |
+| Analytics | **Amber** | The GA measurement ID is documented, but this audit found no production analytics acceptance evidence. |
+
+### Recovery audit
+
+R1 and R2 have no standalone files under `docs/recovery/`; their completed
+evidence is represented by the recovery matrix and commits `e81cc48`,
+`3853efb`, `8c1c661` and `07a1d50`. R3 is explicitly superseded by R4. R4
+closed the authenticated Workspace/Operations gate and cleaned all temporary
+fixtures. R5 reconciled the Render Engine and creative foundation. R6 accepted
+the owner-authenticated creative preview. R7 accepted persistent Search and
+Knowledge projections. R8/R8B implemented the canonical favourites boundary,
+recorded one-owner acceptance and explicitly left the second-user gate open.
+No duplicate architecture or recovery implementation was reintroduced; each
+record documents its deferred work and non-actions.
