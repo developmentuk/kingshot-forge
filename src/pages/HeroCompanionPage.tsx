@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import FeedbackDialog from '../components/FeedbackDialog'
 import PublishedHeroSkills from '../components/heroes/PublishedHeroSkills'
+import { ForgeConnections } from '../features/search/SearchExperience'
 import { getHeroCatalogue } from '../services/heroService'
 import type { Hero, HeroRarity, HeroTier } from '../types/hero'
 import './HeroCompanionPage.css'
@@ -154,6 +155,7 @@ function HeroCompanionDetail({ hero, heroes }: { hero: Hero; heroes: Hero[] }) {
       <section id="progression" className="hero-companion-panel"><div className="hero-companion-section__heading"><div><p className="eyebrow">Investment plan</p><h2>Hero progression recommendations</h2></div><p>Guidance uses published ratings, availability and classification. It does not invent unpublished costs or breakpoints.</p></div><div className="hero-companion-progression">{progression.map((step, index) => <article key={step.title}><span>{index + 1}</span><div><h3>{step.title}</h3><p>{step.copy}</p></div></article>)}</div></section>
       {hero.tags.length > 0 && <section className="hero-companion-panel"><div className="hero-companion-section__heading"><div><p className="eyebrow">Classification</p><h2>Tags</h2></div></div><div className="hero-companion-tags">{hero.tags.map((tag) => <span key={tag}>{formatLabel(tag)}</span>)}</div></section>}
     </div><aside className="hero-companion-sidebar"><section className="hero-companion-panel hero-companion-trust"><p className="eyebrow">Forge trust</p><h2>Source details</h2><dl><div><dt>Source</dt><dd>{hero.source_name || 'Not recorded'}</dd></div><div><dt>Verification</dt><dd>{hero.source_verified || 'Not recorded'}</dd></div><div><dt>Source updated</dt><dd>{formatDate(hero.source_updated_at)}</dd></div><div><dt>Forge updated</dt><dd>{formatDate(hero.updated_at)}</dd></div>{hero.source_accuracy_score !== null && <div><dt>Accuracy score</dt><dd>{hero.source_accuracy_score}%</dd></div>}</dl>{hero.source_url && <a href={hero.source_url} target="_blank" rel="noreferrer" className="hero-companion-source-link">Open source reference</a>}</section><section className="hero-companion-panel hero-companion-feedback"><span className="hero-companion-feedback__icon" aria-hidden="true">💡</span><p className="eyebrow">Help improve Forge</p><h2>Something not right?</h2><p>Request an update or report an issue with {hero.name}’s data.</p><button type="button" className="hero-companion-feedback__button" onClick={() => setFeedbackOpen(true)}>Report an issue</button></section></aside></section>
+    <ForgeConnections dataset="heroes" id={hero.id} />
     <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} entityType="hero" entityId={hero.id} entityName={hero.name} />
   </main>
 }

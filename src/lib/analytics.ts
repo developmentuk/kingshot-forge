@@ -21,7 +21,7 @@ declare global {
     gtag?: (
       command: 'event',
       eventName: string,
-      parameters: Readonly<Record<string, string | number | boolean>>,
+      parameters?: Readonly<Record<string, string | number | boolean>>,
     ) => void
   }
 }
@@ -36,4 +36,3 @@ export function trackHeroSkillAnalytics(
     ...parameters,
   })
 }
-
