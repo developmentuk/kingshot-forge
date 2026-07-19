@@ -51,8 +51,9 @@ export function SearchExplorerPage() {
   }, [dataset, depth, query, relationshipFrom, session?.access_token, simulation])
 
   async function refresh(mode: 'dataset' | 'full') {
-    if (!session?.access_token) return
-    const response = await fetch('/api/admin/search', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ action: 'refresh', mode, datasets: dataset ? [dataset] : undefined, confirm: mode === 'full' }) })
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`
+    const response = await fetch('/api/admin/search', { method: 'POST', headers, body: JSON.stringify({ action: 'refresh', mode, datasets: dataset ? [dataset] : undefined, confirm: mode === 'full' }) })
     if (!response.ok) setError('The requested Search refresh could not be completed.')
     else window.location.reload()
   }

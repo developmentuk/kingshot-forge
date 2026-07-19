@@ -1,6 +1,6 @@
 # Forge Recovery Matrix — Sprints R1–R4
 
-Status: **R6 Creative Platform acceptance complete; exact preview verified**
+Status: **R7 Search & Knowledge acceptance complete; exact preview verified**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 R4 validation head: `bfbd89ec5a230ab50c01dedd3134201d2ab759bc`
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
@@ -80,6 +80,18 @@ R3 outcome: the recovered Workspace platform remained locally buildable but was 
 | Vercel TypeScript diagnostics | Keep exact preview candidate deployable | Narrow NodeNext import/result/type-target repairs | Repaired and deployed | Final commit `bfbd89e...` deployed Ready with no TypeScript errors in build logs | Current RC3 branch | Vercel function compiler, NodeNext | R4 recovery document | Ready for next recovery sprint |
 
 R4 performed no migration, RLS change, push, merge, tag or promotion. Temporary fixture records were cleaned up after final browser sign-out. The exact deployed candidate was `bfbd89ec5a230ab50c01dedd3134201d2ab759bc` (`dpl_EVSjynszfzGF9C5T2Pc1j2KLKtAo`).
+
+## Sprint R7 Search & Knowledge Platform recovery
+
+| Subsystem | Current implementation | Recovery status | Validation status | Version 1.0 readiness |
+| --- | --- | --- | --- | --- |
+| Canonical search API and projections | `/api/search`, shared search contracts, persistent published projections and permission-aware ranking | Recovered and deployed; missing persistent schema was applied through the checked-in migration | Owner-authenticated public search returned published Sophia; Vercel logs recorded 200 responses; index version 4 contains 554 projections | **Accepted for R7 preview** |
+| Search Explorer | `/admin/search` with query, dataset, relationship, depth, role simulation and refresh controls | Preserved; refresh request now falls back to the authenticated same-origin cookie when the client has no bearer token | Owner preview rendered persisted rows, successful refresh metadata and `truegold` war-academy matches | **Accepted for R7 preview** |
+| Relationship navigation | Hero Companion `ForgeConnections` relationship region and canonical relationship search route | Preserved as the relationship-engine consumer boundary | Sophia detail rendered Forge Connections, related content and Explore all navigation | **Accepted for R7 preview** |
+| Public visibility boundary | Published/public result filtering separate from internal Search Explorer visibility | Preserved; no synthetic creator/editorial data added | Public `truegold` query exposed no internal rows while admin showed published war-academy rows; Sophia remained publicly searchable | **Accepted for R7 preview** |
+| Responsive and runtime evidence | Search and Explorer surfaces in the deployed RC3 shell | Validated without new UI redesign | Search checked at 390/768/1280 explicit viewport overrides; no horizontal overflow; browser console clean | **Accepted for R7 preview** |
+
+R7 evidence is recorded in `docs/recovery/SPRINT-R7-SEARCH-KNOWLEDGE-RECOVERY.md`. The only deployment after the starting preview was required by the Search Explorer cookie fallback fix. The Supabase migration was limited to the missing search projection schema; no fixture, provider transport, production promotion, push or merge was performed.
 
 ## Sprint R5 render and creative recovery
 
