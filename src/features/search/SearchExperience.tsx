@@ -69,7 +69,7 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const shortcut = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform) ? '⌘ K' : 'Ctrl K'
   const chooseSearch = useCallback((value: string) => { setQuery(value); setRecent((current) => { const next = [value, ...current.filter((item) => item !== value)].slice(0, 8); localStorage.setItem(RECENT_KEY, JSON.stringify(next)); return next }) }, [])
-  const openResult = useCallback((record: SearchRecord) => { chooseSearch(query.trim()); if (record.canonical_url?.startsWith('/')) { navigate(record.canonical_url); onClose?.() } }, [chooseSearch, navigate, onClose, query])
+  const openResult = useCallback((record: SearchRecord) => { chooseSearch(query.trim()); navigate(record.canonical_url?.startsWith('/') ? record.canonical_url : `/search?q=${encodeURIComponent(record.title)}`); onClose?.() }, [chooseSearch, navigate, onClose, query])
 
   useEffect(() => {
     if (!open || embedded) return
