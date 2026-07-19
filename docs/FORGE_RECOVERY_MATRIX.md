@@ -127,14 +127,15 @@ warning and Vercel npm audit notice were not introduced by this sprint.
 | Hero Collection and Showcase | Player-owned hero state, widget/gear fields, showcase selection and public showcase projection | Preserved on existing `player_heroes` path | Hero governance and identity tests pass; owner-authenticated runtime evidence remains pending | **Not ready** |
 | Progression snapshots | Immutable `player_progression_snapshots` with owner/private and public/shared policies | Preserved; no mutable plan model introduced | Progression service/page audited; RLS and build pass | **Not ready** |
 | Transfer, Kingdom and Alliance | Public Transfer Hub, private Transfer Profile, Kingdom/Alliance directory and membership routes | Preserved; existing permission boundaries retained | Read-only RLS inspection confirms owner/public predicates | **Ready for owner preview evidence** |
-| Persistent favourites | Existing zero-row `public.favourites` table reconciled as the one shared contract for typed entity references; Kingdom, Alliance and Hero surfaces consume it | **Implemented; preview acceptance blocked** | Live migration, focused tests, full check and exact preview deployment pass; authenticated runtime acceptance awaits owner session | **Blocked on external owner action** |
+| Persistent favourites | Existing zero-row `public.favourites` table reconciled as the one shared contract for typed entity references; Kingdom, Alliance and Hero surfaces consume it | **Implemented; partial preview acceptance evidenced** | Exact owner session passed reversible Hero add/remove, My Forge rendering, refresh/session persistence, supported entity controls, cleanup, console inspection and live schema/RLS checks; User B isolation, signed-out app rejection and authenticated responsive/network instrumentation remain blocked by session/protection/tooling constraints | **Blocked on remaining owner-session evidence** |
 | Saved Progression Plans | Explicitly removed from R8/R8B acceptance; no plan entity, service, API, route, migration or RLS contract is permitted | **Deferred by decision** — separate post-v1.0 epic under ADR-0114 | Absence is intentional and documented; future-facing ADR/roadmap references remain | **Not an R8 defect** |
-| R8B deployed preview | Exact validated candidate and authenticated responsive preview acceptance are required | **Deployed; authenticated acceptance blocked** | `dpl_8tmBUZpNxRmk4HkGW3dGPkTcpNdd` is READY; exact preview is signed out while a historical hostname has the owner session | **Blocked on external owner action** |
+| R8B deployed preview | Exact validated candidate and authenticated responsive preview acceptance are required | **Deployed; partial authenticated acceptance evidenced** | `dpl_8tmBUZpNxRmk4HkGW3dGPkTcpNdd` is READY; exact preview owner session passed the reversible favourite and persistence path; second-user, signed-out app, authenticated responsive and network gates remain open | **Blocked on remaining owner-session evidence** |
 
 R8 evidence is recorded in `docs/recovery/SPRINT-R8-PLAYER-PLATFORM-RECOVERY.md`.
-  The approved favourites migration and exact preview deployment are complete.
-  No fixture, push, merge, tag or promotion was performed. R8B remains open
-  pending owner-authenticated preview action.
+  The approved favourites migration, exact preview deployment and partial owner
+  acceptance are complete. No fixture, push, merge, tag or promotion was
+  performed. R8B remains open pending the explicitly listed owner-session
+  gates.
 
 ## Recovery decisions
 

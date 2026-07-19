@@ -1,6 +1,6 @@
 # Sprint R8B — Player Platform Completion & Preview Acceptance
 
-Status: **Blocked on external owner-authenticated preview acceptance**
+Status: **Blocked on remaining owner-session acceptance fixtures**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 Starting HEAD: `5596a9e8316e026595f6c02b3c16cb45ab19dd7d`
 Supabase project: `hrvdhjscwitqpwjhnjkm`
@@ -91,11 +91,18 @@ Passed locally on the final implementation head `a73be97a4378a2675ce35c704693af4
 
 The build completed successfully with the existing Vite bundle-size warning.
 Local responsive smoke checks at 390, 768 and 1280 CSS px reported no
-horizontal overflow. The exact preview deployed successfully and unauthenticated
-route refreshes rendered the expected shell/sign-in states without a blank
-screen; authenticated favourite add/remove, persistence, account isolation,
-content-type and RLS runtime acceptance remain blocked because this exact
-preview hostname has no restored owner session.
+horizontal overflow. The exact preview deployed successfully and the approved
+owner session now passed the reversible authenticated Hero favourite add/remove,
+My Forge rendering, refresh persistence, session restoration, supported Hero /
+Kingdom / Alliance-detail control checks, clean-up verification and console
+error/warning inspection. Live Supabase schema, own-row RLS policy and zero-row
+post-cleanup checks also passed.
+
+The exact preview still requires a second approved User B session for direct
+account-isolation evidence. A separate signed-out attempt stops at Vercel
+owner protection before the application shell, and this browser binding exposes
+no authenticated viewport or network-inspection capability at 390, 768 and
+1280 CSS px. These are owner-session/tooling gates, not implementation defects.
 
 ## Exact preview evidence
 
@@ -105,17 +112,27 @@ preview hostname has no restored owner session.
 - Deployment state: `READY`, target `preview`; remote `npm run build` passed.
 - Preview environment binding names were present for Supabase URL and
   publishable key; values were not exposed.
-- Existing Chrome session was authenticated on a different historical preview
-  hostname, but the exact R8B hostname rendered signed out. No credentials,
-  OTPs or provider login data were entered.
+- Approved Chrome owner session on the exact R8B hostname authenticated as
+  `ᒪØᖇᗩ᙭` (Kingdom 850, verified player).
+- Reversible runtime fixture: `hero` / Amadeus was added, rendered in My Forge,
+  persisted across reload, observed after session restoration, then removed;
+  live `public.favourites` returned to zero rows for zero users.
+- Supported controls were observed as `Add Amadeus to favourites`, `Add Kingdom
+  850 to favourites` and `Add Alliance TLG to favourites` on their canonical
+  surfaces. Console error/warning inspection was empty across the exercised
+  authenticated routes.
+- The signed-out exact-preview attempt was correctly intercepted by Vercel
+  Authentication before application content; no credentials, OTPs or provider
+  login data were entered.
 
 ## Owner action required
 
-The remaining action is external owner authentication on the exact preview
-hostname above, followed by the requested reversible favourite and privacy
-acceptance checks. The implementation and database work do not require another
-governance decision. Saved Progression Plans remain intentionally deferred by
-ADR-0114.
+The remaining action is an approved second-user session (or disposable owner
+fixture) for User A/User B isolation, plus an owner-approved way to exercise the
+signed-out application rejection and authenticated responsive/network checks on
+the exact protected preview. The implementation and database work do not
+require another governance decision. Saved Progression Plans remain
+intentionally deferred by ADR-0114.
 
 Recommended R9: resolve that governance decision first, then implement only
 the approved contracts with focused privacy tests and a controlled preview
@@ -124,5 +141,5 @@ an interim substitute.
 
 ## Repository state
 
-The branch remains clean after the implementation commit and this evidence
-closure. No push, merge, tag or promotion was performed.
+The branch remains clean after this evidence update. No new deployment, push,
+merge, tag or promotion was performed.
