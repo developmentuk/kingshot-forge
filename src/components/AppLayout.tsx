@@ -37,7 +37,7 @@ function AppLayout() {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const { user } = useAuth()
-  const { role, hasPermission, loadingRole } = useRole()
+  const { hasPermission, loadingRole } = useRole()
   const location = useLocation()
   const workspace = getWorkspace(workspaceForPath(location.pathname))
   const visibleGroups = workspace.groups.map((group) => ({ ...group, items: group.items.filter((item) => !item.permission || hasPermission(item.permission)) })).filter((group) => group.items.length > 0)
