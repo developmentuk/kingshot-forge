@@ -3,6 +3,8 @@
 Date: 19 July 2026  
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 Starting HEAD: `e211993b76e8ca498952569f04cd3c740da7ba9c`  
+Final HEAD: `2308509` (`docs(release): record final v1 gate`)  
+Commits: `2308509`  
 Supabase project: `hrvdhjscwitqpwjhnjkm`  
 Replacement deployment: `dpl_6n8fUzHAJ3sGUTdyQf6mESxXrw6j`  
 Preview: https://kingshot-forge-n2ywu430a-clarksim-7474s-projects.vercel.app
@@ -42,4 +44,3 @@ Supabase project status is `ACTIVE_HEALTHY` on PostgreSQL 17.6.1, and migration 
 ## Owner action required
 
 Provide approved User A, User B, editorial and admin/publisher sessions plus responsive viewport tooling, then complete the runtime acceptance matrix and supply backup/restore, rollback, monitoring and incident-response evidence. Separately upgrade Supabase and enable leaked-password protection after the paid-plan move. Re-run this gate before production approval.
-
