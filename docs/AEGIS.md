@@ -359,7 +359,9 @@ The corrective validation sprint is implemented locally: calibration values now 
 
 Validation commands: `npm run test:render-engine`, `npm run build`, `npm run lint`, and the existing `npm run check` suite. The benchmark registry deliberately marks missing source records as metadata-only and records no image-comparison percentages. Calibration and reference screenshots remain browser-local. The future Forge Screenshot Intelligence Engine is documented but not implemented.
 
-Handover: preserve the existing Art Studio renderer adapter and copied artwork text; verify desktop and mobile previews, each device profile, local screenshot upload, overlay opacity and permission denial manually before accepting the milestone. Do not merge to `main`, deploy, or introduce persistence in this sprint.
+Handover: preserve the existing Art Studio renderer adapter and copied artwork text; verify desktop and mobile previews, each device profile, local profile save/restore, local screenshot upload, overlay opacity and permission denial manually before accepting the milestone. Persistence is browser-local only; do not merge to `main`, deploy or add Supabase persistence.
+
+Release 0.7.2 issue verification: repository history identifies the private `/my-forge/player-identity` route mismatch, fixed by `ff14418` (`fix(player-identity): restore private identity route`). That commit is already an ancestor of `feature/kingshot-art-renderer`, and the current route uses the corrected absolute path. No duplicate fix was added to Sprint 9.3; `scripts/test-render-engine.mjs` retains a regression assertion for the route shape.
 
 ## Session bootstrap
 
