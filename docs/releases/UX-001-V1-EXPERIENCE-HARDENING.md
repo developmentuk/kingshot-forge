@@ -38,17 +38,23 @@ The shared shell and search launcher were inspected on the public home route,
 `/admin/datasets`, `/admin/data-engine`, `/admin/verification`,
 `/admin/community-art`, `/admin/imports`, `/admin/publish`, `/admin/history`,
 `/release-notes` and `/settings` through the route registry and representative
-local render checks. Protected authenticated/editorial runtime acceptance and
-the Vercel preview remain owner-gated and are not claimed complete here.
+preview render checks. The replacement preview additionally checked `/`,
+`/companion/heroes`, `/kingdom-explorer`, `/alliance-directory`, `/my-forge`,
+`/my-forge/hero-collection`, `/my-forge/progression`,
+`/my-forge/transfer-profile`, `/operations`, `/admin/data/buildings`,
+`/admin/imports`, `/admin/publish`, `/admin/history` and
+`/admin/community-art`.
 
 ## Responsive and accessibility evidence
 
-Local browser evidence captured the desktop Global Search dialog and a 390px
-viewport. At 390px the dialog measured 374px wide, body scroll was locked and
-document horizontal overflow was false. Desktop evidence confirmed parent
-`BODY`, `position: fixed`, z-index `1000`, focused input, and Escape focus
-restoration to `Open global search`. Full authenticated route coverage at
-768px, 1280px and 1440px requires the owner preview session/tooling.
+The replacement preview was checked at 390px, 768px, 1280px and 1440px.
+Horizontal overflow was false at every requested size; filters stacked at the
+mobile breakpoint and the modal remained bounded with body scroll locked.
+Desktop evidence confirmed parent `BODY`, `position: fixed`, z-index `1000`,
+focused input, Escape focus restoration, 38 published results, arrow selection
+and Enter navigation. The browser's 390px override reported a 433px CSS
+layout viewport due to device scaling; the rendered screenshot still showed
+the mobile layout with no overflow.
 
 ## Validation
 
@@ -59,11 +65,20 @@ restoration to `Open global search`. Full authenticated route coverage at
 - Production-equivalent build and full `npm run check` — pass after the
   documentation/test updates; known lint and large-chunk warnings remain.
 
-## Deployment and recommendation
+## Deployment and owner decision
 
-No commit, push, merge, tag, production promotion or new preview deployment
-was performed in this work session. The exact protected preview cannot be
-honestly reported as re-verified without owner-authenticated access. Resume
-Version 1.0 acceptance after running the full check, deploying this exact
-clean commit to protected preview, and completing owner checks for search,
-version label, headings/spacing, player/admin screens and mobile layout.
+Replacement deployment: commit `1a2f9d55a3ec1a1b233cec7448672cfc453192c`;
+deployment `dpl_7iMvfxJd7ZVkqbqr5duAq9te9Ae9`; status `READY`; preview
+`https://kingshot-forge-qhho6ce8q-clarksim-7474s-projects.vercel.app`.
+The earlier `dpl_Xiyj53cVAJGZYF5JHo6wApr9VWDU` preview was superseded after
+the verified keyboard fallback defect and is not the acceptance target.
+Vercel build completed successfully with the existing 10 audit findings and
+large-chunk warning. Vercel runtime logs returned no errors.
+
+Owner visual decision: **Pending owner confirmation**. The preview is ready
+for inspection; no agent observation is treated as owner approval.
+
+Owner checklist: inspect Global Search, preview label, page heading/spacing,
+one player route, one admin route, and the 390px mobile layout. Record
+Approved, Approved with Minor Deferred Visual Debt, or Rejected with route,
+viewport and screenshot details.

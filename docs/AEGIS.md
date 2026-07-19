@@ -449,4 +449,9 @@ The focused local hardening work is recorded in
 reference is `docs/design/FORGE-UI-SYSTEM.md`. Search overlay/API handling,
 release labels and shared UI tokens were updated. Protected preview,
 authenticated cross-role and full responsive owner evidence remain required.
+
+The UX-001 replacement protected preview is READY from commit `1a2f9d5` at
+`https://kingshot-forge-qhho6ce8q-clarksim-7474s-projects.vercel.app`.
+Agent-rendered Global Search and responsive checks pass; owner visual
+confirmation is still required before Version 1.0 acceptance resumes.
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.

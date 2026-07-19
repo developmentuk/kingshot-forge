@@ -52,3 +52,13 @@ It adds focused Global Search containment/API safeguards, canonical preview/
 production labels and shared UI tokens. This gate remains **Not Ready** until
 the exact clean commit is deployed to protected preview and owner-authenticated
 responsive, cross-role and operational evidence is completed.
+
+## UX-001 preview deployment update — 19 July 2026
+
+The exact replacement commit `1a2f9d55a3ec1a1b233cec7448672cfc453192c6`
+is deployed READY as `dpl_7iMvfxJd7ZVkqbqr5duAq9te9Ae9` at
+https://kingshot-forge-qhho6ce8q-clarksim-7474s-projects.vercel.app.
+Protected preview runtime checks pass for Global Search, version presentation,
+representative public/player/admin routes, requested responsive widths and
+console errors. Owner visual decision remains **Pending owner confirmation**;
+this gate is not promoted to Ready.

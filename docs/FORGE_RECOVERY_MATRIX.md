@@ -265,3 +265,8 @@ removed obsolete preview version presentation, and reconciled shared UI
 tokens. It does not supersede RC5A owner acceptance or claim protected preview,
 authenticated role, or operational evidence. See
 `releases/UX-001-V1-EXPERIENCE-HARDENING.md`.
+
+The UX-001 replacement preview is READY at
+`https://kingshot-forge-qhho6ce8q-clarksim-7474s-projects.vercel.app`
+(`dpl_7iMvfxJd7ZVkqbqr5duAq9te9Ae9`, commit `1a2f9d5`). Agent runtime and
+responsive checks pass; owner visual decision remains pending.
