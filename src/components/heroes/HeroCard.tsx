@@ -4,6 +4,7 @@ import type {
   Hero,
   PlayerHeroWithHero,
 } from '../../types/hero'
+import FavouriteButton from '../FavouriteButton'
 
 type HeroCardProps = {
   hero: Hero
@@ -208,6 +209,7 @@ function HeroCard({
       </button>
 
       <div className="hero-game-card__actions">
+        <FavouriteButton entityType="hero" entityId={hero.id} label={hero.name} className="hero-game-card__action hero-game-card__action--favourite" />
         <Link
           to={companionPath}
           className="hero-game-card__action hero-game-card__action--guide"

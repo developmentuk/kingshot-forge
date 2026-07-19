@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import DashboardCard from '../components/dashboard/DashboardCard'
 import ForgeProgressPanel, { ForgeGlyph } from '../components/ForgeProgressPanel'
 import { clearRecentNames, loadRecentNames, RECENT_NAMES_UPDATED_EVENT } from '../data/recentNames'
+import { useAuth } from '../context/AuthContext'
+import { useFavourites } from '../context/useFavourites'
 
 const NAME_FAVOURITES_KEY = 'kingshot-forge-name-favourites'
 const ART_FAVOURITES_KEY = 'kingshot-forge-art-favourites'
@@ -17,6 +19,8 @@ function loadStoredCount(key: string) {
 }
 
 export default function MyForgePage() {
+  const { user } = useAuth()
+  const { favourites, loading: favouritesLoading, error: favouritesError, remove: removeFavourite } = useFavourites()
   const [nameCount, setNameCount] = useState(() => loadStoredCount(NAME_FAVOURITES_KEY))
   const [artCount, setArtCount] = useState(() => loadStoredCount(ART_FAVOURITES_KEY))
   const [recentCount, setRecentCount] = useState(() => loadRecentNames().length)
@@ -49,7 +53,7 @@ export default function MyForgePage() {
       <ToolCard to="/my-forge/heroes" icon="hero" title="Hero Showcase" copy="Curate six featured heroes" />
       <ToolCard to="/my-forge/transfer-profile" icon="transfer" title="Transfer Profile" copy="Optional transfer planning" badge="Optional" />
     </div></DashboardCard>
-    <DashboardCard title="Forge Library" subtitle="Saved locally on this device." icon="📚" accent="green"><div className="my-forge-summary"><div><strong>{nameCount}</strong><span>Favourite name styles</span></div><div><strong>{artCount}</strong><span>Favourite artwork</span></div><div><strong>{recentCount}</strong><span>Recent names</span></div><div><strong>{totalSaved}</strong><span>Total saved items</span></div></div><div className="my-forge-library-actions"><Link className="button button--secondary" to="/name-studio">Open Name Studio</Link><Link className="button button--secondary" to="/art-studio">Open Art Studio</Link><button className="button button--secondary" type="button" onClick={() => { clearRecentNames(); setRecentCount(0) }}>Clear recent names</button></div></DashboardCard>
+    <DashboardCard title="Forge Library" subtitle="Local creative saves plus account-synchronised Player favourites." icon="📚" accent="green"><div className="my-forge-summary"><div><strong>{nameCount}</strong><span>Favourite name styles</span></div><div><strong>{artCount}</strong><span>Favourite artwork</span></div><div><strong>{recentCount}</strong><span>Recent names</span></div><div><strong>{totalSaved}</strong><span>Local saved items</span></div></div><div className="my-forge-library-actions"><Link className="button button--secondary" to="/name-studio">Open Name Studio</Link><Link className="button button--secondary" to="/art-studio">Open Art Studio</Link><button className="button button--secondary" type="button" onClick={() => { clearRecentNames(); setRecentCount(0) }}>Clear recent names</button></div><div className="my-forge-persistent-favourites"><p className="eyebrow">Persistent favourites</p>{!user ? <p>Sign in to save heroes, kingdoms and alliances across sessions and devices.</p> : favouritesLoading ? <p aria-busy="true">Loading your favourites…</p> : favourites.length === 0 ? <p>No persistent favourites yet. Use the star on a supported Hero, Kingdom or Alliance surface.</p> : <ul>{favourites.map((favourite) => <li key={favourite.id}><span>{favourite.entity_type} · {favourite.entity_id}</span><button type="button" className="remove-saved-button" onClick={() => void removeFavourite(favourite.entity_type, favourite.entity_id)}>Remove</button></li>)}</ul>}{favouritesError && <p className="profile-panel__error">{favouritesError}</p>}</div></DashboardCard>
   </main>
 }
 

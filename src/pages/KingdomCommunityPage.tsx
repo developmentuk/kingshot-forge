@@ -13,6 +13,7 @@ import type {
   KingdomMember,
   KingdomRecord,
 } from '../types/community'
+import FavouriteButton from '../components/FavouriteButton'
 
 function getVerificationLabel(
   status: KingdomMember['verification_status'],
@@ -383,6 +384,7 @@ function KingdomCommunityPage() {
                     )}
                   </div>
                 )}
+                <FavouriteButton entityType="kingdom" entityId={kingdom.id} label={`Kingdom ${kingdom.kingdom_number}`} className="kingdom-member-favourite" />
               </div>
             </article>
 
@@ -482,15 +484,6 @@ function KingdomCommunityPage() {
                           )}
                         </span>
 
-                        <button
-                          type="button"
-                          className="kingdom-member-favourite"
-                          aria-label={`Favourite ${member.player_name}`}
-                          title="Favourites will be enabled later in this sprint."
-                          disabled
-                        >
-                          ☆
-                        </button>
                       </div>
                     </article>
                   ))}

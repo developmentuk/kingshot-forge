@@ -7,6 +7,7 @@ import App from './App'
 import { AuthProvider } from './context/AuthContext'
 import { RoleProvider } from './context/RoleContext'
 import { PlayerIdentityProvider } from './context/PlayerIdentityContext'
+import { FavouritesProvider } from './context/FavouritesContext'
 
 import './index.css'
 import './styles/kingshot-chat-calibration.css'
@@ -18,7 +19,9 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <RoleProvider>
           <PlayerIdentityProvider>
-            <App />
+            <FavouritesProvider>
+              <App />
+            </FavouritesProvider>
           </PlayerIdentityProvider>
         </RoleProvider>
       </AuthProvider>

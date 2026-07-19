@@ -1,25 +1,21 @@
-# Sprint R8 — Player Platform & Progression Recovery
+# Sprint R8B — Player Platform Completion & Preview Acceptance
 
-Status: **Blocked — owner/governance action required**  
+Status: **In progress — approved continuation sprint**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
-Starting HEAD: `1c09e24329879b36c059f02120555992ac2a049d`  
+Starting HEAD: `5596a9e8316e026595f6c02b3c16cb45ab19dd7d`
 Supabase project: `hrvdhjscwitqpwjhnjkm`
 
 ## Outcome
 
-The existing Player Platform foundation was audited from the required clean
+The existing Player Platform foundation is preserved from the required clean
 head. The canonical identity, profile, progression snapshot, Hero Showcase,
-Kingdom, Alliance and Transfer surfaces are present and locally deployable.
-R8 cannot be accepted because two requested capabilities are not recovered in
-this branch: persistent player favourites and saved progression plans.
+Kingdom, Alliance and Transfer surfaces remain in scope. R8B completes the
+approved Persistent Favourites capability and closes its preview evidence.
 
-This is an intentional architecture/governance boundary, not a missing UI
-hook that can be safely repaired inside R8. `docs/ADR/ADR-0114-player-planning-
-extension-boundary.md` remains Proposed and explicitly keeps Player Planning
-blocked; it also prohibits beginning Planning product code, API, schema or
-migration work in the identity milestone. `docs/PLAYER_DOMAIN_ARCHITECTURE.md`
-likewise records the Player Planning domain as proposed and requiring separate
-schema, authority, privacy and audit approval.
+Saved Progression Plans are removed from R8 acceptance by owner decision.
+`docs/ADR/ADR-0114-player-planning-extension-boundary.md` remains Proposed and
+in force: Planning is a separate post-v1.0 epic and no planning product code,
+API, schema or migration is part of R8B.
 
 ## Recovered and verified locally
 
@@ -39,20 +35,21 @@ schema, authority, privacy and audit approval.
 
 ## Explicit gaps blocking acceptance
 
-### Player favourites
+### Persistent Favourites
 
-The Kingdom and Alliance member cards render disabled favourite controls with
-the messages “Favourites will be enabled later in this sprint” and “Player
-favourites are coming later.” There is no Player-domain favourite service,
-table, migration or privacy contract. Existing Name Studio and Art Studio
-favourites are browser-local and are not player favourites.
+The existing zero-row `public.favourites` table is the canonical persistence
+boundary. R8B reconciles its legacy `item_type`/`item_id` names to
+`entity_type`/`entity_id`, validates supported entity types, retains the
+unique user/entity key, adds lookup indexes and preserves authenticated
+own-row RLS. The shared client service is the only Player Platform access
+layer; browser-local Name Studio and Art Studio favourites remain separate
+legacy convenience features and are not authoritative Player favourites.
 
-### Saved progression plans
+### Saved Progression Plans
 
-The progression surface records immutable snapshots only. There is no saved
-plan/roadmap entity, service, route, API, migration or RLS contract. Adding one
-would be new product and persistence design, contrary to ADR-0114 without an
-owner-approved extension of scope.
+The progression surface continues to record immutable snapshots only. There is
+no saved plan/roadmap entity, service, route, API, migration or RLS contract.
+This absence is intentional R8B scope, not an incomplete defect.
 
 ## Privacy and permission evidence
 

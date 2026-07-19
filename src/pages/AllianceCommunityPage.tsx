@@ -24,6 +24,7 @@ import type {
   AllianceMember,
   AllianceRecord,
 } from '../types/community'
+import FavouriteButton from '../components/FavouriteButton'
 
 function formatRole(
   role: AllianceMember['member_role'],
@@ -468,6 +469,7 @@ function AllianceCommunityPage() {
           </div>
 
           <div className="alliance-community-hero__actions">
+            <FavouriteButton entityType="alliance" entityId={alliance.id} label={`Alliance ${alliance.tag}`} className="kingdom-member-favourite" />
             {alliance.discord_invite_url && (
               <a
                 className="button button--primary"
@@ -782,13 +784,6 @@ function AllianceCommunityPage() {
                       )}
                     </span>
 
-                    <button
-                      type="button"
-                      disabled
-                      title="Player favourites are coming later."
-                    >
-                      ☆
-                    </button>
                   </div>
                 </article>
               ),

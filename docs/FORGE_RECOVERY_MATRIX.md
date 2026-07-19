@@ -119,7 +119,7 @@ R5 performed no Supabase migration, storage change, production write, push,
 merge, tag or production promotion. Existing lint warnings, Vite bundle-size
 warning and Vercel npm audit notice were not introduced by this sprint.
 
-## Sprint R8 Player Platform & Progression recovery
+## Sprint R8B Player Platform completion and preview acceptance
 
 | Subsystem | Current implementation | Recovery status | Validation status | Version 1.0 readiness |
 | --- | --- | --- | --- | --- |
@@ -127,9 +127,9 @@ warning and Vercel npm audit notice were not introduced by this sprint.
 | Hero Collection and Showcase | Player-owned hero state, widget/gear fields, showcase selection and public showcase projection | Preserved on existing `player_heroes` path | Hero governance and identity tests pass; owner-authenticated runtime evidence remains pending | **Not ready** |
 | Progression snapshots | Immutable `player_progression_snapshots` with owner/private and public/shared policies | Preserved; no mutable plan model introduced | Progression service/page audited; RLS and build pass | **Not ready** |
 | Transfer, Kingdom and Alliance | Public Transfer Hub, private Transfer Profile, Kingdom/Alliance directory and membership routes | Preserved; existing permission boundaries retained | Read-only RLS inspection confirms owner/public predicates | **Ready for owner preview evidence** |
-| Player favourites | Kingdom/Alliance controls are disabled; no Player-domain persistence or contract exists | **Blocked** — not safely recoverable without approved schema/privacy design | Absence confirmed in source and live table inventory | **Blocked** |
-| Saved progression plans | No plan entity, service, API, route, migration or RLS contract exists; ADR-0114 keeps Planning blocked | **Blocked** — governance decision required before implementation | Absence confirmed in source and architecture ADR | **Blocked** |
-| R8 deployed preview | No current R8 preview URL or approved owner-authenticated browser session was supplied | **Blocked** — owner must provide preview/session or change the gate | Local build passes; deployed responsive/console/network evidence not claimed | **Blocked** |
+| Persistent favourites | Existing zero-row `public.favourites` table reconciled as the one shared contract for typed entity references; Kingdom, Alliance and Hero surfaces consume it | **In progress** — approved owner decision | Live schema audit found existing unique key and own-row RLS; migration, focused tests and runtime acceptance pending | **Pending R8B acceptance** |
+| Saved Progression Plans | Explicitly removed from R8/R8B acceptance; no plan entity, service, API, route, migration or RLS contract is permitted | **Deferred by decision** — separate post-v1.0 epic under ADR-0114 | Absence is intentional and documented; future-facing ADR/roadmap references remain | **Not an R8 defect** |
+| R8B deployed preview | Exact validated candidate and authenticated responsive preview acceptance are required | **Pending implementation** | Deployment and owner-authenticated runtime evidence to be recorded in R8B acceptance document | **Pending R8B acceptance** |
 
 R8 evidence is recorded in `docs/recovery/SPRINT-R8-PLAYER-PLATFORM-RECOVERY.md`.
 No Supabase write, migration, fixture, deployment, push, merge, tag or
@@ -141,7 +141,8 @@ promotion was performed. R8 remains open pending owner/governance action.
 - Existing `/admin/*` routes remain compatibility aliases for recovered operational slices. Workspace routing is additive and does not bypass server permissions.
 - Workspace preferences are presentation state only. `WorkspaceRoute`, `ProtectedRoute`, API capability checks and Supabase RLS remain authoritative.
 - Completed functionality was recovered from the Operations Centre history. Planned Creator, Audit Log, Roles and Feature Flags surfaces remain labelled planned and were not implemented in R1/R2.
-- The connected Supabase project `hrvdhjscwitqpwjhnjkm` was inspected read-only in R1–R3. Its migration history already contains the Identity and Contributor Application migrations; no production migration or database write was performed. R3 did not create representative accounts because no approved credentials or isolated fixture workflow was available.
+- R8B owner decisions approve one canonical persistent favourites contract and defer Saved Progression Plans to a separate post-v1.0 epic. ADR-0114 remains in force; no planning product, API, schema or migration is part of this sprint.
+- The connected Supabase project `hrvdhjscwitqpwjhnjkm` was initially inspected read-only. The approved R8B migration is limited to reconciling the existing zero-row `public.favourites` table, its constraints, indexes and own-row RLS. No unrelated policy or production data is in scope.
 
 ## Remaining release evidence
 
