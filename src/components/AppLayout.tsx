@@ -5,6 +5,7 @@ import FeedbackDialog from './FeedbackDialog'
 import { useAuth } from '../context/AuthContext'
 import { useRole } from '../context/RoleContext'
 import { RELEASE_DISPLAY, SHORT_COMMIT_SHA } from '../config/release'
+import { SearchExperience } from '../features/search/SearchExperience'
 
 type NavigationItem = {
   label: string
@@ -140,6 +141,7 @@ function MobileBottomLink({ item }: { item: NavigationItem }) {
 function AppLayout() {
   const [navigationOpen, setNavigationOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const { user } = useAuth()
   const { canViewCms, hasPermission, loadingRole } = useRole()
   const location = useLocation()
@@ -180,7 +182,14 @@ function AppLayout() {
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') setNavigationOpen(false)
+      if (event.key === 'Escape') {
+        setNavigationOpen(false)
+        setSearchOpen(false)
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen(true)
+      }
     }
     window.addEventListener('keydown', handleEscape)
     return () => window.removeEventListener('keydown', handleEscape)
@@ -218,6 +227,7 @@ function AppLayout() {
             </span>
           </Link>
 
+          <button type="button" className="app-header__search" onClick={() => setSearchOpen(true)} aria-label="Open global search"><span aria-hidden="true">⌕</span><span>Search Forge…</span><kbd>Ctrl K</kbd></button>
           <div className="app-header__account"><AccountMenu /></div>
         </div>
       </header>
@@ -307,6 +317,7 @@ function AppLayout() {
         onClose={() => setFeedbackOpen(false)}
         defaultType="suggestion"
       />
+      <SearchExperience open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   )
 }

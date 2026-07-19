@@ -91,6 +91,11 @@ export interface ExecuteEditorialActionOptions {
     datasetId: DatasetKey,
     recordId: string,
   ) => Promise<boolean>;
+  onSearchInvalidation?: (event: {
+    datasetId: string;
+    recordId: string;
+    versionId?: string;
+  }) => Promise<void> | void;
 }
 
 function requireText(
@@ -330,7 +335,9 @@ export async function executeEditorialAction(
   const definition =
     createRuntimeDatasetDefinition(datasetId);
   const runtime =
-    options.runtime ?? createEditorialRuntime();
+    options.runtime ?? createEditorialRuntime({
+      onPublicationCommitted: options.onSearchInvalidation,
+    });
   const service =
     new AuthorisedEditorialService(
       definition,

@@ -41,12 +41,14 @@ import PublicPlayerProgressionPage from "./pages/PublicPlayerProgressionPage";
 import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
 import HeroCollectionPage from "./pages/HeroCollectionPage";
 import HeroCompanionPage from "./pages/HeroCompanionPage";
+import SearchPage from "./features/search/SearchPage";
 
 import { DataEngineDiagnosticsPage } from "./pages/admin/DataEngineDiagnosticsPage";
 import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
 import { AdminDatasetsPage } from "./features/admin/AdminDatasetsPage";
 import { AdminDatasetDetailPage } from "./features/admin/AdminDatasetDetailPage";
 import { FeedbackAdminPage } from "./features/admin/FeedbackAdminPage";
+import { SearchExplorerPage } from "./features/admin/SearchExplorerPage";
 import { CommunityArtModerationPage } from "./features/admin/CommunityArtModerationPage";
 import {
   DatasetVerificationPage,
@@ -81,6 +83,7 @@ function App() {
         <Route path="my-forge" element={<MyForgePage />} />
         <Route path="roadmap" element={<RoadmapPage />} />
         <Route path="release-notes" element={<ReleaseNotesPage />} />
+        <Route path="search" element={<SearchPage />} />
         <Route path="transfer-profile" element={<TransferProfilePage />} />
         <Route path="my-forge/transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />
@@ -110,7 +113,7 @@ function App() {
         <Route path="admin/render-engine" element={<ProtectedRoute permission="cms.view"><RenderEngineCalibrationPage /></ProtectedRoute>} />
         <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Import Manager</h1><p>Import management will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
         <Route path="admin/history" element={<ProtectedRoute permission="cms.history.view"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Version History</h1><p>Dataset and record history will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
-        <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Global Search</h1><p>Search across every Forge dataset from one place.</p></div></section></main></ProtectedRoute>} />
+        <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><SearchExplorerPage /></ProtectedRoute>} />
         <Route path="admin/publish" element={<ProtectedRoute permission="cms.publish"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Publish Centre</h1><p>Validation and publishing tools will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
       </Route>
     </Routes>

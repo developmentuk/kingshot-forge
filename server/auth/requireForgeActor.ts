@@ -19,6 +19,7 @@ export interface ForgeActor {
   userId: string;
   role: ForgeActorRole;
   roles: ForgeActorRole[];
+  permissionKeys: string[];
 }
 
 function readBearerToken(
@@ -95,9 +96,26 @@ export async function requireForgeActor(
     (roleData?.role as ForgeActorRole | undefined) ??
     "viewer";
 
+  const {
+    data: permissionData,
+    error: permissionError,
+  } = await supabase
+    .from("forge_role_permissions")
+    .select("permission_key")
+    .eq("role", role);
+
+  if (permissionError) {
+    throw new Error(
+      `Unable to load Forge capabilities: ${permissionError.message}`,
+    );
+  }
+
   return {
     userId: userData.user.id,
     role,
     roles: [role],
+    permissionKeys: (permissionData ?? []).map(
+      (item) => String(item.permission_key),
+    ),
   };
 }

@@ -16,3 +16,7 @@ export {
 export {
   SupabaseScheduledPublicationRepository,
 } from "./SupabaseScheduledPublicationRepository.js";
+
+export {
+  SupabaseSearchProjectionRepository,
+} from "./SupabaseSearchProjectionRepository.js";
