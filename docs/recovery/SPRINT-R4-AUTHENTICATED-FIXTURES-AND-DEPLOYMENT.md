@@ -1,6 +1,6 @@
 # Sprint R4 — Authenticated Fixtures and Deployment Stabilisation
 
-Status: validated locally; exact candidate redeploy pending
+Status: complete
 
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`
 
@@ -64,22 +64,26 @@ The isolated fixture set was provisioned on 19 July 2026 and identified by `forg
 | Responsive layout | Pass | Operations at 390px, 768px and 1280px reported no horizontal overflow (`scrollWidth <= innerWidth`). |
 | Local TypeScript / build | Pass | `npx tsc -p tsconfig.server.json --noEmit` and `npm run check` pass; only existing lint and bundle-size warnings remain. |
 
-Supabase inspection confirmed canonical role assignments, capability permissions, forced RLS on identity/application tables, owner/moderator Community Art policies, and the fixture application/art records. No migration or policy change was required. Direct unauthenticated API access returned the expected bearer-token error; authenticated API behavior was exercised by the deployed UI sessions.
+Supabase inspection confirmed canonical role assignments, capability permissions, forced RLS on identity/application tables, owner/moderator Community Art policies, and the fixture application/art records while they existed. No migration or policy change was required. Direct unauthenticated API access returned the expected bearer-token error; authenticated API behavior was exercised by the deployed UI sessions.
 
 ## Provisioned writes and cleanup
 
-The planned writes are limited to four Auth users with fixture metadata, their canonical role assignments, one submitted contributor application plus its fixture event, and one pending Community Art record. All records are labelled or keyed as R4 fixtures and cascade from the fixture users where applicable. No existing user, role, RLS policy, migration, or production submission is modified. Cleanup deletes the labelled application and art record and then the four Auth users; cleanup is run after browser sign-out and is recorded with verification counts.
+The planned writes were limited to four Auth users with fixture metadata, their canonical role assignments, one submitted contributor application plus its fixture event, and one pending Community Art record. All records were labelled or keyed as R4 fixtures and cascaded from the fixture users where applicable. No existing user, role, RLS policy, migration, or production submission was modified. Cleanup ran after browser sign-out and removed four users and the labelled records; post-cleanup verification returned zero R4 users, zero fixture applications, zero fixture art records, and no local state file.
 
 ## Deployment diagnostics and evidence
 
-R3 recorded Vercel diagnostics in Record Editor relative imports and Player Identity server/type paths. R4 repaired only those reported paths: explicit Record Editor `.js` imports, Player Identity result-union and timestamp narrowing, the own-property check, and support-result typing. The local NodeNext server check and full validation suite pass after the repair. A clean exact-commit Vercel redeploy is the final deployment gate.
+R3 recorded Vercel diagnostics in Record Editor relative imports and Player Identity server/type paths. R4 repaired only those reported paths: explicit Record Editor `.js` imports, Player Identity result-union and timestamp narrowing, the own-property check, and support-result typing. The local NodeNext server check and full validation suite pass after the repair. The final clean exact-commit deployment was commit `bfbd89ec5a230ab50c01dedd3134201d2ab759bc`, deployment `dpl_EVSjynszfzGF9C5T2Pc1j2KLKtAo`, preview [kingshot-forge-dqju6wfv4-clarksim-7474s-projects.vercel.app](https://kingshot-forge-dqju6wfv4-clarksim-7474s-projects.vercel.app), status Ready. Its build logs contained no TypeScript errors; only the existing Vite bundle-size warning remained.
 
 ## Validation log
 
+- Browser validation completed for Player, Contributor + Content Creator, Moderator and Admin + Operations fixtures, including session switching and authenticated responsive checks at 390px, 768px and 1280px.
+- `npm run check`, `npx tsc -p tsconfig.server.json --noEmit`, `npm run validate:nodenext`, and the final Vercel build passed.
+- No production promotion, push, merge or tag was performed.
+
 ## Provisioning and cleanup
 
-Provisioning created four temporary Auth users, canonical role assignments, one submitted contributor application with one fixture event, and one pending Community Art submission. The first partial attempt was cleaned up before successful provisioning. Cleanup is required after final browser sign-out; expected post-cleanup counts are zero R4 users, applications, art records and local state file.
+Provisioning created four temporary Auth users, canonical role assignments, one submitted contributor application with one fixture event, and one pending Community Art submission. The first partial attempt was cleaned up before successful provisioning. Final cleanup completed after browser sign-out; verified post-cleanup counts are zero R4 users, applications and art records, with no local state file.
 
 ## Remaining risks and Version 1.0 readiness
 
-R4 closes the authenticated Workspace/Operations evidence gate, subject to the exact clean redeploy and cleanup. Render Engine and Creative Platform recovery remain outside R4. Unified audit-log completion, production-scale API observability, and secondary planned routes remain future recovery work.
+R4 closes the authenticated Workspace/Operations evidence gate. Render Engine and Creative Platform recovery remain outside R4. Unified audit-log completion, production-scale API observability, and secondary planned routes remain future recovery work.

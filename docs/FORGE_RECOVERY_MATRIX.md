@@ -1,8 +1,8 @@
-# Forge Recovery Matrix — Sprints R1–R3
+# Forge Recovery Matrix — Sprints R1–R4
 
-Status: **working recovery baseline**  
+Status: **R4 recovery baseline complete; R5 ready**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
-R3 validation head: `748d7777f59968e61ca98e791d28fc9fc068ccc9`
+R4 validation head: `bfbd89ec5a230ab50c01dedd3134201d2ab759bc`
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
 
 Readiness uses evidence, not estimates. “Not ready” means a release gate remains; it does not mean the recovered code is absent.
@@ -57,13 +57,13 @@ R3 outcome: the recovered Workspace platform remained locally buildable but was 
 
 | Subsystem | Purpose | Current implementation | Recovery status | Validation status | Source branches | Dependencies | Documentation | Version 1.0 readiness |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Authenticated fixture management | Provision reversible role fixtures without changing production auth design | `scripts/manage-forge-r4-fixtures.mjs` with service-role-only provisioning and cleanup | Implemented for R4 validation | Four fixtures provisioned; cleanup pending final redeploy | Current RC3 branch | Supabase Auth, canonical role assignments, preview redirect | `docs/recovery/SPRINT-R4-AUTHENTICATED-FIXTURES-AND-DEPLOYMENT.md` | Ready for next gate |
-| Workspace runtime validation | Prove role-aware shells, direct-route guards and session switching | Existing registry, route guards and workspace shells | Recovered and validated | Player, contributor/content creator, moderator and admin sessions passed targeted checks | RC3 plus recovered Operations history | AuthContext, RoleContext, server actor resolution | R4 recovery document | Ready pending exact redeploy |
-| Operations Centre | Provide dashboard, User Management, Applications and Community Art entry points | Existing Operations implementation | Recovered and validated | Admin authenticated preview rendered dashboard and capability-filtered navigation | `release/0.8.0-operations-centre`, current RC3 branch | Operations APIs, Supabase RLS | R2/R3 docs and R4 recovery document | Ready pending exact redeploy |
-| Community Art moderation | Review controlled pending submission through moderator capability | Existing Moderation Centre and Community Art queue | Preserved and validated | Moderator authenticated preview rendered moderation workspace and queue entry | RC3 plus Art Studio foundation | Art Studio persistence, moderation capability, RLS | Art Studio docs and R4 recovery document | Ready pending exact redeploy |
-| Vercel TypeScript diagnostics | Keep exact preview candidate deployable | Narrow NodeNext import/result/type-target repairs | Repaired locally | Server tsc and full `npm run check` pass; clean redeploy pending | Current RC3 branch | Vercel function compiler, NodeNext | R4 recovery document | Pending exact redeploy |
+| Authenticated fixture management | Provision reversible role fixtures without changing production auth design | `scripts/manage-forge-r4-fixtures.mjs` with service-role-only provisioning and cleanup | Implemented for R4 validation | Four fixtures provisioned and cleaned up; zero residual records verified | Current RC3 branch | Supabase Auth, canonical role assignments, preview redirect | `docs/recovery/SPRINT-R4-AUTHENTICATED-FIXTURES-AND-DEPLOYMENT.md` | Ready for next recovery sprint |
+| Workspace runtime validation | Prove role-aware shells, direct-route guards and session switching | Existing registry, route guards and workspace shells | Recovered and validated | Player, contributor/content creator, moderator and admin sessions passed targeted checks; session switching and responsive checks passed | RC3 plus recovered Operations history | AuthContext, RoleContext, server actor resolution | R4 recovery document | Ready for next recovery sprint |
+| Operations Centre | Provide dashboard, User Management, Applications and Community Art entry points | Existing Operations implementation | Recovered and validated | Admin authenticated preview rendered dashboard and capability-filtered navigation; final exact commit deployed Ready | `release/0.8.0-operations-centre`, current RC3 branch | Operations APIs, Supabase RLS | R2/R3 docs and R4 recovery document | Ready for next recovery sprint |
+| Community Art moderation | Review controlled pending submission through moderator capability | Existing Moderation Centre and Community Art queue | Preserved and validated | Moderator authenticated preview rendered moderation workspace and queue entry; fixture was removed after validation | RC3 plus Art Studio foundation | Art Studio persistence, moderation capability, RLS | Art Studio docs and R4 recovery document | Ready for next recovery sprint |
+| Vercel TypeScript diagnostics | Keep exact preview candidate deployable | Narrow NodeNext import/result/type-target repairs | Repaired and deployed | Final commit `bfbd89e...` deployed Ready with no TypeScript errors in build logs | Current RC3 branch | Vercel function compiler, NodeNext | R4 recovery document | Ready for next recovery sprint |
 
-R4 performed no migration, RLS change, push, merge, tag or promotion. Temporary fixture records are scheduled for cleanup after final browser sign-out.
+R4 performed no migration, RLS change, push, merge, tag or promotion. Temporary fixture records were cleaned up after final browser sign-out. The exact deployed candidate was `bfbd89ec5a230ab50c01dedd3134201d2ab759bc` (`dpl_EVSjynszfzGF9C5T2Pc1j2KLKtAo`).
 
 ## Recovery decisions
 
@@ -75,4 +75,4 @@ R4 performed no migration, RLS change, push, merge, tag or promotion. Temporary 
 
 ## Remaining release evidence
 
-Version 1.0 still requires authenticated role-fixture validation, authenticated responsive desktop/mobile checks, live API/RLS verification, deployed exact-commit smoke testing, runtime observability review, and the remaining platform recovery items listed above. R2/R3 local validation is not a claim that those release gates are complete.
+Version 1.0 still requires the remaining platform recovery items listed above, including Render Engine and Creative Platform recovery, broader runtime observability and any secondary planned routes. R4 authenticated Workspace/Operations validation and the exact candidate deployment are complete.

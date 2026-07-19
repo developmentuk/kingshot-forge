@@ -2,7 +2,7 @@
 
 R3 was carried forward into R4 because approved authenticated access and a clean Vercel TypeScript build were not available at its close. The fixture and deployment recovery is recorded in [`SPRINT-R4-AUTHENTICATED-FIXTURES-AND-DEPLOYMENT.md`](./SPRINT-R4-AUTHENTICATED-FIXTURES-AND-DEPLOYMENT.md).
 
-Status: **blocked at external validation gates**  
+Status: **superseded by completed R4 authenticated fixture validation**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 Starting head: `748d7777f59968e61ca98e791d28fc9fc068ccc9`
 
