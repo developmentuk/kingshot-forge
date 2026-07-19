@@ -4,5 +4,5 @@ export * from './configuration'
 export * from './device-profiles'
 export * from './grid'
 export * from './parser'
+export * from './persistence'
 export * from './types'
-

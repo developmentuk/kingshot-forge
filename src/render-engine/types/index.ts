@@ -36,6 +36,20 @@ export type DeviceProfile = {
   avatarSize: number
 }
 
+export type DeviceProfileOverrides = Partial<Record<DeviceProfileId, Partial<DeviceProfile>>>
+
+export type SavedCalibrationProfile = {
+  schemaVersion: 1
+  id: string
+  name: string
+  createdAt: string
+  updatedAt: string
+  baseDeviceProfile: DeviceProfileId
+  calibration: CalibrationConfiguration
+  deviceOverrides: DeviceProfileOverrides
+  benchmarkId?: string
+}
+
 export type GridCell = {
   glyph: string
   family: GlyphFamily
@@ -58,4 +72,3 @@ export type ArtworkAnalysis = {
   warnings: string[]
   rendererLabel: string
 }
-
