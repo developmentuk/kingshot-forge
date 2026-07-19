@@ -115,27 +115,13 @@ function App() {
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
 
         <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
-        <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><UserManagementPage /></WorkspaceRoute>} />
-        <Route path="operations/users/:userId" element={<WorkspaceRoute workspaceId="operations"><UserDetailPage /></WorkspaceRoute>} />
-        <Route path="operations/applications" element={<WorkspaceRoute workspaceId="operations"><ContributorApplicationsPage /></WorkspaceRoute>} />
-        <Route path="operations/applications/:applicationId" element={<WorkspaceRoute workspaceId="operations"><ContributorApplicationDetailPage /></WorkspaceRoute>} />
-        <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Roles and Permissions" /></WorkspaceRoute>} />
-        <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Audit Log" /></WorkspaceRoute>} />
-        <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Feature Flags" /></WorkspaceRoute>} />
-        <Route path="contributor" element={<WorkspaceRoute workspaceId="contributor"><WorkspaceHomePage workspaceId="contributor" /></WorkspaceRoute>} />
-        <Route path="contributor/drafts" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="My drafts" /></WorkspaceRoute>} />
-        <Route path="contributor/submissions" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="Submission history" /></WorkspaceRoute>} />
-        <Route path="creator" element={<WorkspaceRoute workspaceId="creator"><WorkspaceHomePage workspaceId="creator" /></WorkspaceRoute>} />
-        <Route path="creator/content" element={<WorkspaceRoute workspaceId="creator"><OperationsStatusPage title="Creator content" /></WorkspaceRoute>} />
-        <Route path="creator/verification" element={<WorkspaceRoute workspaceId="creator"><OperationsStatusPage title="Creator verification" /></WorkspaceRoute>} />
-        <Route path="moderation" element={<WorkspaceRoute workspaceId="moderation"><WorkspaceHomePage workspaceId="moderation" /></WorkspaceRoute>} />
-        <Route path="moderation/reports" element={<WorkspaceRoute workspaceId="moderation"><OperationsStatusPage title="Reports" /></WorkspaceRoute>} />
-
-        <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
-        <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="User Management" /></WorkspaceRoute>} />
-        <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Roles and Permissions" /></WorkspaceRoute>} />
-        <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Audit Log" /></WorkspaceRoute>} />
-        <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><OperationsStatusPage title="Feature Flags" /></WorkspaceRoute>} />
+        <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="users.read"><UserManagementPage /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/users/:userId" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="users.read"><UserDetailPage /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/applications" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="applications.read"><ContributorApplicationsPage /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/applications/:applicationId" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="applications.read"><ContributorApplicationDetailPage /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Roles and Permissions" /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Audit Log" /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Feature Flags" /></ProtectedRoute></WorkspaceRoute>} />
         <Route path="contributor" element={<WorkspaceRoute workspaceId="contributor"><WorkspaceHomePage workspaceId="contributor" /></WorkspaceRoute>} />
         <Route path="contributor/drafts" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="My drafts" /></WorkspaceRoute>} />
         <Route path="contributor/submissions" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="Submission history" /></WorkspaceRoute>} />

@@ -37,13 +37,10 @@ export default function WorkspaceHomePage({ workspaceId }: { workspaceId: ForgeW
           <span className="status-badge">{items.length} destinations</span>
         </div>
         <div className="workspace-home__grid">
-          {items.map((item) => (
-            <Link className="workspace-home__card" to={item.path} key={item.path}>
-              <span aria-hidden="true">{item.icon}</span>
-              <div><h3>{item.label}</h3><p>{item.status ? `${item.status[0].toUpperCase()}${item.status.slice(1)} — this area is not presented as complete.` : 'Open workspace tool'}</p></div>
-              <strong aria-hidden="true">→</strong>
-            </Link>
-          ))}
+          {items.map((item) => {
+            const content = <><span aria-hidden="true">{item.icon}</span><div><h3>{item.label}</h3><p>{item.status ? `${item.status[0].toUpperCase()}${item.status.slice(1)} — this area is not presented as complete.` : 'Open workspace tool'}</p></div>{!item.status && <strong aria-hidden="true">→</strong>}</>
+            return item.status ? <div className="workspace-home__card workspace-home__card--disabled" aria-disabled="true" key={item.path}>{content}</div> : <Link className="workspace-home__card" to={item.path} key={item.path}>{content}</Link>
+          })}
         </div>
       </section>
       <div className="workspace-home__note" role="note"><strong>Access is server-authorized.</strong><span>Workspace visibility only changes presentation. Direct routes and mutations still require their own permissions.</span></div>
