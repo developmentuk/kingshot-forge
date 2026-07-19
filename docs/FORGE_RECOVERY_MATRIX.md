@@ -119,6 +119,22 @@ R5 performed no Supabase migration, storage change, production write, push,
 merge, tag or production promotion. Existing lint warnings, Vite bundle-size
 warning and Vercel npm audit notice were not introduced by this sprint.
 
+## Sprint R8 Player Platform & Progression recovery
+
+| Subsystem | Current implementation | Recovery status | Validation status | Version 1.0 readiness |
+| --- | --- | --- | --- | --- |
+| Player Identity and Profiles | Canonical linked-player context, private profile editor and public profile projection/routes | Preserved; no duplicate identity system introduced | Player Identity contracts, focused tests and build pass; public visibility boundary confirmed in code and RLS | **Ready for owner preview evidence** |
+| Hero Collection and Showcase | Player-owned hero state, widget/gear fields, showcase selection and public showcase projection | Preserved on existing `player_heroes` path | Hero governance and identity tests pass; owner-authenticated runtime evidence remains pending | **Not ready** |
+| Progression snapshots | Immutable `player_progression_snapshots` with owner/private and public/shared policies | Preserved; no mutable plan model introduced | Progression service/page audited; RLS and build pass | **Not ready** |
+| Transfer, Kingdom and Alliance | Public Transfer Hub, private Transfer Profile, Kingdom/Alliance directory and membership routes | Preserved; existing permission boundaries retained | Read-only RLS inspection confirms owner/public predicates | **Ready for owner preview evidence** |
+| Player favourites | Kingdom/Alliance controls are disabled; no Player-domain persistence or contract exists | **Blocked** — not safely recoverable without approved schema/privacy design | Absence confirmed in source and live table inventory | **Blocked** |
+| Saved progression plans | No plan entity, service, API, route, migration or RLS contract exists; ADR-0114 keeps Planning blocked | **Blocked** — governance decision required before implementation | Absence confirmed in source and architecture ADR | **Blocked** |
+| R8 deployed preview | No current R8 preview URL or approved owner-authenticated browser session was supplied | **Blocked** — owner must provide preview/session or change the gate | Local build passes; deployed responsive/console/network evidence not claimed | **Blocked** |
+
+R8 evidence is recorded in `docs/recovery/SPRINT-R8-PLAYER-PLATFORM-RECOVERY.md`.
+No Supabase write, migration, fixture, deployment, push, merge, tag or
+promotion was performed. R8 remains open pending owner/governance action.
+
 ## Recovery decisions
 
 - `src/navigation/workspaceRegistry.ts` remains the single navigation contract. The shell consumes it; it does not create a second menu model.
