@@ -270,3 +270,14 @@ The UX-001 replacement preview is READY at
 `https://kingshot-forge-qhho6ce8q-clarksim-7474s-projects.vercel.app`
 (`dpl_7iMvfxJd7ZVkqbqr5duAq9te9Ae9`, commit `1a2f9d5`). Agent runtime and
 responsive checks pass; owner visual decision remains pending.
+
+## UX-001 exact commit continuation — 19 July 2026
+
+The exact UX-001 commit `5e277720d94aaa38a852e6ce996625c7debd2362` is deployed
+as protected READY preview `dpl_6QAuc5AvHLVBrzwfzZnHkYePG8B8` at
+`https://kingshot-forge-qw27incbg-clarksim-7474s-projects.vercel.app`.
+Global Search, preview version presentation, public/player representative
+routes, protected-route boundary states, responsive widths 390/768/1280/1440,
+and browser/Vercel diagnostics were checked. Owner visual confirmation is
+still pending; this evidence does not close authenticated cross-role,
+cross-user or operational gates. Version 1.0 acceptance remains blocked.

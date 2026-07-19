@@ -62,3 +62,31 @@ Protected preview runtime checks pass for Global Search, version presentation,
 representative public/player/admin routes, requested responsive widths and
 console errors. Owner visual decision remains **Pending owner confirmation**;
 this gate is not promoted to Ready.
+
+## Exact UX-001 commit deployment continuation — 19 July 2026
+
+The exact requested commit `5e277720d94aaa38a852e6ce996625c7debd2362` was
+deployed cleanly as protected preview `dpl_6QAuc5AvHLVBrzwfzZnHkYePG8B8`
+at `https://kingshot-forge-qw27incbg-clarksim-7474s-projects.vercel.app`.
+Status is `READY`; target is `preview`; Vercel project is `kingshot-forge`
+(`prj_qoxc7FGYaVFAwtREvHpB5viQguO7`) and the configured preview Supabase
+bindings are present for project `hrvdhjscwitqpwjhnjkm`. No promotion,
+merge, tag or push occurred.
+
+The exact-commit checks passed: `npm run check`, server TypeScript,
+`npm run validate:nodenext`, `npm run build` and `git diff --check`. Existing
+non-blocking warnings are eight Oxlint warnings, the Vite large-client-chunk
+warning, ten npm audit findings (six high/four moderate) and the Node
+`url.parse` deprecation warning in runtime logs.
+
+Deployed Global Search, preview release label, representative route and
+responsive checks passed. Console diagnostics were empty. Vercel runtime
+logs recorded HTTP 200 for `/api/search` and dataset reads; no failed route
+chunk or stylesheet was observed. Protected admin/editorial/operations routes
+were inspected as unauthenticated access-denied/workspace-unavailable states,
+not treated as authenticated owner acceptance.
+
+Owner visual decision remains **Pending owner confirmation**. Recommendation
+remains **Not Ready for Version 1.0** until the owner inspects the exact
+protected preview and supplies the UX-001 decision, authenticated role
+evidence and outstanding operational recovery evidence.

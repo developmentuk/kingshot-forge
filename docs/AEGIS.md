@@ -454,4 +454,17 @@ The UX-001 replacement protected preview is READY from commit `1a2f9d5` at
 `https://kingshot-forge-qhho6ce8q-clarksim-7474s-projects.vercel.app`.
 Agent-rendered Global Search and responsive checks pass; owner visual
 confirmation is still required before Version 1.0 acceptance resumes.
+
+## UX-001 exact preview continuation — 19 July 2026
+
+The requested clean UX-001 commit `5e277720d94aaa38a852e6ce996625c7debd2362`
+was deployed to protected preview `dpl_6QAuc5AvHLVBrzwfzZnHkYePG8B8` at
+`https://kingshot-forge-qw27incbg-clarksim-7474s-projects.vercel.app` and is
+`READY`. The Supabase project binding remains `hrvdhjscwitqpwjhnjkm` through
+the configured preview environment variables. Global Search containment,
+keyboard launch, controlled response handling, preview label, representative
+routes, 390/768/1280/1440 responsive checks and console diagnostics passed.
+Owner visual acceptance is **Pending owner confirmation**; protected admin,
+editorial and operations screens were observed only at their unauthenticated
+boundary states. The recommendation remains **Not Ready for Version 1.0**.
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.

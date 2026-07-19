@@ -82,3 +82,46 @@ Owner checklist: inspect Global Search, preview label, page heading/spacing,
 one player route, one admin route, and the 390px mobile layout. Record
 Approved, Approved with Minor Deferred Visual Debt, or Rejected with route,
 viewport and screenshot details.
+
+## Exact UX-001 preview acceptance continuation — 19 July 2026
+
+The requested exact clean commit `5e277720d94aaa38a852e6ce996625c7debd2362`
+was deployed separately from the later documentation/fallback commits as
+protected preview `dpl_6QAuc5AvHLVBrzwfzZnHkYePG8B8`,
+`https://kingshot-forge-qw27incbg-clarksim-7474s-projects.vercel.app`.
+Vercel reports `READY`, preview target, project `kingshot-forge`, Vite build,
+Node 24.x, and Supabase preview variables (`VITE_SUPABASE_URL`,
+`VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL` and service-role binding).
+The preview protection interstitial was present; no production promotion was
+performed.
+
+Agent runtime checks passed: Global Search opened from the header, Ctrl+K and
+Cmd+K; the dialog was body-level, fixed, z-index 1000, viewport-covering and
+scroll-locked; search results loaded, remained scrollable, and the controlled
+API path did not expose a parser exception. Escape restored focus to the
+launcher and body scrolling. The preview rendered `Forge Preview`; the
+obsolete `Preview · v0.7.5` label was absent and deployment metadata was not
+shown as the ordinary-user release label.
+
+Routes inspected: `/`, `/companion/heroes`, `/kingdom-explorer`,
+`/alliance-directory`, `/my-forge`, `/my-forge/hero-collection`,
+`/my-forge/progression`, `/my-forge/transfer-profile`, `/admin`,
+`/admin/data/buildings`, `/admin/imports`, `/admin/data-engine`,
+`/admin/publish`, `/admin/history`, `/operations` and
+`/admin/community-art`. Public/player shells rendered; protected admin and
+operations routes correctly showed their access/workspace states without an
+authenticated owner role.
+
+Responsive checks covered 390px, 768px, 1280px and 1440px. No horizontal
+overflow was observed; the known device-scale CSS widths were 433px and
+853px for the 390px and 768px overrides. Global Search remained bounded,
+closeable and scroll-locked at every width. Chrome console diagnostics were
+empty; Vercel runtime logs showed successful 200 responses for `/api/search`
+and `/api/data-engine/dataset`, with only the existing Node `url.parse`
+deprecation warning and Vite large-chunk warning.
+
+Owner visual decision: **Pending owner confirmation**. Deferred debt remains
+the legacy feature-CSS token migration, authenticated role/session checks and
+operational recovery evidence. UX-001 must not be marked visually accepted
+until the owner inspects the protected URL and records Approved, Approved with
+Minor Deferred Visual Debt, or Rejected with exact defect evidence.
