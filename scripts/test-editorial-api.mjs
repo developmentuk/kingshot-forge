@@ -634,11 +634,11 @@ try {
         actors.admin,
         nonApprovedRuntime,
       ),
-    "non-approved publication request",
+    "Buildings publication capability",
   );
 
   await expectStatus(
-    422,
+    409,
     () =>
       execute(
         {
@@ -651,12 +651,12 @@ try {
         actors.admin,
         runtime,
       ),
-    "unsupported rollback",
+    "rollback requires a published record",
   );
 
   for (const action of ["archive", "restore"]) {
     await expectStatus(
-      422,
+      409,
       () =>
         execute(
           {
@@ -668,7 +668,7 @@ try {
           actors.admin,
           runtime,
         ),
-      `unsupported ${action}`,
+      `${action} has an invalid current status`,
     );
   }
 

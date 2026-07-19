@@ -176,15 +176,15 @@ reconciliation below.
 | Persistent Favourites | **Red** | R8B proves User A add/remove and persistence, but not User B isolation or signed-out rejection on the protected exact preview. |
 | Transfer Hub | **Amber** | R8B code/RLS boundary and public `looking` filter are evidenced; complete cross-user runtime proof remains open. |
 | Community Art | **Green** | R4/R6 authenticated moderation and R6 renderer/submission preview evidence passed; no duplicate submission system was introduced. |
-| Editorial Platform | **Red** | AEGIS requires governed import → verify → publish behaviour; the roadmap and routes show the persistent CMS publication journey is incomplete. |
-| Data Engine | **Amber** | Dataset catalogue, diagnostics and verification foundations exist; production-scale import/publish operations remain incomplete. |
+| Editorial Platform | **Amber** | RC2 adds governed source refresh, review/approval, immutable history, compare, rollback and atomic Heroes/Hero Skills publication; signed-in owner and production acceptance remain open. |
+| Data Engine | **Amber** | Dataset catalogue, diagnostics and authenticated Import Manager source preview/provenance validation are implemented; production-scale staging remains an operational follow-up. |
 | Dataset Registry | **Green** | Registry and dataset contracts are present and covered by the existing validation suite. |
-| Admin CMS | **Amber** | Dataset, verification and search administration are available, while Import Manager, Publish Centre and Version History remain explicitly planned. |
+| Admin CMS | **Amber** | Dataset, verification, Import Manager, Publish Centre and Version History surfaces are implemented; signed-in acceptance remains open. |
 | Verification workflows | **Green** | Verification Centre routes, contracts and focused validation pass; publication completion is a separate blocker. |
-| Import workflows | **Red** | `/admin/imports` is an intentional planned/status surface, not an implemented import workflow. |
-| Publishing workflows | **Red** | `/admin/publish` is an intentional planned/status surface, not an implemented publication workflow. |
+| Import workflows | **Amber** | `/admin/imports` refreshes registered Data Engine sources and displays provenance/hash validation; dataset-specific editorial staging remains bounded by existing editor capabilities. |
+| Publishing workflows | **Amber** | `/admin/publish` inspects queue/schedule state and processes approved supported publications through the existing atomic service. |
 | Feature Flags | **Amber** | Identity flags are exact-match environment gates and default off; the Operations Feature Flags console remains planned. |
-| Audit Logging | **Amber** | Identity/recruitment mutations are audited, but the unified Audit Log surface remains planned. |
+| Audit Logging | **Amber** | Editorial import/edit/review/publish/rollback events are persisted and visible through record history; a cross-domain unified operator log remains planned. |
 | Notifications | **Amber** | ADR-0113 defines the boundary; no complete notification product is exposed and implementation is deferred. |
 | Analytics | **Amber** | The GA measurement ID is documented, but this audit found no production analytics acceptance evidence. |
 

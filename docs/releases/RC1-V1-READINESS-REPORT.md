@@ -1,5 +1,15 @@
 # Project Aegis — RC1 Version 1.0 Readiness Report
 
+## RC2 status update — 19 July 2026
+
+RC2 reconciled the approved Supabase editorial schema, completed the existing
+editorial record workflow, and replaced the RC1 Import Manager, Version History
+and Publish Centre status placeholders with working authenticated surfaces. See
+[RC2-EDITORIAL-PLATFORM.md](./RC2-EDITORIAL-PLATFORM.md) and
+[RC2-SCHEMA-RECONCILIATION.md](./RC2-SCHEMA-RECONCILIATION.md) for evidence.
+Version 1.0 remains not ready until owner-authenticated preview and production
+acceptance gates are recorded.
+
 Date: 19 July 2026<br>
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`<br>
 Starting HEAD: `e9dd2a3cf8873ddcfbe2f88fce7d5ed2232afd46`<br>
