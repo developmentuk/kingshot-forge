@@ -400,4 +400,16 @@ two-user isolation, authenticated editorial/runtime/responsive acceptance and
 production smoke are not evidenced. Live Supabase advisor findings also
 require owner review before release. The complete gate and promotion plan are
 in [`docs/releases/RC3-V1-RELEASE-GATE.md`](releases/RC3-V1-RELEASE-GATE.md).
+
+## RC4 security hardening — 19 July 2026
+
+RC4 reviewed the connected Supabase advisors, SECURITY DEFINER functions, RLS,
+RPC grants, authentication integration, API boundaries, operations and
+performance. The checked-in hardening migration
+`20260719210000_rc4_security_definer_hardening.sql` locks the feedback trigger
+search path and removes anonymous/unnecessary public execution grants. It is
+not applied to the live project until Clark approves the controlled database
+change. Version 1.0 remains **Not Ready** pending live re-advisor results,
+Auth settings, backup/monitoring evidence and authenticated smoke acceptance.
+See [`RC4-SECURITY-HARDENING.md`](releases/RC4-SECURITY-HARDENING.md).
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.

@@ -203,6 +203,19 @@ leaked-password protection disabled; no live security change was made.
 RC3 recommendation: **Not Ready for Version 1.0**. Full evidence is in
 `docs/releases/RC3-V1-RELEASE-GATE.md`.
 
+## RC4 security-hardening status — 19 July 2026
+
+RC4 reviewed every current Supabase advisor finding and all 22
+`SECURITY DEFINER` functions. A checked-in migration locks the mutable
+feedback-trigger search path and removes anonymous/unnecessary public RPC
+execution while preserving intentional authenticated contracts and the
+service-role-only editorial publication/rollback functions. The migration is
+not applied to the live project pending owner approval. Auth dashboard,
+backup/restore, monitoring and authenticated smoke evidence remain open.
+
+RC4 recommendation: **Not Ready for Version 1.0**. See
+`docs/releases/RC4-SECURITY-HARDENING.md`.
+
 ### Recovery audit
 
 R1 and R2 have no standalone files under `docs/recovery/`; their completed

@@ -172,3 +172,15 @@ Production remains explicitly out of scope for RC3. The owner gate sequence is:
 
 No merge, tag, push, production deployment or promotion was performed by RC3.
 
+## RC4 follow-up — 19 July 2026
+
+RC4 added the checked-in migration
+`20260719210000_rc4_security_definer_hardening.sql` and focused test
+`npm run test:rc4-security`. The migration locks the feedback trigger search
+path and removes anonymous/unnecessary public SECURITY DEFINER execution while
+preserving the existing authenticated role/access and alliance command
+contracts. It has not been applied to Supabase pending owner approval.
+
+RC4 therefore retains the RC3 recommendation **Not Ready for Version 1.0**.
+See [`RC4-SECURITY-HARDENING.md`](RC4-SECURITY-HARDENING.md) for the complete
+advisor disposition, authentication review and operational owner gates.
