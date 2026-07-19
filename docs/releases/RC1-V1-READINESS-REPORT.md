@@ -160,3 +160,15 @@ unrelated refactoring out of RC2.
 
 Final HEAD: the commit containing this report, reported in the RC1 handoff.
 No remote push, merge, tag or deployment occurred.
+
+## RC3 status update — 19 July 2026
+
+RC3 deployed the exact candidate `7cfaad7e75a2078fa04efae6edefb450610c460e`
+to protected preview deployment `dpl_Gtg27ukWziY34K3F7yMiaZArgbnv` and passed
+the full local validation gate. The authenticated owner session was not
+available; Vercel SSO intercepted the preview before the app loaded. User A /
+User B isolation, authenticated editorial runtime, authenticated responsive
+acceptance and production smoke therefore remain open. Supabase security
+advisors also report unresolved legacy security-definer execution grants.
+The authoritative RC3 gate is recorded in
+[`RC3-V1-RELEASE-GATE.md`](./RC3-V1-RELEASE-GATE.md).

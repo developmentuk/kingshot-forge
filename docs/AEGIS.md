@@ -388,4 +388,16 @@ At the start of every development session:
 2. Inspect the active branch and exact head commit.
 3. Read any supporting architecture documents affected by the sprint.
 4. Use the connected Supabase project read-only until a write is explicitly required by the milestone.
+
+## RC3 Version 1.0 release gate — 19 July 2026
+
+RC3 validated and deployed the exact candidate from
+`recovery/0.9.0-rc3-feature-reconciliation` at
+`7cfaad7e75a2078fa04efae6edefb450610c460e` to protected preview deployment
+`dpl_Gtg27ukWziY34K3F7yMiaZArgbnv`. Local checks and the Vercel build pass.
+Version 1.0 remains **Not Ready** because owner-authenticated preview,
+two-user isolation, authenticated editorial/runtime/responsive acceptance and
+production smoke are not evidenced. Live Supabase advisor findings also
+require owner review before release. The complete gate and promotion plan are
+in [`docs/releases/RC3-V1-RELEASE-GATE.md`](releases/RC3-V1-RELEASE-GATE.md).
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.

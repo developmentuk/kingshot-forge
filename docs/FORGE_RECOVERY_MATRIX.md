@@ -188,6 +188,21 @@ reconciliation below.
 | Notifications | **Amber** | ADR-0113 defines the boundary; no complete notification product is exposed and implementation is deferred. |
 | Analytics | **Amber** | The GA measurement ID is documented, but this audit found no production analytics acceptance evidence. |
 
+## RC3 release-gate reconciliation — 19 July 2026
+
+The exact candidate `7cfaad7e75a2078fa04efae6edefb450610c460e` was deployed to
+protected preview as `dpl_Gtg27ukWziY34K3F7yMiaZArgbnv` and built successfully.
+Local validation remains green. The owner-authenticated browser session was
+not available, so the User A/User B privacy gate, authenticated editorial
+runtime, authenticated responsive checks and production smoke remain release
+blockers. The live project has zero `public.favourites` rows, owner-only
+favourites policies, and service-role-only RC2 publication/rollback RPC ACLs.
+Supabase advisors still report legacy public security-definer grants and
+leaked-password protection disabled; no live security change was made.
+
+RC3 recommendation: **Not Ready for Version 1.0**. Full evidence is in
+`docs/releases/RC3-V1-RELEASE-GATE.md`.
+
 ### Recovery audit
 
 R1 and R2 have no standalone files under `docs/recovery/`; their completed

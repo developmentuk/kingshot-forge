@@ -49,3 +49,12 @@ RC3 should focus on signed-in owner acceptance, two-user RLS isolation evidence,
 production-equivalent preview validation and final operational observability.
 Keep unrelated dataset redesign, notification work and broad Operations
 enhancements out of the release gate.
+
+## RC3 status update — 19 July 2026
+
+The exact RC3 candidate deployed successfully to protected preview and the
+local editorial validation suites remain green. The RC2 editorial workflow has
+not yet received authenticated owner runtime acceptance, two-role publication
+acceptance or deployed rollback evidence because the approved browser session
+was unavailable. RC3 therefore keeps Version 1.0 **Not Ready**. See
+[`RC3-V1-RELEASE-GATE.md`](./RC3-V1-RELEASE-GATE.md).
