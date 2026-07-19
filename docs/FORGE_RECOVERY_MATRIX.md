@@ -24,6 +24,22 @@ Readiness uses evidence, not estimates. “Not ready” means a release gate rem
 | Role-aware navigation and permissions | Ensure visibility is not treated as authorization and direct routes remain guarded | Registry filters links; `WorkspaceRoute` and `ProtectedRoute` enforce access boundaries | Reconciled; existing server authority preserved | Workspace/Identity tests and build pass; role fixture/browser checks pending | RC3 plus `release/0.8.0-operations-centre` | Role Context, server actor resolution, Supabase RLS | `docs/security/role-capability-matrix.md`, `docs/AEGIS.md` | **Not ready** |
 | RC3 Search and Render platform | Preserve the current canonical platform while recovering Workspace functionality | Existing search, relationship and calibration surfaces remain present | Preserved; recovery commits were integrated without restoring their superseded deletions | Full `npm run check` passes; existing lint and bundle-size warnings remain | `recovery/0.9.0-rc3-feature-reconciliation` | Existing services and shared styles | Current RC3 docs | **Not ready** |
 
+## Sprint R5 render and creative inventory baseline
+
+Inventory performed at starting HEAD `b6196010c1bfbaaa828cadeff57a0873362dec3f` on
+`recovery/0.9.0-rc3-feature-reconciliation`, before R5 edits.
+
+| Area | Baseline finding | R5 action/status |
+| --- | --- | --- |
+| Canonical Render Engine | `src/render-engine/` already contains parser, fixed-cell grid, analyser, configuration, device profiles, benchmarks, persistence, simulator and shared types. The public barrel omitted the simulator export. | Reconciled by exporting the simulator from `src/render-engine/index.ts`. |
+| Kingshot artwork renderer | `src/components/art/KingshotArtRenderer.tsx` is the active Art Studio adapter and consumes the Render Engine parser, analyser and grid. No competing active artwork renderer was found. | Preserved as the canonical renderer. |
+| Calibration Lab | `src/features/admin/RenderEngineCalibrationPage.tsx` and `renderEngineCalibration.css` are present, route-protected at `/admin/render-engine` by `cms.view`, and linked through the existing operations registry. | Preserved; focused and full validation required. |
+| Community Art moderation | Moderation was capability-protected but rendered a raw `<pre>` instead of the canonical renderer. | Migrated moderation preview to `KingshotArtRenderer`; retained exact source text for copy and validation. |
+| Persistence | Browser-local schema key `forge.renderEngine.calibrationProfiles.v1` and schema filtering are present; no server persistence path exists. | Preserved; focused save/load/reset and malformed-profile validation required. |
+| Creative surfaces | Art Studio library, modal and submission previews use `KingshotArtRenderer`; Chat Studio and Name/Banner surfaces have no completed R5 integration to force. | Preserved applicable integrations; no unrelated surface redesign. |
+| Route/navigation gaps | Calibration route and capability guard exist; Community Art queue route remains independently protected by `moderation.manage`. | No new permission system or route required. |
+| Duplicate/obsolete implementations | No duplicate active Render Engine or Art Studio renderer file found. Legacy moderation CSS targeted the removed raw preview shape. | Legacy selector removed; no renderer file deleted. |
+
 ## Sprint R2 runtime validation and hardening
 
 | Area | Evidence | Recovery status | Version 1.0 readiness |
