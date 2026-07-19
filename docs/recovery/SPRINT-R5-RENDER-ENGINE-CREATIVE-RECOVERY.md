@@ -1,6 +1,6 @@
 # Sprint R5 — Render Engine and Creative Platform Recovery
 
-Status: validation in progress
+Status: locally complete; preview smoke blocked by Vercel SSO
 
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`
 
@@ -67,13 +67,13 @@ Record the final results below when the candidate is validated:
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Focused Render Engine tests | Pending | `node scripts/test-render-engine.mjs`; `node scripts/test-render-engine-persistence.mjs` |
-| Full project check | Pending | `npm run check` |
-| Server TypeScript | Pending | `npx tsc -p tsconfig.server.json --noEmit` |
-| NodeNext validation | Pending | `npm run validate:nodenext` |
-| Production build | Pending | `npm run build` |
-| Responsive checks | Pending | 390px, 768px and 1280px creative surfaces |
-| Exact preview deployment | Pending | Candidate commit, deployment ID and preview URL |
+| Focused Render Engine tests | Pass | Both focused scripts pass, including moderation canonical-renderer and public simulator-export assertions. |
+| Full project check | Pass | `npm run check`; existing lint warnings and Vite >500 kB bundle warning unchanged. |
+| Server TypeScript | Pass | `npx tsc -p tsconfig.server.json --noEmit` |
+| NodeNext validation | Pass | `npm run validate:nodenext` |
+| Production build | Pass | `npm run build` and remote Vercel build pass. |
+| Responsive checks | Pass locally | Art Studio has no horizontal overflow at 390px, 768px and 1280px; no console errors. |
+| Exact preview deployment | Deployed; smoke blocked | Commit `2c83f98d4e9a3d3f74eea8da06321ccbb1ab7ec2`; deployment `dpl_EaeRdY1qdbxQdBfdCnCuTeX2BP8n`; preview `https://kingshot-forge-r1kg35rbj-clarksim-7474s-projects.vercel.app`; status Ready. Browser access redirects to Vercel SSO, so authenticated Art Studio, Calibration Lab and moderation smoke cannot be claimed. |
 
 ## Remaining risks
 
@@ -85,6 +85,8 @@ be reported with the final evidence.
 
 ## Version 1.0 readiness
 
-R5 is not release-ready until the focused tests, full local gates, responsive
-checks and exact-commit controlled preview smoke all pass. Production promotion,
-merge and release tagging remain outside this sprint.
+R5 local reconciliation is complete and the exact preview is Ready. Sprint R5
+remains externally blocked from release readiness until an owner-authenticated
+preview session completes Art Studio, Calibration Lab and Community Art
+moderation smoke. Production promotion, merge and release tagging remain
+outside this sprint.

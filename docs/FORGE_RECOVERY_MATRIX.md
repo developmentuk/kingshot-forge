@@ -1,6 +1,6 @@
 # Forge Recovery Matrix — Sprints R1–R4
 
-Status: **R4 recovery baseline complete; R5 ready**
+Status: **R5 local recovery complete; exact preview smoke blocked by Vercel SSO**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 R4 validation head: `bfbd89ec5a230ab50c01dedd3134201d2ab759bc`
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
@@ -80,6 +80,20 @@ R3 outcome: the recovered Workspace platform remained locally buildable but was 
 | Vercel TypeScript diagnostics | Keep exact preview candidate deployable | Narrow NodeNext import/result/type-target repairs | Repaired and deployed | Final commit `bfbd89e...` deployed Ready with no TypeScript errors in build logs | Current RC3 branch | Vercel function compiler, NodeNext | R4 recovery document | Ready for next recovery sprint |
 
 R4 performed no migration, RLS change, push, merge, tag or promotion. Temporary fixture records were cleaned up after final browser sign-out. The exact deployed candidate was `bfbd89ec5a230ab50c01dedd3134201d2ab759bc` (`dpl_EVSjynszfzGF9C5T2Pc1j2KLKtAo`).
+
+## Sprint R5 render and creative recovery
+
+| Subsystem | Current implementation | Recovery status | Validation status | Version 1.0 readiness |
+| --- | --- | --- | --- | --- |
+| Canonical Render Engine | `src/render-engine/` parser, fixed-cell grid, analyser, configuration, device profiles, benchmarks, persistence, simulator and shared types; public barrel exports all foundations. | Reconciled from existing Render Engine history; simulator export restored. | Focused tests, `npm run check`, server TypeScript, NodeNext and build pass. | **Blocked** — exact preview authenticated smoke remains. |
+| Kingshot artwork renderer | `src/components/art/KingshotArtRenderer.tsx` is the sole active artwork renderer and consumes the canonical engine. | Preserved and validated. | Deterministic fixed-cell and persistence tests pass; local Art Studio responsive smoke passes at 390/768/1280. | **Blocked** — preview session required. |
+| Admin Calibration Lab | `/admin/render-engine`, `RenderEngineCalibrationPage.tsx`, browser-local profiles and existing `cms.view` guard. | Preserved; no new permission system. | Static route/permission assertions and local build pass; unauthenticated local route fails closed. | **Blocked** — authenticated preview smoke required. |
+| Creative integrations | Art Studio uses the renderer; Community Art moderation migrated from raw `<pre>` to the renderer; attribution and text-art validation remain separate. | Unified applicable previews; no unrelated Chat/Name/Banner redesign. | Art Studio local responsive smoke and full Art Studio suite pass. | **Blocked** — authenticated moderation preview required. |
+| Exact-commit preview | Candidate `2c83f98d4e9a3d3f74eea8da06321ccbb1ab7ec2` deployed as Ready deployment `dpl_EaeRdY1qdbxQdBfdCnCuTeX2BP8n` at `https://kingshot-forge-r1kg35rbj-clarksim-7474s-projects.vercel.app`. | Deployed to preview only. | Browser redirect to Vercel SSO prevented authenticated smoke; no bypass attempted. | **Blocked by owner session** |
+
+R5 performed no Supabase migration, storage change, production write, push,
+merge, tag or production promotion. Existing lint warnings, Vite bundle-size
+warning and Vercel npm audit notice were not introduced by this sprint.
 
 ## Recovery decisions
 
