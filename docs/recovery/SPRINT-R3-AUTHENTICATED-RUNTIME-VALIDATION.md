@@ -10,7 +10,7 @@ Starting head: `748d7777f59968e61ca98e791d28fc9fc068ccc9`
 - The connected Supabase project `hrvdhjscwitqpwjhnjkm` was queried read-only for fixture inventory. It contains four Auth users, three active role-assignment rows covering `owner`, `content_creator` and `beta_tester`, zero contributor applications and eleven community-art submissions.
 - No test credentials, disposable account labels or approved fixture-cleanup procedure were found in the repository.
 - The Vercel project is `kingshot-forge`; the latest available READY deployment is from an unrelated integration commit. The preview is Vercel-authenticated, and the connected browser has no existing signed-in session.
-- The exact R3 documentation commit was deployed as READY preview `https://kingshot-forge-1huohvzaw-clarksim-7474s-projects.vercel.app` (`dpl_4FcyuXe1VKXFKHjUVrCTNmFjvyMz`). Vercel's build log reports pre-existing TypeScript diagnostics in broader Player Identity and record-editor code even though local `npm run check` passes.
+- The R3 documentation candidates were deployed as READY previews: `https://kingshot-forge-1huohvzaw-clarksim-7474s-projects.vercel.app` (`dpl_4FcyuXe1VKXFKHjUVrCTNmFjvyMz`) and follow-up `https://kingshot-forge-2az6nyatx-clarksim-7474s-projects.vercel.app` (`dpl_7jEHc5Prj3aBwjgAVYomAw8zsUy8`). Vercel's build log reports pre-existing TypeScript diagnostics in broader Player Identity and record-editor code even though local `npm run check` passes.
 - Signed-out smoke of `/operations`, `/operations/users`, `/operations/applications` and `/admin/community-art` produced non-blank guarded states with no horizontal overflow at 390, 768 and 1280px.
 
 ## Gates not claimed
