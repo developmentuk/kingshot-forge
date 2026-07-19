@@ -1,6 +1,6 @@
 # Sprint R8B — Player Platform Completion & Preview Acceptance
 
-Status: **In progress — approved continuation sprint**
+Status: **Blocked on external owner-authenticated preview acceptance**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 Starting HEAD: `5596a9e8316e026595f6c02b3c16cb45ab19dd7d`
 Supabase project: `hrvdhjscwitqpwjhnjkm`
@@ -33,11 +33,11 @@ API, schema or migration is part of R8B.
   remain on the existing `player_heroes`/gear path.
 - Transfer Hub exposes only public profiles with `status = 'looking'`.
 
-## Explicit gaps blocking acceptance
+## R8B implementation outcome
 
 ### Persistent Favourites
 
-The existing zero-row `public.favourites` table is the canonical persistence
+The existing zero-row `public.favourites` table is now the canonical persistence
 boundary. R8B reconciles its legacy `item_type`/`item_id` names to
 `entity_type`/`entity_id`, validates supported entity types, retains the
 unique user/entity key, adds lookup indexes and preserves authenticated
@@ -67,12 +67,13 @@ Read-only inspection of the live Supabase project confirmed RLS enabled on
 - transfer-profile writes and private reads are `auth.uid()` owner checks;
 - public transfer discovery is limited to public `looking` profiles.
 
-No Supabase write, migration, fixture, provider transport or production
-change was performed.
+The approved migration was applied to project `hrvdhjscwitqpwjhnjkm` and
+verified with live schema/policy queries. No fixture rows were created, no
+provider transport was used, and no production promotion was performed.
 
 ## Validation evidence
 
-Passed on the starting head:
+Passed locally on the final implementation head `a73be97a4378a2675ce35c704693af43f4148f28`:
 
 - `npm run validate:player-identity`
 - `npm run test:player-identity`
@@ -84,23 +85,37 @@ Passed on the starting head:
 - `npm run build`
 - `npm run lint` (pre-existing warnings only: Fast Refresh exports,
   `useDataset` hook dependencies)
+- `npm run test:favourites`
+- `npm run check`
+- `git diff --check`
 
 The build completed successfully with the existing Vite bundle-size warning.
-No current R8 owner-authenticated preview URL or approved browser session was
-provided in the brief, so deployed route, responsive, console, network,
-status-code and content-type evidence could not be truthfully collected. The
-previous R7 preview is not treated as R8 evidence.
+Local responsive smoke checks at 390, 768 and 1280 CSS px reported no
+horizontal overflow. The exact preview deployed successfully and unauthenticated
+route refreshes rendered the expected shell/sign-in states without a blank
+screen; authenticated favourite add/remove, persistence, account isolation,
+content-type and RLS runtime acceptance remain blocked because this exact
+preview hostname has no restored owner session.
+
+## Exact preview evidence
+
+- Candidate commit deployed: `a73be97a4378a2675ce35c704693af43f4148f28`
+- Deployment: `dpl_8tmBUZpNxRmk4HkGW3dGPkTcpNdd`
+- Preview: <https://kingshot-forge-dvwfiw86r-clarksim-7474s-projects.vercel.app>
+- Deployment state: `READY`, target `preview`; remote `npm run build` passed.
+- Preview environment binding names were present for Supabase URL and
+  publishable key; values were not exposed.
+- Existing Chrome session was authenticated on a different historical preview
+  hostname, but the exact R8B hostname rendered signed out. No credentials,
+  OTPs or provider login data were entered.
 
 ## Owner action required
 
-Choose one of the following before R8 can be reopened:
-
-1. Approve a new Player-domain contract for persistent favourites and saved
-   progression plans, including schema, server authority, RLS, privacy,
-   retention and audit decisions; or
-2. Remove those capabilities from the R8 acceptance gate and provide the
-   current R8 preview URL plus an approved owner-authenticated browser session
-   for the remaining runtime checks.
+The remaining action is external owner authentication on the exact preview
+hostname above, followed by the requested reversible favourite and privacy
+acceptance checks. The implementation and database work do not require another
+governance decision. Saved Progression Plans remain intentionally deferred by
+ADR-0114.
 
 Recommended R9: resolve that governance decision first, then implement only
 the approved contracts with focused privacy tests and a controlled preview
@@ -109,6 +124,5 @@ an interim substitute.
 
 ## Repository state
 
-R8 documentation and the Recovery Matrix are the only intended changes. No
-deployment was created. The branch remains clean after the documentation
-commit.
+The branch remains clean after the implementation commit and this evidence
+closure. No push, merge, tag or promotion was performed.
