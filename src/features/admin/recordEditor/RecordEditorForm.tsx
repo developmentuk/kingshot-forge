@@ -5,16 +5,16 @@ import {
 
 import {
   CompanionImageField,
-} from "./CompanionImageField";
+} from "./CompanionImageField.js";
 
 import {
   RecordEditorField,
-} from "./RecordEditorField";
+} from "./RecordEditorField.js";
 
 import {
   getOrderedEditorFields,
   getOrderedEditorSections,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 import type {
   RecordEditorFieldSchema,
@@ -22,7 +22,7 @@ import type {
   RecordEditorSchema,
   RecordEditorValidationResult,
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 interface RecordEditorFormProps {
   mode?: "create" | "edit" | "review";

@@ -5,13 +5,13 @@ import type {
 
 import {
   BuildingCostsField,
-} from "./BuildingCostsField";
+} from "./BuildingCostsField.js";
 
 import type {
   RecordEditorFieldSchema,
   RecordEditorRecord,
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 interface RecordEditorFieldProps {
   field:

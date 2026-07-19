@@ -55,6 +55,10 @@ function failure(code: PlayerIdentityResultCode): OperationFailure {
   return { ok: false, code }
 }
 
+function failureFromResult(result: PlayerIdentityOperationResult<unknown>): OperationFailure {
+  return "code" in result ? failure(result.code) : failure("invalid_request")
+}
+
 function nextRevision(revision: PlayerIdentityRevision): PlayerIdentityRevision {
   return (revision + 1) as PlayerIdentityRevision
 }
@@ -169,7 +173,7 @@ export class PlayerIdentityService {
       expectedRevision: aggregate.revision,
       event: createEvent({ name: "CharacterLinkProposed", identityRevision: revision, actorForgeUserId: actor.forgeUserId, now }),
     })
-    return result.ok ? { ok: true, value: proposal, revision } : { ok: false, code: result.code }
+    return result.ok ? { ok: true, value: proposal, revision } : failureFromResult(result)
   }
 
   async changeLinkState(actor: AuthenticatedForgeActor, input: {
@@ -207,7 +211,7 @@ export class PlayerIdentityService {
       expectedRevision: aggregate.revision,
       event: createEvent({ name: eventName, identityRevision: revision, actorForgeUserId: actor.forgeUserId, characterLinkId: target.id, now }),
     })
-    return result.ok ? { ok: true, value: updatedTarget, revision } : { ok: false, code: result.code }
+    return result.ok ? { ok: true, value: updatedTarget, revision } : failureFromResult(result)
   }
 
   async selectPrimary(actor: AuthenticatedForgeActor, input: {
@@ -237,7 +241,7 @@ export class PlayerIdentityService {
       expectedRevision: aggregate.revision,
       event: createEvent({ name: "PrimaryCharacterChanged", identityRevision: revision, actorForgeUserId: actor.forgeUserId, characterLinkId: input.linkId, now }),
     })
-    return result.ok ? { ok: true, value: selected, revision } : { ok: false, code: result.code }
+    return result.ok ? { ok: true, value: selected, revision } : failureFromResult(result)
   }
 
   async selectActive(request: ActiveCharacterRequest): Promise<ActiveCharacterResolutionResult> {
@@ -265,7 +269,7 @@ export class PlayerIdentityService {
     const revision = nextRevision(aggregate.revision)
     const event = createEvent({ name: "PlayerVisibilityChanged", identityRevision: revision, actorForgeUserId: actor.forgeUserId, visibilityAudience: validation.value.audience, now })
     const result = await this.dependencies.store.saveAggregate({ aggregate: { ...aggregate, revision, visibility: { ...validation.value, revision } }, expectedRevision: aggregate.revision, event })
-    return result.ok ? { ok: true, value: undefined, revision } : { ok: false, code: result.code }
+    return result.ok ? { ok: true, value: undefined, revision } : failureFromResult(result)
   }
 
   async proposeAlias(actor: AuthenticatedForgeActor, input: {
@@ -293,7 +297,7 @@ export class PlayerIdentityService {
       expectedRevision: aggregate.revision,
       event: createEvent({ name: "PublicAliasProposed", identityRevision: revision, actorForgeUserId: actor.forgeUserId, now }),
     })
-    return result.ok ? { ok: true, value: alias.value, revision } : { ok: false, code: result.code }
+    return result.ok ? { ok: true, value: alias.value, revision } : failureFromResult(result)
   }
 
   async updateShowcase(actor: AuthenticatedForgeActor, input: {
@@ -312,6 +316,6 @@ export class PlayerIdentityService {
     const revision = nextRevision(aggregate.revision)
     const showcase = { ...input.showcase, selectionRevision: revision }
     const result = await this.dependencies.store.saveAggregate({ aggregate: { ...aggregate, revision, heroShowcase: showcase }, expectedRevision: aggregate.revision, event: createEvent({ name: "HeroShowcaseSelectionChanged", identityRevision: revision, actorForgeUserId: actor.forgeUserId, now }) })
-    return result.ok ? { ok: true, value: showcase, revision } : { ok: false, code: result.code }
+    return result.ok ? { ok: true, value: showcase, revision } : failureFromResult(result)
   }
 }

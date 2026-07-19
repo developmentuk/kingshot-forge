@@ -4,7 +4,7 @@ import type {
   RecordEditorSchema,
   RecordEditorValidationResult,
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 function isEmptyValue(
   value: RecordEditorValue,

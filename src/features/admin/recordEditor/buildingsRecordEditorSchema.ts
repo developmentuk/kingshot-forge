@@ -2,7 +2,7 @@ import type {
   RecordEditorRecord,
   RecordEditorSchema,
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 function isNonEmptyString(
   value: RecordEditorValue,

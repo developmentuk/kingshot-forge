@@ -1,7 +1,7 @@
 import {
   DatasetRegistry,
   DatasetValidationService,
-} from "../../../platform/datasets";
+} from "../../../platform/datasets/index.js";
 
 import type {
   DatasetDefinition,
@@ -12,7 +12,7 @@ import type {
   DatasetValidationIssue,
   DatasetValidationResult,
   DatasetValue,
-} from "../../../platform/datasets";
+} from "../../../platform/datasets/index.js";
 
 import type {
   RecordEditorFieldSchema,
@@ -21,7 +21,7 @@ import type {
   RecordEditorSchema,
   RecordEditorValidationResult,
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 function toDatasetValue(
   value: RecordEditorValue,

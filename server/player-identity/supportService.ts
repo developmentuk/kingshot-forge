@@ -32,7 +32,7 @@ export class PlayerIdentitySupportService {
 
   async inspect(actor: AuthenticatedForgeActor, caseId: PlayerSupportCaseId): Promise<PlayerIdentityOperationResult<PlayerSupportCaseSummary>> {
     const list = await this.list(actor)
-    if (!list.ok) return list
+    if (!list.ok) return { ok: false, code: list.code }
     const supportCase = await this.dependencies.store.readSupportCase(caseId)
     return supportCase ? { ok: true, value: supportCase, revision: supportCase.revision } : { ok: false, code: "dispute_not_found" }
   }
@@ -49,7 +49,7 @@ export class PlayerIdentitySupportService {
     }
     const now = this.dependencies.now?.() ?? new Date()
     const decision = evaluateHighRiskApproval(input.approval, input.currentRevision, now)
-    if (!decision.allowed) return { ok: false, code: decision.code }
+    if (decision.allowed !== true) return { ok: false, code: "code" in decision ? decision.code : "invalid_request" }
     const name = input.approval.state === "approved" ? "HighRiskApprovalGranted" : "HighRiskApprovalRejected"
     return this.dependencies.store.appendAudit(createImmutablePlayerIdentityEvent({
       eventId: `approval_event_${now.getTime().toString(36)}` as PlayerIdentityEventId,
