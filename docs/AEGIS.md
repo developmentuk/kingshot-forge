@@ -412,4 +412,15 @@ not applied to the live project until Clark approves the controlled database
 change. Version 1.0 remains **Not Ready** pending live re-advisor results,
 Auth settings, backup/monitoring evidence and authenticated smoke acceptance.
 See [`RC4-SECURITY-HARDENING.md`](releases/RC4-SECURITY-HARDENING.md).
+
+## RC5 owner security and acceptance — 19 July 2026
+
+The approved RC4 hardening migration is applied and verified on Supabase
+project `hrvdhjscwitqpwjhnjkm`. Anonymous legacy RPC execution and the mutable
+trigger search path are closed; the remaining eight authenticated warnings are
+intentional application contracts. Exact preview deployment is READY, but
+leaked-password protection did not persist on the Free plan and authenticated
+two-user/editorial/responsive plus operational evidence remains open. RC5
+recommendation: **Not Ready for Version 1.0**. See
+[`RC5-OWNER-SECURITY-AND-ACCEPTANCE.md`](releases/RC5-OWNER-SECURITY-AND-ACCEPTANCE.md).
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.

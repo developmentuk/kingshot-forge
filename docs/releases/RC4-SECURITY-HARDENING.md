@@ -141,3 +141,15 @@ post-v1.0 technical debt.
 **Not Ready for Version 1.0.** RC4 local hardening is complete, but public
 release remains blocked by unapplied live security changes and unverified
 authentication/operational owner gates.
+
+## RC5 follow-up — 19 July 2026
+
+The owner-approved migration is applied and verified in Supabase project
+`hrvdhjscwitqpwjhnjkm`. The expected anonymous grant removals and
+`search_path=public` trigger lock are live. Fresh security Advisor results now
+show only the intentional eight authenticated SECURITY DEFINER warnings among
+the RC4 function findings; leaked-password protection remains disabled because
+the project is on the Free plan. Exact preview deployment is READY, but
+authenticated browser acceptance, backups/restore, rollback rehearsal and
+monitoring ownership remain open. RC5 therefore remains **Not Ready for
+Version 1.0**; see `RC5-OWNER-SECURITY-AND-ACCEPTANCE.md`.

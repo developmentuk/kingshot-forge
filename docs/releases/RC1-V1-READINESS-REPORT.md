@@ -172,3 +172,14 @@ acceptance and production smoke therefore remain open. Supabase security
 advisors also report unresolved legacy security-definer execution grants.
 The authoritative RC3 gate is recorded in
 [`RC3-V1-RELEASE-GATE.md`](./RC3-V1-RELEASE-GATE.md).
+
+## RC5 status update — 19 July 2026
+
+RC5 applied and verified the approved RC4 database hardening migration and
+deployed the exact clean candidate to READY preview. Anonymous legacy
+SECURITY DEFINER execution findings are closed; eight authenticated contract
+warnings remain intentional. Leaked-password protection remains disabled on
+the Supabase Free plan, and owner-authenticated two-user, editorial,
+responsive, backup/restore and monitoring evidence remains open. RC5 remains
+**Not Ready for Version 1.0**. See
+[`RC5-OWNER-SECURITY-AND-ACCEPTANCE.md`](./RC5-OWNER-SECURITY-AND-ACCEPTANCE.md).

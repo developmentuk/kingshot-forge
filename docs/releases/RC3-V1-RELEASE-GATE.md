@@ -172,6 +172,15 @@ Production remains explicitly out of scope for RC3. The owner gate sequence is:
 
 No merge, tag, push, production deployment or promotion was performed by RC3.
 
+## RC5 supersession — 19 July 2026
+
+RC5 supersedes the RC3 live-security status: the approved RC4 hardening
+migration was applied and verified on Supabase. Anonymous legacy execution
+warnings and the mutable search-path warning are closed. Authenticated
+acceptance remains an owner gate, and leaked-password protection remains
+disabled on the current Free plan. See the authoritative RC5 report for the
+current recommendation and owner actions.
+
 ## RC4 follow-up — 19 July 2026
 
 RC4 added the checked-in migration

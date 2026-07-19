@@ -228,3 +228,14 @@ Knowledge projections. R8/R8B implemented the canonical favourites boundary,
 recorded one-owner acceptance and explicitly left the second-user gate open.
 No duplicate architecture or recovery implementation was reintroduced; each
 record documents its deferred work and non-actions.
+
+## RC5 owner-controlled security and acceptance — 19 July 2026
+
+The approved RC4 migration is applied to the connected Supabase project and
+its ACL/search-path effects are verified. Advisor recheck shows 22
+informational RLS/no-policy notices, eight intentional authenticated
+SECURITY DEFINER warnings and one unresolved leaked-password warning. The
+exact preview build is READY, but owner-authenticated two-user, editorial
+runtime, responsive and backup/operations evidence remains open. RC5 remains
+**Not Ready for Version 1.0**. See
+[`RC5-OWNER-SECURITY-AND-ACCEPTANCE.md`](releases/RC5-OWNER-SECURITY-AND-ACCEPTANCE.md).
