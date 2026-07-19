@@ -62,7 +62,7 @@ function AppLayout() {
     <header className="app-header"><div className="app-header__inner">
       <button type="button" className="app-header__menu-button" aria-label="Open navigation" aria-expanded={navigationOpen} aria-controls="primary-navigation" onClick={() => setNavigationOpen((current) => !current)}><span /><span /><span /></button>
       <Link to="/" className="app-brand" onClick={closeNavigation}><span className="app-brand__mark" aria-hidden="true">⚒️</span><span className="app-brand__text"><strong>Kingshot Forge</strong><small>{workspace.label}</small></span></Link>
-      <button type="button" className="app-header__search" onClick={() => setSearchOpen(true)} aria-label="Open global search"><span aria-hidden="true">⌕</span><span>Search Forge…</span><kbd>Ctrl K</kbd></button>
+      <button type="button" className="app-header__search" onClick={() => setSearchOpen(true)} aria-label="Open global search"><span className="app-header__search-icon" aria-hidden="true">⌕</span><span>Search Forge…</span><kbd><span className="app-header__search-key--windows">Ctrl</span><span className="app-header__search-key--mac">⌘</span> K</kbd></button>
       <div className="app-header__workspace"><WorkspaceSwitcher /></div><div className="app-header__account"><AccountMenu /></div>
     </div></header>
     <div className="app-shell__body">

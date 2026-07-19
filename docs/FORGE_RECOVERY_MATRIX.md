@@ -257,3 +257,11 @@ The final release-gate evidence is recorded in
 `docs/releases/V1-FINAL-RELEASE-GATE.md`. Automated checks and the replacement
 preview Global Search smoke check pass; owner-authenticated cross-user,
 cross-role, responsive and operational recovery evidence remains outstanding.
+
+## UX-001 experience hardening — 19 July 2026
+
+Local UX-001 work hardened Global Search containment and response handling,
+removed obsolete preview version presentation, and reconciled shared UI
+tokens. It does not supersede RC5A owner acceptance or claim protected preview,
+authenticated role, or operational evidence. See
+`releases/UX-001-V1-EXPERIENCE-HARDENING.md`.

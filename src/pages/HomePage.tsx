@@ -102,7 +102,7 @@ function HomePage() {
               <span>Latest release</span>
               <strong>Version {APP_VERSION}</strong>
             </div>
-            <h2>Release 0.7.5 is ready for final validation</h2>
+            <h2>Version 1.0 experience hardening is in progress</h2>
             <p>
               Auto Redeem now has server-authoritative player verification, explicit consent,
               provider pause controls and private result history. Production enablement remains gated.

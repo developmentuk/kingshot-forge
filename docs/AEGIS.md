@@ -441,4 +441,12 @@ unchanged. Approved User A/User B and editorial-role runtime evidence,
 authenticated responsive viewport checks and backup/monitoring ownership
 remain open, so the final recommendation is **Not Ready**. See
 [`RC5A-FINAL-OWNER-ACCEPTANCE.md`](releases/RC5A-FINAL-OWNER-ACCEPTANCE.md).
+
+## UX-001 experience hardening — 19 July 2026
+
+The focused local hardening work is recorded in
+`docs/releases/UX-001-V1-EXPERIENCE-HARDENING.md`; the canonical interface
+reference is `docs/design/FORGE-UI-SYSTEM.md`. Search overlay/API handling,
+release labels and shared UI tokens were updated. Protected preview,
+authenticated cross-role and full responsive owner evidence remain required.
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.

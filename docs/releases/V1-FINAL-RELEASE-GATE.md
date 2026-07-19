@@ -44,3 +44,11 @@ Supabase project status is `ACTIVE_HEALTHY` on PostgreSQL 17.6.1, and migration 
 ## Owner action required
 
 Provide approved User A, User B, editorial and admin/publisher sessions plus responsive viewport tooling, then complete the runtime acceptance matrix and supply backup/restore, rollback, monitoring and incident-response evidence. Separately upgrade Supabase and enable leaked-password protection after the paid-plan move. Re-run this gate before production approval.
+## UX-001 local hardening follow-up
+
+The local UX-001 implementation is documented in
+[`UX-001-V1-EXPERIENCE-HARDENING.md`](UX-001-V1-EXPERIENCE-HARDENING.md).
+It adds focused Global Search containment/API safeguards, canonical preview/
+production labels and shared UI tokens. This gate remains **Not Ready** until
+the exact clean commit is deployed to protected preview and owner-authenticated
+responsive, cross-role and operational evidence is completed.

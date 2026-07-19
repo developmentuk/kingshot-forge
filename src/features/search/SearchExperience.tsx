@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import './search.css'
@@ -21,6 +21,7 @@ type SearchRecord = {
 type SearchMatch = { record: SearchRecord; score: number; relationshipType?: string; relationshipPath?: string[]; relationshipExplanation?: string }
 type SearchResponse = { results: SearchMatch[]; meta: { resultCount: number; executionTimeMs: number; stale: boolean } }
 type SearchSort = 'relevance' | 'alphabetical' | 'published' | 'connected'
+type SearchApiBody = { status?: string; data?: SearchResponse; error?: { message?: string } }
 
 const RECENT_KEY = 'forge.search.recent'
 const PINNED_KEY = 'forge.search.pinned'
@@ -41,6 +42,17 @@ function highlight(text: string, query: string) {
 
 function datasetLabel(dataset: string) { return DATASET_LABELS[dataset] ?? dataset.replaceAll('-', ' ') }
 
+async function readSearchResponse(response: Response): Promise<SearchApiBody> {
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
+  if (response.redirected || !contentType.includes('application/json')) {
+    throw new Error(response.status === 401 || response.status === 403 ? 'Search requires an active Forge session.' : 'Search is temporarily unavailable. Please try again shortly.')
+  }
+  const body = await response.json() as SearchApiBody
+  if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Search requires an active Forge session.' : 'Search is temporarily unavailable. Please try again shortly.')
+  if (body.status !== 'success' || !body.data) throw new Error(body.error?.message ?? 'Search is temporarily unavailable. Please try again shortly.')
+  return body
+}
+
 export function SearchExperience({ open = true, onClose, embedded = false, initialQuery = '' }: { open?: boolean; onClose?: () => void; embedded?: boolean; initialQuery?: string }) {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -54,6 +66,10 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
   const [error, setError] = useState<string | null>(null)
   const [recent, setRecent] = useState(() => readList(RECENT_KEY))
   const [pinned, setPinned] = useState(() => readList(PINNED_KEY))
+  const [selectedIndex, setSelectedIndex] = useState(-1)
+  const shortcut = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform) ? '⌘ K' : 'Ctrl K'
+  const chooseSearch = useCallback((value: string) => { setQuery(value); setRecent((current) => { const next = [value, ...current.filter((item) => item !== value)].slice(0, 8); localStorage.setItem(RECENT_KEY, JSON.stringify(next)); return next }) }, [])
+  const openResult = useCallback((record: SearchRecord) => { chooseSearch(query.trim()); if (record.canonical_url?.startsWith('/')) { navigate(record.canonical_url); onClose?.() } }, [chooseSearch, navigate, onClose, query])
 
   useEffect(() => {
     if (!open || embedded) return
@@ -77,19 +93,31 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
       if (query.trim()) params.set('q', query.trim())
       if (dataset) params.set('dataset', dataset)
       try {
-        const response = await fetch(`/api/search?${params}` , { signal: controller.signal })
-        const body = await response.json() as { status: string; data?: SearchResponse; error?: { message?: string } }
-        if (!response.ok || body.status !== 'success' || !body.data) throw new Error(body.error?.message ?? 'Search is temporarily unavailable.')
-        setResults(body.data)
-      } catch (caught) { if (!(caught instanceof DOMException && caught.name === 'AbortError')) setError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable.') } finally { setLoading(false) }
+        const response = await fetch(`/api/search?${params}` , { signal: controller.signal, headers: { Accept: 'application/json' } })
+        const body = await readSearchResponse(response)
+        setResults(body.data ?? null)
+        setSelectedIndex(-1)
+      } catch (caught) { if (!(caught instanceof DOMException && caught.name === 'AbortError')) { setResults(null); setError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable. Please try again shortly.') } } finally { setLoading(false) }
     }, query.trim() ? 160 : 0)
     return () => { window.clearTimeout(timer); controller.abort() }
   }, [dataset, open, query])
+
+  const sortedResults = useMemo(() => [...(results?.results ?? [])].sort((a, b) => {
+    if (sort === 'alphabetical') return a.record.title.localeCompare(b.record.title)
+    if (sort === 'published') return Date.parse(b.record.published_at ?? '') - Date.parse(a.record.published_at ?? '')
+    if (sort === 'connected') return (b.record.relationship_count ?? 0) - (a.record.relationship_count ?? 0)
+    return b.score - a.score
+  }), [results, sort])
 
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); inputRef.current?.focus() }
       if (event.key === 'Escape' && !embedded) onClose?.()
+      if (!embedded && sortedResults.length) {
+        if (event.key === 'ArrowDown') { event.preventDefault(); setSelectedIndex((current) => (current + 1) % sortedResults.length) }
+        if (event.key === 'ArrowUp') { event.preventDefault(); setSelectedIndex((current) => (current - 1 + sortedResults.length) % sortedResults.length) }
+        if (event.key === 'Enter' && selectedIndex >= 0) { event.preventDefault(); openResult(sortedResults[selectedIndex].record) }
+      }
       if (event.key === 'Tab' && !embedded && dialogRef.current) {
         const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button, input, select, [href], [tabindex]:not([tabindex="-1"])')).filter((element) => !element.hasAttribute('disabled'))
         if (!focusable.length) return
@@ -100,29 +128,20 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
       }
     }
     window.addEventListener('keydown', handleKey); return () => window.removeEventListener('keydown', handleKey)
-  }, [embedded, onClose])
+  }, [embedded, onClose, openResult, selectedIndex, sortedResults])
 
-  const sortedResults = useMemo(() => [...(results?.results ?? [])].sort((a, b) => {
-    if (sort === 'alphabetical') return a.record.title.localeCompare(b.record.title)
-    if (sort === 'published') return Date.parse(b.record.published_at ?? '') - Date.parse(a.record.published_at ?? '')
-    if (sort === 'connected') return (b.record.relationship_count ?? 0) - (a.record.relationship_count ?? 0)
-    return b.score - a.score
-  }), [results, sort])
-
-  function chooseSearch(value: string) { setQuery(value); setRecent((current) => { const next = [value, ...current.filter((item) => item !== value)].slice(0, 8); localStorage.setItem(RECENT_KEY, JSON.stringify(next)); return next }) }
   function togglePinned(value: string) { setPinned((current) => { const next = current.includes(value) ? current.filter((item) => item !== value) : [value, ...current].slice(0, 8); localStorage.setItem(PINNED_KEY, JSON.stringify(next)); return next }) }
-  function openResult(record: SearchRecord) { chooseSearch(query.trim()); if (record.canonical_url?.startsWith('/')) { navigate(record.canonical_url); onClose?.() } }
 
   if (!open) return null
   const searchContent = <div className={embedded ? 'forge-search forge-search--embedded' : 'forge-search forge-search--overlay'} role={embedded ? undefined : 'dialog'} aria-modal={embedded ? undefined : true} aria-labelledby={embedded ? undefined : 'forge-search-title'} onMouseDown={(event) => { if (!embedded && event.target === event.currentTarget) onClose?.() }}>
     <div className="forge-search__panel" ref={embedded ? undefined : dialogRef}>
-      <div className="forge-search__heading"><div><p className="forge-search__eyebrow">Kingshot Forge</p><h1 id={embedded ? undefined : 'forge-search-title'}>Global Search</h1></div>{!embedded && <button type="button" className="forge-search__close" onClick={onClose} aria-label="Close search">×</button>}</div>
-      <div className="forge-search__input-wrap"><span aria-hidden="true">⌕</span><input ref={inputRef} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search heroes, events, gear, guides and more…" aria-label="Search Forge" /><kbd>Ctrl K</kbd></div>
+      <div className="forge-search__heading"><div><p className="forge-search__eyebrow">Kingshot Forge</p><h2 id={embedded ? undefined : 'forge-search-title'}>Global Search</h2></div>{!embedded && <button type="button" className="forge-search__close" onClick={onClose} aria-label="Close search">×</button>}</div>
+      <div className="forge-search__input-wrap"><span aria-hidden="true">⌕</span><input ref={inputRef} type="search" value={query} onChange={(event) => { setQuery(event.target.value); setSelectedIndex(-1) }} placeholder="Search heroes, events, gear, guides and more…" aria-label="Search Forge" aria-controls="forge-search-results" aria-expanded={Boolean(query.trim())} /><kbd>{shortcut}</kbd></div>
       <div className="forge-search__filters"><label>Dataset<select value={dataset} onChange={(event) => setDataset(event.target.value)}><option value="">All datasets</option>{Object.entries(DATASET_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><label>Sort<select value={sort} onChange={(event) => setSort(event.target.value as SearchSort)}><option value="relevance">Relevance</option><option value="alphabetical">Alphabetical</option><option value="published">Published date</option><option value="connected">Most connected</option></select></label></div>
       {!query.trim() && !loading && <div className="forge-search__welcome"><p>Search across the published Forge knowledge graph.</p><div className="forge-search__chips">{pinned.length > 0 && <div><strong>Pinned</strong>{pinned.map((item) => <button key={item} type="button" onClick={() => chooseSearch(item)}>⌖ {item}</button>)}</div>}{recent.length > 0 && <div><strong>Recent</strong>{recent.map((item) => <button key={item} type="button" onClick={() => chooseSearch(item)}>{item}</button>)}<button type="button" className="forge-search__clear" onClick={() => { localStorage.removeItem(RECENT_KEY); setRecent([]) }}>Clear history</button></div>}</div></div>}
       {loading && <p className="forge-search__status" role="status">Searching the Forge index…</p>}
       {error && <p className="forge-search__status forge-search__status--error" role="alert">{error}</p>}
-      {!loading && query.trim() && results && <><div className="forge-search__summary"><strong>{results.meta.resultCount} results</strong><span>{results.meta.executionTimeMs}ms{results.meta.stale ? ' · showing last known good index' : ''}</span></div>{sortedResults.length === 0 ? <div className="forge-search__empty"><strong>No published matches</strong><p>Try a broader term or remove the dataset filter.</p></div> : <div className="forge-search__results">{sortedResults.map(({ record, score }) => <article className="forge-result" key={`${record.dataset}:${record.id}`} onClick={() => openResult(record)}><div className="forge-result__icon" aria-hidden="true">{record.image ? <img src={record.image} alt="" /> : '◈'}</div><div className="forge-result__body"><div className="forge-result__top"><span className="forge-result__dataset">{datasetLabel(record.dataset)}</span><span className="forge-result__status">{record.status}</span></div><h2>{highlight(record.title, query)}</h2>{record.subtitle && <p className="forge-result__subtitle">{highlight(record.subtitle, query)}</p>}<p>{record.summary ? highlight(record.summary, query) : 'Published Forge content'}</p><small>{record.relationship_count ?? 0} connections · score {score.toFixed(0)}</small></div><div className="forge-result__actions"><button type="button" aria-label={`${pinned.includes(query) ? 'Unpin' : 'Pin'} search`} onClick={(event) => { event.stopPropagation(); togglePinned(query.trim()) }}> {pinned.includes(query.trim()) ? '★' : '☆'} </button></div></article>)}</div>}</>}
+      {!loading && query.trim() && results && <><div className="forge-search__summary"><strong>{results.meta.resultCount} results</strong><span>{results.meta.executionTimeMs}ms{results.meta.stale ? ' · showing last known good index' : ''}</span></div>{sortedResults.length === 0 ? <div className="forge-search__empty"><strong>No published matches</strong><p>Try a broader term or remove the dataset filter.</p></div> : <div className="forge-search__results" id="forge-search-results" role="listbox" aria-label="Published search results">{sortedResults.map(({ record, score }, index) => <article className={index === selectedIndex ? 'forge-result forge-result--selected' : 'forge-result'} key={`${record.dataset}:${record.id}`} role="option" aria-selected={index === selectedIndex} tabIndex={index === selectedIndex ? 0 : -1} onClick={() => openResult(record)} onKeyDown={(event) => { if (event.key === 'Enter') openResult(record) }}><div className="forge-result__icon" aria-hidden="true">{record.image ? <img src={record.image} alt="" /> : '◈'}</div><div className="forge-result__body"><div className="forge-result__top"><span className="forge-result__dataset">{datasetLabel(record.dataset)}</span><span className="forge-result__status">{record.status}</span></div><h3>{highlight(record.title, query)}</h3>{record.subtitle && <p className="forge-result__subtitle">{highlight(record.subtitle, query)}</p>}<p>{record.summary ? highlight(record.summary, query) : 'Published Forge content'}</p><small>{record.relationship_count ?? 0} connections · score {score.toFixed(0)}</small></div><div className="forge-result__actions"><button type="button" aria-label={`${pinned.includes(query.trim()) ? 'Unpin' : 'Pin'} search`} onClick={(event) => { event.stopPropagation(); togglePinned(query.trim()) }}> {pinned.includes(query.trim()) ? '★' : '☆'} </button></div></article>)}</div>}</>}
       <p className="forge-search__hint">↑↓ to navigate · Enter to open · Esc to close</p>
     </div>
   </div>

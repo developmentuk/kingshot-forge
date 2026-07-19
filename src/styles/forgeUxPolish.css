@@ -1,10 +1,75 @@
 /* Shared UX polish layered over legacy feature styles. */
 
 :root {
+  --forge-font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --forge-colour-text-primary: #f7f2e8;
+  --forge-colour-text-secondary: #aab6c5;
+  --forge-colour-border-default: #344255;
+  --forge-colour-border-strong: #455a72;
+  --forge-colour-focus: #e6ab38;
+  --forge-colour-action-primary: #e6ab38;
+  --forge-colour-bg-subtle: #111e2d;
+  --forge-space-1: .25rem;
+  --forge-space-2: .5rem;
+  --forge-space-3: .75rem;
+  --forge-space-4: 1rem;
+  --forge-space-5: 1.25rem;
+  --forge-space-6: 1.5rem;
+  --forge-ux-page-gap: 1.5rem;
+  --forge-ux-mobile-gutter: .85rem;
+  --forge-ux-control-height: 2.6rem;
+  --forge-ux-radius-control: .65rem;
+  --forge-ux-radius-card: .85rem;
+  --forge-radius-sm: .55rem;
+  --forge-ux-border-panel: #2b394a;
+  --forge-ux-border-hover: #e6ab38;
+  --forge-shadow-sm: 0 12px 30px rgba(0, 0, 0, .16);
+  --forge-focus-ring: 0 0 0 3px rgba(230, 171, 56, .22);
+  --forge-transition-interactive: 160ms ease;
+  --forge-content-max: 1180px;
+  --forge-content-readable: 65ch;
+  --forge-line-height-tight: 1.12;
+  --forge-line-height-body: 1.5;
   --forge-type-page-title: clamp(2.25rem, 4.5vw, 3rem);
   --forge-type-section-title: clamp(1.5rem, 2.5vw, 2rem);
   --forge-type-card-title: clamp(1.125rem, 1.8vw, 1.5rem);
   --forge-type-body: clamp(.875rem, 1vw, 1.0625rem);
+}
+
+body { font-family: var(--forge-font-sans); }
+
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--forge-colour-focus);
+  outline-offset: 2px;
+}
+
+.app-header__search {
+  display: flex;
+  min-width: min(17rem, 28vw);
+  height: 2.6rem;
+  align-items: center;
+  gap: .6rem;
+  margin-left: 1rem;
+  border: 1px solid var(--forge-colour-border-default);
+  border-radius: var(--forge-ux-radius-control);
+  padding: 0 .75rem;
+  color: var(--forge-colour-text-secondary);
+  background: rgba(17, 30, 45, .82);
+  text-align: left;
+  cursor: pointer;
+}
+.app-header__search:hover, .app-header__search:focus-visible { border-color: var(--forge-colour-focus); color: var(--forge-colour-text-primary); background: #142338; }
+.app-header__search-icon { color: var(--forge-colour-focus); font-size: 1.1rem; }
+.app-header__search > span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-header__search kbd { margin-left: auto; border: 1px solid #455a72; border-radius: .35rem; padding: .15rem .35rem; color: #aab6c5; background: #0b1726; font-size: .65rem; white-space: nowrap; }
+.app-header__search-key--mac { display: none; }
+
+@media (max-width: 800px) {
+  .app-header__search { min-width: 2.6rem; width: 2.6rem; justify-content: center; margin-left: auto; padding: 0; }
+  .app-header__search > span:nth-child(2), .app-header__search kbd { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
 :where(.page-title, .section-heading h1, .product-roadmap__hero h1) {
