@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import './search.css'
 
@@ -43,6 +44,8 @@ function datasetLabel(dataset: string) { return DATASET_LABELS[dataset] ?? datas
 export function SearchExperience({ open = true, onClose, embedded = false, initialQuery = '' }: { open?: boolean; onClose?: () => void; embedded?: boolean; initialQuery?: string }) {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const restoreFocusRef = useRef<HTMLElement | null>(null)
   const [query, setQuery] = useState(initialQuery)
   const [dataset, setDataset] = useState('')
   const [sort, setSort] = useState<SearchSort>('relevance')
@@ -52,7 +55,19 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
   const [recent, setRecent] = useState(() => readList(RECENT_KEY))
   const [pinned, setPinned] = useState(() => readList(PINNED_KEY))
 
-  useEffect(() => { if (open) window.setTimeout(() => inputRef.current?.focus(), 0) }, [open])
+  useEffect(() => {
+    if (!open || embedded) return
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 0)
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.body.style.overflow = previousOverflow
+      restoreFocusRef.current?.focus()
+      restoreFocusRef.current = null
+    }
+  }, [embedded, open])
   useEffect(() => {
     if (!open) return
     const controller = new AbortController()
@@ -75,6 +90,14 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
     function handleKey(event: KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); inputRef.current?.focus() }
       if (event.key === 'Escape' && !embedded) onClose?.()
+      if (event.key === 'Tab' && !embedded && dialogRef.current) {
+        const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button, input, select, [href], [tabindex]:not([tabindex="-1"])')).filter((element) => !element.hasAttribute('disabled'))
+        if (!focusable.length) return
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+      }
     }
     window.addEventListener('keydown', handleKey); return () => window.removeEventListener('keydown', handleKey)
   }, [embedded, onClose])
@@ -91,9 +114,9 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
   function openResult(record: SearchRecord) { chooseSearch(query.trim()); if (record.canonical_url?.startsWith('/')) { navigate(record.canonical_url); onClose?.() } }
 
   if (!open) return null
-  return <div className={embedded ? 'forge-search forge-search--embedded' : 'forge-search forge-search--overlay'} role={embedded ? undefined : 'dialog'} aria-modal={embedded ? undefined : true} aria-label="Forge global search">
-    <div className="forge-search__panel">
-      <div className="forge-search__heading"><div><p className="forge-search__eyebrow">Kingshot Forge</p><h1>Global Search</h1></div>{!embedded && <button type="button" onClick={onClose} aria-label="Close search">×</button>}</div>
+  const searchContent = <div className={embedded ? 'forge-search forge-search--embedded' : 'forge-search forge-search--overlay'} role={embedded ? undefined : 'dialog'} aria-modal={embedded ? undefined : true} aria-labelledby={embedded ? undefined : 'forge-search-title'} onMouseDown={(event) => { if (!embedded && event.target === event.currentTarget) onClose?.() }}>
+    <div className="forge-search__panel" ref={embedded ? undefined : dialogRef}>
+      <div className="forge-search__heading"><div><p className="forge-search__eyebrow">Kingshot Forge</p><h1 id={embedded ? undefined : 'forge-search-title'}>Global Search</h1></div>{!embedded && <button type="button" className="forge-search__close" onClick={onClose} aria-label="Close search">×</button>}</div>
       <div className="forge-search__input-wrap"><span aria-hidden="true">⌕</span><input ref={inputRef} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search heroes, events, gear, guides and more…" aria-label="Search Forge" /><kbd>Ctrl K</kbd></div>
       <div className="forge-search__filters"><label>Dataset<select value={dataset} onChange={(event) => setDataset(event.target.value)}><option value="">All datasets</option>{Object.entries(DATASET_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><label>Sort<select value={sort} onChange={(event) => setSort(event.target.value as SearchSort)}><option value="relevance">Relevance</option><option value="alphabetical">Alphabetical</option><option value="published">Published date</option><option value="connected">Most connected</option></select></label></div>
       {!query.trim() && !loading && <div className="forge-search__welcome"><p>Search across the published Forge knowledge graph.</p><div className="forge-search__chips">{pinned.length > 0 && <div><strong>Pinned</strong>{pinned.map((item) => <button key={item} type="button" onClick={() => chooseSearch(item)}>⌖ {item}</button>)}</div>}{recent.length > 0 && <div><strong>Recent</strong>{recent.map((item) => <button key={item} type="button" onClick={() => chooseSearch(item)}>{item}</button>)}<button type="button" className="forge-search__clear" onClick={() => { localStorage.removeItem(RECENT_KEY); setRecent([]) }}>Clear history</button></div>}</div></div>}
@@ -103,6 +126,7 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
       <p className="forge-search__hint">↑↓ to navigate · Enter to open · Esc to close</p>
     </div>
   </div>
+  return embedded ? searchContent : createPortal(searchContent, document.body)
 }
 
 const RELATIONSHIP_LABELS: Record<string, string> = { recommended_with: 'Recommended With', countered_by: 'Counters', synergy_with: 'Synergies', appears_in: 'Appears In', rewards: 'Rewards', requires: 'Requires', unlocks: 'Unlocks', used_by: 'Used By', published_by: 'Creator Guides', videos: 'Videos', research: 'Research', operations: 'Operations', related_to: 'Related Content' }
