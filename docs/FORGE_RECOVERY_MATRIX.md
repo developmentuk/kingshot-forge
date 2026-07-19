@@ -1,6 +1,6 @@
 # Forge Recovery Matrix — Sprints R1–R4
 
-Status: **R5 local recovery complete; exact preview smoke blocked by Vercel SSO**
+Status: **R6 Creative Platform acceptance complete; exact preview verified**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 R4 validation head: `bfbd89ec5a230ab50c01dedd3134201d2ab759bc`
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
@@ -85,11 +85,23 @@ R4 performed no migration, RLS change, push, merge, tag or promotion. Temporary 
 
 | Subsystem | Current implementation | Recovery status | Validation status | Version 1.0 readiness |
 | --- | --- | --- | --- | --- |
-| Canonical Render Engine | `src/render-engine/` parser, fixed-cell grid, analyser, configuration, device profiles, benchmarks, persistence, simulator and shared types; public barrel exports all foundations. | Reconciled from existing Render Engine history; simulator export restored. | Focused tests, `npm run check`, server TypeScript, NodeNext and build pass. | **Blocked** — exact preview authenticated smoke remains. |
-| Kingshot artwork renderer | `src/components/art/KingshotArtRenderer.tsx` is the sole active artwork renderer and consumes the canonical engine. | Preserved and validated. | Deterministic fixed-cell and persistence tests pass; local Art Studio responsive smoke passes at 390/768/1280. | **Blocked** — preview session required. |
-| Admin Calibration Lab | `/admin/render-engine`, `RenderEngineCalibrationPage.tsx`, browser-local profiles and existing `cms.view` guard. | Preserved; no new permission system. | Static route/permission assertions and local build pass; unauthenticated local route fails closed. | **Blocked** — authenticated preview smoke required. |
-| Creative integrations | Art Studio uses the renderer; Community Art moderation migrated from raw `<pre>` to the renderer; attribution and text-art validation remain separate. | Unified applicable previews; no unrelated Chat/Name/Banner redesign. | Art Studio local responsive smoke and full Art Studio suite pass. | **Blocked** — authenticated moderation preview required. |
-| Exact-commit preview | Candidate `2c83f98d4e9a3d3f74eea8da06321ccbb1ab7ec2` deployed as Ready deployment `dpl_EaeRdY1qdbxQdBfdCnCuTeX2BP8n` at `https://kingshot-forge-r1kg35rbj-clarksim-7474s-projects.vercel.app`. | Deployed to preview only. | Browser redirect to Vercel SSO prevented authenticated smoke; no bypass attempted. | **Blocked by owner session** |
+| Canonical Render Engine | `src/render-engine/` parser, fixed-cell grid, analyser, configuration, device profiles, benchmarks, persistence, simulator and shared types; public barrel exports all foundations. | Reconciled from existing Render Engine history; simulator export restored. | Focused tests, `npm run check`, server TypeScript, NodeNext and build pass; exact preview accepted in R6. | **Ready for R6 acceptance** |
+| Kingshot artwork renderer | `src/components/art/KingshotArtRenderer.tsx` is the sole active artwork renderer and consumes the canonical engine. | Preserved and validated. | Deterministic fixed-cell and persistence tests pass; deployed Art Studio responsive smoke passes at 390/768/1280. | **Accepted in R6** |
+| Admin Calibration Lab | `/admin/render-engine`, `RenderEngineCalibrationPage.tsx`, browser-local profiles and existing `cms.view` guard. | Preserved; no new permission system. | Owner-authenticated route, saved-profile restoration, working-default reset, browser-local persistence and malformed-value fallback accepted in R6. | **Accepted in R6** |
+| Creative integrations | Art Studio uses the renderer; Community Art moderation migrated from raw `<pre>` to the renderer; attribution and text-art validation remain separate. | Unified applicable previews; no unrelated Chat/Name/Banner redesign. | Owner-authenticated Art Studio, submission preview, Community Art moderation and protected-route smoke accepted in R6. | **Accepted in R6** |
+| Exact-commit preview | Clean R6 HEAD `6c106ea8c68a6cdf1cb1b2059536a08a4bede10a` deployed as Ready deployment `dpl_DDeK6neMfJNqmFrzTLaAXN7q4Msj` at `https://kingshot-forge-dr8uqyraz-clarksim-7474s-projects.vercel.app`. | Deployed to preview only. | Owner-authenticated route, permission, responsive, console and loaded-asset checks passed; no replacement deployment required. | **Accepted in R6** |
+
+## Sprint R6 Creative Platform acceptance
+
+The exact preview deployment above was accepted from the clean branch at HEAD
+`6c106ea8c68a6cdf1cb1b2059536a08a4bede10a`.
+
+Evidence is recorded in
+`docs/recovery/SPRINT-R6-CREATIVE-PLATFORM-ACCEPTANCE.md`. R6 closed the
+remaining authenticated Render Engine and Creative Platform evidence gate:
+owner permissions, Art Studio and moderation route smoke, submission preview,
+browser-local profile restoration/default recovery, malformed-value fallback,
+responsive checks at 390/768/1280, and console/network inspection.
 
 R5 performed no Supabase migration, storage change, production write, push,
 merge, tag or production promotion. Existing lint warnings, Vite bundle-size

@@ -1,6 +1,6 @@
 # Sprint R5 — Render Engine and Creative Platform Recovery
 
-Status: locally complete; preview smoke blocked by Vercel SSO
+Status: complete; R6 owner-authenticated preview acceptance recorded
 
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`
 
@@ -73,7 +73,7 @@ Record the final results below when the candidate is validated:
 | NodeNext validation | Pass | `npm run validate:nodenext` |
 | Production build | Pass | `npm run build` and remote Vercel build pass. |
 | Responsive checks | Pass locally | Art Studio has no horizontal overflow at 390px, 768px and 1280px; no console errors. |
-| Exact preview deployment | Deployed; smoke blocked | Commit `2c83f98d4e9a3d3f74eea8da06321ccbb1ab7ec2`; deployment `dpl_EaeRdY1qdbxQdBfdCnCuTeX2BP8n`; preview `https://kingshot-forge-r1kg35rbj-clarksim-7474s-projects.vercel.app`; status Ready. Browser access redirects to Vercel SSO, so authenticated Art Studio, Calibration Lab and moderation smoke cannot be claimed. |
+| Exact preview deployment | Superseded by accepted R6 deployment | R6 acceptance evidence is recorded in `docs/recovery/SPRINT-R6-CREATIVE-PLATFORM-ACCEPTANCE.md`; no production promotion occurred. |
 
 ## Remaining risks
 
@@ -85,8 +85,6 @@ be reported with the final evidence.
 
 ## Version 1.0 readiness
 
-R5 local reconciliation is complete and the exact preview is Ready. Sprint R5
-remains externally blocked from release readiness until an owner-authenticated
-preview session completes Art Studio, Calibration Lab and Community Art
-moderation smoke. Production promotion, merge and release tagging remain
-outside this sprint.
+R5 local reconciliation and its formerly blocked preview gate are complete by
+the R6 owner-authenticated acceptance. Production promotion, merge and release
+tagging remain outside this sprint.
