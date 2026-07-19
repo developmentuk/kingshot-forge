@@ -101,3 +101,10 @@ to a separate review.
 ## Final recommendation
 
 **Not Ready**
+
+# Final Version 1.0 gate update
+
+The superseding report is `docs/releases/V1-FINAL-RELEASE-GATE.md`. The exact
+replacement preview still passes the Global Search owner smoke check. The
+recommendation remains **Not Ready** until approved cross-user/role sessions,
+responsive viewport evidence and operational readiness evidence are supplied.

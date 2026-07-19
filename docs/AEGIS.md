@@ -204,6 +204,11 @@ Required standards:
 
 ## Quality Gates
 
+The Version 1.0 final release-gate record is maintained at
+`docs/releases/V1-FINAL-RELEASE-GATE.md`. Its recommendation remains blocking
+until approved cross-user/role sessions, responsive viewport evidence and
+owner operational evidence are complete.
+
 A milestone is complete only when all applicable gates pass:
 
 - the project builds successfully;

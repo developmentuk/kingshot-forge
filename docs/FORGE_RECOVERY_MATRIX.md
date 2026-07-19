@@ -250,3 +250,10 @@ preview diagnostics. No fixtures were created. User A/User B, editorial-role,
 responsive viewport and backup/monitoring evidence remain owner gates. RC5A is
 **Not Ready**; see
 [`RC5A-FINAL-OWNER-ACCEPTANCE.md`](releases/RC5A-FINAL-OWNER-ACCEPTANCE.md).
+
+# Version 1.0 final gate update
+
+The final release-gate evidence is recorded in
+`docs/releases/V1-FINAL-RELEASE-GATE.md`. Automated checks and the replacement
+preview Global Search smoke check pass; owner-authenticated cross-user,
+cross-role, responsive and operational recovery evidence remains outstanding.

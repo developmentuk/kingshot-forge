@@ -183,3 +183,10 @@ the Supabase Free plan, and owner-authenticated two-user, editorial,
 responsive, backup/restore and monitoring evidence remains open. RC5 remains
 **Not Ready for Version 1.0**. See
 [`RC5-OWNER-SECURITY-AND-ACCEPTANCE.md`](./RC5-OWNER-SECURITY-AND-ACCEPTANCE.md).
+
+# Final Version 1.0 gate update
+
+See `docs/releases/V1-FINAL-RELEASE-GATE.md` for the final dependency,
+acceptance, validation and owner-action disposition. The release remains Not
+Ready because required approved runtime identities, viewport acceptance and
+operational evidence are unavailable.

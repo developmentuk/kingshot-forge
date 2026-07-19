@@ -202,3 +202,9 @@ an owner-authenticated replacement preview. The RC3 blockers remain open where
 approved User A/User B and editorial-role sessions, responsive viewport
 acceptance, and backup/monitoring ownership were not evidenced. See
 [`RC5A-FINAL-OWNER-ACCEPTANCE.md`](RC5A-FINAL-OWNER-ACCEPTANCE.md).
+
+# Final Version 1.0 gate update
+
+The superseding final gate is `docs/releases/V1-FINAL-RELEASE-GATE.md`.
+Automated validation and the replacement Global Search check pass, while the
+required owner-session, responsive and operational gates remain blockers.

@@ -98,3 +98,9 @@ session reached the replacement and verified body-level dialog placement,
 scroll lock, focus entry/restoration, explicit close behaviour and clean
 preview diagnostics. The authoritative RC5A report records the remaining
 owner gates and final **Not Ready** recommendation.
+
+# Final Version 1.0 gate update
+
+The final evidence record is `docs/releases/V1-FINAL-RELEASE-GATE.md`.
+RC5's accepted security decisions remain unchanged; the final gate still needs
+approved User A/User B/editorial/admin sessions and owner operational evidence.
