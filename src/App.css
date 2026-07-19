@@ -208,6 +208,7 @@
 .workspace-home__note, .workspace-status__panel { display: grid; gap: .3rem; margin-top: 1rem; padding: .85rem 1rem; border-left: 3px solid #4ab7b2; border-radius: .35rem; background: #211f34; }.workspace-home__note span, .workspace-status__panel p { color: #c8c3dc; }
 .workspace-status > .status-badge { margin-bottom: .75rem; }.workspace-status__panel { max-width: 700px; margin-top: 2rem; }.workspace-status__panel h2 { margin: 0; }
 @media (max-width: 760px) { .app-header__workspace { margin-left: .5rem; }.workspace-switcher__button { max-width: 10rem; }.workspace-switcher__button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.workspace-home__section-heading { align-items: start; flex-direction: column; } }
+@media (max-width: 500px) { .app-header__workspace { display: none; } }
 
 /* Sprint 8.0C public contributor surfaces. */
 .join-forge { max-width: 1120px; margin: 0 auto; padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2.5rem); color: #f7f4ff; }

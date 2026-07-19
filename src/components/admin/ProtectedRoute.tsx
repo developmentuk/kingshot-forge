@@ -42,7 +42,7 @@ function ProtectedRoute({
 
         <p>
           You do not have permission to access this area of
-          Forge Admin.
+          Forge.
         </p>
 
         <Link
