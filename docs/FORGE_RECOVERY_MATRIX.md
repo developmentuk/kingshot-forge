@@ -1,8 +1,8 @@
-# Forge Recovery Matrix — Sprints R1–R2
+# Forge Recovery Matrix — Sprints R1–R3
 
 Status: **working recovery baseline**  
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
-R2 baseline head: `e81cc48`  
+R3 validation head: `748d7777f59968e61ca98e791d28fc9fc068ccc9`  
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
 
 Readiness uses evidence, not estimates. “Not ready” means a release gate remains; it does not mean the recovered code is absent.
@@ -39,14 +39,28 @@ Readiness uses evidence, not estimates. “Not ready” means a release gate rem
 
 R2 architectural decision: route visibility and direct-route authorization are separate concerns. The workspace registry remains the navigation contract, while `WorkspaceRoute`, `ProtectedRoute`, server actor capability checks and Supabase RLS remain authoritative. R2 added only boundary/state hardening around recovered functionality; it did not add a second permission model or new workspace feature.
 
+## Sprint R3 authenticated runtime and deployment validation
+
+| Area | Evidence | Recovery status | Version 1.0 readiness |
+| --- | --- | --- | --- |
+| Safe role fixtures | Read-only inspection found four Auth users, three active role-assignment rows (`owner`, `content_creator`, `beta_tester`) and no contributor applications. No repository-documented test credentials or disposable fixture procedure was present. | Inventory complete; no fixture writes made | **Blocked** — required role coverage still needs approved credentials/fixtures |
+| Signed-in runtime | Preview was reachable only through Vercel Authentication; the connected browser had no existing signed-in session. No login, session restoration, capability, workspace switcher or account-isolation claim was made. | Not executable in this environment | **Blocked** |
+| Live APIs and RLS | Static server boundaries remain capability-gated. Supabase RLS remains enabled on the recovered Identity, Contributor Application and Community Art tables. No authenticated request or mutation was executed. | Read-only evidence only | **Blocked** — authenticated API/RLS proof remains required |
+| Exact-commit deployment | The available READY deployment points to an unrelated integration commit (`08bd79c1...`). No R3 candidate deployment was created before the validation gates were available. | Not validated | **Blocked** |
+| Browser smoke / responsive | No signed-in route state could be rendered. R2 local unauthenticated width checks remain valid at 390, 768 and 1280px; they are not authenticated smoke evidence. | Local baseline retained | **Blocked** |
+| Runtime observability | No new runtime errors were attributable to R3 because no R3 deployment or authenticated traffic was executed. | No new evidence | **Blocked** |
+| Full validation | `npm run check` passed on the R3 starting head. Existing lint warnings and the Vite >500 kB chunk warning remain unchanged. | Validated locally | **Ready as a local gate; not a release gate** |
+
+R3 outcome: the recovered Workspace platform remains locally buildable and structurally validated, but the sprint cannot be marked complete without approved authenticated fixtures/session access and an exact-commit preview smoke run. The database was kept read-only; no migration, account, role, application or moderation write was performed.
+
 ## Recovery decisions
 
 - `src/navigation/workspaceRegistry.ts` remains the single navigation contract. The shell consumes it; it does not create a second menu model.
 - Existing `/admin/*` routes remain compatibility aliases for recovered operational slices. Workspace routing is additive and does not bypass server permissions.
 - Workspace preferences are presentation state only. `WorkspaceRoute`, `ProtectedRoute`, API capability checks and Supabase RLS remain authoritative.
 - Completed functionality was recovered from the Operations Centre history. Planned Creator, Audit Log, Roles and Feature Flags surfaces remain labelled planned and were not implemented in R1/R2.
-- The connected Supabase project `hrvdhjscwitqpwjhnjkm` was inspected read-only in R1 and R2. Its migration history already contains the Identity and Contributor Application migrations; no production migration or database write was performed.
+- The connected Supabase project `hrvdhjscwitqpwjhnjkm` was inspected read-only in R1–R3. Its migration history already contains the Identity and Contributor Application migrations; no production migration or database write was performed. R3 did not create representative accounts because no approved credentials or isolated fixture workflow was available.
 
 ## Remaining release evidence
 
-Version 1.0 still requires authenticated role-fixture validation, authenticated responsive desktop/mobile checks, live API/RLS verification, deployed exact-commit smoke testing, and the remaining platform recovery items listed above. R2 local validation is not a claim that those release gates are complete.
+Version 1.0 still requires authenticated role-fixture validation, authenticated responsive desktop/mobile checks, live API/RLS verification, deployed exact-commit smoke testing, runtime observability review, and the remaining platform recovery items listed above. R2/R3 local validation is not a claim that those release gates are complete.
