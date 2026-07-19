@@ -423,4 +423,17 @@ leaked-password protection did not persist on the Free plan and authenticated
 two-user/editorial/responsive plus operational evidence remains open. RC5
 recommendation: **Not Ready for Version 1.0**. See
 [`RC5-OWNER-SECURITY-AND-ACCEPTANCE.md`](releases/RC5-OWNER-SECURITY-AND-ACCEPTANCE.md).
+
+## RC5A final owner acceptance — 19 July 2026
+
+RC5A fixed the verified Global Search inline-rendering defect without changing
+the search architecture, then deployed commit
+`c130173b31444bf6b47a86412f1c54e17efe6f91` to a READY replacement preview.
+Owner-authenticated browser evidence confirms body-level dialog placement,
+scroll lock, focus entry/restoration, explicit close behaviour and clean
+preview diagnostics. The owner-accepted temporary leaked-password risk is
+unchanged. Approved User A/User B and editorial-role runtime evidence,
+authenticated responsive viewport checks and backup/monitoring ownership
+remain open, so the final recommendation is **Not Ready**. See
+[`RC5A-FINAL-OWNER-ACCEPTANCE.md`](releases/RC5A-FINAL-OWNER-ACCEPTANCE.md).
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.

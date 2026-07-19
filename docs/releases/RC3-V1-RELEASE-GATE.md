@@ -193,3 +193,12 @@ contracts. It has not been applied to Supabase pending owner approval.
 RC4 therefore retains the RC3 recommendation **Not Ready for Version 1.0**.
 See [`RC4-SECURITY-HARDENING.md`](RC4-SECURITY-HARDENING.md) for the complete
 advisor disposition, authentication review and operational owner gates.
+
+## RC5A supersession — 19 July 2026
+
+RC5A fixed the verified Global Search inline-rendering defect in commit
+`c130173b31444bf6b47a86412f1c54e17efe6f91` and verified the corrected dialog on
+an owner-authenticated replacement preview. The RC3 blockers remain open where
+approved User A/User B and editorial-role sessions, responsive viewport
+acceptance, and backup/monitoring ownership were not evidenced. See
+[`RC5A-FINAL-OWNER-ACCEPTANCE.md`](RC5A-FINAL-OWNER-ACCEPTANCE.md).

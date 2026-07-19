@@ -239,3 +239,14 @@ exact preview build is READY, but owner-authenticated two-user, editorial
 runtime, responsive and backup/operations evidence remains open. RC5 remains
 **Not Ready for Version 1.0**. See
 [`RC5-OWNER-SECURITY-AND-ACCEPTANCE.md`](releases/RC5-OWNER-SECURITY-AND-ACCEPTANCE.md).
+
+## RC5A final owner acceptance — 19 July 2026
+
+RC5A fixed the verified Global Search inline-rendering defect and deployed
+commit `c130173b31444bf6b47a86412f1c54e17efe6f91` to replacement preview
+`dpl_6n8fUzHAJ3sGUTdyQf6mESxXrw6j`. Owner-authenticated browser evidence
+confirms body-level dialog placement, focus management, scroll lock and clean
+preview diagnostics. No fixtures were created. User A/User B, editorial-role,
+responsive viewport and backup/monitoring evidence remain owner gates. RC5A is
+**Not Ready**; see
+[`RC5A-FINAL-OWNER-ACCEPTANCE.md`](releases/RC5A-FINAL-OWNER-ACCEPTANCE.md).

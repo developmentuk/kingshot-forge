@@ -88,3 +88,13 @@ Backups/restore evidence, migration rollback rehearsal, named incident owner, pr
 ## Final recommendation
 
 **Not Ready for Version 1.0.** RC5 security hardening is applied and verified, but the unresolved leaked-password protection setting and missing owner-authenticated/operational evidence are release blockers.
+
+## RC5A follow-up — 19 July 2026
+
+RC5A fixed the verified Global Search inline-rendering defect and deployed
+replacement preview `dpl_6n8fUzHAJ3sGUTdyQf6mESxXrw6j` from commit
+`c130173b31444bf6b47a86412f1c54e17efe6f91`. The owner-authenticated browser
+session reached the replacement and verified body-level dialog placement,
+scroll lock, focus entry/restoration, explicit close behaviour and clean
+preview diagnostics. The authoritative RC5A report records the remaining
+owner gates and final **Not Ready** recommendation.
