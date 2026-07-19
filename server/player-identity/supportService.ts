@@ -32,7 +32,7 @@ export class PlayerIdentitySupportService {
 
   async inspect(actor: AuthenticatedForgeActor, caseId: PlayerSupportCaseId): Promise<PlayerIdentityOperationResult<PlayerSupportCaseSummary>> {
     const list = await this.list(actor)
-    if (!list.ok) return { ok: false, code: list.code }
+    if (!list.ok) return { ok: false, code: "code" in list ? list.code : "invalid_request" }
     const supportCase = await this.dependencies.store.readSupportCase(caseId)
     return supportCase ? { ok: true, value: supportCase, revision: supportCase.revision } : { ok: false, code: "dispute_not_found" }
   }
