@@ -33,6 +33,9 @@ function MobileBottomLink({ item }: { item: WorkspaceNavItem }) {
 }
 
 function AppLayout() {
+  // Community Art remains owned by the existing moderation implementation;
+  // the workspace registry exposes its compatibility route without duplicating it.
+  // Its gate remains hasPermission('moderation.manage') in the registry and server route.
   const [navigationOpen, setNavigationOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
