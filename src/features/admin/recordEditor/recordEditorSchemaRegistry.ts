@@ -1,18 +1,18 @@
 import {
   buildingsRecordEditorSchema,
-} from "./buildingsRecordEditorSchema";
+} from "./buildingsRecordEditorSchema.js";
 
 import {
   heroSkillsRecordEditorSchema,
-} from "./heroSkillsRecordEditorSchema";
+} from "./heroSkillsRecordEditorSchema.js";
 
 import {
   heroesRecordEditorSchema,
-} from "./heroesRecordEditorSchema";
+} from "./heroesRecordEditorSchema.js";
 
 import type {
   RecordEditorSchema,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 const recordEditorSchemas = new Map<
   string,

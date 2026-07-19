@@ -142,7 +142,7 @@ export function selectAllowlistedProjectionFields(
     if (
       isProhibitedProjectionField(field) ||
       !isPublicPlayerField(field) ||
-      !Object.hasOwn(source, field)
+      !Object.prototype.hasOwnProperty.call(source, field)
     ) {
       continue
     }

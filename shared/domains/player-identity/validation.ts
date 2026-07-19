@@ -293,28 +293,28 @@ export function validateVerificationTimestamps(
   const revoked = parseTimestamp(verification.revokedAt, "revokedAt")
   const disputed = parseTimestamp(verification.disputedAt, "disputedAt")
 
-  if (!issued.valid) {
+  if (issued.valid === false) {
     return {
       valid: false,
       reason: issued.reason,
     }
   }
 
-  if (!expires.valid) {
+  if (expires.valid === false) {
     return {
       valid: false,
       reason: expires.reason,
     }
   }
 
-  if (!revoked.valid) {
+  if (revoked.valid === false) {
     return {
       valid: false,
       reason: revoked.reason,
     }
   }
 
-  if (!disputed.valid) {
+  if (disputed.valid === false) {
     return {
       valid: false,
       reason: disputed.reason,

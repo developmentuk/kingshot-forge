@@ -51,7 +51,19 @@ R2 architectural decision: route visibility and direct-route authorization are s
 | Runtime observability | Exact preview had no runtime logs during the smoke window. Existing project-wide warning: Node `DEP0169` on an older `/api/search` deployment; not attributable to this preview. | Reviewed | **Blocked** — authenticated traffic and broader build diagnostics remain |
 | Full validation | `npm run check` passed on the R3 starting head. Existing lint warnings and the Vite >500 kB chunk warning remain unchanged. | Validated locally | **Ready as a local gate; not a release gate** |
 
-R3 outcome: the recovered Workspace platform remains locally buildable and structurally validated, but the sprint cannot be marked complete without approved authenticated fixtures/session access and an exact-commit preview smoke run. The database was kept read-only; no migration, account, role, application or moderation write was performed.
+R3 outcome: the recovered Workspace platform remained locally buildable but was blocked on authenticated access and clean Vercel diagnostics. Sprint R4 carries that gate forward with isolated temporary fixtures.
+
+## Sprint R4 authenticated fixtures and deployment
+
+| Subsystem | Purpose | Current implementation | Recovery status | Validation status | Source branches | Dependencies | Documentation | Version 1.0 readiness |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Authenticated fixture management | Provision reversible role fixtures without changing production auth design | `scripts/manage-forge-r4-fixtures.mjs` with service-role-only provisioning and cleanup | Implemented for R4 validation | Four fixtures provisioned; cleanup pending final redeploy | Current RC3 branch | Supabase Auth, canonical role assignments, preview redirect | `docs/recovery/SPRINT-R4-AUTHENTICATED-FIXTURES-AND-DEPLOYMENT.md` | Ready for next gate |
+| Workspace runtime validation | Prove role-aware shells, direct-route guards and session switching | Existing registry, route guards and workspace shells | Recovered and validated | Player, contributor/content creator, moderator and admin sessions passed targeted checks | RC3 plus recovered Operations history | AuthContext, RoleContext, server actor resolution | R4 recovery document | Ready pending exact redeploy |
+| Operations Centre | Provide dashboard, User Management, Applications and Community Art entry points | Existing Operations implementation | Recovered and validated | Admin authenticated preview rendered dashboard and capability-filtered navigation | `release/0.8.0-operations-centre`, current RC3 branch | Operations APIs, Supabase RLS | R2/R3 docs and R4 recovery document | Ready pending exact redeploy |
+| Community Art moderation | Review controlled pending submission through moderator capability | Existing Moderation Centre and Community Art queue | Preserved and validated | Moderator authenticated preview rendered moderation workspace and queue entry | RC3 plus Art Studio foundation | Art Studio persistence, moderation capability, RLS | Art Studio docs and R4 recovery document | Ready pending exact redeploy |
+| Vercel TypeScript diagnostics | Keep exact preview candidate deployable | Narrow NodeNext import/result/type-target repairs | Repaired locally | Server tsc and full `npm run check` pass; clean redeploy pending | Current RC3 branch | Vercel function compiler, NodeNext | R4 recovery document | Pending exact redeploy |
+
+R4 performed no migration, RLS change, push, merge, tag or promotion. Temporary fixture records are scheduled for cleanup after final browser sign-out.
 
 ## Recovery decisions
 

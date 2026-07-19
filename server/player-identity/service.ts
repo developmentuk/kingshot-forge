@@ -169,7 +169,7 @@ export class PlayerIdentityService {
       expectedRevision: aggregate.revision,
       event: createEvent({ name: "CharacterLinkProposed", identityRevision: revision, actorForgeUserId: actor.forgeUserId, now }),
     })
-    return result.ok ? { ok: true, value: proposal, revision } : result
+    return result.ok ? { ok: true, value: proposal, revision } : { ok: false, code: result.code }
   }
 
   async changeLinkState(actor: AuthenticatedForgeActor, input: {
@@ -207,7 +207,7 @@ export class PlayerIdentityService {
       expectedRevision: aggregate.revision,
       event: createEvent({ name: eventName, identityRevision: revision, actorForgeUserId: actor.forgeUserId, characterLinkId: target.id, now }),
     })
-    return result.ok ? { ok: true, value: updatedTarget, revision } : result
+    return result.ok ? { ok: true, value: updatedTarget, revision } : { ok: false, code: result.code }
   }
 
   async selectPrimary(actor: AuthenticatedForgeActor, input: {
@@ -237,7 +237,7 @@ export class PlayerIdentityService {
       expectedRevision: aggregate.revision,
       event: createEvent({ name: "PrimaryCharacterChanged", identityRevision: revision, actorForgeUserId: actor.forgeUserId, characterLinkId: input.linkId, now }),
     })
-    return result.ok ? { ok: true, value: selected, revision } : result
+    return result.ok ? { ok: true, value: selected, revision } : { ok: false, code: result.code }
   }
 
   async selectActive(request: ActiveCharacterRequest): Promise<ActiveCharacterResolutionResult> {
@@ -265,7 +265,7 @@ export class PlayerIdentityService {
     const revision = nextRevision(aggregate.revision)
     const event = createEvent({ name: "PlayerVisibilityChanged", identityRevision: revision, actorForgeUserId: actor.forgeUserId, visibilityAudience: validation.value.audience, now })
     const result = await this.dependencies.store.saveAggregate({ aggregate: { ...aggregate, revision, visibility: { ...validation.value, revision } }, expectedRevision: aggregate.revision, event })
-    return result.ok ? { ok: true, value: undefined, revision } : result
+    return result.ok ? { ok: true, value: undefined, revision } : { ok: false, code: result.code }
   }
 
   async proposeAlias(actor: AuthenticatedForgeActor, input: {
@@ -293,7 +293,7 @@ export class PlayerIdentityService {
       expectedRevision: aggregate.revision,
       event: createEvent({ name: "PublicAliasProposed", identityRevision: revision, actorForgeUserId: actor.forgeUserId, now }),
     })
-    return result.ok ? { ok: true, value: alias.value, revision } : result
+    return result.ok ? { ok: true, value: alias.value, revision } : { ok: false, code: result.code }
   }
 
   async updateShowcase(actor: AuthenticatedForgeActor, input: {
@@ -312,6 +312,6 @@ export class PlayerIdentityService {
     const revision = nextRevision(aggregate.revision)
     const showcase = { ...input.showcase, selectionRevision: revision }
     const result = await this.dependencies.store.saveAggregate({ aggregate: { ...aggregate, revision, heroShowcase: showcase }, expectedRevision: aggregate.revision, event: createEvent({ name: "HeroShowcaseSelectionChanged", identityRevision: revision, actorForgeUserId: actor.forgeUserId, now }) })
-    return result.ok ? { ok: true, value: showcase, revision } : result
+    return result.ok ? { ok: true, value: showcase, revision } : { ok: false, code: result.code }
   }
 }
