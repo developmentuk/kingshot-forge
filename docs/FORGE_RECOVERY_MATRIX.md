@@ -1,8 +1,8 @@
-# Forge Recovery Matrix — Sprint R1
+# Forge Recovery Matrix — Sprints R1–R2
 
 Status: **working recovery baseline**  
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
-Head at matrix creation: `500e09b`  
+R2 baseline head: `e81cc48`  
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
 
 Readiness uses evidence, not estimates. “Not ready” means a release gate remains; it does not mean the recovered code is absent.
@@ -24,14 +24,29 @@ Readiness uses evidence, not estimates. “Not ready” means a release gate rem
 | Role-aware navigation and permissions | Ensure visibility is not treated as authorization and direct routes remain guarded | Registry filters links; `WorkspaceRoute` and `ProtectedRoute` enforce access boundaries | Reconciled; existing server authority preserved | Workspace/Identity tests and build pass; role fixture/browser checks pending | RC3 plus `release/0.8.0-operations-centre` | Role Context, server actor resolution, Supabase RLS | `docs/security/role-capability-matrix.md`, `docs/AEGIS.md` | **Not ready** |
 | RC3 Search and Render platform | Preserve the current canonical platform while recovering Workspace functionality | Existing search, relationship and calibration surfaces remain present | Preserved; recovery commits were integrated without restoring their superseded deletions | Production build passes; existing full suite remains to be run | `recovery/0.9.0-rc3-feature-reconciliation` | Existing services and shared styles | Current RC3 docs | **Not ready** |
 
+## Sprint R2 runtime validation and hardening
+
+| Area | Evidence | Recovery status | Version 1.0 readiness |
+| --- | --- | --- | --- |
+| Direct route reconciliation | Duplicate declarations were removed from `src/App.tsx`; User Management, Contributor Applications, roles/audit/flags and Community Art retain explicit capability guards. | Hardened | **Ready for the next authenticated gate** |
+| Navigation integrity | `WorkspaceHomePage` renders only active destinations as links; planned and unavailable destinations are disabled presentation states. Operations dashboard links are capability-aware. | Hardened | **Ready for the next authenticated gate** |
+| Applicant state handling | Applicant status page now avoids API calls while signed out and exposes loading, signed-out, unavailable and empty states. Recruitment mutations remain server-capability checked per action. | Hardened | **Not ready** — authenticated role fixture still required |
+| Operations state handling | User Management, Contributor Applications and application detail preserve loading, empty, error and mutation feedback states; direct routes fail closed. | Validated locally | **Not ready** — authenticated end-to-end evidence still required |
+| Community Art moderation | Existing moderation implementation and API remain the source of truth; `moderation.manage` is enforced in the route, registry and server endpoint. | Reconciled and preserved | **Not ready** — authenticated moderator evidence still required |
+| Responsive runtime | Local unauthenticated route state was checked at 390, 768 and 1280px. The 390px header overflow was corrected in the canonical shell CSS; all three widths now fit the viewport on the updated local server. | Hardened and locally checked | **Not ready** — authenticated content-density review remains |
+| Supabase / RLS | Project `hrvdhjscwitqpwjhnjkm` was inspected read-only. Recovered identity and contributor-application tables have RLS enabled; server-only tables are forced where expected. Policy catalog access returned `451 no_biscuit_no_service`, so policy text was not independently enumerated. | No migration or write required | **Not ready** — live authenticated API/RLS checks remain |
+| Role matrix | Static contracts cover Player, Contributor, Content Creator, Moderator, Operations, Admin, multi-role and no-elevated-role capability boundaries. | Contract coverage present | **Not ready** — signed-in runtime fixtures remain |
+
+R2 architectural decision: route visibility and direct-route authorization are separate concerns. The workspace registry remains the navigation contract, while `WorkspaceRoute`, `ProtectedRoute`, server actor capability checks and Supabase RLS remain authoritative. R2 added only boundary/state hardening around recovered functionality; it did not add a second permission model or new workspace feature.
+
 ## Recovery decisions
 
 - `src/navigation/workspaceRegistry.ts` remains the single navigation contract. The shell consumes it; it does not create a second menu model.
 - Existing `/admin/*` routes remain compatibility aliases for recovered operational slices. Workspace routing is additive and does not bypass server permissions.
 - Workspace preferences are presentation state only. `WorkspaceRoute`, `ProtectedRoute`, API capability checks and Supabase RLS remain authoritative.
 - Completed functionality was recovered from the Operations Centre history. Planned Creator, Audit Log, Roles and Feature Flags surfaces remain labelled planned and were not implemented in R1.
-- The connected Supabase project `hrvdhjscwitqpwjhnjkm` was inspected read-only. Its migration history already contains the Identity and Contributor Application migrations; no production migration or database write was performed in R1.
+- The connected Supabase project `hrvdhjscwitqpwjhnjkm` was inspected read-only in R1 and R2. Its migration history already contains the Identity and Contributor Application migrations; no production migration or database write was performed.
 
 ## Remaining release evidence
 
-Version 1.0 still requires authenticated role-fixture validation, responsive desktop/mobile checks, live API/RLS verification, deployed exact-commit smoke testing, and the remaining platform recovery items listed above. The build and focused recovery tests passing is not a claim that those release gates are complete.
+Version 1.0 still requires authenticated role-fixture validation, authenticated responsive desktop/mobile checks, live API/RLS verification, deployed exact-commit smoke testing, and the remaining platform recovery items listed above. R2 local validation is not a claim that those release gates are complete.
