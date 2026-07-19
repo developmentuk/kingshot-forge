@@ -2,7 +2,7 @@
 
 Status: **working recovery baseline**  
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
-Head at matrix creation: `b32afe2`  
+Head at matrix creation: `500e09b`  
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
 
 Readiness uses evidence, not estimates. “Not ready” means a release gate remains; it does not mean the recovered code is absent.
