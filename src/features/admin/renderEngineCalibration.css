@@ -69,3 +69,39 @@
 .render-engine-lab__panel .forge-render-engine__analysis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 950px) { .render-engine-lab__toolbar, .render-engine-lab__inspector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .render-engine-lab__status { border-left: 0; padding-left: 0; } .render-engine-lab__inspector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .render-engine-lab__inspector > :first-child { grid-column: 1 / -1; } }
 @media (max-width: 700px) { .render-engine-lab__topbar { align-items: flex-start; flex-direction: column; } .render-engine-lab__workspace, .render-engine-lab__toolbar, .render-engine-lab__inspector { grid-template-columns: 1fr; } .render-engine-lab__controls { grid-template-columns: 1fr; } .render-engine-lab__panel .forge-render-engine__analysis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.render-engine-lab__profile-bar { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem; padding: .55rem .7rem; border: 1px solid var(--lab-border); border-radius: .7rem; background: var(--lab-panel-soft); }
+.render-engine-lab__profile-bar > label:first-child { display: grid; min-width: 220px; flex: 1 1 240px; gap: .25rem; color: var(--lab-muted); font-size: .7rem; font-weight: 750; }
+.render-engine-lab__profile-bar select { min-height: 2rem; }
+.render-engine-lab__import { display: inline-flex; min-height: 2.35rem; align-items: center; border: 1px solid #58708a; border-radius: .4rem; padding: .35rem .55rem; color: var(--lab-muted); background: #08111c; font-size: .72rem; cursor: pointer; }
+.render-engine-lab__import input { width: 1px; height: 1px; overflow: hidden; opacity: 0; position: absolute; }
+.render-engine-lab__save-state { display: inline-flex; min-height: 2.25rem; align-items: center; padding: 0 .45rem; color: #b9f0ca; font-size: .72rem; font-weight: 750; }
+.render-engine-lab__save-state--dirty { color: #ffe2a0; }
+.render-engine-lab__segmented, .render-engine-lab__comparison-controls { display: flex; flex-wrap: wrap; gap: .25rem; }
+.render-engine-lab__segmented button, .render-engine-lab__comparison-controls > button { border: 1px solid #58708a; border-radius: .35rem; padding: .35rem .5rem; color: var(--lab-muted); background: #08111c; font: inherit; font-size: .68rem; cursor: pointer; }
+.render-engine-lab__segmented button.is-active, .render-engine-lab__comparison-controls > button.is-active { border-color: var(--lab-accent); color: #241806; background: var(--lab-accent); }
+.render-engine-lab__preview-surface, .render-engine-lab__reference-surface { position: relative; min-height: 350px; overflow: hidden; border: 1px solid var(--lab-border); border-radius: .45rem; background: #070d15; cursor: grab; }
+.render-engine-lab__preview-surface:active, .render-engine-lab__reference-surface:active { cursor: grabbing; }
+.render-engine-lab__preview-surface--light { color: #241f18; background: #fffdf5; }
+.render-engine-lab__preview-surface--checker { background-color: #263241; background-image: linear-gradient(45deg, rgba(255,255,255,.08) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,.08) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,.08) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,.08) 75%); background-position: 0 0, 0 12px, 12px -12px, -12px 0; background-size: 24px 24px; }
+.render-engine-lab__preview-surface--grid::before { position: absolute; inset: 0; z-index: 0; background-image: linear-gradient(rgba(240,187,76,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(240,187,76,.18) 1px, transparent 1px); background-size: 10px 10px; content: ''; pointer-events: none; }
+.render-engine-lab__preview-surface--guides::after { position: absolute; inset: 50% 0 auto; border-top: 1px dashed rgba(240,187,76,.65); content: ''; pointer-events: none; }
+.render-engine-lab__zoom-content { position: relative; z-index: 1; display: grid; min-width: max-content; min-height: 100%; place-items: center; transform-origin: center; }
+.render-engine-lab__zoom-controls { position: absolute; right: .45rem; bottom: .45rem; z-index: 3; display: flex; align-items: center; gap: .2rem; border: 1px solid #58708a; border-radius: .35rem; padding: .2rem; color: #fff; background: rgba(8,17,28,.9); }
+.render-engine-lab__zoom-controls button { border: 0; border-radius: .2rem; padding: .2rem .35rem; color: #fff; background: #1b2b3c; font: inherit; font-size: .7rem; cursor: pointer; }
+.render-engine-lab__zoom-controls output { min-width: 3.2rem; color: var(--lab-accent); font-size: .68rem; text-align: center; }
+.render-engine-lab__preview-surface .kingshot-cell-grid { position: relative; z-index: 1; }
+.render-engine-lab__preview-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .6rem; color: var(--lab-muted); font-size: .72rem; }
+.render-engine-lab__preview-actions label { display: inline-flex; align-items: center; gap: .3rem; }
+.render-engine-lab__preview-actions select { min-height: 1.8rem; width: auto; }
+.render-engine-lab__reference-surface { min-height: 350px; display: grid; place-items: center; }
+.render-engine-lab__reference-image { width: auto; height: auto; max-width: none; max-height: none; border: 0; background: transparent; object-fit: contain; }
+.render-engine-lab__overlay-render { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; overflow: auto; pointer-events: none; }
+.render-engine-lab__overlay-render .kingshot-cell-grid { filter: drop-shadow(0 0 1px rgba(255,255,255,.8)); }
+.render-engine-lab__workspace--overlay .render-engine-lab__panel--preview, .render-engine-lab__workspace--reference-only .render-engine-lab__panel--preview, .render-engine-lab__workspace--forge-only .render-engine-lab__panel--reference { display: none; }
+.render-engine-lab__workspace--focus { position: fixed; inset: .75rem; z-index: 20; grid-template-columns: 1fr; overflow: auto; padding: 1rem; background: var(--lab-bg); }
+.render-engine-lab__workspace--focus .render-engine-lab__panel--preview { display: block; }
+.render-engine-lab--focus > :not(.render-engine-lab__workspace) { display: none; }
+.render-engine-lab--focus .render-engine-lab__workspace { min-height: calc(100vh - 2rem); }
+.render-engine-lab__metadata-panel { margin-top: 0; }
+@media (max-width: 700px) { .render-engine-lab__profile-bar { align-items: stretch; flex-direction: column; } .render-engine-lab__profile-bar > label:first-child { min-width: 0; } .render-engine-lab__preview-surface, .render-engine-lab__reference-surface { min-height: 280px; } .render-engine-lab__actions { width: 100%; } .render-engine-lab__save-state { flex: 1 1 100%; } }
