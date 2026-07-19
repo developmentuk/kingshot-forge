@@ -2,7 +2,7 @@
 
 Status: **working recovery baseline**  
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
-R3 validation head: `748d7777f59968e61ca98e791d28fc9fc068ccc9`  
+R3 validation head: `748d7777f59968e61ca98e791d28fc9fc068ccc9`
 Scope: recover completed Forge workspace functionality into the RC3 platform without introducing a second architecture.
 
 Readiness uses evidence, not estimates. “Not ready” means a release gate remains; it does not mean the recovered code is absent.
@@ -46,9 +46,9 @@ R2 architectural decision: route visibility and direct-route authorization are s
 | Safe role fixtures | Read-only inspection found four Auth users, three active role-assignment rows (`owner`, `content_creator`, `beta_tester`) and no contributor applications. No repository-documented test credentials or disposable fixture procedure was present. | Inventory complete; no fixture writes made | **Blocked** — required role coverage still needs approved credentials/fixtures |
 | Signed-in runtime | Preview was reachable only through Vercel Authentication; the connected browser had no existing signed-in session. No login, session restoration, capability, workspace switcher or account-isolation claim was made. | Not executable in this environment | **Blocked** |
 | Live APIs and RLS | Static server boundaries remain capability-gated. Supabase RLS remains enabled on the recovered Identity, Contributor Application and Community Art tables. No authenticated request or mutation was executed. | Read-only evidence only | **Blocked** — authenticated API/RLS proof remains required |
-| Exact-commit deployment | The available READY deployment points to an unrelated integration commit (`08bd79c1...`). No R3 candidate deployment was created before the validation gates were available. | Not validated | **Blocked** |
-| Browser smoke / responsive | No signed-in route state could be rendered. R2 local unauthenticated width checks remain valid at 390, 768 and 1280px; they are not authenticated smoke evidence. | Local baseline retained | **Blocked** |
-| Runtime observability | No new runtime errors were attributable to R3 because no R3 deployment or authenticated traffic was executed. | No new evidence | **Blocked** |
+| Exact-commit deployment | READY preview `https://kingshot-forge-1huohvzaw-clarksim-7474s-projects.vercel.app`, deployment `dpl_4FcyuXe1VKXFKHjUVrCTNmFjvyMz`, metadata commit `f6d85aaae3fcefbc88a253fab302be9639435735`. Vercel build logs also report pre-existing TypeScript diagnostics outside the recovered Workspace surfaces. | Deployed for controlled smoke; build-risk recorded | **Blocked** — clean Vercel type-check evidence remains required |
+| Browser smoke / responsive | Signed-out `/operations`, `/operations/users`, `/operations/applications` and `/admin/community-art` rendered non-blank, guarded states. Exact preview width checks were non-overflowing at 390, 768 and 1280px. No signed-in route state could be rendered. | Deployed signed-out smoke complete | **Blocked** — authenticated content and role checks remain |
+| Runtime observability | Exact preview had no runtime logs during the smoke window. Existing project-wide warning: Node `DEP0169` on an older `/api/search` deployment; not attributable to this preview. | Reviewed | **Blocked** — authenticated traffic and broader build diagnostics remain |
 | Full validation | `npm run check` passed on the R3 starting head. Existing lint warnings and the Vite >500 kB chunk warning remain unchanged. | Validated locally | **Ready as a local gate; not a release gate** |
 
 R3 outcome: the recovered Workspace platform remains locally buildable and structurally validated, but the sprint cannot be marked complete without approved authenticated fixtures/session access and an exact-commit preview smoke run. The database was kept read-only; no migration, account, role, application or moderation write was performed.
