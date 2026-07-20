@@ -22,6 +22,7 @@
     "test:publication-integrity": "node scripts/test-publication-integrity.mjs",
     "test:buildings-publication": "node scripts/test-buildings-publication.mjs",
     "test:buildings-admin-projection": "node scripts/test-buildings-admin-projection.mjs",
+    "test:buildings-editor-hotfix": "node scripts/test-buildings-editor-hotfix.mjs",
     "test:verification-centre": "node scripts/test-verification-centre.mjs",
     "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
     "validate:player-identity": "node scripts/validate-player-identity.mjs",

@@ -32,8 +32,10 @@ function createBuildingEditorRecord(
   const progression = Array.isArray(record.progression) ? record.progression : [];
   const costs = progression.flatMap((row) => {
     if (!isRecordObject(row)) return [];
+    const standardLevel = readNumberValue(row.base_level);
+    if (standardLevel === null || !Number.isInteger(standardLevel) || standardLevel < 1) return [];
     return [[
-      readNumberValue(row.stage ?? row.base_level) ?? 0,
+      standardLevel,
       readNumberValue(row.bread) ?? 0,
       readNumberValue(row.wood) ?? 0,
       readNumberValue(row.stone) ?? 0,

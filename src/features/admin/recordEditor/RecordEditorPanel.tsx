@@ -38,6 +38,7 @@ interface RecordEditorPanelProps {
     | RecordEditorRecord
     | void;
   supplementalContent?: ReactNode;
+  validationEnabled?: boolean;
 }
 
 export function RecordEditorPanel({
@@ -50,6 +51,7 @@ export function RecordEditorPanel({
   onClose,
   onSave,
   supplementalContent,
+  validationEnabled = true,
 }: RecordEditorPanelProps) {
   const [isSaving, setIsSaving] =
     useState(false);
@@ -72,6 +74,9 @@ export function RecordEditorPanel({
     schema,
     record,
   );
+  const effectiveValidation = validationEnabled
+    ? validation
+    : { isValid: true, errors: [], errorsByField: {} };
 
   useEffect(() => {
     const recordChanged =
@@ -170,7 +175,7 @@ export function RecordEditorPanel({
     if (
       isSaving ||
       !isDirty ||
-      !validation.isValid
+      !effectiveValidation.isValid
     ) {
       return;
     }
@@ -294,7 +299,7 @@ export function RecordEditorPanel({
             record={workingRecord}
             validation={
               saveValidation ??
-              validation
+              effectiveValidation
             }
             isDirty={isDirty}
             isSaving={isSaving}

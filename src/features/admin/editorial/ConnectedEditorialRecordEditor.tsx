@@ -38,6 +38,10 @@ import {
   type EditorialApiAction,
   type EditorialRecordState,
 } from "./editorialApi";
+import {
+  hydrateBuildingsEditorRecord,
+  isRealBuildingsDraft,
+} from "../buildingsEditorHydration.js";
 
 interface ConnectedEditorialRecordEditorProps {
   mode?: "create" | "edit" | "review";
@@ -113,6 +117,7 @@ export function ConnectedEditorialRecordEditor({
   const loadState = useCallback(
     async (signal?: AbortSignal) => {
       setRuntimeError(null);
+      setLoading(true);
 
       try {
         const nextState =
@@ -122,15 +127,15 @@ export function ConnectedEditorialRecordEditor({
             signal,
           );
 
+        if (signal?.aborted) return;
         setState(nextState);
-
-        if (nextState.currentVersion) {
-          setCurrentRecord({
-            id: record.id,
-            values:
-              nextState.currentVersion.values,
-          });
-        }
+        setCurrentRecord(
+          schema.datasetId === "buildings"
+            ? hydrateBuildingsEditorRecord(record, nextState)
+            : nextState.currentVersion
+              ? { id: record.id, values: nextState.currentVersion.values }
+              : record,
+        );
       } catch (error) {
         if (
           error instanceof DOMException &&
@@ -145,11 +150,11 @@ export function ConnectedEditorialRecordEditor({
             : "Unable to load editorial state.",
         );
       } finally {
-        setLoading(false);
+        if (!signal?.aborted) setLoading(false);
       }
     },
     [
-      record.id,
+      record,
       schema.datasetId,
     ],
   );
@@ -222,8 +227,11 @@ export function ConnectedEditorialRecordEditor({
       role,
       saveAction,
     );
-  const draftIsEditable =
-    !state?.head || state.head.status === "draft";
+  const hasRealDraft =
+    schema.datasetId === "buildings"
+      ? isRealBuildingsDraft(state)
+      : Boolean(state?.head && state.head.status === "draft" && state.currentVersion);
+  const draftIsEditable = hasRealDraft;
   const editingDisabled =
     loading ||
     Boolean(runtimeError && !state) ||
@@ -232,10 +240,12 @@ export function ConnectedEditorialRecordEditor({
   const editingDisabledMessage =
     loading
       ? "Editorial state is loading."
-      : runtimeError && !state
-        ? "Editorial state could not be loaded, so saving is disabled. Retry by reopening this record."
+        : runtimeError && !state
+        ? "Editorial state could not be loaded, so saving is disabled. Retry the request below."
         : !savePermission
           ? "Your role can view this record but cannot save editorial drafts."
+          : !state?.head
+            ? "This published record has no active draft. Return it to draft before editing."
           : !draftIsEditable
             ? `This record is ${state?.head?.status.replaceAll("_", " ")}. Return it to draft before editing values.`
             : undefined;
@@ -433,6 +443,7 @@ export function ConnectedEditorialRecordEditor({
       schema={schema}
       record={currentRecord}
       disabled={editingDisabled}
+      validationEnabled={!loading && hasRealDraft}
       disabledMessage={
         editingDisabledMessage
       }
@@ -449,6 +460,11 @@ export function ConnectedEditorialRecordEditor({
                 Editorial workflow error
               </strong>
               <p>{runtimeError}</p>
+              {!state && (
+                <button type="button" onClick={() => void loadState()}>
+                  Retry
+                </button>
+              )}
             </div>
           )}
 
@@ -520,7 +536,7 @@ export function ConnectedEditorialRecordEditor({
           ) : (
             <section className="editorial-admin-card">
               <p className="editorial-admin-empty">
-                Save this record to create its first editorial draft and version history.
+                This published record has no active draft. Return it to draft before editing.
               </p>
             </section>
           )}

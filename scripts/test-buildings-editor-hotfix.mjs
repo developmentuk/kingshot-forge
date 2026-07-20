@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+
+const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
+const hydration = read('src/features/admin/buildingsEditorHydration.ts')
+const adapter = read('src/features/admin/buildingsDatasetAdapter.ts')
+const editor = read('src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx')
+const panel = read('src/features/admin/recordEditor/RecordEditorPanel.tsx')
+const costs = read('src/features/admin/recordEditor/BuildingCostsField.tsx')
+
+assert.match(hydration, /const values = \{ \.\.\.canonical\.values \}/)
+assert.match(hydration, /key !== "progression"/)
+assert.match(hydration, /isProgression\(draft\.progression\)/)
+assert.match(editor, /hydrateBuildingsEditorRecord/)
+assert.match(editor, /isRealBuildingsDraft/)
+assert.match(editor, /if \(signal\?\.aborted\) return/)
+assert.match(editor, /setLoading\(true\)/)
+assert.match(adapter, /const standardLevel = readNumberValue\(row\.base_level\)/)
+assert.match(adapter, /standardLevel < 1\) return \[\]/)
+assert.doesNotMatch(adapter, /row\.stage \?\? row\.base_level/)
+assert.match(panel, /validationEnabled\?: boolean/)
+assert.match(panel, /const effectiveValidation = validationEnabled/)
+assert.match(costs, /id=\{`\$\{id\}-row-/)
+assert.match(costs, /name=\{`\$\{id\}\[/)
+console.log('Buildings editor hydration, progression and accessibility contract passed.')

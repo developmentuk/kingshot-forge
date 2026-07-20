@@ -248,6 +248,7 @@ export function RecordEditorField({
 
   const commonAttributes = {
     id: inputId,
+    name: field.key,
 
     disabled:
       isDisabled,

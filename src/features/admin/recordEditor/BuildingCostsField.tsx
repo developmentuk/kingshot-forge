@@ -349,6 +349,8 @@ export function BuildingCostsField({
                           }
                         >
                           <input
+                            id={`${id}-row-${rowIndex + 1}-cell-${cellIndex + 1}`}
+                            name={`${id}[${rowIndex}].${COST_COLUMN_LABELS[cellIndex].toLowerCase().replaceAll(" ", "-")}`}
                             type="number"
                             min={0}
                             step={1}
