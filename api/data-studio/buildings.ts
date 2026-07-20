@@ -70,7 +70,21 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     const { data: existing } = await supabase.from('forge_import_runs').select('id, state').eq('dataset_key', 'buildings').eq('file_fingerprint', fingerprint).maybeSingle()
     if (existing) {
-      response.status(200).json({ status: 'success', data: { importRunId: existing.id, state: existing.state, reused: true } })
+      const { data: existingRecords, error: existingRecordsError } = await supabase
+        .from('forge_import_records')
+        .select('sheet_name, issue_state')
+        .eq('import_run_id', existing.id)
+      if (existingRecordsError) throw new Error(`Unable to read the existing staged run: ${existingRecordsError.message}`)
+      const records = existingRecords ?? []
+      response.status(200).json({ status: 'success', data: {
+        importRunId: existing.id,
+        state: existing.state,
+        stagedCatalog: records.filter(record => record.sheet_name === 'buildings_catalog').length,
+        stagedProgression: records.filter(record => record.sheet_name === 'buildings_import').length,
+        warningRows: records.filter(record => record.issue_state === 'warning').length,
+        rejectedRows: records.filter(record => record.issue_state === 'rejected').length,
+        reused: true,
+      } })
       return
     }
 
