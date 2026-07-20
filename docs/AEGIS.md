@@ -512,3 +512,11 @@ may contain multiple warnings; record status is not warning identity. The
 append-only warning table and identity-set release certification preserve that
 distinction. The existing Buildings run remains `review_required` and
 unpublished; publication must continue to fail if any identity set differs.
+
+## REL-002 owner acceptance gate — 20 July 2026
+
+Release-candidate verification and REL-001 migration application passed. Final
+owner-authenticated role sessions and the exact publication approval phrase
+were unavailable, so Buildings remain unpublished and Version 1.0 remains
+**Not Ready**. Leaked-password protection remains disabled and accepted only as
+a temporary Free-plan risk; it is not enabled.

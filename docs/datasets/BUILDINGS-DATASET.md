@@ -15,3 +15,7 @@ remains `review_required`. Its source fingerprint and filename match the
 validated workbook. The owner preview reports 8 warnings even where two
 warnings share source row 7; the warnings are prerequisite entries, not a
 deduplicated row count.
+
+REL-002 owner acceptance remains pending. The eight warnings must receive
+explicit owner/editor decisions before publication; no placeholder catalogue
+records may be created.

@@ -57,3 +57,8 @@ Warning IDs:
 ## Scope and recommendation
 
 No new import run, Buildings import, feature, publication, merge, push, deployment or tag was created. Version 1.0 remains **Not Ready** because the broader owner-authenticated cross-role, responsive and operational recovery evidence in the final gate is still outstanding.
+
+REL-002 rechecked the certification after applying the REL-001 migration to
+Supabase. The eight identities still reconcile and Buildings remain
+unpublished. Owner acceptance and the exact publication approval phrase were
+not available, so no publication action was taken.

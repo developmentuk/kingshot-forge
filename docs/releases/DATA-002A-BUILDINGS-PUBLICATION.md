@@ -47,3 +47,11 @@ Corrected preview artifact: deployment
 deployed commit `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf`, status `READY`.
 The authenticated browser check stopped at Vercel login; owner visual
 acceptance and role/capability checks therefore remain pending owner sign-in.
+
+## REL-002 acceptance gate — 20 July 2026
+
+The REL-001 warning-identity migration is applied. The existing run remains
+`review_required` with 10 catalogue, 587 progression and 8 immutable warning
+identities; published Buildings remain empty. REL-002 could not proceed to
+owner review or publication because approved authenticated role sessions and
+the exact `Approve Buildings Publication` decision were unavailable.

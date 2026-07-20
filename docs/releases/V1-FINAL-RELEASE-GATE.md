@@ -13,6 +13,16 @@ Preview: https://kingshot-forge-n2ywu430a-clarksim-7474s-projects.vercel.app
 
 **Not Ready for Version 1.0.** The code and automated validation gates pass, but the required approved User A/User B/editorial/admin sessions, authenticated responsive viewport acceptance, and owner operational evidence were not available. No production promotion, merge, tag or push was performed.
 
+## REL-002 owner acceptance attempt — 20 July 2026
+
+Phase 1 verification passed: the REL-001 migration is applied, the single
+Buildings import run remains `review_required`, 10 catalogue and 587
+progression records are staged, eight warning identities reconcile, and zero
+Buildings rows are published. No approved owner/admin, editorial, ordinary
+player, User A or User B sessions were available, and the exact approval phrase
+`Approve Buildings Publication` was not supplied. Publication was not
+attempted. See [`REL-002-FINAL-OWNER-ACCEPTANCE.md`](REL-002-FINAL-OWNER-ACCEPTANCE.md).
+
 ## UX-002 remediation
 
 The focused UX-002 blocker remediation is recorded in
