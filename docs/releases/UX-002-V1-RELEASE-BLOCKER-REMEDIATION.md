@@ -31,6 +31,21 @@ No schema weakening or live migration was applied. The inspected
 changed. Authenticated visual screenshots, a clean protected preview and owner
 review remain required follow-up evidence; local checks do not imply approval.
 
+## Exact preview candidate
+
+The implementation commit `6fae77bcdac789b162b8bc1e429aaef8890aef99` was
+first deployed successfully as Vercel deployment
+`dpl_Hcw1Eg3bWkqVovyQ7AjTkAeanLEK`:
+
+`https://kingshot-forge-6m5f3t8cv-clarksim-7474s-projects.vercel.app`
+
+This was a protected preview target and was not promoted to production. The
+documentation follow-up `e7dc0830a047d1fd7a624d26717d7602bf01a28d` was also
+deployed READY as `dpl_JBEoW5XHHnHnyLXVmaSQkwcoiVdR` at
+`https://kingshot-forge-ahzw0qw8f-clarksim-7474s-projects.vercel.app`.
+
+The exact final deployed commit is `e7dc0830a047d1fd7a624d26717d7602bf01a28d`.
+
 ## Owner review checklist
 
 Search activation; valid and invalid progression save; Settings; Hero ratings;

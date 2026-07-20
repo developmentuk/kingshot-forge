@@ -20,6 +20,10 @@ The focused UX-002 blocker remediation is recorded in
 Its local changes still require a clean exact-commit preview, responsive
 screenshots and authenticated owner review before this gate can be marked Ready.
 
+UX-002 final documentation commit `e7dc083` deployed READY to
+`https://kingshot-forge-ahzw0qw8f-clarksim-7474s-projects.vercel.app` as
+`dpl_JBEoW5XHHnHnyLXVmaSQkwcoiVdR`. Owner review remains pending.
+
 ## Dependency audit
 
 `npm audit` before and after the compatible lockfile refresh reported **10 findings: 6 high, 4 moderate, 0 critical**. The safe refresh moved `@vercel/node` 5.8.24 → 5.8.26 and `@vercel/build-utils` 13.33.0 → 13.34.0; the audit disposition did not change.
