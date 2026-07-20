@@ -487,3 +487,8 @@ UX-003 is limited to owner-verified V1 acceptance failures. API-owned linked-pla
 ## UX-004 final workflow controls
 
 Automatic gift redemption remains opt-in and failure-isolated from authentication. Identity mutations notify the target through in-app delivery and audit-linked email delivery status. Render Engine benchmark status is explicit; metadata-only or broken artwork is never presented as ready.
+
+The owner returned DATA-002A for corrections. The corrected workflow records
+`review_required` import runs, exposes authenticated staged record detail and
+the eight unresolved prerequisite warnings, and keeps publication disabled
+until a later explicit owner decision. No publication has occurred.

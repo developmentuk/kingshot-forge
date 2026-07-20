@@ -107,3 +107,11 @@ UX-003 is not accepted by automated checks alone. The owner must review the repl
 ## UX-004 gate note
 
 UX-004 implementation is complete locally and is not a production promotion. The exact clean commit still requires a new protected preview, migration application, authenticated acceptance evidence, and zero-fixture verification before Version 1.0 readiness can be claimed.
+
+## DATA-002A correction gate — 20 July 2026
+
+The owner returned the Buildings checkpoint for corrections. No import run,
+staging mutation or publication existed. The requested deployment ID was
+verified as READY, but the previously tested hostname was a different
+deployment URL. A corrected preview with authenticated import-run detail and
+publication-disabled Buildings review is required before this gate can advance.

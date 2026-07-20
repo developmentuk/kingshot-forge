@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import { useRole } from '../../context/RoleContext'
 import './forgeContentStudio.css'
 
@@ -17,18 +18,19 @@ type Overview = {
 const fallback: Overview = { pendingImports: 0, validationErrors: 0, awaitingReview: 1, awaitingApproval: 1, publishedToday: 0, datasets: ['buildings'], importStatistics: { catalogRecords: 10, progressionRecords: 587, totalRecords: 597, warnings: 8, blockingErrors: 0 }, recentActivity: [], publicationQueue: [], relationshipImpact: { pages: 10, guides: 3, heroes: 0, creators: 0, searches: 597, forgeConnections: 10 }, dependencyGraph: [{ id: 'buildings', label: 'Buildings', kind: 'dataset', dependsOn: ['truegold', 'resources', 'prerequisites'] }, { id: 'player-pages', label: 'Player building pages', kind: 'page', dependsOn: ['buildings'] }, { id: 'search', label: 'Search projections', kind: 'index', dependsOn: ['buildings'] }, { id: 'connections', label: 'Forge Connections', kind: 'graph', dependsOn: ['buildings'] }], refreshOrchestration: { search: 'queued-after-publish', knowledgeGraph: 'queued-after-search', audit: 'append-only' }, lastImport: null }
 
 export function ForgeContentStudioPage() {
+  const { session } = useAuth()
   const { hasPermission } = useRole()
   const [data, setData] = useState<Overview>(fallback)
   const [error, setError] = useState('')
   useEffect(() => {
     let active = true
-    fetch('/api/data-studio/overview', { headers: { Accept: 'application/json' } }).then(async (res) => {
+    fetch('/api/data-studio/overview', { headers: { Accept: 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) } }).then(async (res) => {
       const payload = await res.json() as { status: string; data?: Overview; message?: string }
       if (!res.ok || payload.status !== 'success') throw new Error(payload.message ?? 'Unable to load Content Studio.')
       if (active && payload.data) setData(payload.data)
     }).catch((value: unknown) => { if (active) setError(value instanceof Error ? value.message : 'Content Studio is using the staged checkpoint.') })
     return () => { active = false }
-  }, [])
+  }, [session?.access_token])
 
   return <main className="admin-page forge-content-studio">
     <section className="admin-page__header forge-studio-hero"><div><p className="admin-page__eyebrow">Forge Content Studio</p><h1>Editorial publishing workspace</h1><p className="admin-page__intro">Review governed source data, understand its relationship impact, and move it through the publication gate. Buildings remains staged awaiting owner approval.</p></div><div className="forge-studio-checkpoint"><span>Owner checkpoint</span><strong>Buildings · staged</strong><small>10 catalog · 587 progression · 0 blockers · 8 warnings</small></div></section>

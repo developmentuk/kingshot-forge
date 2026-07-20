@@ -15,3 +15,12 @@ The live schema adds `forge_dataset_contracts`, `forge_import_runs`, `forge_impo
 The enhanced preflight passed with zero blocking errors, duplicates, orphan records or invalid requirements JSON. It recorded 8 warnings for unresolved prerequisite names (`Sawmill`, `House 1`, `Quarry`, `Hero Hall`, `House 3`, `Iron Mine`, `Mill` and `Watchtower`), preserving source text and creating no fictitious entities. The connected project had zero live Buildings rows and zero import runs at inspection, so the workbook represents 10 new building entities and 587 new progression records; missing-record handling remains `retain_existing`.
 
 The protected `/admin/imports` UI was verified to load its access gate, but the available browser session was signed out. No import run was created and no staging mutation was made without an authenticated Forge actor. Publication remains gated and requires owner approval after an authenticated Data Studio staging run and review.
+
+## DATA-002A correction checkpoint — 20 July 2026
+
+The first protected-preview attempt used the wrong deployment hostname. The
+deployment ID `dpl_GMV4tBog8kVhUAt598qiQfa9YDsq` resolves to
+`https://kingshot-forge-95pez7k5k-clarksim-7474s-projects.vercel.app`.
+The corrected import surface now loads authenticated import-run detail,
+preserves `review_required` as the initial state, displays the eight
+unresolved prerequisite records and keeps publication disabled during review.

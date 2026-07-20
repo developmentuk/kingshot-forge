@@ -298,3 +298,11 @@ UX-004 adds `TGn-0` progression normalization, automatic redemption orchestratio
 ## DATA-001 Buildings workbook checkpoint — 20 July 2026
 
 The owner workbook `KSForge_Buildings_Import_Ready_200726.xlsx` was read and preflighted without mutation. SHA-256: `840d70bc9173ef12d454FE72FBE517FE49124B250562C8FBEF1B68C0F2DD1980`. Counts: 10 catalog, 587 progression, 597 total. Result: zero blocking errors, zero duplicate keys, zero orphan records, zero invalid JSON records, 710 prerequisite mappings and 8 unresolved prerequisite warnings. The live Buildings/import baseline was empty. The protected Data Studio UI returned its signed-out access gate, so no import run or staging mutation was created; no publication, merge, tag or production promotion occurred. Owner approval is required after authenticated staging and review.
+
+## DATA-002A recovery note
+
+The original blank-preview evidence was invalid because the tested hostname did
+not correspond to deployment `dpl_GMV4tBog8kVhUAt598qiQfa9YDsq`. Recovery now
+requires the corrected protected preview, authenticated staging of the
+unchanged Buildings workbook, visible prerequisite review and owner approval;
+publication remains prohibited during correction.
