@@ -337,3 +337,6 @@ supplied `Approve Buildings Publication`, but this branch has no supported
 atomic Buildings publication path. Recovery must stop before publication;
 adding the missing publication and warning-decision contracts is outside
 REL-002 scope.
+# REL-003 recovery note
+
+Buildings version 1 is published as `bpub-a8070ae2-beef-4abe-81d8-4e338f768f75`. Recovery uses `preview_buildings_rollback` followed by the service-role rollback RPC; the first version correctly has no prior target. Publication snapshots, warning decisions, prerequisite decisions, editorial versions, and audit events are immutable.

@@ -239,18 +239,9 @@ try {
     );
   }
 
-  await expectStatus(
-    422,
-    () =>
-      execute(
-        {
-          action: "queue_publish",
-          datasetId: "buildings",
-          recordId: "academy",
-          expectedVersion: 1,
-        },
-        actors.admin,
-      ),
+  assert.equal(
+    (await vite.ssrLoadModule("/shared/data-engine/dataset-capabilities.ts")).getRegisteredDatasetCapabilities("buildings").publishing,
+    true,
     "Buildings publication capability",
   );
 

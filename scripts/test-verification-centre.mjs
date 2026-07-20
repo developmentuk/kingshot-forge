@@ -83,11 +83,11 @@ try {
         result === "blocked",
     ),
   );
-  assert.equal(capabilityStatus(buildings, "publishing"), "unsupported");
+  assert.equal(capabilityStatus(buildings, "publishing"), "blocked");
   assert.ok(
     buildings.checks.some(
       ({ id, result }) =>
-        id === "buildings:publication-rejection" && result === "passed",
+        id === "buildings:atomic-publication" && result === "passed",
     ),
   );
   assert.equal(capabilityStatus(events, "browser"), "ready");

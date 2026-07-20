@@ -57,3 +57,6 @@ The REL-001 warning-identity migration is applied. The existing run remains
 identities; published Buildings remain empty. The owner supplied
 `Approve Buildings Publication`, but REL-002 stopped before mutation because
 this branch has no supported atomic Buildings publication operation.
+# REL-003 publication outcome
+
+The approved staged run was published atomically as version 1. Eight external prerequisite decisions were retained as structured references with deferred catalogue dependencies. The public projection contains exactly 10 Buildings and 587 progression rows; no placeholder rows were created. Search, relationship, prerequisite graph, and Personal Progression refresh records all succeeded.

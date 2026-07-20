@@ -36,3 +36,6 @@ The replacement protected preview is deployment
 `dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j`, deployed from commit
 `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf` and verified `READY`. Browser
 authentication remains an owner handoff requirement.
+# REL-003 Content Studio path
+
+The Buildings review screen is manifest-gated. Owner-approved warning decisions are persisted through a server-only RPC, and publication requires exact warning identity equality, a manifest hash, the existing import run, and an idempotency key. Publication and refreshes are audit-linked; rollback is append-only.

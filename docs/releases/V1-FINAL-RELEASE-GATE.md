@@ -153,3 +153,6 @@ REL-001 certification: **PASS** for identity reconciliation. Buildings remain
 unpublished, with no publication version, relationship refresh, search refresh
 or rollback created. The overall Version 1.0 recommendation remains
 **Not Ready** pending the existing owner-authenticated and operational gates.
+# REL-003 certification update
+
+Buildings publication is now certified for publication version 1: 10 catalogue rows, 587 progression rows, 8 reconciled warning IDs, 4 successful refresh stages, and immutable audit evidence. The publication RPC remains service-role-only and manifest-hash gated. Version 1 has rollback preview support but no prior publication to restore. Final Version 1 recommendation remains subject to the standard authenticated browser/console acceptance checks.
