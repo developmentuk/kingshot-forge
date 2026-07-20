@@ -16,7 +16,7 @@ export function validateDataset(contract: DatasetContract, sheets: Readonly<Reco
     if (sheet !== 'verification_notes' && rows.length === 0) add({ severity: 'blocking', code: 'missing_rows', sheet, message: `Sheet ${sheet} contains no data rows.` })
     rows.forEach((row, index) => {
       const rowNumber = index + 2; let blocked = false; let warned = false
-      for (const column of required) if (isBlank(row[column])) { add({ severity: 'blocking', code: 'required_value_missing', sheet, row: rowNumber, column, message: `${column} is required.` }); blocked = true }
+      for (const column of required) if (isBlank(row[column]) && !contract.fields[column]?.nullable) { add({ severity: 'blocking', code: 'required_value_missing', sheet, row: rowNumber, column, message: `${column} is required.` }); blocked = true }
       for (const [column, field] of Object.entries(contract.fields)) {
         if (!sheetColumns.has(column)) continue
         if (isBlank(row[column])) { if (field.required && !field.nullable) { add({ severity: 'blocking', code: 'required_value_missing', sheet, row: rowNumber, column, message: `${column} is required.` }); blocked = true }; continue }

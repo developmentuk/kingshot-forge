@@ -16,11 +16,10 @@ export const buildingsContract: DatasetContract = {
     building_key: { type: 'string', required: true }, building_name: { type: 'string', required: true }, category: { type: 'string', required: true },
     description: { type: 'string', required: true }, standard_max_level: { type: 'integer', required: true }, truegold_supported: { type: 'boolean', required: true }, record_count: { type: 'integer', required: true },
     record_id: { type: 'string', required: true }, level_label: { type: 'string', required: true }, progression_phase: { type: 'string', required: true }, base_level: { type: 'integer', nullable: true }, truegold_tier: { type: 'integer', nullable: true }, stage: { type: 'integer', nullable: true },
-    requirements_json: { type: 'json', required: true }, requirements_text: { type: 'string', required: true }, source_url: { type: 'url', required: true }, verification_status: { type: 'string', required: true }, verified_on: { type: 'date', nullable: true },
+    requirements_json: { type: 'json', required: true }, requirements_text: { type: 'string', nullable: true }, source_url: { type: 'url', required: true }, verification_status: { type: 'string', required: true }, verified_on: { type: 'date', nullable: true },
     truegold: { type: 'number', nullable: true }, tempered_truegold: { type: 'number', nullable: true }, bread: { type: 'number', nullable: true }, wood: { type: 'number', nullable: true }, stone: { type: 'number', nullable: true }, iron: { type: 'number', nullable: true }, upgrade_time_seconds: { type: 'number', nullable: true },
   },
   uniqueConstraints: [{ sheet: 'buildings_catalog', columns: ['building_key'] }, { sheet: 'buildings_import', columns: ['record_id'] }],
   relationships: [{ fromSheet: 'buildings_import', fromColumn: 'building_key', toSheet: 'buildings_catalog', toColumn: 'building_key' }],
   metadata: { rawCostWarning: 'Workbook resource costs are raw/base costs; preserve this warning in published metadata.', missingRecordPolicy: 'retain_existing', targetEntityTypes: ['building', 'building_progression'], publishedTables: ['buildings', 'building_progression'] },
 }
-
