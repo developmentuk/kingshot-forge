@@ -346,7 +346,9 @@ at **Not Ready for Version 1.0**. The verified UI defect was a read-only
 Content Studio overview query using `publication_queue.created_at`; the repair
 uses canonical `requested_at` and does not mutate Buildings data or audit
 history. Authenticate the exact READY preview, repeat owner-only checks, then
-reassess the gate.
+reassess the gate. REL-004 owner authentication completed successfully; the
+rollback preview was inspected and its confirmation dismissed without a
+mutation. Production promotion remains a separate owner-authorised action.
 # REL-003 recovery note
 
 Buildings version 1 is published as `bpub-a8070ae2-beef-4abe-81d8-4e338f768f75`. Recovery uses `preview_buildings_rollback` followed by the service-role rollback RPC; the first version correctly has no prior target. Publication snapshots, warning decisions, prerequisite decisions, editorial versions, and audit events are immutable.

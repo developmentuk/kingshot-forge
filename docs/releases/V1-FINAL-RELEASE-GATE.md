@@ -160,8 +160,9 @@ Buildings publication is now certified for publication version 1: 10 catalogue r
 ## REL-004 final browser acceptance — 20 July 2026
 
 REL-004 deployed repaired commit `1144aba77d6ab544a68719a28e563e5acceb58c9`
-to protected READY preview `dpl_J3JPWgMNpA5iX37kEqTPXvkRmUgV`. Public Buildings
-and Search routes passed, and the Content Studio queue read defect was repaired.
-The exact repaired hostname still requires owner authentication for Content
-Studio, audit, rollback, responsive authenticated workflow and final owner
-acceptance. Recommendation: **Not Ready for Version 1.0**.
+to protected READY preview `dpl_J3JPWgMNpA5iX37kEqTPXvkRmUgV`. The approved
+owner/admin session completed Content Studio, Version History, Data Studio,
+Operations Centre, User Management, Render Engine/Calibration Lab, Personal
+Progression, rollback-preview, responsive and console/network checks.
+Recommendation: **Ready for Owner Production Approval**. Production promotion
+remains a separate owner action and was not performed.

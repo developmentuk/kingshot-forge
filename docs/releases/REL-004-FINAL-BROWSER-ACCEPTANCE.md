@@ -1,6 +1,6 @@
 # REL-004 — Final Authenticated Browser Acceptance
 
-Status: **NOT READY FOR VERSION 1.0** pending owner authentication on the repaired preview host.
+Status: **READY FOR OWNER PRODUCTION APPROVAL**; production promotion remains intentionally blocked.
 
 ## Candidate and deployment
 
@@ -12,7 +12,7 @@ Status: **NOT READY FOR VERSION 1.0** pending owner authentication on the repair
 - Deployment status: `READY`; protected preview, not promoted to production
 - Supabase project: `hrvdhjscwitqpwjhnjkm`
 
-The existing owner session was authenticated on the prior preview hostname. The repaired hostname correctly returned `Access denied` for `/admin/content-studio` until the owner signs in on that exact hostname. No authentication boundary was bypassed and no publication mutation was attempted.
+The approved owner/admin session is authenticated on the exact repaired hostname. No authentication boundary was bypassed and no publication mutation was attempted.
 
 ## Published Buildings evidence
 
@@ -31,13 +31,19 @@ buildings|unresolved_prerequisite|buildings_import|8|town-center:6|town-center|I
 buildings|unresolved_prerequisite|buildings_import|9|town-center:7|town-center|Mill|Mill|6|
 ```
 
-## Browser checks and root cause
+## Authenticated browser checks and root cause
 
-Public checks passed on the repaired preview: Buildings directory (10 cards), Town Center, Barracks, Academy, Search route, published Town Center search result, and console error/warning checks. Town Center showed 71 progression records and Truegold; Barracks showed 70 Truegold records; Academy showed 30 Standard records. No partial or staged-only Buildings data was observed publicly.
+Owner/admin checks passed on the repaired preview: Content Studio, Version History, Buildings Data Studio, Operations Centre, User Management, Render Engine / Calibration Lab, Personal Progression, Buildings directory and representative detail routes. Content Studio showed `Buildings · published`, the authenticated workbook `KSForge_Buildings_Import_Ready_200726.xlsx`, 10 catalogue, 587 progression, 8 warnings, 0 blocking errors, `Published Today 1`, and a timeline ending `Version 1 · publication record active`. No staged fallback or publication queue error appeared.
+
+Version History showed immutable Buildings version 1, the approval comment, and the rollback-preview control. Its confirmation was dismissed without executing rollback. The existing publication evidence remains version 1 with no prior target, so rollback readiness correctly explains that no destructive rollback is available without a valid target and history remains immutable.
+
+Public checks also passed: Buildings directory (10 cards), Town Center, Barracks, Academy, Search route, published Town Center search result, and console checks. Town Center showed 71 progression records and Truegold; Barracks showed 70 Truegold records; Academy showed 30 Standard records. No partial or staged-only Buildings data was observed publicly.
 
 The first authenticated preview exposed a real Content Studio read-path defect: the overview endpoint selected nonexistent `publication_queue.created_at`, causing a staged fallback and hiding the published import. Commit `1144aba` changes the query to canonical `requested_at` and makes the checkpoint/timeline reflect the returned import state. No Buildings data, publication, warning decision or import-run state was changed.
 
-Owner-authenticated acceptance of the repaired preview remains pending. Therefore Content Studio, owner role/capability evidence, audit timeline UI, rollback preview UI, responsive authenticated workflow, and authenticated network checks are not certified by this report.
+The authenticated shell showed the approved verified owner account and Forge Operations Centre workspace. No application console errors, Supabase errors, failed protected API calls, stale-session errors, failed lazy chunks, unexpected 401/403 responses, RLS errors, or raw database errors were observed. The browser extension emitted one stale React DevTools warning for the intentionally probed nonexistent `/admin/calibration-lab` path; the implemented Calibration Lab route is `/admin/render-engine` and passed. No fixture snapshot was written because the UI exposes no reversible delete path; fixture writes and cleanup were both `0`.
+
+Responsive authenticated smoke checks were completed for the required owner surfaces at 390px, 768px and 1280px: headings rendered, no horizontal overflow was observed, and no clipped controls or hidden required actions were identified. The implemented Calibration Lab route is `/admin/render-engine`.
 
 ## Validation
 
@@ -45,6 +51,6 @@ Owner-authenticated acceptance of the repaired preview remains pending. Therefor
 
 ## Recommendation
 
-**Not Ready for Version 1.0**
+**Ready for Owner Production Approval**
 
-Exact next owner action: open the repaired protected preview, authenticate in that browser session, confirm `/admin/content-studio` shows the published Buildings import, and complete the owner-only Content Studio, audit, rollback, responsive, console and network checks. Do not promote to production until that evidence is recorded.
+Exact next owner action: the owner may approve production promotion of this exact repaired candidate. Promotion itself remains outside REL-004 and was not performed.

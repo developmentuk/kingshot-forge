@@ -529,6 +529,6 @@ Buildings publication uses a server-only atomic RPC, an immutable warning decisi
 
 The final browser gate requires authentication on the exact protected preview
 hostname. A valid session on an earlier preview is not evidence for the repaired
-deployment. Public checks may proceed, but owner-only Content Studio, audit,
-rollback and role checks remain uncertified until the owner signs in on that
-exact host. No authentication boundary may be bypassed.
+deployment. REL-004 completed owner-only Content Studio, audit, rollback and
+role checks on deployment `dpl_J3JPWgMNpA5iX37kEqTPXvkRmUgV`; no authentication
+boundary was bypassed.
