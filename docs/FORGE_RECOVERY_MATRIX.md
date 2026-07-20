@@ -295,3 +295,6 @@ UX-003 implementation is tracked in `docs/releases/UX-003-V1-FUNCTIONAL-ACCEPTAN
 ## UX-004 final workflow completion
 
 UX-004 adds `TGn-0` progression normalization, automatic redemption orchestration, role/status notifications, structured tagged Forge Connections, explicit Render Engine availability, and the embedded workflow guide. Authenticated owner evidence and migration application remain deployment gates.
+## DATA-001 Buildings workbook checkpoint — 20 July 2026
+
+The owner workbook `KSForge_Buildings_Import_Ready_200726.xlsx` was read and preflighted without mutation. SHA-256: `840d70bc9173ef12d454FE72FBE517FE49124B250562C8FBEF1B68C0F2DD1980`. Counts: 10 catalog, 587 progression, 597 total. Result: zero blocking errors, zero duplicate keys, zero orphan records, zero invalid JSON records, 710 prerequisite mappings and 8 unresolved prerequisite warnings. The live Buildings/import baseline was empty. The protected Data Studio UI returned its signed-out access gate, so no import run or staging mutation was created; no publication, merge, tag or production promotion occurred. Owner approval is required after authenticated staging and review.

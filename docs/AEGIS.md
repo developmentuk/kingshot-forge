@@ -1,5 +1,9 @@
 # Kingshot Forge Project Constitution
 
+## DATA-001 operational record — 20 July 2026
+
+The Buildings workbook preflight passed with 10 catalog rows, 587 progression rows, zero blocking errors, zero duplicates, zero orphans and eight unresolved prerequisite warnings. The source fingerprint is `840d70bc9173ef12d454fe72fbe517FE49124B250562C8FBEF1B68C0F2DD1980`. The workbook remains unmodified; no direct publication occurred. Staging requires an authenticated Forge actor and owner review, and publication remains explicitly gated.
+
 `docs/AEGIS.md` is the authoritative operational constitution for Kingshot Forge. It governs how the platform is designed, implemented, validated and released. Supporting product direction remains in `docs/FORGE_BLUEPRINT.md`; binding architectural decisions remain in `docs/ADR/`; detailed engineering standards remain in `governance/`.
 
 ## Identity and canonical systems
