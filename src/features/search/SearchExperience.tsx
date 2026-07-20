@@ -67,9 +67,10 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
   const [recent, setRecent] = useState(() => readList(RECENT_KEY))
   const [pinned, setPinned] = useState(() => readList(PINNED_KEY))
   const [selectedIndex, setSelectedIndex] = useState(-1)
+  const didNavigateRef = useRef(false)
   const shortcut = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform) ? '⌘ K' : 'Ctrl K'
   const chooseSearch = useCallback((value: string) => { setQuery(value); setRecent((current) => { const next = [value, ...current.filter((item) => item !== value)].slice(0, 8); localStorage.setItem(RECENT_KEY, JSON.stringify(next)); return next }) }, [])
-  const openResult = useCallback((record: SearchRecord) => { chooseSearch(query.trim()); navigate(record.canonical_url?.startsWith('/') ? record.canonical_url : `/search?q=${encodeURIComponent(record.title)}`); onClose?.() }, [chooseSearch, navigate, onClose, query])
+  const openResult = useCallback((record: SearchRecord) => { didNavigateRef.current = true; chooseSearch(query.trim()); navigate(record.canonical_url?.startsWith('/') ? record.canonical_url : `/search?q=${encodeURIComponent(record.title)}`); onClose?.() }, [chooseSearch, navigate, onClose, query])
 
   useEffect(() => {
     if (!open || embedded) return
@@ -80,7 +81,8 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
     return () => {
       window.clearTimeout(focusTimer)
       document.body.style.overflow = previousOverflow
-      restoreFocusRef.current?.focus()
+      if (!didNavigateRef.current) restoreFocusRef.current?.focus()
+      didNavigateRef.current = false
       restoreFocusRef.current = null
     }
   }, [embedded, open])
@@ -162,8 +164,9 @@ export function ForgeConnections({ dataset, id, limit = 12, showPanels = true }:
   const [loading, setLoading] = useState(true)
   useEffect(() => { const controller = new AbortController(); setLoading(true); fetch(`/api/search?relationshipFrom=${encodeURIComponent(`${dataset}:${id}`)}&depth=1&limit=${limit}`, { signal: controller.signal }).then(async (response) => { if (!response.ok) return; const body = await response.json() as { data?: SearchResponse }; setMatches(body.data?.results ?? []) }).catch(() => undefined).finally(() => setLoading(false)); return () => controller.abort() }, [dataset, id, limit])
   if (loading) return <section className="forge-connections forge-connections--loading" aria-busy="true"><div className="forge-connections__skeleton" /><div className="forge-connections__skeleton" /><div className="forge-connections__skeleton" /></section>
-  if (!matches.length) return <section className="forge-connections forge-connections--empty"><p className="forge-search__eyebrow">Relationship Engine</p><h2>Forge Connections</h2><p>No published relationships are available for this destination yet.</p></section>
-  const groups = [...new Set(matches.map((match) => relationshipLabel(match.relationshipType)))]
-  return <section className="forge-connections" aria-labelledby="forge-connections-title"><div className="forge-connections__heading"><div><p className="forge-search__eyebrow">Relationship Engine</p><h2 id="forge-connections-title">Forge Connections</h2></div><Link to={`/search?relationshipFrom=${encodeURIComponent(`${dataset}:${id}`)}`}>Explore all</Link></div>{groups.map((group) => <div className="forge-connections__group" key={group}><h3>{group}</h3><div className="forge-connections__grid">{matches.filter((match) => relationshipLabel(match.relationshipType) === group).map((match) => { const { record } = match; const confidence = confidenceLabel(record); return <Link className="forge-connection-card" key={`${record.dataset}:${record.id}`} to={record.canonical_url ?? `/search?q=${encodeURIComponent(record.title)}`}><span className="forge-result__icon" aria-hidden="true">◈</span><span><span className="forge-connection-card__meta"><small>{datasetLabel(record.dataset)}</small>{confidence && <small className="forge-confidence">{confidence}</small>}</span><strong>{record.title}</strong>{record.subtitle && <small>{record.subtitle}</small>}<em>{record.summary ?? 'Connected Forge content'}</em><small className="forge-connection-card__why">Why this matters: {explain(match)}</small></span></Link>})}</div></div>)}{showPanels && <KnowledgePanels matches={matches} />}<div className="forge-connections__discovery"><strong>Players also viewed</strong><span>{matches.slice(0, 3).map((match) => match.record.title).join(' · ')}</span></div></section>
+  const related = [...new Map(matches.filter((match) => `${match.record.dataset}:${match.record.id}` !== `${dataset}:${id}`).map((match) => [`${match.record.dataset}:${match.record.id}`, match])).values()]
+  if (!related.length) return <section className="forge-connections forge-connections--empty"><p className="forge-search__eyebrow">Relationship Engine</p><h2>Forge Connections</h2><p>No related Forge content has been published yet.</p></section>
+  const groups = [...new Set(related.map((match) => relationshipLabel(match.relationshipType)))]
+  return <section className="forge-connections" aria-labelledby="forge-connections-title"><div className="forge-connections__heading"><div><p className="forge-search__eyebrow">Relationship Engine</p><h2 id="forge-connections-title">Forge Connections</h2></div><Link to={`/search?relationshipFrom=${encodeURIComponent(`${dataset}:${id}`)}`}>View all related content</Link></div>{groups.map((group) => <div className="forge-connections__group" key={group}><h3>{group}</h3><div className="forge-connections__grid">{related.filter((match) => relationshipLabel(match.relationshipType) === group).map((match) => { const { record } = match; const confidence = confidenceLabel(record); return <Link className="forge-connection-card" key={`${record.dataset}:${record.id}`} to={record.canonical_url?.startsWith('/') ? record.canonical_url : `/search?q=${encodeURIComponent(record.title)}`}><span className="forge-result__icon" aria-hidden="true">◈</span><span><span className="forge-connection-card__meta"><small>{datasetLabel(record.dataset)}</small>{confidence && <small className="forge-confidence">{confidence}</small>}</span><strong>{record.title}</strong>{record.subtitle && <small>{record.subtitle}</small>}<em>{record.summary ?? 'Published related content'}</em><small className="forge-connection-card__why">{explain(match)}</small></span></Link>})}</div></div>)}{showPanels && <KnowledgePanels matches={related} />}</section>
 }
 

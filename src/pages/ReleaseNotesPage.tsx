@@ -37,9 +37,9 @@ function ReleaseNotesPage() {
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
-            <span className="release-entry__badge">Ready for Clark’s final production validation</span>
-            <h2>Release 0.7.5 — Auto Redeem</h2>
-            <p>Release candidate · production provider remains disabled</p>
+            <span className="release-entry__badge">Forge Preview</span>
+            <h2>Version 1.0 — Forge platform</h2>
+            <p>Preview undergoing final validation before the Version 1.0 production release</p>
           </div>
           <Link className="button button--secondary" to="/gift-codes">
             Open Gift Centre

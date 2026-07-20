@@ -468,3 +468,12 @@ Owner visual acceptance is **Pending owner confirmation**; protected admin,
 editorial and operations screens were observed only at their unauthenticated
 boundary states. The recommendation remains **Not Ready for Version 1.0**.
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.
+
+### UX-002 Version 1.0 release-blocker remediation
+
+UX-002 keeps the player-level and Town Center contracts separate: linked
+`player_level` values outside the snapshot's 1–30 Town Center range are treated
+as unknown, never coerced into the database. Search activation, Forge
+Connections, settings/Operations surfaces, Hero ratings, Render Engine
+navigation, release presentation and KvK Cards/Compact presentation are
+recorded in `docs/releases/UX-002-V1-RELEASE-BLOCKER-REMEDIATION.md`.

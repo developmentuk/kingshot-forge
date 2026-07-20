@@ -13,6 +13,13 @@ Preview: https://kingshot-forge-n2ywu430a-clarksim-7474s-projects.vercel.app
 
 **Not Ready for Version 1.0.** The code and automated validation gates pass, but the required approved User A/User B/editorial/admin sessions, authenticated responsive viewport acceptance, and owner operational evidence were not available. No production promotion, merge, tag or push was performed.
 
+## UX-002 remediation
+
+The focused UX-002 blocker remediation is recorded in
+[`UX-002-V1-RELEASE-BLOCKER-REMEDIATION.md`](UX-002-V1-RELEASE-BLOCKER-REMEDIATION.md).
+Its local changes still require a clean exact-commit preview, responsive
+screenshots and authenticated owner review before this gate can be marked Ready.
+
 ## Dependency audit
 
 `npm audit` before and after the compatible lockfile refresh reported **10 findings: 6 high, 4 moderate, 0 critical**. The safe refresh moved `@vercel/node` 5.8.24 → 5.8.26 and `@vercel/build-utils` 13.33.0 → 13.34.0; the audit disposition did not change.

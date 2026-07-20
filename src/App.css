@@ -267,3 +267,27 @@
 .operations-user-detail__header > div > a { display: inline-block; margin-bottom: 1rem; font-weight: 700; }.operations-user-detail__grid, .settings-page__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }.operations-user-detail__grid section, .settings-page__grid section { padding: 1rem; border: 1px solid #e0e4ec; border-radius: .8rem; background: #fff; }.operations-user-detail__grid h2, .settings-page__grid h2 { margin-top: 0; }.operations-user-detail dl, .settings-page dl { display: grid; gap: .7rem; }.operations-user-detail dl div, .settings-page dl div { display: grid; gap: .2rem; }.operations-user-detail dt, .settings-page dt { color: #687083; font-size: .82rem; }.operations-user-detail dd, .settings-page dd { margin: 0; }.operations-user-detail__actions { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem; margin-top: 1rem; }.operations-user-detail__actions button { border: 0; border-radius: .45rem; padding: .65rem .8rem; background: #2d5bab; color: #fff; cursor: pointer; }.operations-user-detail__actions button:disabled { opacity: .5; cursor: not-allowed; }.operations-user-detail__actions .button--danger { background: #a33d42; }.operations-user-detail__reason { max-width: 700px; margin: 1rem 0; }.operations-user-detail__reason textarea { min-height: 6rem; resize: vertical; }
 .settings-page__grid { margin-top: 2rem; }.settings-page__grid section p { color: #687083; }.settings-page__grid dl { margin-bottom: 1rem; }
 @media (max-width: 760px) { .operations-users__header, .operations-user-detail__header { align-items: start; flex-direction: column; }.operations-users__filters, .operations-user-detail__grid, .settings-page__grid { grid-template-columns: 1fr; }.operations-users__pagination { align-items: stretch; flex-direction: column; }.operations-users__pagination span { order: -1; } }
+
+/* UX-002 shared dark surface reconciliation. Keep operations and settings in
+ * the same accessible visual language as the application shell. */
+.operations-users, .operations-user-detail, .settings-page { color: #f7f4ff; }
+.operations-users__header h1, .operations-user-detail__header h1, .settings-page h1 { font-size: clamp(1.8rem, 4vw, 2.65rem); line-height: 1.1; }
+.operations-users__header p:not(.eyebrow), .operations-user-detail__header p:not(.eyebrow), .settings-page header > p:not(.eyebrow), .settings-page__grid section p { color: #c8c3dc; }
+.operations-users__filters, .operations-users__table-wrap, .operations-user-detail__grid section, .settings-page__grid section { border-color: #3d3857; background: #211f34; color: #f7f4ff; }
+.operations-users__filters input, .operations-users__filters select, .operations-user-detail select, .operations-user-detail textarea { border-color: #514b70; background: #171628; color: #f7f4ff; }
+.operations-users th, .operations-users td { border-color: #3d3857; }
+.operations-users tbody th small, .operations-user-detail dt, .settings-page dt { color: #c8c3dc; }
+.operations-users a, .operations-user-detail a { color: #7ed5d0; }
+.operations-users__pagination button { border-color: #514b70; background: #302d4b; color: #f7f4ff; }
+.settings-page__grid { margin-top: 1.5rem; }
+.settings-page__grid h2, .operations-user-detail__grid h2 { font-size: 1.15rem; }
+.status-badge { background: #302d4b; color: #f7f4ff; }
+.kvk-results-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin: 1rem 0; padding: .75rem 1rem; border: 1px solid #3d3857; border-radius: .8rem; background: #211f34; color: #f7f4ff; }
+.kvk-results-toolbar [role="group"] { display: flex; flex-wrap: wrap; gap: .5rem; }
+.kvk-compact-table-wrap { overflow-x: auto; border: 1px solid #3d3857; border-radius: .8rem; background: #211f34; }
+.kvk-compact-table { width: 100%; min-width: 620px; border-collapse: collapse; }
+.kvk-compact-table th, .kvk-compact-table td { padding: .8rem; border-bottom: 1px solid #3d3857; text-align: left; vertical-align: top; }
+.kvk-compact-table th { color: #c8c3dc; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+.kvk-compact-table td { color: #f7f4ff; }
+.kvk-compact-table td small { display: block; margin-top: .2rem; color: #c8c3dc; }
+@media (max-width: 620px) { .kvk-results-toolbar { align-items: flex-start; flex-direction: column; } }

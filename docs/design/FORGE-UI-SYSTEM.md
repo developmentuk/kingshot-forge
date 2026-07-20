@@ -62,3 +62,12 @@ colours and route-specific selectors. This sprint reconciles shared tokens and
 the evidenced search/shell defects without a blind purge. A future visual debt
 pass should migrate remaining legacy selectors incrementally with route-level
 screenshots.
+
+## UX-002 release-blocker rules
+
+Operations and settings surfaces use the same dark Forge surface, border,
+focus and text tokens as the application shell. Data tables may scroll inside a
+bounded container on narrow screens; they must not hide values through clipped
+fixed heights. Rating cards keep stars, scores and explanations in normal flow.
+Related-content components render only published, visible, deduplicated
+relationships and use an explicit empty state when no relationship exists.

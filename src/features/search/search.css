@@ -7,3 +7,6 @@
 .forge-search__results { max-height: min(390px, 42dvh); }
 .forge-result:focus-visible, .forge-result--selected { border-color: #e6ab38; box-shadow: 0 0 0 2px rgba(230,171,56,.14); outline: 0; }
 @media (max-width: 700px) { .forge-search--overlay { padding: max(.5rem, env(safe-area-inset-top)) max(.5rem, env(safe-area-inset-right)) max(.5rem, env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left)); } .forge-search--overlay .forge-search__panel { width: 100%; max-height: calc(100dvh - 1rem); } .forge-search__results { max-height: none; } }
+.forge-connection-card { min-width: 0; }
+.forge-connection-card strong, .forge-connection-card em, .forge-connection-card small { overflow-wrap: anywhere; }
+.forge-connections__discovery { display: none; }

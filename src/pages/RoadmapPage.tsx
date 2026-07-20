@@ -98,13 +98,13 @@ const roadmapReleases: RoadmapRelease[] = [
     ],
   },
   {
-    version: "0.7.5",
+    version: "1.0",
     name: "Auto Redeem",
     status: "development",
     progress: 100,
-    priority: "Ready for Clark’s final production validation",
+    priority: "Final validation before Version 1.0",
     description:
-      "Locally validated release candidate for safe, consented gift-code redemption; production enablement remains gated pending Clark’s final validation.",
+      "Forge Preview is undergoing final validation before the Version 1.0 production release. Safe, consented gift-code redemption remains gated until release checks pass.",
     features: [
       "Governed active gift-code registry",
       "Explicit linked-player consent",
@@ -236,8 +236,8 @@ function RoadmapPage() {
           <p className="eyebrow">Product roadmap</p>
           <h1 className="page-title">Build each domain completely</h1>
           <p>
-            Community Art Studio is complete. Release 0.7.5 now focuses entirely on safe,
-            consented Auto Redeem for linked Kingshot players.
+            Community Art Studio is complete. Forge Preview is undergoing final validation
+            before the Version 1.0 production release.
           </p>
         </div>
         <div className="product-roadmap__hero-actions">
@@ -250,11 +250,11 @@ function RoadmapPage() {
         <div>
           <span className="roadmap-priority-panel__icon">🎁</span>
           <div>
-            <p className="eyebrow">Release candidate status</p>
-            <h2>Release 0.7.5 — Auto Redeem</h2>
+            <p className="eyebrow">Forge Preview</p>
+            <h2>Version 1.0 release status</h2>
             <p>
-              Release candidate ready for Clark’s final production validation. The secure,
-              transparent redemption journey remains paused until production checks pass.
+              This preview is undergoing final validation before the Version 1.0 production
+              release. The secure, transparent redemption journey remains paused until checks pass.
             </p>
           </div>
         </div>

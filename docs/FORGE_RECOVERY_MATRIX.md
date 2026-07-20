@@ -158,6 +158,14 @@ R8B cross-user evidence, incomplete Editorial/CMS import and publication
 workflows, and production release acceptance. See the authoritative RC1
 reconciliation below.
 
+## UX-002 release-blocker remediation — 20 July 2026
+
+The focused UX-002 sprint reconciles Search activation, progression validation,
+Forge Connections, Settings, Hero Companion ratings, Operations styling,
+Render Engine navigation, neutral release copy and KvK presentation. The exact
+implementation and open authenticated/visual evidence are recorded in
+[`releases/UX-002-V1-RELEASE-BLOCKER-REMEDIATION.md`](releases/UX-002-V1-RELEASE-BLOCKER-REMEDIATION.md).
+
 ## RC1 readiness reconciliation (authoritative)
 
 | Area | Status | Evidence and release meaning |
