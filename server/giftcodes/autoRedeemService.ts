@@ -4,7 +4,7 @@ import { createOfficialGiftCodeProvider, OFFICIAL_GIFT_CODE_PROVIDER_ID, readOff
 import { createGiftCodeIdempotencyIdentity } from './workflow/idempotency.js'
 
 const CONSENT_VERSION = 'giftcode-redemption-v1'
-const POLICY_TEXT = 'Forge Auto Redeem submits the linked Player ID and selected active Gift Codes to the Kingshot provider, records normalized outcomes and timestamps, never requests a game password, and only processes codes after a user-triggered run.'
+const POLICY_TEXT = 'Forge Auto Redeem submits the linked Player ID and selected active Gift Codes to the Kingshot provider, records normalized outcomes and timestamps, never requests a game password, and only processes codes after explicit opt-in and an automatic or user-triggered run.'
 const POLICY_DIGEST = createHash('sha256').update(POLICY_TEXT).digest('hex')
 const MAX_CODES_PER_RUN = 20
 const MIN_DELAY_MS = 750
@@ -224,6 +224,18 @@ export async function redeemAvailable(userId: string, options: { allowedCodes?: 
 
 export async function redeemControlledValidationCode(userId: string) {
   return redeemAvailable(userId, { allowedCodes: [CONTROLLED_VALIDATION_CODE] })
+}
+
+const automaticRunInFlight = new Set<string>()
+export async function triggerAutomaticRedemption(userId: string, trigger: 'login' | 'player_refresh' | 'scheduled' | 'new_code' = 'login') {
+  if (automaticRunInFlight.has(userId)) return { skipped: true, reason: 'run_in_progress', trigger }
+  automaticRunInFlight.add(userId)
+  try {
+    const context = await getAutoRedeemContext(userId)
+    if (!context.eligibility.eligible || !context.consent) return { skipped: true, reason: context.eligibility.reasons.join(','), trigger }
+    try { return { skipped: false, trigger, ...(await redeemAvailable(userId)) } }
+    catch (error) { console.warn('[giftcodes:auto]', { userId, trigger, name: error instanceof Error ? error.name : 'UnknownError' }); return { skipped: true, reason: 'automatic_run_failed', trigger } }
+  } finally { automaticRunInFlight.delete(userId) }
 }
 
 export async function redemptionHistory(userId: string) {

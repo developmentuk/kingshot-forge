@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../server/auth/requireForgeActor.js'
-import { autoRedeemPolicy, getAdminGiftCodeCatalogue, getAdminGiftCodeMetrics, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redeemControlledValidationCode, redemptionHistory, revokeConsent, setProviderOperations } from '../server/giftcodes/autoRedeemService.js'
+import { autoRedeemPolicy, getAdminGiftCodeCatalogue, getAdminGiftCodeMetrics, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redeemControlledValidationCode, redemptionHistory, revokeConsent, setProviderOperations, triggerAutomaticRedemption } from '../server/giftcodes/autoRedeemService.js'
 
 function body(request: VercelRequest) { return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {} }
 function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
@@ -15,6 +15,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
     const actor = await requireForgeActor(request)
     if (request.method === 'GET' && action === 'history') { response.status(200).json({ status: 'success', data: await redemptionHistory(actor.userId) }); return }
+    if (request.method === 'POST' && action === 'auto-run') { response.status(202).json({ status: 'success', data: await triggerAutomaticRedemption(actor.userId, 'login') }); return }
     if (action === 'operations') {
       if (actor.role !== 'owner' && actor.role !== 'admin') { fail(response, 403, 'Administrator access is required.'); return }
       if (request.method === 'GET') { response.status(200).json({ status: 'success', data: await getProviderOperations() }); return }

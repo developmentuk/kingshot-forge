@@ -1,5 +1,6 @@
 import type { ForgeActor } from '../auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
+import { notifyIdentityMutation } from '../notifications/notificationService.js'
 import { canAssignRole, dedupeCapabilities, isForgeRole, workspaceIdsForCapabilities, type ForgeRole } from './roleCapabilities.js'
 import type { AccountStatus, UserAuditEntry, UserDetail, UserListItem, UserRoleAssignment } from './contracts.js'
 
@@ -142,8 +143,9 @@ function requireReason(reason: unknown): string {
 }
 
 async function audit(actor: ForgeActor, targetUserId: string, action: string, reason: string, beforeState: Record<string, unknown>, afterState: Record<string, unknown>) {
-  const { error } = await getSupabaseAdmin().from('forge_identity_audit_events').insert({ actor_user_id: actor.userId, target_user_id: targetUserId, action, domain: 'identity', reason, before_state: beforeState, after_state: afterState })
+  const { data, error } = await getSupabaseAdmin().from('forge_identity_audit_events').insert({ actor_user_id: actor.userId, target_user_id: targetUserId, action, domain: 'identity', reason, before_state: beforeState, after_state: afterState }).select('id').single()
   if (error) throw new UserManagementError(500, 'The identity mutation could not be audited and was not completed.')
+  return data.id as string
 }
 
 export async function assignRole(actor: ForgeActor, targetUserId: string, roleInput: unknown, reasonInput: unknown) {
@@ -159,7 +161,8 @@ export async function assignRole(actor: ForgeActor, targetUserId: string, roleIn
   if (existing) return { idempotent: true, role }
   const { data, error } = await admin.from('forge_user_role_assignments').insert({ user_id: targetUserId, role, granted_by: actor.userId, grant_reason: reason }).select('id,role,active,granted_at').single()
   if (error) throw new UserManagementError(500, 'The role assignment could not be completed.')
-  await audit(actor, targetUserId, 'role_assigned', reason, {}, { role, assignmentId: data.id })
+  const auditEventId = await audit(actor, targetUserId, 'role_assigned', reason, {}, { role, assignmentId: data.id })
+  void notifyIdentityMutation({ userId: targetUserId, action: 'role_assigned', roleOrStatus: role, auditEventId }).catch((error) => console.warn('[notifications]', error instanceof Error ? error.message : 'delivery failed'))
   return { idempotent: false, role, assignmentId: data.id }
 }
 
@@ -177,7 +180,8 @@ export async function revokeRole(actor: ForgeActor, targetUserId: string, roleIn
   if (!current) return { idempotent: true, role }
   const { error } = await admin.from('forge_user_role_assignments').update({ active: false, revoked_by: actor.userId, revoked_at: new Date().toISOString(), revoke_reason: reason }).eq('id', current.id)
   if (error) throw new UserManagementError(500, 'The role revocation could not be completed.')
-  await audit(actor, targetUserId, 'role_revoked', reason, { role }, { role, assignmentId: current.id })
+  const auditEventId = await audit(actor, targetUserId, 'role_revoked', reason, { role }, { role, assignmentId: current.id })
+  void notifyIdentityMutation({ userId: targetUserId, action: 'role_revoked', roleOrStatus: role, auditEventId }).catch((error) => console.warn('[notifications]', error instanceof Error ? error.message : 'delivery failed'))
   return { idempotent: false, role, assignmentId: current.id }
 }
 
@@ -195,7 +199,8 @@ export async function changeAccountStatus(actor: ForgeActor, targetUserId: strin
   if (previous?.status === status) return { idempotent: true, status }
   const { error } = await admin.from('forge_user_account_status').upsert({ user_id: targetUserId, status, changed_by: actor.userId, changed_at: new Date().toISOString(), reason, updated_at: new Date().toISOString() })
   if (error) throw new UserManagementError(500, 'The account status change could not be completed.')
-  await audit(actor, targetUserId, 'account_status_changed', reason, { status: previous?.status ?? 'active' }, { status })
+  const auditEventId = await audit(actor, targetUserId, 'account_status_changed', reason, { status: previous?.status ?? 'active' }, { status })
+  void notifyIdentityMutation({ userId: targetUserId, action: 'account_status_changed', roleOrStatus: status, auditEventId }).catch((error) => console.warn('[notifications]', error instanceof Error ? error.message : 'delivery failed'))
   return { idempotent: false, status }
 }
 

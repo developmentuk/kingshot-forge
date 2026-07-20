@@ -77,3 +77,6 @@ relationships and use an explicit empty state when no relationship exists.
 - Forge Connections are curated cards, ranked from explicit relationships and canonical tags, with a meaningful reason and Open action.
 - Rating-card grids use one column on mobile, two columns on constrained widths and four columns only when each card has a safe minimum width. Content determines card height.
 - KvK card mode uses two clearly labelled kingdom panels, an explicit VS marker and text/icon result labels. Compact mode remains the dense operational table.
+## Final workflow heading and status guidance
+
+Use the shared compact page-title scale for task-oriented pages such as KvK Match History. Operational selectors must expose Ready, Metadata only, Broken reference, or Unsupported states; unavailable content cannot use ready-state controls.

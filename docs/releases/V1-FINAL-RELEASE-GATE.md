@@ -104,3 +104,6 @@ evidence and outstanding operational recovery evidence.
 ## UX-003 gate note
 
 UX-003 is not accepted by automated checks alone. The owner must review the replacement preview for canonical Search destinations, automatic linked-player identity/Town Center refresh, progression enablement/save, role mutations and audit history, Render Engine workflow, five responsive Hero Companion widths, structured Forge Connections and KvK versus cards. See `docs/releases/UX-003-V1-FUNCTIONAL-ACCEPTANCE-REMEDIATION.md`.
+## UX-004 gate note
+
+UX-004 implementation is complete locally and is not a production promotion. The exact clean commit still requires a new protected preview, migration application, authenticated acceptance evidence, and zero-fixture verification before Version 1.0 readiness can be claimed.

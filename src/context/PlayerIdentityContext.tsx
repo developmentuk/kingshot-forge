@@ -146,6 +146,11 @@ export function PlayerIdentityProvider({
   }, [authLoading, loadPlayerIdentity, playerAccount?.last_refreshed_at, refreshPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
+    if (!session?.access_token || !user) return
+    void fetch('/api/giftcodes?action=auto-run', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: '{}' }).catch(() => undefined)
+  }, [session?.access_token, user])
+
+  useEffect(() => {
     function handlePlayerUpdate() {
       void refreshPlayerIdentity()
     }

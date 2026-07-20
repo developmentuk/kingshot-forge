@@ -74,7 +74,7 @@ export function normalizeTownCenterLevel(...values: unknown[]): number | null {
     if (typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 30) return value
     if (typeof value !== 'string') continue
     const text = value.trim()
-    const match = text.match(/(?:town\s*center|town_center|\btc\b)\s*[:#-]?\s*(\d{1,2})\b/i)
+    const match = text.match(/(?:town\s*center|town_center|\btc\b)\s*[:#-]?\s*(\d{1,2})\b/i) ?? text.match(/\bTG\s*(\d{1,2})\s*-\s*0\b/i)
     const parsed = match ? Number(match[1]) : null
     if (parsed !== null && Number.isInteger(parsed) && parsed >= 1 && parsed <= 30) return parsed
   }

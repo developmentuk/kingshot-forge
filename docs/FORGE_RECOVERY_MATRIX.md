@@ -292,3 +292,6 @@ cross-user or operational gates. Version 1.0 acceptance remains blocked.
 ## UX-003 acceptance remediation
 
 UX-003 implementation is tracked in `docs/releases/UX-003-V1-FUNCTIONAL-ACCEPTANCE-REMEDIATION.md`. The current local remediation adds canonical search destination routing, throttled login refresh with cached fallback, explicit Town Center normalization, role mutation affordance guidance, Render Engine registry clarity, responsive Hero Companion rating cards, structured Forge Connections presentation and an original KvK versus card. Authenticated preview evidence and deployment remain required before this matrix can be marked ready.
+## UX-004 final workflow completion
+
+UX-004 adds `TGn-0` progression normalization, automatic redemption orchestration, role/status notifications, structured tagged Forge Connections, explicit Render Engine availability, and the embedded workflow guide. Authenticated owner evidence and migration application remain deployment gates.

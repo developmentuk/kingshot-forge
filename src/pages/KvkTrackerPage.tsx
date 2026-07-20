@@ -219,8 +219,8 @@ function KvkTrackerPage() {
       <div className="section-heading">
         <p className="eyebrow">KvK Tracker</p>
 
-        <h1 className="page-title">
-          Explore Kingdom versus Kingdom results
+        <h1 className="page-title kvk-tracker-page__title">
+          KvK Match History
         </h1>
 
         <p>

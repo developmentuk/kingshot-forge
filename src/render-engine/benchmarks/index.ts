@@ -2,6 +2,7 @@ import { artTemplates } from '../../data/art'
 import type { ArtworkClass, DeviceProfileId } from '../types'
 
 export type BenchmarkValidationStatus = 'metadata-only' | 'ready-for-review'
+export type BenchmarkAvailability = 'ready' | 'metadata-only' | 'broken-reference' | 'unsupported'
 export type RenderBenchmark = {
   id: string
   title: string
@@ -24,5 +25,10 @@ export const RENDER_BENCHMARKS: readonly RenderBenchmark[] = [
 
 export function getBenchmarkArtwork(benchmark: RenderBenchmark): string {
   return benchmark.sourceArtworkId ? artTemplates.find((item) => item.id === benchmark.sourceArtworkId)?.art ?? '' : ''
+}
+
+export function getBenchmarkAvailability(benchmark: RenderBenchmark): BenchmarkAvailability {
+  if (!benchmark.sourceArtworkId) return 'metadata-only'
+  return getBenchmarkArtwork(benchmark) ? 'ready' : 'broken-reference'
 }
 
