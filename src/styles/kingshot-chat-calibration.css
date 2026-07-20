@@ -1,0 +1,177 @@
+/*
+ * Kingshot chat-frame calibration
+ *
+ * Kingshot does not publish a fixed CSS or pixel width for chat. The frame is
+ * responsive to the game viewport and UI scale. Measurement from the supplied
+ * 1080px-wide in-game capture places the visible chat card at approximately
+ * 721px, or 66.76% of the viewport. Forge reproduces that ratio on desktop and
+ * caps it at the measured reference width. Small screens retain the existing
+ * edge-to-edge mobile-sheet behaviour.
+ */
+:root {
+  --kingshot-chat-reference-viewport: 1080;
+  --kingshot-chat-reference-width: 721;
+  --kingshot-chat-width-ratio: 66.76vw;
+  --kingshot-chat-width-cap: 721px;
+  --kingshot-preview-font-size: .82rem;
+  --kingshot-preview-line-height: 1.08;
+  --kingshot-preview-scale-x: .76;
+}
+
+.kingshot-art-renderer--kingshot {
+  width: max-content;
+  min-width: 0;
+  max-width: none;
+  margin-inline: auto;
+  font-size: var(--kingshot-preview-font-size);
+  line-height: var(--kingshot-preview-line-height);
+  transform: scaleX(var(--kingshot-preview-scale-x));
+  transform-origin: top center;
+}
+
+.kingshot-art-renderer--kingshot .kingshot-art-renderer__line {
+  min-height: var(--kingshot-preview-line-height);
+  line-height: var(--kingshot-preview-line-height);
+}
+
+.kingshot-art-renderer--kingshot.kingshot-art-renderer--ascii {
+  color: var(--kingshot-art-ink);
+  font-family: "Courier New", Consolas, monospace;
+  font-size: .76rem;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  letter-spacing: -.025em;
+  line-height: 1.06;
+  white-space: pre;
+  transform: scaleX(.91);
+  transform-origin: top center;
+}
+
+.kingshot-art-renderer--pixel { font-size: .87rem; }
+.kingshot-art-renderer--banner { letter-spacing: -.02em; }
+.kingshot-art-renderer--mixed { --kingshot-preview-scale-x: .82; }
+.kingshot-art-renderer__empty { min-width: .36em; }
+
+.art-preview-modal__content { justify-content: center; }
+.art-preview-modal__content > .kingshot-art-renderer { flex: 0 0 auto; }
+
+/* Forge Render Engine v2 */
+.forge-render-engine {
+  display: grid;
+  width: min(100%, 640px);
+  gap: .8rem;
+  margin-inline: auto;
+  color: #17202b;
+}
+
+.forge-render-engine__device-controls {
+  display: flex;
+  justify-content: center;
+  gap: .35rem;
+}
+
+.forge-render-engine__device {
+  border: 1px solid rgba(51, 65, 85, .28);
+  border-radius: 999px;
+  padding: .35rem .7rem;
+  color: #435063;
+  background: rgba(255, 255, 255, .64);
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.forge-render-engine__device--active {
+  border-color: #a46b00;
+  color: #5d3c00;
+  background: #fff2c7;
+}
+
+.forge-render-engine__viewport {
+  display: grid;
+  min-height: 150px;
+  place-items: center;
+  margin-inline: auto;
+  overflow: auto;
+  border: 1px solid rgba(92, 85, 77, .18);
+  border-radius: .85rem;
+  background: rgba(255, 255, 255, .34);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4);
+  transition: width .2s ease;
+}
+
+.forge-render-engine--phone .forge-render-engine__viewport { width: min(100%, 360px); }
+.forge-render-engine--tablet .forge-render-engine__viewport { width: min(100%, 500px); }
+.forge-render-engine--desktop .forge-render-engine__viewport { width: 100%; }
+
+.forge-render-engine__art {
+  width: max-content;
+  padding: 1.3rem;
+}
+
+.forge-render-engine__analysis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.forge-render-engine__analysis > div {
+  display: grid;
+  gap: .12rem;
+  border: 1px solid rgba(92, 85, 77, .18);
+  border-radius: .65rem;
+  padding: .55rem .65rem;
+  background: rgba(255, 255, 255, .48);
+}
+
+.forge-render-engine__analysis span {
+  color: #6b7280;
+  font-size: .64rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.forge-render-engine__analysis strong {
+  color: #252a31;
+  font-size: .78rem;
+}
+
+.forge-render-engine__notes {
+  display: grid;
+  gap: .25rem;
+  border-left: 3px solid #c58a16;
+  padding: .5rem .7rem;
+  color: #4b5563;
+  background: rgba(255, 248, 224, .72);
+  font-size: .72rem;
+  text-align: left;
+}
+
+.forge-render-engine__notes p { margin: 0; }
+.forge-render-engine__warning { color: #8a4b08; }
+
+@media (min-width: 701px) {
+  .art-preview-modal__panel {
+    width: min(var(--kingshot-chat-width-cap), var(--kingshot-chat-width-ratio), calc(100vw - 2.5rem));
+  }
+
+  .art-preview-modal__content {
+    padding-inline: clamp(1.5rem, 5vw, 3.4rem);
+  }
+}
+
+@media (max-width: 700px) {
+  :root {
+    --kingshot-preview-font-size: .8rem;
+    --kingshot-preview-scale-x: .74;
+  }
+
+  .kingshot-art-renderer--kingshot.kingshot-art-renderer--ascii {
+    font-size: .72rem;
+    transform: scaleX(.88);
+  }
+
+  .art-preview-modal__panel { width: 100%; }
+  .forge-render-engine__analysis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

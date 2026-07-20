@@ -18,6 +18,8 @@ type OutcomeFilter =
   | 'captured'
   | 'defended'
 
+type KvkView = 'cards' | 'compact'
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
@@ -33,6 +35,7 @@ function KvkTrackerPage() {
 
   const [outcomeFilter, setOutcomeFilter] =
     useState<OutcomeFilter>('all')
+  const [view, setView] = useState<KvkView>(() => (localStorage.getItem('forge.kvk.view') as KvkView) || 'cards')
 
   const [seasons, setSeasons] =
     useState<KvkSeason[]>([])
@@ -206,13 +209,18 @@ function KvkTrackerPage() {
     )
   }, [kingdomId, matches])
 
+  function changeView(next: KvkView) {
+    setView(next)
+    localStorage.setItem('forge.kvk.view', next)
+  }
+
   return (
     <section className="section page-section kvk-tracker-page">
       <div className="section-heading">
         <p className="eyebrow">KvK Tracker</p>
 
-        <h1 className="page-title">
-          Explore Kingdom versus Kingdom results
+        <h1 className="page-title kvk-tracker-page__title">
+          KvK Match History
         </h1>
 
         <p>
@@ -351,7 +359,15 @@ function KvkTrackerPage() {
             </div>
           </div>
 
-          <div className="kvk-match-grid">
+          <div className="kvk-results-toolbar" aria-label="KvK result presentation">
+            <strong>{matches.length} results</strong>
+            <div role="group" aria-label="View mode">
+              <button type="button" className={view === 'cards' ? 'button button--primary' : 'button button--secondary'} onClick={() => changeView('cards')}>Cards</button>
+              <button type="button" className={view === 'compact' ? 'button button--primary' : 'button button--secondary'} onClick={() => changeView('compact')}>Compact</button>
+            </div>
+          </div>
+
+          {view === 'compact' ? <div className="kvk-compact-table-wrap"><table className="kvk-compact-table"><caption className="sr-only">Compact KvK results</caption><thead><tr><th>Season / date</th><th>Kingdoms</th><th>Prep winner</th><th>Castle winner</th><th>Outcome</th></tr></thead><tbody>{matches.map((match) => <tr key={match.kvk_id}><td>{match.kvk_title ?? `Season ${match.season_id}`}<small>{formatDate(match.season_date)}</small></td><td>{match.kingdom_a} vs {match.kingdom_b}</td><td>{match.prep_winner ?? 'Unknown'}</td><td>{match.castle_winner ?? 'Unknown'}</td><td>{match.castle_captured ? 'Captured' : 'Defended'}</td></tr>)}</tbody></table></div> : <div className="kvk-match-grid">
             {matches.map((match) => {
               const searchedKingdom =
                 Number(kingdomId)
@@ -393,6 +409,14 @@ function KvkTrackerPage() {
                       {formatDate(match.season_date)}
                     </time>
                   </div>
+
+                  <div className="kvk-match-card__versus" aria-label={`Kingdom ${match.kingdom_a} versus Kingdom ${match.kingdom_b}`}>
+                    <div className={match.castle_winner === match.kingdom_a ? 'kvk-match-card__kingdom kvk-match-card__kingdom--winner' : 'kvk-match-card__kingdom'}><small>Kingdom A · {match.attacker === match.kingdom_a ? 'Attacker' : 'Defender'}</small><strong>Kingdom {match.kingdom_a}</strong><span>{match.castle_winner === match.kingdom_a ? 'Winner' : 'Challenger'}</span></div>
+                    <span className="kvk-match-card__vs" aria-hidden="true">VS</span>
+                    <div className={match.castle_winner === match.kingdom_b ? 'kvk-match-card__kingdom kvk-match-card__kingdom--winner' : 'kvk-match-card__kingdom'}><small>Kingdom B · {match.attacker === match.kingdom_b ? 'Attacker' : 'Defender'}</small><strong>Kingdom {match.kingdom_b}</strong><span>{match.castle_winner === match.kingdom_b ? 'Winner' : 'Challenger'}</span></div>
+                  </div>
+
+                  <div className="kvk-match-card__result-strip"><span>{wonPrep ? '✓ Prep won' : '× Prep lost'}</span><span>{wonCastle ? '✓ Castle won' : '× Castle lost'}</span><span>{match.castle_captured ? '⚑ Captured' : '⬟ Defended'}</span></div>
 
                   <div className="kvk-match-card__results">
                     <div>
@@ -439,10 +463,11 @@ function KvkTrackerPage() {
                       </strong>
                     </div>
                   </div>
+                  <footer className="kvk-match-card__footer"><span>{wasAttacker ? 'Attacker perspective' : 'Defender perspective'} · {formatDate(match.season_date)}</span><span>Match details →</span></footer>
                 </article>
               )
             })}
-          </div>
+          </div>}
         </>
       )}
 

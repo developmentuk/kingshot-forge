@@ -1,0 +1,16 @@
+import { supabase } from '../lib/supabase'
+import type { ApplicantApplication, OperationsApplicationDetail, OperationsApplicationListItem } from '../../server/recruitment/contracts'
+type Response<T> = { status: 'success' | 'error'; data?: T; message?: string }
+async function request<T>(url: string, init?: RequestInit) { const { data: { session } } = await supabase.auth.getSession(); const response = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}), ...(init?.headers ?? {}) } }); const payload = await response.json() as Response<T>; if (!response.ok || payload.status !== 'success' || payload.data === undefined) throw new Error(payload.message ?? 'Contributor application request failed.'); return payload.data }
+export type ApplicationInput = { primaryRoleKey: string; additionalRoleKeys?: string[]; displayName?: string; discordUsername?: string; timezone?: string; kingdom?: string; experienceSummary?: string; motivation?: string; relevantSkills?: string; portfolioLinks?: string[]; availabilitySummary?: string; accessibilitySupport?: string; confirmations?: Record<string, boolean>; answers?: Record<string, string> }
+export const getMyApplication = () => request<ApplicantApplication | null>('/api/contributor-applications')
+export const createApplicationDraft = (input: ApplicationInput) => request<ApplicantApplication>('/api/contributor-applications?action=draft', { method: 'POST', body: JSON.stringify(input) })
+export const updateApplicationDraft = (id: string, input: ApplicationInput) => request<ApplicantApplication>(`/api/contributor-applications?id=${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) })
+export const submitApplication = (id: string) => request<ApplicantApplication>(`/api/contributor-applications?id=${encodeURIComponent(id)}&action=submit`, { method: 'POST' })
+export const withdrawApplication = (id: string) => request<ApplicantApplication>(`/api/contributor-applications?id=${encodeURIComponent(id)}&action=withdraw`, { method: 'POST' })
+export const respondApplication = (id: string, input: ApplicationInput & { message: string }) => request<ApplicantApplication>(`/api/contributor-applications?id=${encodeURIComponent(id)}&action=respond`, { method: 'POST', body: JSON.stringify(input) })
+export type ApplicationList = { items: OperationsApplicationListItem[]; page: number; pageSize: number; total: number; totalPages: number }
+export const listApplications = (query: Record<string, string | number | undefined>) => { const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)])); return request<ApplicationList>(`/api/operations/applications?${params}`) }
+export const getApplication = (id: string) => request<OperationsApplicationDetail>(`/api/operations/applications?applicationId=${encodeURIComponent(id)}`)
+export const reviewApplication = (id: string, input: Record<string, unknown>) => request<OperationsApplicationDetail>(`/api/operations/applications?applicationId=${encodeURIComponent(id)}`, { method: 'POST', body: JSON.stringify(input) })
+export const getRecruitmentMetrics = () => request<Record<string, number>>('/api/operations/applications?action=metrics')

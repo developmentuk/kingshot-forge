@@ -1,0 +1,38 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
+import { assignRole, changeAccountStatus, getUserDetail, listUsers, UserManagementError, roleCatalogue, revokeRole } from '../../server/identity/userManagementService.js'
+
+function body(request: VercelRequest) { return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {} }
+function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
+
+export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
+  try {
+    const actor = await requireForgeActor(request)
+    const userId = typeof request.query.userId === 'string' ? request.query.userId : null
+    const action = typeof request.query.action === 'string' ? request.query.action : null
+    if (request.method === 'GET' && action === 'roles') { response.status(200).json({ status: 'success', data: roleCatalogue(actor) }); return }
+    if (request.method === 'GET' && userId) { response.status(200).json({ status: 'success', data: await getUserDetail(actor, userId) }); return }
+    if (request.method === 'GET') {
+      response.status(200).json({ status: 'success', data: await listUsers(actor, {
+        search: typeof request.query.search === 'string' ? request.query.search : undefined,
+        role: typeof request.query.role === 'string' ? request.query.role : undefined,
+        status: typeof request.query.status === 'string' ? request.query.status : undefined,
+        page: typeof request.query.page === 'string' ? request.query.page : undefined,
+        pageSize: typeof request.query.pageSize === 'string' ? request.query.pageSize : undefined,
+      }) }); return
+    }
+    if (request.method === 'POST' && userId) {
+      const input = body(request)
+      if (input.action === 'assign_role') response.status(200).json({ status: 'success', data: await assignRole(actor, userId, input.role, input.reason) })
+      else if (input.action === 'revoke_role') response.status(200).json({ status: 'success', data: await revokeRole(actor, userId, input.role, input.reason) })
+      else if (input.action === 'change_status') response.status(200).json({ status: 'success', data: await changeAccountStatus(actor, userId, input.status, input.reason) })
+      else fail(response, 400, 'A valid identity management action is required.')
+      return
+    }
+    response.setHeader('Allow', 'GET, POST'); fail(response, 405, 'Method not allowed.')
+  } catch (error) {
+    if (error instanceof ForgeAuthenticationError || error instanceof UserManagementError) { fail(response, error.statusCode, error.message); return }
+    console.error('[operations-users]', { method: request.method, name: error instanceof Error ? error.name : 'UnknownError' })
+    fail(response, 500, 'The Forge identity service is temporarily unavailable.')
+  }
+}

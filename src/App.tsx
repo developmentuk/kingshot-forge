@@ -11,6 +11,8 @@ import "./styles/passportPolish.css";
 // Keep Hero Collection polish last so it overrides the legacy Hero card rules.
 import "./styles/heroCollectionPolish.css";
 import "./styles/forgeUxPolish.css";
+import "./styles/kingshotSimulator.css";
+import "./features/admin/renderEngineCalibration.css";
 
 import HomePage from "./pages/HomePage";
 import NameStudioPage from "./pages/NameStudioPage";
@@ -39,12 +41,14 @@ import PublicPlayerProgressionPage from "./pages/PublicPlayerProgressionPage";
 import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
 import HeroCollectionPage from "./pages/HeroCollectionPage";
 import HeroCompanionPage from "./pages/HeroCompanionPage";
+import SearchPage from "./features/search/SearchPage";
 
 import { DataEngineDiagnosticsPage } from "./pages/admin/DataEngineDiagnosticsPage";
 import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
 import { AdminDatasetsPage } from "./features/admin/AdminDatasetsPage";
 import { AdminDatasetDetailPage } from "./features/admin/AdminDatasetDetailPage";
 import { FeedbackAdminPage } from "./features/admin/FeedbackAdminPage";
+import { SearchExplorerPage } from "./features/admin/SearchExplorerPage";
 import { CommunityArtModerationPage } from "./features/admin/CommunityArtModerationPage";
 import {
   DatasetVerificationPage,
@@ -55,6 +59,22 @@ import ProtectedRoute from "./components/admin/ProtectedRoute";
 import { PrivatePlayerIdentityPage } from "./features/player-identity/PrivatePlayerIdentityPage";
 import { PlayerSupportWorkspacePage } from "./features/player-identity/PlayerSupportWorkspacePage";
 import { GiftRedemptionOperationsPage } from "./features/admin/GiftRedemptionOperationsPage";
+import { RenderEngineCalibrationPage } from "./features/admin/RenderEngineCalibrationPage";
+import { EditorialImportManagerPage } from "./features/admin/EditorialImportManagerPage";
+import { EditorialOperationsPage } from "./features/admin/editorial/EditorialOperationsPage";
+import { ForgeContentStudioPage } from "./features/admin/ForgeContentStudioPage";
+import BuildingsBrowserPage from "./pages/BuildingsBrowserPage";
+import WorkspaceRoute from "./components/WorkspaceRoute";
+import WorkspaceHomePage from "./pages/WorkspaceHomePage";
+import OperationsStatusPage from "./pages/OperationsStatusPage";
+import OperationsDashboardPage from "./pages/OperationsDashboardPage";
+import { UserDetailPage, UserManagementPage } from "./features/operations/UserManagementPage";
+import SettingsPage from "./pages/SettingsPage";
+import { ContributorRolePage, JoinForgePage } from "./pages/JoinForgePage";
+import ContributorApplicationPage from "./pages/ContributorApplicationPage";
+import MyContributorApplicationPage from "./pages/MyContributorApplicationPage";
+import ContributorApplicationsPage from "./features/operations/ContributorApplicationsPage";
+import ContributorApplicationDetailPage from "./features/operations/ContributorApplicationDetailPage";
 
 function App() {
   return (
@@ -78,6 +98,10 @@ function App() {
         <Route path="my-forge" element={<MyForgePage />} />
         <Route path="roadmap" element={<RoadmapPage />} />
         <Route path="release-notes" element={<ReleaseNotesPage />} />
+        <Route path="search" element={<SearchPage />} />
+        <Route path="buildings" element={<BuildingsBrowserPage />} />
+        <Route path="buildings/:buildingKey" element={<BuildingsBrowserPage />} />
+        <Route path="buildings/:buildingKey/progression" element={<BuildingsBrowserPage />} />
         <Route path="transfer-profile" element={<TransferProfilePage />} />
         <Route path="my-forge/transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />
@@ -89,10 +113,33 @@ function App() {
         <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="join" element={<JoinForgePage />} />
+        <Route path="join/:roleSlug" element={<ContributorRolePage />} />
+        <Route path="join/apply" element={<ContributorApplicationPage />} />
+        <Route path="join/my-application" element={<MyContributorApplicationPage />} />
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
 
+        <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
+        <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="users.read"><UserManagementPage /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/users/:userId" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="users.read"><UserDetailPage /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/applications" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="applications.read"><ContributorApplicationsPage /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/applications/:applicationId" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="applications.read"><ContributorApplicationDetailPage /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Roles and Permissions" /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Audit Log" /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Feature Flags" /></ProtectedRoute></WorkspaceRoute>} />
+        <Route path="contributor" element={<WorkspaceRoute workspaceId="contributor"><WorkspaceHomePage workspaceId="contributor" /></WorkspaceRoute>} />
+        <Route path="contributor/drafts" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="My drafts" /></WorkspaceRoute>} />
+        <Route path="contributor/submissions" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="Submission history" /></WorkspaceRoute>} />
+        <Route path="creator" element={<WorkspaceRoute workspaceId="creator"><WorkspaceHomePage workspaceId="creator" /></WorkspaceRoute>} />
+        <Route path="creator/content" element={<WorkspaceRoute workspaceId="creator"><OperationsStatusPage title="Creator content" /></WorkspaceRoute>} />
+        <Route path="creator/verification" element={<WorkspaceRoute workspaceId="creator"><OperationsStatusPage title="Creator verification" /></WorkspaceRoute>} />
+        <Route path="moderation" element={<WorkspaceRoute workspaceId="moderation"><WorkspaceHomePage workspaceId="moderation" /></WorkspaceRoute>} />
+        <Route path="moderation/reports" element={<WorkspaceRoute workspaceId="moderation"><OperationsStatusPage title="Reports" /></WorkspaceRoute>} />
+
         <Route path="admin" element={<ProtectedRoute permission="cms.view"><AdminDashboardPage /></ProtectedRoute>} />
+        <Route path="admin/content-studio" element={<ProtectedRoute permission="cms.view"><ForgeContentStudioPage /></ProtectedRoute>} />
         <Route path="admin/datasets" element={<ProtectedRoute permission="cms.view"><AdminDatasetsPage /></ProtectedRoute>} />
         <Route path="admin/data/:datasetId" element={<ProtectedRoute permission="cms.view"><AdminDatasetDetailPage /></ProtectedRoute>} />
         <Route path="admin/feedback" element={<ProtectedRoute permission="cms.view"><FeedbackAdminPage /></ProtectedRoute>} />
@@ -101,13 +148,14 @@ function App() {
         <Route path="admin/verification" element={<ProtectedRoute permission="cms.view"><VerificationCentrePage /></ProtectedRoute>} />
         <Route path="admin/verification/runs/:runId" element={<ProtectedRoute permission="cms.view"><VerificationRunPage /></ProtectedRoute>} />
         <Route path="admin/verification/:datasetId" element={<ProtectedRoute permission="cms.view"><DatasetVerificationPage /></ProtectedRoute>} />
-        <Route path="admin/player-identity" element={<PlayerSupportWorkspacePage />} />
-        <Route path="admin/player-identity/:caseId" element={<PlayerSupportWorkspacePage />} />
+        <Route path="admin/player-identity" element={<ProtectedRoute permission="platform.users.manage"><PlayerSupportWorkspacePage /></ProtectedRoute>} />
+        <Route path="admin/player-identity/:caseId" element={<ProtectedRoute permission="platform.users.manage"><PlayerSupportWorkspacePage /></ProtectedRoute>} />
         <Route path="admin/gift-redemption" element={<ProtectedRoute permission="cms.view"><GiftRedemptionOperationsPage /></ProtectedRoute>} />
-        <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Import Manager</h1><p>Import management will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
-        <Route path="admin/history" element={<ProtectedRoute permission="cms.history.view"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Version History</h1><p>Dataset and record history will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
-        <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Global Search</h1><p>Search across every Forge dataset from one place.</p></div></section></main></ProtectedRoute>} />
-        <Route path="admin/publish" element={<ProtectedRoute permission="cms.publish"><main className="admin-page"><section className="admin-placeholder-panel"><div className="admin-placeholder-panel__body"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Publish Centre</h1><p>Validation and publishing tools will be added later in Sprint 6.</p></div></section></main></ProtectedRoute>} />
+        <Route path="admin/render-engine" element={<ProtectedRoute permission="cms.view"><RenderEngineCalibrationPage /></ProtectedRoute>} />
+        <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><EditorialImportManagerPage /></ProtectedRoute>} />
+        <Route path="admin/history" element={<ProtectedRoute permission="cms.history.view"><EditorialOperationsPage mode="history" /></ProtectedRoute>} />
+        <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><SearchExplorerPage /></ProtectedRoute>} />
+        <Route path="admin/publish" element={<ProtectedRoute permission="cms.publish"><EditorialOperationsPage mode="publish" /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

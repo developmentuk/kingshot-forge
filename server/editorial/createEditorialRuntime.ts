@@ -46,6 +46,14 @@ import {
   validateEditorialValues,
 } from "./validation.js";
 
+export interface EditorialRuntimeOptions {
+  onPublicationCommitted?: (event: {
+    datasetId: string;
+    recordId: string;
+    versionId?: string;
+  }) => Promise<void> | void;
+}
+
 export function createRuntimeDatasetDefinition(
   datasetId: string,
 ): DatasetDefinition {
@@ -83,7 +91,9 @@ export function createRuntimeDatasetDefinition(
   };
 }
 
-export function createEditorialRuntime() {
+export function createEditorialRuntime(
+  options: EditorialRuntimeOptions = {},
+) {
   const client = getSupabaseAdmin();
 
   const editorialRepository =
@@ -186,9 +196,25 @@ export function createEditorialRuntime() {
           "publish",
         );
 
-        return atomicPublicationRepository.publish(
+        const result = await atomicPublicationRepository.publish(
           context.item,
         );
+        if (options.onPublicationCommitted) {
+          try {
+            await options.onPublicationCommitted({
+              datasetId: context.item.datasetId,
+              recordId: context.item.recordId,
+              versionId: result.publishedVersionId,
+            });
+          } catch (error) {
+            console.error("[editorial] Search invalidation event failed", {
+              datasetId: context.item.datasetId,
+              recordId: context.item.recordId,
+              error: error instanceof Error ? error.message : "unknown error",
+            });
+          }
+        }
+        return result;
       },
     );
 

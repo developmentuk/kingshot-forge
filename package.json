@@ -1,7 +1,7 @@
 {
   "name": "kingshot-forge",
   "private": true,
-  "version": "0.7.5",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,22 +16,41 @@
     "validate:editorial-platform": "node scripts/validate-editorial-platform.mjs",
     "validate:verification-centre": "node scripts/validate-verification-centre.mjs",
     "validate:art-studio": "node scripts/validate-art-studio-foundation.mjs",
+    "preflight:buildings": "node scripts/preflight-buildings.mjs",
     "test:editorial-api": "node scripts/test-editorial-api.mjs",
+    "test:content-studio": "node scripts/test-content-studio.mjs",
+    "test:publication-integrity": "node scripts/test-publication-integrity.mjs",
+    "test:buildings-publication": "node scripts/test-buildings-publication.mjs",
     "test:verification-centre": "node scripts/test-verification-centre.mjs",
     "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
     "validate:player-identity": "node scripts/validate-player-identity.mjs",
     "test:player-identity": "node scripts/test-player-identity.mjs && node scripts/test-player-identity-vertical-slice.mjs && node scripts/test-player-verification-boundary.mjs && node scripts/test-player-link-service.mjs",
     "test:art-studio": "node scripts/test-art-studio-foundation.mjs && node scripts/test-art-studio-player-attribution.mjs && node scripts/test-community-art-submission.mjs && node scripts/test-community-art-ux.mjs",
     "test:art-studio-attribution": "node scripts/test-art-studio-player-attribution.mjs",
+    "test:render-engine": "node scripts/test-render-engine.mjs && node scripts/test-render-engine-persistence.mjs",
     "test:auto-redeem": "node scripts/test-auto-redeem.mjs && node scripts/test-auto-redeem-ui.mjs && node scripts/test-auto-redeem-admin.mjs",
-    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run test:auto-redeem && npm run lint && npm run build"
+    "test:search": "node scripts/test-search.mjs",
+    "test:search-persistence": "node scripts/test-search-persistence.mjs",
+    "test:search-performance": "node scripts/test-search-performance.mjs",
+    "test:search-api": "node scripts/test-search-api.mjs",
+    "test:search-experience": "node scripts/test-search-experience.mjs",
+    "test:workspaces": "node scripts/test-workspace-architecture.mjs",
+    "test:forge-identity": "node scripts/test-forge-identity.mjs",
+    "test:favourites": "node scripts/test-favourites.mjs",
+    "test:contributor-applications": "node scripts/test-contributor-applications.mjs",
+    "test:ux002-contracts": "node scripts/test-ux002-contracts.mjs",
+    "test:ux003-contracts": "node scripts/test-ux003-contracts.mjs",
+    "test:ux004-contracts": "node scripts/test-ux004-contracts.mjs",
+    "test:rc4-security": "node scripts/test-rc4-security-hardening.mjs",
+    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:content-studio && npm run test:publication-integrity && npm run test:buildings-publication && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run test:auto-redeem && npm run test:render-engine && npm run test:search && npm run test:search-persistence && npm run test:search-performance && npm run test:search-api && npm run test:search-experience && npm run test:workspaces && npm run test:forge-identity && npm run test:favourites && npm run test:contributor-applications && npm run test:ux002-contracts && npm run test:ux003-contracts && npm run test:rc4-security && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router": "^8.2.0",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.18.1",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",

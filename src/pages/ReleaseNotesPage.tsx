@@ -21,9 +21,25 @@ function ReleaseNotesPage() {
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
-            <span className="release-entry__badge">Ready for Clark’s final production validation</span>
-            <h2>Release 0.7.5 — Auto Redeem</h2>
-            <p>Release candidate · production provider remains disabled</p>
+            <span className="release-entry__badge">In development</span>
+            <h2>Release 0.8.0 — Forge Operations Centre</h2>
+            <p>Active major milestone · not live</p>
+          </div>
+          <Link className="button button--secondary" to="/roadmap">View roadmap</Link>
+        </div>
+        <div className="release-entry__sections">
+          <section><h3>Workspace separation</h3><ul><li>Player View is the default and no longer owns internal navigation.</li><li>Contributor, Creator, Moderation and Operations workspace shells are established.</li><li>A role-aware workspace switcher remembers preference only when access remains valid.</li></ul></section>
+          <section><h3>Operations foundation</h3><ul><li>Existing Admin routes are grouped through a shared registry and remain compatibility aliases.</li><li>Unfinished destinations are labelled planned or partial.</li><li>Forge Identity adds safe User Management list/detail projections, multi-role assignments, audited role/status mutations and masked linked-player summaries.</li><li>Player View now includes the Settings Centre; unified Audit Log, standalone Roles and Permissions and Feature Flags remain in development.</li></ul></section>
+          <section><h3>Sprint 8.0C — Forge Contributors</h3><ul><li>Shared workspace cards, switcher and sidebar now use the dark Forge visual contract with compact operational density.</li><li>Join Forge is available at <Link to="/join">/join</Link> with data-driven role pages and explicit unpaid/voluntary disclosure.</li><li>Signed-in applicants can save, submit, track and withdraw applications; authorised Operations users can review, message, note and onboard.</li><li>Acceptance remains separate from platform role assignment and privileged access.</li></ul></section>
+        </div>
+      </article>
+
+      <article className="release-entry release-entry--latest">
+        <div className="release-entry__heading">
+          <div>
+            <span className="release-entry__badge">Forge Preview</span>
+            <h2>Version 1.0 — Forge platform</h2>
+            <p>Preview undergoing final validation before the Version 1.0 production release</p>
           </div>
           <Link className="button button--secondary" to="/gift-codes">
             Open Gift Centre

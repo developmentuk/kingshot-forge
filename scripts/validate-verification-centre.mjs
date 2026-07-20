@@ -32,7 +32,7 @@ const expectations = [
       'databaseAccess: "read-only"',
       'result: "blocked"',
       "Hero Skills canonical-data boundary",
-      "Buildings publication rejection",
+      "Buildings atomic publication",
       "npm audit reports 10 vulnerabilities",
     ],
   },

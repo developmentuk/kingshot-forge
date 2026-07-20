@@ -2974,3 +2974,4 @@
   }
 }
 
+.kvk-tracker-page__title { max-width: 14ch; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.04; }

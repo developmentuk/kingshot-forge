@@ -27,9 +27,9 @@
 }
 
 .hero-companion-ratings-heading h2 {
-  font-size: clamp(2.8rem, 6vw, 5.2rem);
-  line-height: 0.92;
-  letter-spacing: -0.055em;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
 }
 
 .hero-companion-ratings-heading > p {
@@ -89,15 +89,18 @@
 }
 
 .hero-companion-section--ratings .hero-companion-rating p {
-  position: absolute;
-  right: 22px;
-  bottom: 20px;
+  position: static;
+  margin-top: 0.75rem;
   left: 22px;
   margin: 0;
   color: #cbd5e1;
   font-size: 0.88rem;
   line-height: 1.55;
 }
+
+.hero-companion-section--ratings .hero-companion-rating { display: grid; align-content: start; gap: .7rem; min-width: 0; }
+.hero-companion-section--ratings .hero-companion-rating__header { min-width: 0; }
+.hero-companion-section--ratings .hero-companion-rating__header span { overflow-wrap: anywhere; }
 
 .hero-companion-section--ratings .hero-companion-rating--s,
 .hero-companion-section--ratings .hero-companion-rating--s-plus {

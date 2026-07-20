@@ -614,20 +614,21 @@ for (const datasetId of DATASET_KEYS) {
 
   if (datasetId === "buildings") {
     addCheck({
-      id: `${datasetId}:publication-rejection`,
+      id: `${datasetId}:atomic-publication`,
       datasetId,
-      capability: "unsupported-operations",
-      name: "Buildings publication rejection",
-      description: "Buildings remains editable without claiming a live publication projection.",
-      expectedEvidence: "The UI shows Unsupported and direct API publication returns 422.",
+      capability: "publishing",
+      name: "Buildings atomic publication",
+      description: "Buildings publication verifies the manifest and warning identity decisions before one server-side transaction publishes the canonical projection.",
+      expectedEvidence: "Content Studio exposes a manifest-gated Publish Buildings action and the server command is service-role-only.",
       severity: "critical",
       requiredForReady: true,
       supportingSources: [
         "scripts/test-editorial-api.mjs",
         "shared/data-engine/dataset-capabilities.ts",
+        "supabase/migrations/20260720200000_rel003_buildings_publication.sql",
       ],
       result: "passed",
-      reason: "Buildings publishing is absent from the UI and rejected through the direct API contract.",
+      reason: "Buildings publication is manifest-gated, identity-reconciled, atomic and protected by the server-side publication RPC.",
       confidence: "high",
       expiring: true,
     });

@@ -2,7 +2,7 @@ import { access, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-const roots = ["api", "server", "src/platform"];
+const roots = ["api", "server", "src/platform", "src/features/admin/recordEditor"];
 const writeChanges = process.argv.includes("--write");
 const sourceExtensions = [".ts", ".tsx", ".mts", ".cts"];
 const sourceExtensionSet = new Set(sourceExtensions);

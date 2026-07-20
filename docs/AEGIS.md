@@ -1,5 +1,9 @@
 # Kingshot Forge Project Constitution
 
+## DATA-001 operational record — 20 July 2026
+
+The Buildings workbook preflight passed with 10 catalog rows, 587 progression rows, zero blocking errors, zero duplicates, zero orphans and eight unresolved prerequisite warnings. The source fingerprint is `840d70bc9173ef12d454fe72fbe517FE49124B250562C8FBEF1B68C0F2DD1980`. The workbook remains unmodified; no direct publication occurred. Staging requires an authenticated Forge actor and owner review, and publication remains explicitly gated.
+
 `docs/AEGIS.md` is the authoritative operational constitution for Kingshot Forge. It governs how the platform is designed, implemented, validated and released. Supporting product direction remains in `docs/FORGE_BLUEPRINT.md`; binding architectural decisions remain in `docs/ADR/`; detailed engineering standards remain in `governance/`.
 
 ## Identity and canonical systems
@@ -8,7 +12,7 @@
 - Product owner: **Clark**
 - Engineering partner: **Aegis**
 - Repository: `developmentuk/kingshot-forge`
-- Production: `https://kingshot-forge.vercel.app/`
+- Production: `https://ksforge.app/`
 - Supabase project: `hrvdhjscwitqpwjhnjkm`
 - Google Analytics measurement ID: `G-8L3HYETN51`
 - GitHub is the canonical source for code and documentation.
@@ -204,6 +208,11 @@ Required standards:
 
 ## Quality Gates
 
+The Version 1.0 final release-gate record is maintained at
+`docs/releases/V1-FINAL-RELEASE-GATE.md`. Its recommendation remains blocking
+until approved cross-user/role sessions, responsive viewport evidence and
+owner operational evidence are complete.
+
 A milestone is complete only when all applicable gates pass:
 
 - the project builds successfully;
@@ -347,9 +356,38 @@ Release constraints:
 
 This milestone is complete only when the shared UX polish is validated, historical releases remain immutable, debug output is removed, AEGIS reflects the active branch and the repository is ready for Clark's final production validation.
 
+### Sprint 8.0C — Workspace UX and Forge Contributors
+
+Sprint 8.0C corrects the shared internal workspace visual contract: dark
+surfaces, compact operational headings, responsive workspace switching,
+readable sidebar status treatment and honest planned destinations. The public
+Forge Contributor catalogue is typed in `src/data/contributorRoles.ts` and is
+available through `/join` and `/join/:roleSlug`. All roles are explicitly
+unpaid, voluntary hobby/community roles.
+
+The secure application form, application persistence and forced RLS,
+Operations review centre, audit events and onboarding foundation are now
+implemented through the recruitment service and protected APIs. The public
+catalogue collects no application information. Acceptance remains separate
+from canonical platform-role assignment. Local build/lint and recruitment
+architecture checks pass; authenticated browser and final Supabase security
+validation remain release gates.
+
 ### Auto Redeem visibility contract
 
 The Auto Redeem interaction remains rendered for authenticated users while context is loading, unavailable, environment-disabled, paused or circuit-open. The action is disabled with a safe explanation and manual official redemption remains available. This presentation rule does not weaken server enforcement of configuration, provider health, verified linkage, consent or active-code eligibility.
+
+### Release 0.7.0 Sprint 9.2 — Forge Render Engine Calibration Lab validation
+
+Working branch: `feature/kingshot-art-renderer`.
+
+The corrective validation sprint is implemented locally: calibration values now reach per-glyph styles, family relevance and unavailable benchmark states are explicit, the workspace is compact and readable, and the admin Calibration Lab remains available at `/admin/render-engine`. No persistence or Supabase write was added. The branch is ready for another human visual validation pass.
+
+Validation commands: `npm run test:render-engine`, `npm run build`, `npm run lint`, and the existing `npm run check` suite. The benchmark registry deliberately marks missing source records as metadata-only and records no image-comparison percentages. Calibration and reference screenshots remain browser-local. The future Forge Screenshot Intelligence Engine is documented but not implemented.
+
+Handover: preserve the existing Art Studio renderer adapter and copied artwork text; verify desktop and mobile previews, each device profile, local profile save/restore, local screenshot upload, overlay opacity and permission denial manually before accepting the milestone. Persistence is browser-local only; do not merge to `main`, deploy or add Supabase persistence.
+
+Release 0.7.2 issue verification: repository history identifies the private `/my-forge/player-identity` route mismatch, fixed by `ff14418` (`fix(player-identity): restore private identity route`). That commit is already an ancestor of `feature/kingshot-art-renderer`, and the current route uses the corrected absolute path. No duplicate fix was added to Sprint 9.3; `scripts/test-render-engine.mjs` retains a regression assertion for the route shape.
 
 ## Session bootstrap
 
@@ -359,4 +397,138 @@ At the start of every development session:
 2. Inspect the active branch and exact head commit.
 3. Read any supporting architecture documents affected by the sprint.
 4. Use the connected Supabase project read-only until a write is explicitly required by the milestone.
+
+## RC3 Version 1.0 release gate — 19 July 2026
+
+RC3 validated and deployed the exact candidate from
+`recovery/0.9.0-rc3-feature-reconciliation` at
+`7cfaad7e75a2078fa04efae6edefb450610c460e` to protected preview deployment
+`dpl_Gtg27ukWziY34K3F7yMiaZArgbnv`. Local checks and the Vercel build pass.
+Version 1.0 remains **Not Ready** because owner-authenticated preview,
+two-user isolation, authenticated editorial/runtime/responsive acceptance and
+production smoke are not evidenced. Live Supabase advisor findings also
+require owner review before release. The complete gate and promotion plan are
+in [`docs/releases/RC3-V1-RELEASE-GATE.md`](releases/RC3-V1-RELEASE-GATE.md).
+
+## RC4 security hardening — 19 July 2026
+
+RC4 reviewed the connected Supabase advisors, SECURITY DEFINER functions, RLS,
+RPC grants, authentication integration, API boundaries, operations and
+performance. The checked-in hardening migration
+`20260719210000_rc4_security_definer_hardening.sql` locks the feedback trigger
+search path and removes anonymous/unnecessary public execution grants. It is
+not applied to the live project until Clark approves the controlled database
+change. Version 1.0 remains **Not Ready** pending live re-advisor results,
+Auth settings, backup/monitoring evidence and authenticated smoke acceptance.
+See [`RC4-SECURITY-HARDENING.md`](releases/RC4-SECURITY-HARDENING.md).
+
+## RC5 owner security and acceptance — 19 July 2026
+
+The approved RC4 hardening migration is applied and verified on Supabase
+project `hrvdhjscwitqpwjhnjkm`. Anonymous legacy RPC execution and the mutable
+trigger search path are closed; the remaining eight authenticated warnings are
+intentional application contracts. Exact preview deployment is READY, but
+leaked-password protection did not persist on the Free plan and authenticated
+two-user/editorial/responsive plus operational evidence remains open. RC5
+recommendation: **Not Ready for Version 1.0**. See
+[`RC5-OWNER-SECURITY-AND-ACCEPTANCE.md`](releases/RC5-OWNER-SECURITY-AND-ACCEPTANCE.md).
+
+## RC5A final owner acceptance — 19 July 2026
+
+RC5A fixed the verified Global Search inline-rendering defect without changing
+the search architecture, then deployed commit
+`c130173b31444bf6b47a86412f1c54e17efe6f91` to a READY replacement preview.
+Owner-authenticated browser evidence confirms body-level dialog placement,
+scroll lock, focus entry/restoration, explicit close behaviour and clean
+preview diagnostics. The owner-accepted temporary leaked-password risk is
+unchanged. Approved User A/User B and editorial-role runtime evidence,
+authenticated responsive viewport checks and backup/monitoring ownership
+remain open, so the final recommendation is **Not Ready**. See
+[`RC5A-FINAL-OWNER-ACCEPTANCE.md`](releases/RC5A-FINAL-OWNER-ACCEPTANCE.md).
+
+## UX-001 experience hardening — 19 July 2026
+
+The focused local hardening work is recorded in
+`docs/releases/UX-001-V1-EXPERIENCE-HARDENING.md`; the canonical interface
+reference is `docs/design/FORGE-UI-SYSTEM.md`. Search overlay/API handling,
+release labels and shared UI tokens were updated. Protected preview,
+authenticated cross-role and full responsive owner evidence remain required.
+
+The UX-001 replacement protected preview is READY from commit `1a2f9d5` at
+`https://kingshot-forge-qhho6ce8q-clarksim-7474s-projects.vercel.app`.
+Agent-rendered Global Search and responsive checks pass; owner visual
+confirmation is still required before Version 1.0 acceptance resumes.
+
+## UX-001 exact preview continuation — 19 July 2026
+
+The requested clean UX-001 commit `5e277720d94aaa38a852e6ce996625c7debd2362`
+was deployed to protected preview `dpl_6QAuc5AvHLVBrzwfzZnHkYePG8B8` at
+`https://kingshot-forge-qw27incbg-clarksim-7474s-projects.vercel.app` and is
+`READY`. The Supabase project binding remains `hrvdhjscwitqpwjhnjkm` through
+the configured preview environment variables. Global Search containment,
+keyboard launch, controlled response handling, preview label, representative
+routes, 390/768/1280/1440 responsive checks and console diagnostics passed.
+Owner visual acceptance is **Pending owner confirmation**; protected admin,
+editorial and operations screens were observed only at their unauthenticated
+boundary states. The recommendation remains **Not Ready for Version 1.0**.
 5. Continue from the current head; do not use local ZIP snapshots unless Clark explicitly requests that workflow.
+
+### UX-002 Version 1.0 release-blocker remediation
+
+UX-002 keeps the player-level and Town Center contracts separate: linked
+`player_level` values outside the snapshot's 1–30 Town Center range are treated
+as unknown, never coerced into the database. Search activation, Forge
+Connections, settings/Operations surfaces, Hero ratings, Render Engine
+navigation, release presentation and KvK Cards/Compact presentation are
+recorded in `docs/releases/UX-002-V1-RELEASE-BLOCKER-REMEDIATION.md`.
+## UX-003 remediation boundary
+
+UX-003 is limited to owner-verified V1 acceptance failures. API-owned linked-player fields may refresh automatically, while biography, preferences, notes and other editorial/profile fields remain owner-owned. Town Center is accepted only when explicitly present and normalized to the existing 1–30 snapshot contract; values such as `TG6-0` are not silently converted. Search and relationship surfaces must never use the generic Search route as an entity destination.
+## UX-004 final workflow controls
+
+Automatic gift redemption remains opt-in and failure-isolated from authentication. Identity mutations notify the target through in-app delivery and audit-linked email delivery status. Render Engine benchmark status is explicit; metadata-only or broken artwork is never presented as ready.
+
+The owner returned DATA-002A for corrections. The corrected workflow records
+`review_required` import runs, exposes authenticated staged record detail and
+the eight unresolved prerequisite warnings, and keeps publication disabled
+until a later explicit owner decision. No publication has occurred.
+
+The recovery evidence is import run `cc925b58-ac6e-4776-875a-1021067118c4` in
+Supabase project `hrvdhjscwitqpwjhnjkm`: 10 catalog, 587 progression, 597
+total, 710 resolved mappings, 8 unresolved warnings, and zero published
+Buildings rows. The previous blank preview is attributed to a deployment
+hostname mismatch; the replacement must be checked by exact deployment ID,
+commit, protected route and browser console/network evidence.
+
+The corrected preview is deployment `dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j` at
+`https://kingshot-forge-qhbttrt5d-clarksim-7474s-projects.vercel.app`, deployed
+from `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf` with Vercel status `READY`.
+
+## REL-001 publication integrity — 20 July 2026
+
+REL-001 established immutable warning identities across validation, staging,
+review, publication certification and audit reconciliation. One source record
+may contain multiple warnings; record status is not warning identity. The
+append-only warning table and identity-set release certification preserve that
+distinction. The existing Buildings run remains `review_required` and
+unpublished; publication must continue to fail if any identity set differs.
+
+## REL-002 owner acceptance gate — 20 July 2026
+
+Release-candidate verification and REL-001 migration application passed. Final
+owner-authenticated role sessions remain unavailable. The owner supplied the
+publication approval phrase, but this branch has no supported atomic Buildings
+publication operation, so Buildings remain unpublished and Version 1.0 remains
+**Not Ready**. Leaked-password protection remains disabled and accepted only as
+a temporary Free-plan risk; it is not enabled.
+# REL-003 operational note
+
+Buildings publication uses a server-only atomic RPC, an immutable warning decision ledger, a manifest hash, an idempotency key, and append-only publication snapshots. Public data-engine reads are published-only. Failed publication or refresh steps leave the import run and publication history intact; no client may write publication tables directly.
+
+## REL-004 acceptance boundary
+
+The final browser gate requires authentication on the exact protected preview
+hostname. A valid session on an earlier preview is not evidence for the repaired
+deployment. REL-004 completed owner-only Content Studio, audit, rollback and
+role checks on deployment `dpl_J3JPWgMNpA5iX37kEqTPXvkRmUgV`; no authentication
+boundary was bypassed.

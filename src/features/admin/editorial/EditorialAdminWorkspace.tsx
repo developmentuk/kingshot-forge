@@ -33,6 +33,7 @@ interface EditorialAdminWorkspaceProps {
   selectedVersionId?: string;
   onWorkflowAction?: (
     action: EditorialWorkflowAction,
+    note?: string,
   ) => void | Promise<void>;
   onSelectVersion?: (
     versionId: string,

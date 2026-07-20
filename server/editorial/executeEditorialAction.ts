@@ -91,6 +91,11 @@ export interface ExecuteEditorialActionOptions {
     datasetId: DatasetKey,
     recordId: string,
   ) => Promise<boolean>;
+  onSearchInvalidation?: (event: {
+    datasetId: string;
+    recordId: string;
+    versionId?: string;
+  }) => Promise<void> | void;
 }
 
 function requireText(
@@ -330,7 +335,9 @@ export async function executeEditorialAction(
   const definition =
     createRuntimeDatasetDefinition(datasetId);
   const runtime =
-    options.runtime ?? createEditorialRuntime();
+    options.runtime ?? createEditorialRuntime({
+      onPublicationCommitted: options.onSearchInvalidation,
+    });
   const service =
     new AuthorisedEditorialService(
       definition,
@@ -478,13 +485,30 @@ export async function executeEditorialAction(
       );
 
     case "archive":
-    case "restore":
-    case "rollback":
-      throw new EditorialCapabilityError(
-        datasetId,
-        action,
-        `${action.replaceAll("_", " ")} is intentionally unavailable until live-projection semantics are defined.`,
+      return service.archive(
+        transitionInput(body, actor.userId, datasetId, recordId),
+        editorialActor,
       );
+
+    case "restore":
+      return service.restore(
+        transitionInput(body, actor.userId, datasetId, recordId),
+        editorialActor,
+      );
+
+    case "rollback": {
+      const targetVersionId = requireText(
+        body.targetVersionId,
+        "Target version ID",
+      );
+      return service.rollback(
+        {
+          ...transitionInput(body, actor.userId, datasetId, recordId),
+          targetVersionId,
+        },
+        editorialActor,
+      );
+    }
 
     case "queue_publish":
     case "schedule_publish": {

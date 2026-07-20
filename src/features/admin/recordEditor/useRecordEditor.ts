@@ -9,11 +9,11 @@ import type {
   RecordEditorSchema,
   RecordEditorValidationResult,
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 import {
   validateRecordEditorRecord,
-} from "./recordEditorValidation";
+} from "./recordEditorValidation.js";
 
 interface UseRecordEditorResult {
   originalRecord:

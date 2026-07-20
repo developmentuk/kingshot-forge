@@ -5,12 +5,12 @@ import {
 
 import {
   supabase,
-} from "../../../lib/supabase";
+} from "../../../lib/supabase.js";
 
 import type {
   RecordEditorRecord,
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 import "./CompanionImageField.css";
 

@@ -13,6 +13,8 @@ import {
   getDatasetImporter,
 } from './registry.js'
 
+import { loadPublishedBuildingsDataset } from './loadPublishedBuildingsDataset.js'
+
 export interface DatasetPreviewResult {
   dataset: DatasetKey
   sourceUrl: string
@@ -89,6 +91,10 @@ export async function previewDataset(
 export async function loadDataset(
   key: DatasetKey,
 ): Promise<DatasetLoadResult> {
+  if (key === 'buildings' && process.env.SUPABASE_URL && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+    return loadPublishedBuildingsDataset()
+  }
+
   const importer =
     getDatasetImporter(key)
 

@@ -74,6 +74,24 @@ The accepted player-facing journeys are being refined through a focused shared U
 - My Forge, Player Passport and public-page refinement;
 - no new domains, product features, tables or schema changes.
 
+## Release 0.8.0 — Forge Operations Centre — In development
+
+Sprint 8.0A established separated Player, Contributor, Creator, Moderation and
+Operations workspaces. Sprint 8.0B adds the Forge Identity/User Management
+foundation: safe server projections, multi-role capability resolution,
+audited role/status mutations, masked Player Account summaries and Player View
+Settings. Authenticated runtime, responsive and scale validation remain release
+gates; unified audit, standalone role administration and feature flags are
+deferred follow-up work.
+
+### Sprint 8.0C — Workspace UX and Forge Contributors — In development
+
+- shared dark workspace surfaces, switcher and sidebar correction;
+- typed Forge Contributor role catalogue and public `/join` experience;
+- contributor programme and governance policy drafts;
+- secure application workflow, Operations review, onboarding and contributor profile persistence foundation;
+- final authenticated browser validation and release hardening remain in development.
+
 ## Milestone 5 — Intelligence & Automation
 
 - calculators and planning tools from published data
@@ -83,6 +101,10 @@ The accepted player-facing journeys are being refined through a focused shared U
 - event automation
 
 Release 0.7.4 Community Art Studio remains a completed, separate contribution workflow. Release 0.7.5 Auto Redeem is ready for Clark's final production validation: it adds explicit consent, verified linked-player eligibility, server-only provider transport, user-triggered sequential processing, safe outcomes and private history while preserving manual Gift Code copying. It is not live and production provider access remains disabled until the final checks pass.
+
+### Future platform initiative — Forge Screenshot Intelligence Engine
+
+Future work only; explicitly out of scope for Release 0.7.0 Sprint 9.2. This proposed capability may eventually support Kingshot screenshot classification, OCR-assisted data extraction, player-stat import, hero and progression import, artwork extraction, automatic image alignment, renderer comparison, and human review with confidence scoring. No OCR, computer-vision dependency, automatic matching or scoring is introduced by the current Render Engine work.
 
 ## Milestone 6 — Ecosystem & Scale
 

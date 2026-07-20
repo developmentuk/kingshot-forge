@@ -8,9 +8,9 @@ export const SHORT_COMMIT_SHA = COMMIT_SHA === 'local' ? 'local' : COMMIT_SHA.sl
 
 export const IS_PRODUCTION = DEPLOYMENT_ENVIRONMENT === 'production'
 export const RELEASE_CHANNEL = IS_PRODUCTION
-  ? 'Production'
+  ? 'Version 1.0'
   : DEPLOYMENT_ENVIRONMENT === 'preview'
-    ? 'Preview'
-    : 'Local'
+    ? 'Forge Preview'
+    : 'Forge Local'
 
-export const RELEASE_DISPLAY = `${RELEASE_CHANNEL} · ${APP_VERSION_LABEL}`
+export const RELEASE_DISPLAY = RELEASE_CHANNEL

@@ -275,6 +275,7 @@ export function ConnectedEditorialRecordEditor({
 
   async function runWorkflowAction(
     action: EditorialWorkflowAction,
+    note?: string,
   ) {
     if (!state?.head) {
       throw new Error(
@@ -299,6 +300,7 @@ export function ConnectedEditorialRecordEditor({
           recordId: record.id,
           expectedVersion:
             state.head.currentVersion,
+          note,
         },
       );
 
@@ -337,6 +339,30 @@ export function ConnectedEditorialRecordEditor({
           current,
         ),
     );
+  }
+
+  async function rollbackVersion(versionId: string) {
+    if (!state?.head || !window.confirm("Create a new published version from this historical version?")) {
+      return;
+    }
+
+    setBusyAction("restore");
+    setRuntimeError(null);
+    try {
+      await runEditorialAction("rollback", {
+        datasetId: schema.datasetId,
+        recordId: record.id,
+        expectedVersion: state.head.currentVersion,
+        targetVersionId: versionId,
+      });
+      await loadState();
+    } catch (error) {
+      setRuntimeError(
+        error instanceof Error ? error.message : "Rollback failed.",
+      );
+    } finally {
+      setBusyAction(null);
+    }
   }
 
   async function retryQueueItem(
@@ -474,6 +500,9 @@ export function ConnectedEditorialRecordEditor({
               }
               onCompareWithCurrent={
                 compareWithCurrent
+              }
+              onPreviewRollback={
+                rollbackVersion
               }
               onProcessQueueItem={
                 processQueueItem

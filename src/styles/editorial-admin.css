@@ -109,6 +109,26 @@
   gap: 0.5rem;
 }
 
+.editorial-review-note {
+  display: grid;
+  gap: .35rem;
+  color: #c4cfdb;
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.editorial-review-note textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #40516a;
+  border-radius: .65rem;
+  padding: .65rem;
+  background: #0b111a;
+  color: #f7f2e8;
+  font: inherit;
+  resize: vertical;
+}
+
 .editorial-admin-empty {
   margin: 0;
   color: #8996a8;

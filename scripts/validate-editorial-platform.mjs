@@ -30,7 +30,7 @@ const expectations = [
       "validateEditorialValues",
       "requireBoundQueueItem",
       "requireBoundSchedule",
-      "is intentionally unavailable",
+      "case \"rollback\"",
       "head.status !== \"approved\"",
     ],
   },

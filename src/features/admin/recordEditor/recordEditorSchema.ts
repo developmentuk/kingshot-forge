@@ -2,7 +2,7 @@ import type {
   DatasetCellValue,
   DatasetTableColumn,
   DatasetTableRow,
-} from "../datasetBrowserTypes";
+} from "../datasetBrowserTypes.js";
 
 export type RecordEditorValue =
   | DatasetCellValue

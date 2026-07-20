@@ -1,6 +1,7 @@
 import type {
   DatasetPublicationStatus,
 } from "../../../platform";
+import { useState } from "react";
 
 import {
   EditorialStatusBadge,
@@ -25,6 +26,7 @@ interface EditorialWorkflowPanelProps {
   busyAction?: EditorialWorkflowAction | null;
   onAction?: (
     action: EditorialWorkflowAction,
+    note?: string,
   ) => void | Promise<void>;
 }
 
@@ -80,6 +82,7 @@ export function EditorialWorkflowPanel({
   busyAction = null,
   onAction,
 }: EditorialWorkflowPanelProps) {
+  const [note, setNote] = useState("");
   const availableActions =
     statusActions[status].filter((action) =>
       allowedActions
@@ -118,7 +121,12 @@ export function EditorialWorkflowPanel({
       </dl>
 
       {availableActions.length > 0 ? (
-        <div className="editorial-admin-actions">
+        <>
+          <label className="editorial-review-note">
+            Reviewer comment
+            <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add context, evidence or approval rationale. It is stored in immutable audit history." rows={3} />
+          </label>
+          <div className="editorial-admin-actions">
           {availableActions.map((action) => (
             <button
               key={action}
@@ -134,7 +142,7 @@ export function EditorialWorkflowPanel({
                 busyAction !== null
               }
               onClick={() => {
-                void onAction?.(action);
+                void onAction?.(action, note.trim());
               }}
             >
               {busyAction === action
@@ -142,7 +150,8 @@ export function EditorialWorkflowPanel({
                 : actionLabels[action]}
             </button>
           ))}
-        </div>
+          </div>
+        </>
       ) : (
         <p className="editorial-admin-empty">
           No workflow actions are available for

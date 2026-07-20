@@ -58,8 +58,10 @@ export const DATASET_CAPABILITY_REGISTRY: Readonly<
   buildings: {
     ...browseOnlyCapabilities,
     editing: true,
+    publishing: true,
     validation: true,
     versionHistory: true,
+    rollback: true,
   },
   truegold: browseOnlyCapabilities,
   'war-academy': browseOnlyCapabilities,

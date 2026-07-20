@@ -69,6 +69,24 @@ function validateNonNegative(value: number | null, label: string) {
   if (value !== null && (!Number.isFinite(value) || value < 0)) throw new Error(`${label} must be zero or greater.`)
 }
 
+export function normalizeTownCenterLevel(...values: unknown[]): number | null {
+  for (const value of values) {
+    if (typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 30) return value
+    if (typeof value !== 'string') continue
+    const text = value.trim()
+    const match = text.match(/(?:town\s*center|town_center|\btc\b)\s*[:#-]?\s*(\d{1,2})\b/i) ?? text.match(/\bTG\s*(\d{1,2})\s*-\s*0\b/i)
+    const parsed = match ? Number(match[1]) : null
+    if (parsed !== null && Number.isInteger(parsed) && parsed >= 1 && parsed <= 30) return parsed
+  }
+  return null
+}
+
+export function validateTownCenterLevel(value: number | null): void {
+  if (value !== null && (!Number.isInteger(value) || value < 1 || value > 30)) {
+    throw new Error('Town Center must be a whole level from 1 to 30, or left as Not recorded.')
+  }
+}
+
 export type ProgressionValidationOptions = {
   infantryTiers?: ReadonlySet<number>
   lancerTiers?: ReadonlySet<number>
@@ -78,6 +96,7 @@ export type ProgressionValidationOptions = {
 }
 
 export async function addProgressionSnapshot(playerAccountId: string, input: PlayerProgressionInput, options: ProgressionValidationOptions = {}): Promise<void> {
+  validateTownCenterLevel(input.townCenterLevel)
   validateNonNegative(input.currentPower, 'Current power')
   validateNonNegative(input.highestPower, 'Highest power')
   validateNonNegative(input.governorGearScore, 'Governor Gear score')
@@ -105,5 +124,10 @@ export async function addProgressionSnapshot(playerAccountId: string, input: Pla
     notes: input.notes?.trim() || null,
     is_public: input.isPublic,
   })
-  if (error) throw new Error(error.message)
+  if (error) {
+    if (error.code === '23514' && error.message.includes('player_progression_town_center_range')) {
+      throw new Error('Town Center must be a whole level from 1 to 30. The linked player data does not contain a valid Town Center value yet.')
+    }
+    throw new Error('Progression could not be saved. Check the highlighted values and try again.')
+  }
 }

@@ -27,3 +27,4 @@ dist-ssr
 *.sw?
 
 .vercel
+.r4-fixtures.local.json

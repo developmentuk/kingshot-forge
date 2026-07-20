@@ -14,12 +14,13 @@ function sendResult(response: VercelResponse, result: PlayerIdentityOperationRes
     response.status(200).json({ status: "ok", data: result.value, revision: result.revision })
     return
   }
-  const status = result.code === "authentication_required" ? 401
-    : result.code.includes("not_allowed") || result.code === "operation_not_supported" ? 403
-    : result.code.includes("conflict") || result.code === "stale_revision" ? 409
-    : result.code === "feature_disabled" || result.code === "persistence_disabled" || result.code === "migration_required" ? 503
+  const code = "code" in result ? result.code : "invalid_request"
+  const status = code === "authentication_required" ? 401
+    : code.includes("not_allowed") || code === "operation_not_supported" ? 403
+    : code.includes("conflict") || code === "stale_revision" ? 409
+    : code === "feature_disabled" || code === "persistence_disabled" || code === "migration_required" ? 503
     : 400
-  response.status(status).json({ status: "error", code: result.code })
+  response.status(status).json({ status: "error", code })
 }
 
 function body(request: VercelRequest): Readonly<Record<string, unknown>> {

@@ -6,22 +6,22 @@ import {
 
 import {
   RecordEditorForm,
-} from "./RecordEditorForm";
+} from "./RecordEditorForm.js";
 
 import type {
   RecordEditorRecord,
   RecordEditorSchema,
   RecordEditorValidationResult,
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 import {
   useRecordEditor,
-} from "./useRecordEditor";
+} from "./useRecordEditor.js";
 
 import {
   validateRecordEditorRecordForSave,
-} from "./recordEditorPlatformValidation";
+} from "./recordEditorPlatformValidation.js";
 
 interface RecordEditorPanelProps {
   mode?: "create" | "edit" | "review";

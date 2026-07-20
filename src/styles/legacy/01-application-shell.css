@@ -606,6 +606,10 @@
     gap: 0.55rem;
   }
 
+  .app-header__workspace {
+    display: none;
+  }
+
   .app-brand {
     gap: 0.5rem;
   }

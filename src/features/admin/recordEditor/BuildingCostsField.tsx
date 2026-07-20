@@ -4,7 +4,7 @@ import type {
 
 import type {
   RecordEditorValue,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 type BuildingCostRow = [
   number,

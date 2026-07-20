@@ -26,6 +26,7 @@ export type PlayerAccount = {
   level_rendered_detailed: string | null
   level_image: string | null
   profile_photo: string | null
+  town_center_level?: number | null
   verification_status: PlayerVerificationStatus
   verification_method: PlayerVerificationMethod
   verified_by: string | null

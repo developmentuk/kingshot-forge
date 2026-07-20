@@ -239,18 +239,9 @@ try {
     );
   }
 
-  await expectStatus(
-    422,
-    () =>
-      execute(
-        {
-          action: "queue_publish",
-          datasetId: "buildings",
-          recordId: "academy",
-          expectedVersion: 1,
-        },
-        actors.admin,
-      ),
+  assert.equal(
+    (await vite.ssrLoadModule("/shared/data-engine/dataset-capabilities.ts")).getRegisteredDatasetCapabilities("buildings").publishing,
+    true,
     "Buildings publication capability",
   );
 
@@ -634,11 +625,11 @@ try {
         actors.admin,
         nonApprovedRuntime,
       ),
-    "non-approved publication request",
+    "Buildings publication capability",
   );
 
   await expectStatus(
-    422,
+    409,
     () =>
       execute(
         {
@@ -651,12 +642,12 @@ try {
         actors.admin,
         runtime,
       ),
-    "unsupported rollback",
+    "rollback requires a published record",
   );
 
   for (const action of ["archive", "restore"]) {
     await expectStatus(
-      422,
+      409,
       () =>
         execute(
           {
@@ -668,7 +659,7 @@ try {
           actors.admin,
           runtime,
         ),
-      `unsupported ${action}`,
+      `${action} has an invalid current status`,
     );
   }
 

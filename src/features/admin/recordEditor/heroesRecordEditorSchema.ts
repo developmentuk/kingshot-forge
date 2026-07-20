@@ -1,6 +1,6 @@
 import type {
   RecordEditorSchema,
-} from "./recordEditorSchema";
+} from "./recordEditorSchema.js";
 
 export const heroesRecordEditorSchema:
 RecordEditorSchema = {

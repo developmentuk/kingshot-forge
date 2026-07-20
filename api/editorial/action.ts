@@ -13,6 +13,7 @@ import {
 import {
   sendEditorialError,
 } from "../../server/editorial/http.js";
+import { invalidateSearchIndex } from "../../server/search/runtime.js";
 
 export default async function handler(
   request: VercelRequest,
@@ -34,6 +35,7 @@ export default async function handler(
       await executeEditorialAction(
         request.body as EditorialActionBody,
         actor,
+        { onSearchInvalidation: () => invalidateSearchIndex() },
       );
 
     response.status(200).json({

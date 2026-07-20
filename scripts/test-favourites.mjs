@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+
+const migration = fs.readFileSync('supabase/migrations/20260719200000_canonical_persistent_favourites.sql', 'utf8')
+const service = fs.readFileSync('src/services/favouritesService.ts', 'utf8')
+const myForge = fs.readFileSync('src/pages/MyForgePage.tsx', 'utf8')
+const heroCard = fs.readFileSync('src/components/heroes/HeroCard.tsx', 'utf8')
+const kingdom = fs.readFileSync('src/pages/KingdomCommunityPage.tsx', 'utf8')
+const alliance = fs.readFileSync('src/pages/AllianceCommunityPage.tsx', 'utf8')
+
+assert.match(migration, /rename column item_type to entity_type/)
+assert.match(migration, /rename column item_id to entity_id/)
+assert.match(migration, /unique \(user_id, entity_type, entity_id\)/)
+assert.match(migration, /favourites_entity_type_check/)
+assert.match(migration, /to authenticated/)
+assert.match(migration, /auth\.uid\(\).*user_id/)
+assert.match(migration, /revoke all on public\.favourites from anon/)
+assert.match(service, /export async function listFavourites/)
+assert.match(service, /export async function checkFavourite/)
+assert.match(service, /export async function addFavourite/)
+assert.match(service, /export async function removeFavourite/)
+assert.match(service, /export async function toggleFavourite/)
+assert.match(service, /23505/)
+assert.match(service, /FAVOURITE_ENTITY_TYPES/)
+assert.match(myForge, /Persistent favourites/)
+assert.match(heroCard, /entityType="hero"/)
+assert.match(kingdom, /entityType="kingdom"/)
+assert.match(alliance, /entityType="alliance"/)
+assert.doesNotMatch(fs.readFileSync('src/App.tsx', 'utf8'), /saved-plan|progression-plan/i)
+
+console.log('Persistent favourites contract, integration, RLS and planning-omission checks passed.')
