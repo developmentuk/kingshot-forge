@@ -52,7 +52,7 @@ export function EditorialOperationsPage({
     setState(null);
   }, [datasetId]);
 
-  async function runAction(action: EditorialWorkflowAction): Promise<void> {
+  async function runAction(action: EditorialWorkflowAction, note?: string): Promise<void> {
     if (!state?.head) return;
     setBusyAction(action);
     setError("");
@@ -61,6 +61,7 @@ export function EditorialOperationsPage({
         datasetId,
         recordId: recordId.trim(),
         expectedVersion: state.head.currentVersion,
+        note,
       });
       await loadState();
     } catch (value) {

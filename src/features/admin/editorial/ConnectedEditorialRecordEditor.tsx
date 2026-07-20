@@ -275,6 +275,7 @@ export function ConnectedEditorialRecordEditor({
 
   async function runWorkflowAction(
     action: EditorialWorkflowAction,
+    note?: string,
   ) {
     if (!state?.head) {
       throw new Error(
@@ -299,6 +300,7 @@ export function ConnectedEditorialRecordEditor({
           recordId: record.id,
           expectedVersion:
             state.head.currentVersion,
+          note,
         },
       );
 

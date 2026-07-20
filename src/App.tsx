@@ -62,6 +62,8 @@ import { GiftRedemptionOperationsPage } from "./features/admin/GiftRedemptionOpe
 import { RenderEngineCalibrationPage } from "./features/admin/RenderEngineCalibrationPage";
 import { EditorialImportManagerPage } from "./features/admin/EditorialImportManagerPage";
 import { EditorialOperationsPage } from "./features/admin/editorial/EditorialOperationsPage";
+import { ForgeContentStudioPage } from "./features/admin/ForgeContentStudioPage";
+import BuildingsBrowserPage from "./pages/BuildingsBrowserPage";
 import WorkspaceRoute from "./components/WorkspaceRoute";
 import WorkspaceHomePage from "./pages/WorkspaceHomePage";
 import OperationsStatusPage from "./pages/OperationsStatusPage";
@@ -97,6 +99,9 @@ function App() {
         <Route path="roadmap" element={<RoadmapPage />} />
         <Route path="release-notes" element={<ReleaseNotesPage />} />
         <Route path="search" element={<SearchPage />} />
+        <Route path="buildings" element={<BuildingsBrowserPage />} />
+        <Route path="buildings/:buildingKey" element={<BuildingsBrowserPage />} />
+        <Route path="buildings/:buildingKey/progression" element={<BuildingsBrowserPage />} />
         <Route path="transfer-profile" element={<TransferProfilePage />} />
         <Route path="my-forge/transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />
@@ -134,6 +139,7 @@ function App() {
         <Route path="moderation/reports" element={<WorkspaceRoute workspaceId="moderation"><OperationsStatusPage title="Reports" /></WorkspaceRoute>} />
 
         <Route path="admin" element={<ProtectedRoute permission="cms.view"><AdminDashboardPage /></ProtectedRoute>} />
+        <Route path="admin/content-studio" element={<ProtectedRoute permission="cms.view"><ForgeContentStudioPage /></ProtectedRoute>} />
         <Route path="admin/datasets" element={<ProtectedRoute permission="cms.view"><AdminDatasetsPage /></ProtectedRoute>} />
         <Route path="admin/data/:datasetId" element={<ProtectedRoute permission="cms.view"><AdminDatasetDetailPage /></ProtectedRoute>} />
         <Route path="admin/feedback" element={<ProtectedRoute permission="cms.view"><FeedbackAdminPage /></ProtectedRoute>} />

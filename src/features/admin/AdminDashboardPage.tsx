@@ -44,7 +44,7 @@ export function AdminDashboardPage() {
       </section>
 
       <section className="admin-dashboard-grid">
-        <article className="admin-dashboard-card">
+          <article className="admin-dashboard-card">
           <span className="admin-dashboard-card__icon">🗄️</span>
           <div>
             <h2>Datasets</h2>
@@ -89,10 +89,10 @@ export function AdminDashboardPage() {
             <h2>Import Manager</h2>
             <p>Refresh remote sources and review import results.</p>
           </div>
-          <span className="admin-dashboard-card__restricted">Not yet implemented</span>
+            <Link to="/admin/content-studio" className="button button--primary">Open Content Studio</Link>
         </article>
 
-        <article className="admin-dashboard-card">
+          <article className="admin-dashboard-card">
           <span className="admin-dashboard-card__icon">⚙️</span>
           <div>
             <h2>Data Engine</h2>
@@ -107,7 +107,7 @@ export function AdminDashboardPage() {
             <h2>Publish Centre</h2>
             <p>Validate and publish approved dataset changes.</p>
           </div>
-          <span className="admin-dashboard-card__restricted">Available per supported dataset</span>
+            <Link to="/admin/content-studio" className="button button--primary">Open publication queue</Link>
         </article>
       </section>
 
