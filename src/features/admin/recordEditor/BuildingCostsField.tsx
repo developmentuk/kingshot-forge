@@ -22,6 +22,7 @@ interface BuildingCostsFieldProps {
   disabled?: boolean;
   error?: string;
   describedBy?: string;
+  progressionSummary?: BuildingProgressionSummary;
 
   onChange: (
     value: RecordEditorValue,
@@ -153,10 +154,12 @@ export function BuildingCostsField({
   disabled = false,
   error,
   describedBy,
+  progressionSummary,
   onChange,
 }: BuildingCostsFieldProps) {
   const rows =
     normaliseRows(value);
+  const baseState = progressionSummary?.baseState;
 
   function updateCell(
     rowIndex: number,
@@ -299,6 +302,11 @@ export function BuildingCostsField({
             build time for each
             level.
           </span>
+          {progressionSummary && (
+            <p role="status">
+              {progressionSummary.canonicalRecordCount} canonical progression records · {progressionSummary.upgradeRowCount} upgrade rows · {progressionSummary.baseStateCount} base-state record · {progressionSummary.truegoldStageCount} Truegold stages
+            </p>
+          )}
         </div>
 
         <button
@@ -309,6 +317,21 @@ export function BuildingCostsField({
           Add level
         </button>
       </div>
+
+      {progressionSummary && progressionSummary.baseStateCount > 0 && baseState && (
+        <section aria-label="Base-state progression record">
+          <h3>Base-state record (read-only)</h3>
+          <p>This canonical record represents the starting state, not an editable upgrade level.</p>
+          <dl>
+            <div><dt>Record</dt><dd>{displayValue(objectValue(baseState, "record_id"))}</dd></div>
+            <div><dt>Level</dt><dd>{displayValue(objectValue(baseState, "base_level"))}</dd></div>
+            <div><dt>Phase</dt><dd>{displayValue(objectValue(baseState, "progression_phase"))}</dd></div>
+            <div><dt>Build time</dt><dd>{displayValue(objectValue(baseState, "upgrade_time_display"))}</dd></div>
+            <div><dt>Power</dt><dd>{displayValue(objectValue(baseState, "power"))}</dd></div>
+            <div><dt>Source</dt><dd>{displayValue(objectValue(baseState, "source_url"))}</dd></div>
+          </dl>
+        </section>
+      )}
 
       {rows.length > 0 ? (
         <div className="building-costs-editor__scroll">
@@ -452,4 +475,23 @@ export function BuildingCostsField({
       )}
     </div>
   );
+}
+
+export interface BuildingProgressionSummary {
+  canonicalRecordCount: number;
+  upgradeRowCount: number;
+  baseStateCount: number;
+  truegoldStageCount: number;
+  baseState: RecordEditorValue;
+}
+
+function objectValue(value: RecordEditorValue, key: string): RecordEditorValue {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value[key] ?? null;
+  return null;
+}
+
+function displayValue(value: RecordEditorValue): string {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
 }
