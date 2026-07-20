@@ -25,3 +25,9 @@ created.
 # Publication status
 
 Buildings is published through Forge Content Studio version 1 with 10 catalogue records, 587 progression records, and eight retained structured external prerequisite references. Runtime consumers must use the published-only Supabase projection and its provenance metadata.
+
+REL-004 confirms the repaired preview serves the published-only Buildings
+projection publicly: 10 catalogue records and 587 progression records. The
+existing import run and eight structured external prerequisite decisions remain
+unchanged; Content Studio now reads queue timestamps from canonical
+`requested_at`.

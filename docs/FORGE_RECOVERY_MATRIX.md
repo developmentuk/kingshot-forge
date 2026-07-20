@@ -337,6 +337,16 @@ supplied `Approve Buildings Publication`, but this branch has no supported
 atomic Buildings publication path. Recovery must stop before publication;
 adding the missing publication and warning-decision contracts is outside
 REL-002 scope.
+
+## REL-004 recovery note
+
+If the repaired preview cannot be authenticated, preserve the published import
+run and publication version, do not republish or create a new import, and stop
+at **Not Ready for Version 1.0**. The verified UI defect was a read-only
+Content Studio overview query using `publication_queue.created_at`; the repair
+uses canonical `requested_at` and does not mutate Buildings data or audit
+history. Authenticate the exact READY preview, repeat owner-only checks, then
+reassess the gate.
 # REL-003 recovery note
 
 Buildings version 1 is published as `bpub-a8070ae2-beef-4abe-81d8-4e338f768f75`. Recovery uses `preview_buildings_rollback` followed by the service-role rollback RPC; the first version correctly has no prior target. Publication snapshots, warning decisions, prerequisite decisions, editorial versions, and audit events are immutable.

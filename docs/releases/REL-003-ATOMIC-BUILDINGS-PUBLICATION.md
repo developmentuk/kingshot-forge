@@ -36,3 +36,9 @@ Rollback preview is available and reports history preservation; version 1 has no
 ## Release certification
 
 PASS — publication is atomic, server-only, permission-gated, idempotent, manifest-hash gated, warning-identity gated, RLS protected, and audit-linked. The application was not merged, tagged, pushed, deployed, or released to production by this sprint.
+
+REL-004 found that the first protected preview's Content Studio overview
+selected nonexistent `publication_queue.created_at` instead of canonical
+`requested_at`. Commit `1144aba` repairs the read path and status copy. The
+repaired preview requires owner sign-in on its new protected hostname before
+authenticated acceptance can be certified.

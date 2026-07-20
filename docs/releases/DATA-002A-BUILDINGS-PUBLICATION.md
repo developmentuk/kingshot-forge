@@ -60,3 +60,8 @@ this branch has no supported atomic Buildings publication operation.
 # REL-003 publication outcome
 
 The approved staged run was published atomically as version 1. Eight external prerequisite decisions were retained as structured references with deferred catalogue dependencies. The public projection contains exactly 10 Buildings and 587 progression rows; no placeholder rows were created. Search, relationship, prerequisite graph, and Personal Progression refresh records all succeeded.
+
+REL-004 browser acceptance found and repaired a Content Studio read-path defect:
+the overview selected nonexistent `publication_queue.created_at` instead of
+`requested_at`, causing a staged fallback. No Buildings data, publication
+version, warning decision or import-run state was changed.

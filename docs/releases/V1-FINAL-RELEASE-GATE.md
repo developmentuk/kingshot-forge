@@ -156,3 +156,12 @@ or rollback created. The overall Version 1.0 recommendation remains
 # REL-003 certification update
 
 Buildings publication is now certified for publication version 1: 10 catalogue rows, 587 progression rows, 8 reconciled warning IDs, 4 successful refresh stages, and immutable audit evidence. The publication RPC remains service-role-only and manifest-hash gated. Version 1 has rollback preview support but no prior publication to restore. Final Version 1 recommendation remains subject to the standard authenticated browser/console acceptance checks.
+
+## REL-004 final browser acceptance — 20 July 2026
+
+REL-004 deployed repaired commit `1144aba77d6ab544a68719a28e563e5acceb58c9`
+to protected READY preview `dpl_J3JPWgMNpA5iX37kEqTPXvkRmUgV`. Public Buildings
+and Search routes passed, and the Content Studio queue read defect was repaired.
+The exact repaired hostname still requires owner authentication for Content
+Studio, audit, rollback, responsive authenticated workflow and final owner
+acceptance. Recommendation: **Not Ready for Version 1.0**.
