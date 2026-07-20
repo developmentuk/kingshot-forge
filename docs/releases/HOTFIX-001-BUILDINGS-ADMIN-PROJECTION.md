@@ -1,5 +1,27 @@
 # HOTFIX-001 — Buildings Admin projection
 
+## HOTFIX-001B repair
+
+The defect was a hydration ownership/lifecycle error. The editor started from
+the canonical projection, then treated a missing editorial head as editable;
+when a version response arrived, its values replaced the whole record. A
+sparse or absent draft therefore produced blank required fields and validation
+ran against that transient shape. Progression costs also used `stage` before
+`base_level`, allowing Truegold stages to become false standard level errors.
+
+The repaired sequence is: canonical record and nested progression render;
+editorial state loads without clearing them; a real draft overlays only
+explicit draft fields; progression is replaced only by a non-empty valid draft
+progression; validation is enabled only after complete draft hydration. A
+missing head, published head, or failed request leaves canonical values visible
+and disables editing. Published progression and its mutation controls remain
+read-only. Buildings controls now have stable `id`/`name` pairs and labelled
+error references.
+
+No published rows, import runs, or publication versions were changed. The
+Media Library and Building image control remain planned Version 1.1 work; no
+direct image URL field is introduced.
+
 ## Status
 
 Implemented locally on 20 July 2026. This hotfix is protected-preview-only;

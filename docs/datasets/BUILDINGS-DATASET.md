@@ -40,3 +40,11 @@ rows represented in total. The 597 publication records remain a storage
 count, not a directory-row count. Placeholder Building names/keys are not
 generated. Editor views expose the canonical progression read-only and save
 only through editorial draft actions.
+# HOTFIX-001B editor contract
+
+Admin hydration is canonical-first. Published catalogue fields and nested
+progression own the initial editor values. Editorial state supplies metadata
+and overlays only explicit values from a real draft; a missing draft is not an
+empty editable record. Standard cost levels map from `base_level`; Truegold
+uses its explicit `truegold_tier`/`stage` fields and is not coerced into the
+standard level column. Published progression is displayed read-only.

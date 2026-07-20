@@ -47,3 +47,13 @@ Buildings Admin directory must show 10 canonical buildings and per-building
 progression counts; provenance separately reports 587 progression rows and
 597 total publication records. The browser consumes published rows only and
 must not synthesize placeholders when the source is unavailable.
+# Buildings editor hydration boundary
+
+The Buildings Record Editor keeps the published projection visible while
+editorial state is loading. Only a complete `draft` head/version enables draft
+editing and validation. Missing, published, or failed editorial state cannot
+clear canonical values or enable Save. The reusable editor fields expose
+stable identifiers, names, labels, and error references for accessibility.
+
+Buildings image selection is not part of this slice. A governed Media Library
+and Building media controls are Version 1.1 work.
