@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "dataset": "buildings",
+  "sourceFile": "C:\\Users\\clark\\Projects\\kingshot-text-lab\\KSForge_Buildings_Import_Ready_200726(1).xlsx",
+  "status": "blocked",
+  "findings": [
+    {
+      "severity": "blocking",
+      "code": "source_workbook_missing",
+      "message": "Owner-supplied workbook was not found; no workbook was mutated."
+    }
+  ],
+  "sheets": [],
+  "expected": {
+    "buildings_catalog": 10,
+    "buildings_import": 587,
+    "totalDataRows": 597
+  }
+}

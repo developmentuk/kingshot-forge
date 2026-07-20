@@ -1,30 +1,38 @@
-import { useState } from "react";
+import { useState } from 'react'
+import * as XLSX from 'xlsx'
+import { buildingsContract } from '../../../shared/data-pipeline/buildingsContract'
+import type { DatasetValidationResult } from '../../../shared/data-pipeline/contracts'
 
-import { adminDatasets } from "./adminDatasets";
-import { fetchDataset, type DatasetKey, type DatasetLoadResult } from "./dataEngineApi";
+function parseWorkbook(file: File): Promise<{ sheets: Record<string, Record<string, unknown>[]>; names: string[] }> {
+  return file.arrayBuffer().then(buffer => {
+    const workbook = XLSX.read(buffer, { cellDates: true, bookVBA: false })
+    const sheets: Record<string, Record<string, unknown>[]> = {}
+    for (const name of workbook.SheetNames) sheets[name] = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[name], { defval: null, raw: false })
+    return { sheets, names: workbook.SheetNames }
+  })
+}
 
 export function EditorialImportManagerPage() {
-  const [dataset, setDataset] = useState<DatasetKey>(adminDatasets[0]?.id as DatasetKey);
-  const [result, setResult] = useState<DatasetLoadResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function preview(): Promise<void> {
-    setBusy(true);
-    setError("");
-    try {
-      setResult(await fetchDataset(dataset));
-    } catch (value) {
-      setError(value instanceof Error ? value.message : "Import preview failed.");
-    } finally {
-      setBusy(false);
-    }
+  const [file, setFile] = useState<File | null>(null)
+  const [result, setResult] = useState<DatasetValidationResult | null>(null)
+  const [sheetNames, setSheetNames] = useState<string[]>([])
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  async function preview(nextFile: File | null) {
+    setFile(nextFile); setResult(null); setError('')
+    if (!nextFile) return
+    if (!/\.(xlsx|csv)$/i.test(nextFile.name)) { setError('Unsupported file. Choose an .xlsx or .csv file.'); return }
+    if (nextFile.size > 25 * 1024 * 1024) { setError('File exceeds the 25 MB Data Studio limit.'); return }
+    setBusy(true)
+    try { const parsed = await parseWorkbook(nextFile); setSheetNames(parsed.names); setResult((await import('../../../server/data-pipeline/validate')).validateDataset(buildingsContract, parsed.sheets)) }
+    catch (value) { setError(value instanceof Error ? value.message : 'The workbook could not be parsed.') }
+    finally { setBusy(false) }
   }
-
+  const blocking = result?.issues.filter(issue => issue.severity === 'blocking') ?? []
   return <main className="admin-page editorial-import-page">
-    <section className="admin-page__header"><p className="admin-page__eyebrow">Forge Admin CMS</p><h1>Import Manager</h1><p className="admin-page__intro">Refresh a registered source, inspect its provenance and validate the payload before editorial records are staged.</p></section>
-    <section className="editorial-operations-selector"><label>Dataset<select value={dataset} onChange={(event) => setDataset(event.target.value as DatasetKey)}>{adminDatasets.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><button type="button" className="button button--primary" onClick={() => void preview()} disabled={busy}>{busy ? "Refreshing…" : "Refresh source"}</button></section>
-    {error && <div className="error-state" role="alert">{error}</div>}
-    {result && <section className="editorial-admin-card" aria-live="polite"><div className="editorial-admin-card__heading"><div><p className="editorial-admin-eyebrow">Source snapshot</p><h2>{result.metadata?.title ?? result.dataset}</h2></div><strong>{result.recordCount} records</strong></div><dl className="editorial-admin-meta"><div><dt>Fetched</dt><dd>{new Date(result.fetchedAt).toLocaleString()}</dd></div><div><dt>HTTP status</dt><dd>{result.httpStatus}</dd></div><div><dt>Payload hash</dt><dd>{result.payloadHash}</dd></div><div><dt>Source</dt><dd>{result.sourceUrl}</dd></div></dl><p className="success-state" role="status">Preview validated. No database write is performed until the dataset-specific editorial save/review flow is used.</p></section>}
-  </main>;
+    <section className="admin-page__header"><p className="admin-page__eyebrow">Forge Data Studio</p><h1>Dataset import</h1><p className="admin-page__intro">Upload, validate and preview a dataset before it enters the existing editorial version workflow. Nothing is staged or published from this preview.</p></section>
+    <section className="editorial-admin-card"><div className="editorial-admin-card__heading"><div><p className="editorial-admin-eyebrow">Dataset contract v{buildingsContract.version}</p><h2>Buildings</h2></div><span className="status-badge">Preview only</span></div><p>{buildingsContract.description} Accepted formats: XLSX and CSV. Maximum file size: 25 MB.</p><label className="button button--primary" htmlFor="dataset-file">Choose workbook<input id="dataset-file" type="file" accept=".xlsx,.csv" hidden onChange={event => void preview(event.target.files?.[0] ?? null)} /></label>{file && <p role="status">Selected: {file.name} · {(file.size / 1024).toFixed(1)} KB</p>}{busy && <p role="status" aria-live="polite">Parsing and validating…</p>}{error && <div className="error-state" role="alert">{error}</div>}</section>
+    {sheetNames.length > 0 && <section className="editorial-admin-card"><h2>Detected sheets</h2><p>{sheetNames.join(' · ')}</p><p>Required: {buildingsContract.acceptedSheets.join(', ')}</p></section>}
+    {result && <section className="editorial-admin-card" aria-live="polite"><div className="editorial-admin-card__heading"><h2>Validation preview</h2><strong>{result.summary}</strong></div><div className="publication-operations-grid"><div><strong>{result.counts.totalRows}</strong><span>Total rows</span></div><div><strong>{result.counts.validRows}</strong><span>Valid rows</span></div><div><strong>{result.counts.warningRows}</strong><span>Warnings</span></div><div><strong>{result.counts.rejectedRows}</strong><span>Rejected</span></div></div>{blocking.length > 0 && <div className="error-state" role="alert"><strong>Blocking errors ({blocking.length})</strong><ul>{blocking.slice(0, 25).map((issue, index) => <li key={`${issue.code}-${index}`}>{issue.sheet}{issue.row ? ` row ${issue.row}` : ''}{issue.column ? ` / ${issue.column}` : ''}: {issue.message}</li>)}</ul></div>}{blocking.length === 0 && <p className="success-state" role="status">Validation passed. The next step is staging for editorial review; publication remains a separate authorised action.</p>}</section>}
+  </main>
 }

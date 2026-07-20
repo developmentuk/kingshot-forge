@@ -16,6 +16,7 @@
     "validate:editorial-platform": "node scripts/validate-editorial-platform.mjs",
     "validate:verification-centre": "node scripts/validate-verification-centre.mjs",
     "validate:art-studio": "node scripts/validate-art-studio-foundation.mjs",
+    "preflight:buildings": "node scripts/preflight-buildings.mjs",
     "test:editorial-api": "node scripts/test-editorial-api.mjs",
     "test:verification-centre": "node scripts/test-verification-centre.mjs",
     "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
@@ -45,7 +46,8 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router": "^8.2.0",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.18.1",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
