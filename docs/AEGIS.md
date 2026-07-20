@@ -477,3 +477,6 @@ as unknown, never coerced into the database. Search activation, Forge
 Connections, settings/Operations surfaces, Hero ratings, Render Engine
 navigation, release presentation and KvK Cards/Compact presentation are
 recorded in `docs/releases/UX-002-V1-RELEASE-BLOCKER-REMEDIATION.md`.
+## UX-003 remediation boundary
+
+UX-003 is limited to owner-verified V1 acceptance failures. API-owned linked-player fields may refresh automatically, while biography, preferences, notes and other editorial/profile fields remain owner-owned. Town Center is accepted only when explicitly present and normalized to the existing 1–30 snapshot contract; values such as `TG6-0` are not silently converted. Search and relationship surfaces must never use the generic Search route as an entity destination.

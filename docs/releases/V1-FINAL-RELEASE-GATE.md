@@ -101,3 +101,6 @@ Owner visual decision remains **Pending owner confirmation**. Recommendation
 remains **Not Ready for Version 1.0** until the owner inspects the exact
 protected preview and supplies the UX-001 decision, authenticated role
 evidence and outstanding operational recovery evidence.
+## UX-003 gate note
+
+UX-003 is not accepted by automated checks alone. The owner must review the replacement preview for canonical Search destinations, automatic linked-player identity/Town Center refresh, progression enablement/save, role mutations and audit history, Render Engine workflow, five responsive Hero Companion widths, structured Forge Connections and KvK versus cards. See `docs/releases/UX-003-V1-FUNCTIONAL-ACCEPTANCE-REMEDIATION.md`.

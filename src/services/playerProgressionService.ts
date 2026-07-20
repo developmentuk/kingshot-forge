@@ -69,6 +69,18 @@ function validateNonNegative(value: number | null, label: string) {
   if (value !== null && (!Number.isFinite(value) || value < 0)) throw new Error(`${label} must be zero or greater.`)
 }
 
+export function normalizeTownCenterLevel(...values: unknown[]): number | null {
+  for (const value of values) {
+    if (typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 30) return value
+    if (typeof value !== 'string') continue
+    const text = value.trim()
+    const match = text.match(/(?:town\s*center|town_center|\btc\b)\s*[:#-]?\s*(\d{1,2})\b/i)
+    const parsed = match ? Number(match[1]) : null
+    if (parsed !== null && Number.isInteger(parsed) && parsed >= 1 && parsed <= 30) return parsed
+  }
+  return null
+}
+
 export function validateTownCenterLevel(value: number | null): void {
   if (value !== null && (!Number.isInteger(value) || value < 1 || value > 30)) {
     throw new Error('Town Center must be a whole level from 1 to 30, or left as Not recorded.')

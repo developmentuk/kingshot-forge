@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 import { useDataset } from '../lib/dataEngine/useDataset'
-import { addProgressionSnapshot, getMyProgression, validateTownCenterLevel, type PlayerProgressionInput, type PlayerProgressionSnapshot } from '../services/playerProgressionService'
+import { addProgressionSnapshot, getMyProgression, normalizeTownCenterLevel, validateTownCenterLevel, type PlayerProgressionInput, type PlayerProgressionSnapshot } from '../services/playerProgressionService'
 
 type DatasetRecord = Record<string, unknown>
 type SelectOption = { value: number; label: string }
@@ -142,7 +142,7 @@ export default function PlayerProgressionPage() {
   const datasetOptionsReady = infantryOptions.length > 0 && lancerOptions.length > 0 && marksmanOptions.length > 0 && truegoldOptions.length > 0 && vipOptions.length > 0
   // player_level is the API player/account level, not Town Center. Only copy
   // values that satisfy the snapshot schema; otherwise keep the value unknown.
-  const canonicalTownCenterLevel = playerAccount?.player_level !== null && playerAccount?.player_level !== undefined && playerAccount.player_level >= 1 && playerAccount.player_level <= 30 ? playerAccount.player_level : null
+  const canonicalTownCenterLevel = normalizeTownCenterLevel(playerAccount?.town_center_level, playerAccount?.level_rendered_detailed, playerAccount?.level_rendered)
   const townCenterDisplay = playerAccount?.level_rendered_detailed || playerAccount?.level_rendered || (canonicalTownCenterLevel === null ? 'Not available' : `Level ${canonicalTownCenterLevel}`)
 
   useEffect(() => {

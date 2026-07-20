@@ -76,7 +76,7 @@
 }
 
 .hero-companion-section--ratings .hero-companion-rating {
-  min-height: 190px;
+  min-height: 0;
 }
 
 .hero-companion-card__meta .hero-rarity-badge {
@@ -104,6 +104,6 @@
   }
 
   .hero-companion-section--ratings .hero-companion-rating {
-    min-height: 176px;
+    min-height: 0;
   }
 }

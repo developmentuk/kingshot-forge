@@ -71,3 +71,9 @@ bounded container on narrow screens; they must not hide values through clipped
 fixed heights. Rating cards keep stars, scores and explanations in normal flow.
 Related-content components render only published, visible, deduplicated
 relationships and use an explicit empty state when no relationship exists.
+## UX-003 presentation rules
+
+- Entity search results must resolve through a supported canonical destination; records without one are informational and never link back to Search.
+- Forge Connections are curated cards, ranked from explicit relationships and canonical tags, with a meaningful reason and Open action.
+- Rating-card grids use one column on mobile, two columns on constrained widths and four columns only when each card has a safe minimum width. Content determines card height.
+- KvK card mode uses two clearly labelled kingdom panels, an explicit VS marker and text/icon result labels. Compact mode remains the dense operational table.

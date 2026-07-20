@@ -410,6 +410,14 @@ function KvkTrackerPage() {
                     </time>
                   </div>
 
+                  <div className="kvk-match-card__versus" aria-label={`Kingdom ${match.kingdom_a} versus Kingdom ${match.kingdom_b}`}>
+                    <div className={match.castle_winner === match.kingdom_a ? 'kvk-match-card__kingdom kvk-match-card__kingdom--winner' : 'kvk-match-card__kingdom'}><small>Kingdom A · {match.attacker === match.kingdom_a ? 'Attacker' : 'Defender'}</small><strong>Kingdom {match.kingdom_a}</strong><span>{match.castle_winner === match.kingdom_a ? 'Winner' : 'Challenger'}</span></div>
+                    <span className="kvk-match-card__vs" aria-hidden="true">VS</span>
+                    <div className={match.castle_winner === match.kingdom_b ? 'kvk-match-card__kingdom kvk-match-card__kingdom--winner' : 'kvk-match-card__kingdom'}><small>Kingdom B · {match.attacker === match.kingdom_b ? 'Attacker' : 'Defender'}</small><strong>Kingdom {match.kingdom_b}</strong><span>{match.castle_winner === match.kingdom_b ? 'Winner' : 'Challenger'}</span></div>
+                  </div>
+
+                  <div className="kvk-match-card__result-strip"><span>{wonPrep ? '✓ Prep won' : '× Prep lost'}</span><span>{wonCastle ? '✓ Castle won' : '× Castle lost'}</span><span>{match.castle_captured ? '⚑ Captured' : '⬟ Defended'}</span></div>
+
                   <div className="kvk-match-card__results">
                     <div>
                       <span>Prep phase</span>
@@ -455,6 +463,7 @@ function KvkTrackerPage() {
                       </strong>
                     </div>
                   </div>
+                  <footer className="kvk-match-card__footer"><span>{wasAttacker ? 'Attacker perspective' : 'Defender perspective'} · {formatDate(match.season_date)}</span><span>Match details →</span></footer>
                 </article>
               )
             })}

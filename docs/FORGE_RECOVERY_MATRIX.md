@@ -289,3 +289,6 @@ routes, protected-route boundary states, responsive widths 390/768/1280/1440,
 and browser/Vercel diagnostics were checked. Owner visual confirmation is
 still pending; this evidence does not close authenticated cross-role,
 cross-user or operational gates. Version 1.0 acceptance remains blocked.
+## UX-003 acceptance remediation
+
+UX-003 implementation is tracked in `docs/releases/UX-003-V1-FUNCTIONAL-ACCEPTANCE-REMEDIATION.md`. The current local remediation adds canonical search destination routing, throttled login refresh with cached fallback, explicit Town Center normalization, role mutation affordance guidance, Render Engine registry clarity, responsive Hero Companion rating cards, structured Forge Connections presentation and an original KvK versus card. Authenticated preview evidence and deployment remain required before this matrix can be marked ready.

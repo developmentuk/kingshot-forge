@@ -10,3 +10,5 @@
 .forge-connection-card { min-width: 0; }
 .forge-connection-card strong, .forge-connection-card em, .forge-connection-card small { overflow-wrap: anywhere; }
 .forge-connections__discovery { display: none; }
+.forge-result--informational { cursor: default; opacity: .86; }
+.forge-connection-card__open { display: block; margin-top: .45rem; color: #f0bb4c; font-size: .72rem; font-weight: 800; }

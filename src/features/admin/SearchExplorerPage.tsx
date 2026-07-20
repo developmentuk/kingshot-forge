@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { resolveSearchDestination } from '../search/searchDestination'
 
 interface SearchMatch {
   record: { id: string; dataset: string; title: string; subtitle: string | null; summary: string | null; status: string; canonical_url: string | null; confidence?: string | null; confidence_label?: string | null }
@@ -73,7 +74,7 @@ export function SearchExplorerPage() {
       {error && <p role="alert">{error}</p>}
       {payload && <>
         <div className="admin-toolbar"><strong>{payload.results.length} results</strong><span>Index v{payload.index.index_version}</span><span>{payload.index.projection_count} projections · {payload.index.relationship_count} relationships</span><span>{payload.index.stale ? 'Stale fallback' : 'Fresh'}</span><span>Simulated: {payload.simulation.simulatedRole}</span></div>
-        <div className="admin-table-wrapper"><table><thead><tr><th>Record</th><th>Dataset</th><th>Status</th><th>Confidence</th><th>Relationship</th><th>Provider/path</th><th>Explanation</th></tr></thead><tbody>{payload.results.map((match) => <tr key={`${match.record.dataset}:${match.record.id}`}><td><strong>{match.record.title}</strong><br /><small>{match.record.id}</small></td><td>{match.record.dataset}</td><td>{match.record.status}</td><td>{match.record.confidence_label ?? match.record.confidence ?? 'Not supplied'}</td><td>{match.relationshipType ?? '—'}</td><td>{match.relationshipPath?.join(' → ') ?? '—'}</td><td>{match.relationshipExplanation ?? (match.reasons.join(' · ') || 'relationship expansion')}</td></tr>)}</tbody></table></div>
+        <div className="admin-table-wrapper"><table><thead><tr><th>Record</th><th>Dataset</th><th>Status</th><th>Confidence</th><th>Relationship</th><th>Provider/path</th><th>Explanation</th></tr></thead><tbody>{payload.results.map((match) => { const destination = resolveSearchDestination(match.record); return <tr key={`${match.record.dataset}:${match.record.id}`}><td>{destination ? <a href={destination}><strong>{match.record.title}</strong></a> : <strong>{match.record.title}</strong>}<br /><small>{match.record.id}</small></td><td>{match.record.dataset}</td><td>{match.record.status}</td><td>{match.record.confidence_label ?? match.record.confidence ?? 'Not supplied'}</td><td>{match.relationshipType ?? '—'}</td><td>{match.relationshipPath?.join(' → ') ?? '—'}</td><td>{match.relationshipExplanation ?? (match.reasons.join(' · ') || 'relationship expansion')}</td></tr>})}</tbody></table></div>
         <p>Cache age: {payload.index.cache_age_ms === null ? 'not built' : `${payload.index.cache_age_ms}ms`} · Last successful refresh: {payload.index.last_successful_refresh ?? 'none recorded'}.</p>
       </>}
     </section>

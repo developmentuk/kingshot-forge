@@ -10,6 +10,12 @@ import {
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PlayerAccount } from '../types/playerAccount'
+import { normalizeTownCenterLevel } from '../services/playerProgressionService'
+
+const REFRESH_STALE_MS = 30 * 60 * 1000
+const REFRESH_THROTTLE_MS = 5 * 60 * 1000
+const refreshInFlight = new Map<string, Promise<void>>()
+const refreshAttemptAt = new Map<string, number>()
 
 type PlayerIdentityContextValue = {
   playerAccount: PlayerAccount | null
@@ -29,7 +35,7 @@ type PlayerIdentityProviderProps = {
 export function PlayerIdentityProvider({
   children,
 }: PlayerIdentityProviderProps) {
-  const { user, loading: authLoading } = useAuth()
+  const { user, session, loading: authLoading } = useAuth()
 
   const [playerAccount, setPlayerAccount] =
     useState<PlayerAccount | null>(null)
@@ -39,7 +45,7 @@ export function PlayerIdentityProvider({
   const [playerIdentityError, setPlayerIdentityError] =
     useState<string | null>(null)
 
-  const refreshPlayerIdentity = useCallback(async () => {
+  const loadPlayerIdentity = useCallback(async () => {
     if (!user) {
       setPlayerAccount(null)
       setPlayerIdentityError(null)
@@ -93,20 +99,51 @@ export function PlayerIdentityProvider({
       return
     }
 
-    setPlayerAccount(
-      data ? (data as PlayerAccount) : null,
-    )
+    const account = data ? { ...(data as PlayerAccount), town_center_level: normalizeTownCenterLevel((data as PlayerAccount).town_center_level, (data as PlayerAccount).level_rendered_detailed, (data as PlayerAccount).level_rendered) } : null
+    setPlayerAccount(account)
 
     setLoadingPlayerAccount(false)
   }, [user])
+
+  const refreshPlayerIdentity = useCallback(async () => {
+    if (!user || !session?.access_token) return loadPlayerIdentity()
+    const existing = refreshInFlight.get(user.id)
+    if (existing) return existing
+    const request = (async () => {
+      setLoadingPlayerAccount(true)
+      setPlayerIdentityError(null)
+      try {
+        const response = await fetch('/api/player/account', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'revalidate' }) })
+        const payload = await response.json().catch(() => null) as { status?: string; message?: string } | null
+        if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'Player data could not be refreshed.')
+        refreshAttemptAt.set(user.id, Date.now())
+      } catch (caught) {
+        setPlayerIdentityError(caught instanceof Error ? `Cached player data is being used. ${caught.message}` : 'Cached player data is being used while refresh is unavailable.')
+      } finally {
+        await loadPlayerIdentity()
+      }
+    })().finally(() => refreshInFlight.delete(user.id))
+    refreshInFlight.set(user.id, request)
+    return request
+  }, [loadPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
     if (authLoading) {
       return
     }
 
-    void refreshPlayerIdentity()
-  }, [authLoading, refreshPlayerIdentity])
+    let cancelled = false
+    async function establish() {
+      if (!user) { await loadPlayerIdentity(); return }
+      const lastRefresh = Date.parse(playerAccount?.last_refreshed_at ?? '')
+      const throttled = Date.now() - (refreshAttemptAt.get(user.id) ?? 0) < REFRESH_THROTTLE_MS
+      const stale = !Number.isFinite(lastRefresh) || Date.now() - lastRefresh > REFRESH_STALE_MS
+      if (!cancelled && session?.access_token && (stale || !refreshAttemptAt.has(user.id)) && !throttled) await refreshPlayerIdentity()
+      else if (!cancelled) await loadPlayerIdentity()
+    }
+    void establish()
+    return () => { cancelled = true }
+  }, [authLoading, loadPlayerIdentity, playerAccount?.last_refreshed_at, refreshPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
     function handlePlayerUpdate() {
