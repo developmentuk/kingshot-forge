@@ -503,3 +503,12 @@ commit, protected route and browser console/network evidence.
 The corrected preview is deployment `dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j` at
 `https://kingshot-forge-qhbttrt5d-clarksim-7474s-projects.vercel.app`, deployed
 from `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf` with Vercel status `READY`.
+
+## REL-001 publication integrity — 20 July 2026
+
+REL-001 established immutable warning identities across validation, staging,
+review, publication certification and audit reconciliation. One source record
+may contain multiple warnings; record status is not warning identity. The
+append-only warning table and identity-set release certification preserve that
+distinction. The existing Buildings run remains `review_required` and
+unpublished; publication must continue to fail if any identity set differs.

@@ -3,13 +3,14 @@ import * as XLSX from 'xlsx'
 import { Link, useSearchParams } from 'react-router-dom'
 import { buildingsContract } from '../../../shared/data-pipeline/buildingsContract'
 import type { DatasetValidationResult } from '../../../shared/data-pipeline/contracts'
+import { withWarningId } from '../../../shared/data-pipeline/warningIdentity'
 import { useAuth } from '../../context/AuthContext'
 
 type SheetRows = Record<string, Record<string, unknown>[]>
 type StagedRecord = { id: string; sheet_name: string; source_row: number; external_key: string; original_values: Record<string, unknown>; editorial_values: Record<string, unknown> | null; issue_state: string; editorial_note: string | null }
 type ImportRun = { id: string; dataset_key: string; file_fingerprint: string; original_filename: string; parser_version: string; contract_version: number; state: string; validation_result: Record<string, unknown>; source_metadata: Record<string, unknown>; created_at: string; updated_at: string }
-type StageResult = { importRunId: string; state: string; stagedCatalog: number; stagedProgression: number; warningRows: number; rejectedRows: number; reused?: boolean }
-type PrerequisiteWarning = { sheet: string; row: number; record_id: string; building_key: string; source_text: string; parsed_name: string | null; required_level: number | null; required_stage: number | null; resolved_building_key: string | null; resolution_confidence: string; unresolved_reason: string }
+type StageResult = { importRunId: string; state: string; stagedCatalog: number; stagedProgression: number; warningRows: number; warningIds?: string[]; rejectedRows: number; reused?: boolean }
+type PrerequisiteWarning = { warning_id: string; sheet: string; row: number; record_id: string; building_key: string; source_text: string; parsed_name: string | null; required_level: number | null; required_stage: number | null; resolved_building_key: string | null; resolution_confidence: string; unresolved_reason: string }
 
 function parseWorkbook(file: File): Promise<{ sheets: SheetRows; names: string[] }> {
   return file.arrayBuffer().then(buffer => {
@@ -40,13 +41,17 @@ function resolvePrerequisites(sheets: SheetRows): { warnings: PrerequisiteWarnin
       const parsed = parsePrerequisite(value)
       const resolved = parsed.parsed_name ? aliases.get(normaliseName(parsed.parsed_name)) ?? null : null
       if (resolved) { mappings += 1; continue }
-      warnings.push({ sheet: 'buildings_import', row: index + 2, record_id: text(row.record_id), building_key: text(row.building_key), ...parsed, resolved_building_key: null, resolution_confidence: 'none', unresolved_reason: parsed.parsed_name ? 'No canonical building_key exists in the supplied catalog.' : 'Could not parse prerequisite name and level.' })
+      warnings.push(withWarningId({ dataset: 'buildings', code: 'unresolved_prerequisite', sheet: 'buildings_import', row: index + 2, record_id: text(row.record_id), building_key: text(row.building_key), ...parsed, resolved_building_key: null, resolution_confidence: 'none', unresolved_reason: parsed.parsed_name ? 'No canonical building_key exists in the supplied catalog.' : 'Could not parse prerequisite name and level.' }))
     }
   }
   return { warnings, mappings }
 }
 
 function authHeaders(accessToken?: string): HeadersInit { return { Accept: 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) } }
+
+function WarningIdentityPanel({ warnings }: { warnings: readonly PrerequisiteWarning[] }) {
+  return warnings.length ? <section className="editorial-admin-card" aria-label="Warning identity reconciliation"><h2>Warning identities</h2><p>Each unresolved prerequisite has one immutable identity, including multiple warnings on the same source record.</p><ul>{warnings.map(warning => <li key={warning.warning_id}><code>{warning.warning_id}</code></li>)}</ul></section> : null
+}
 
 export function EditorialImportManagerPage() {
   const { session } = useAuth()
@@ -73,9 +78,9 @@ export function EditorialImportManagerPage() {
     if (!runId || !session?.access_token) return
     setBusy(true)
     fetch(`/api/data-studio/buildings?runId=${encodeURIComponent(runId)}`, { headers: authHeaders(session.access_token) }).then(async response => {
-      const payload = await response.json() as { status: string; data?: { run: ImportRun; records: StagedRecord[] }; message?: string }
+      const payload = await response.json() as { status: string; data?: { run: ImportRun; records: StagedRecord[]; warnings?: unknown[] }; message?: string }
       if (!response.ok || payload.status !== 'success' || !payload.data) throw new Error(payload.message ?? 'Unable to load the import run.')
-      setRun(payload.data.run); setStagedRecords(payload.data.records); setParsedSheets({ buildings_catalog: payload.data.records.filter(record => record.sheet_name === 'buildings_catalog').map(record => record.original_values), buildings_import: payload.data.records.filter(record => record.sheet_name === 'buildings_import').map(record => record.original_values) }); setFingerprint(payload.data.run.file_fingerprint); setStageResult({ importRunId: payload.data.run.id, state: payload.data.run.state, stagedCatalog: payload.data.records.filter(record => record.sheet_name === 'buildings_catalog').length, stagedProgression: payload.data.records.filter(record => record.sheet_name === 'buildings_import').length, warningRows: payload.data.records.filter(record => record.issue_state === 'warning').length, rejectedRows: payload.data.records.filter(record => record.issue_state === 'rejected').length, reused: true })
+      setRun(payload.data.run); setStagedRecords(payload.data.records); setParsedSheets({ buildings_catalog: payload.data.records.filter(record => record.sheet_name === 'buildings_catalog').map(record => record.original_values), buildings_import: payload.data.records.filter(record => record.sheet_name === 'buildings_import').map(record => record.original_values) }); setFingerprint(payload.data.run.file_fingerprint); setStageResult({ importRunId: payload.data.run.id, state: payload.data.run.state, stagedCatalog: payload.data.records.filter(record => record.sheet_name === 'buildings_catalog').length, stagedProgression: payload.data.records.filter(record => record.sheet_name === 'buildings_import').length, warningRows: payload.data.warnings?.length ?? 0, warningIds: (payload.data.warnings ?? []).map(warning => String((warning as { warning_id?: unknown }).warning_id ?? '')), rejectedRows: payload.data.records.filter(record => record.issue_state === 'rejected').length, reused: true })
     }).catch(value => setError(value instanceof Error ? value.message : 'Unable to load the import run.')).finally(() => setBusy(false))
   }, [searchParams, session?.access_token])
 
@@ -98,7 +103,7 @@ export function EditorialImportManagerPage() {
     if (!file || !result || !fingerprint || blocking.length > 0) return
     setStaging(true); setError('')
     try {
-      const validationResult = { ...result, counts: { ...result.counts, catalogRows: parsedSheets.buildings_catalog?.length ?? 0, progressionRows: parsedSheets.buildings_import?.length ?? 0, totalRows: (parsedSheets.buildings_catalog?.length ?? 0) + (parsedSheets.buildings_import?.length ?? 0), warnings: prerequisiteReview.warnings.length, blockingErrors: blocking.length }, prerequisiteResolution: { mappings: prerequisiteReview.mappings, unresolved: prerequisiteReview.warnings.length, rows: prerequisiteReview.warnings } }
+      const validationResult = { ...result, findings: prerequisiteReview.warnings.map(warning => ({ warning_id: warning.warning_id, severity: 'Warning', code: 'unresolved_prerequisite', message: `Prerequisite ${warning.source_text} could not be mapped to a canonical building_key.`, sheet: warning.sheet, row: warning.row, record_id: warning.record_id, building_key: warning.building_key, source_text: warning.source_text, parsed_name: warning.parsed_name, required_level: warning.required_level, required_stage: warning.required_stage, unresolved_reason: warning.unresolved_reason })), warningIds: prerequisiteReview.warnings.map(warning => warning.warning_id), counts: { ...result.counts, catalogRows: parsedSheets.buildings_catalog?.length ?? 0, progressionRows: parsedSheets.buildings_import?.length ?? 0, totalRows: (parsedSheets.buildings_catalog?.length ?? 0) + (parsedSheets.buildings_import?.length ?? 0), warnings: prerequisiteReview.warnings.length, warningRows: prerequisiteReview.warnings.length, blockingErrors: blocking.length }, prerequisiteResolution: { mappings: prerequisiteReview.mappings, unresolved: prerequisiteReview.warnings.length, rows: prerequisiteReview.warnings } }
       const response = await fetch('/api/data-studio/buildings', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders(session?.access_token) }, body: JSON.stringify({ fileFingerprint: fingerprint, originalFilename: file.name, parserVersion: 'forge-buildings-preflight-v2', validationResult, sourceMetadata: { sizeBytes: file.size, workbookType: 'xlsx', previewReady: true }, prerequisiteResolution: validationResult.prerequisiteResolution, sheets: parsedSheets }) })
       const payload = await response.json() as { status: string; data?: StageResult; message?: string }
       if (!response.ok || payload.status !== 'success' || !payload.data) throw new Error(payload.message ?? 'The import could not be staged.')
@@ -106,7 +111,7 @@ export function EditorialImportManagerPage() {
     } catch (value) { setError(value instanceof Error ? value.message : 'The import could not be staged.') } finally { setStaging(false) }
   }
 
-  return <main className="admin-page editorial-import-page">
+  return <main className="admin-page editorial-import-page"><WarningIdentityPanel warnings={prerequisiteReview.warnings} />
     <section className="admin-page__header"><p className="admin-page__eyebrow">Forge Data Studio</p><h1>Buildings import review</h1><p className="admin-page__intro">Upload, validate, stage and inspect the immutable Buildings import run. Publication is disabled until the owner reviews this evidence and explicitly approves it.</p></section>
     <section className="editorial-admin-card"><div className="editorial-admin-card__heading"><div><p className="editorial-admin-eyebrow">Dataset contract v{buildingsContract.version}</p><h2>Buildings</h2></div><span className="status-badge">{run?.state ?? 'Review required'}</span></div><p>{buildingsContract.description} Accepted formats: XLSX and CSV. Maximum file size: 25 MB.</p><label className="button button--primary" htmlFor="dataset-file">Choose workbook<input id="dataset-file" type="file" accept=".xlsx,.csv" hidden onChange={event => void preview(event.target.files?.[0] ?? null)} /></label>{file && <p role="status">Selected: {file.name} · {(file.size / 1024).toFixed(1)} KB</p>}{busy && <p role="status" aria-live="polite">Loading review evidence…</p>}{error && <div className="error-state" role="alert">{error}</div>}</section>
     {sheetNames.length > 0 && <section className="editorial-admin-card"><h2>Detected sheets</h2><p>{sheetNames.join(' · ')}</p><p>Required: {buildingsContract.acceptedSheets.join(', ')}</p></section>}

@@ -155,7 +155,8 @@
       "required_stage": null,
       "resolved_building_key": null,
       "resolution_confidence": "none",
-      "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+      "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+      "warning_id": "buildings|unresolved_prerequisite|buildings_import|4|town-center:2|town-center|Sawmill Lv. 1|Sawmill|1|"
     },
     {
       "severity": "Warning",
@@ -172,7 +173,8 @@
       "required_stage": null,
       "resolved_building_key": null,
       "resolution_confidence": "none",
-      "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+      "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+      "warning_id": "buildings|unresolved_prerequisite|buildings_import|5|town-center:3|town-center|House 1 Lv. 2|House 1|2|"
     },
     {
       "severity": "Warning",
@@ -189,7 +191,8 @@
       "required_stage": null,
       "resolved_building_key": null,
       "resolution_confidence": "none",
-      "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+      "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+      "warning_id": "buildings|unresolved_prerequisite|buildings_import|6|town-center:4|town-center|Quarry Lv. 3|Quarry|3|"
     },
     {
       "severity": "Warning",
@@ -206,7 +209,8 @@
       "required_stage": null,
       "resolved_building_key": null,
       "resolution_confidence": "none",
-      "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+      "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+      "warning_id": "buildings|unresolved_prerequisite|buildings_import|7|town-center:5|town-center|Hero Hall Lv. 1|Hero Hall|1|"
     },
     {
       "severity": "Warning",
@@ -223,7 +227,8 @@
       "required_stage": null,
       "resolved_building_key": null,
       "resolution_confidence": "none",
-      "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+      "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+      "warning_id": "buildings|unresolved_prerequisite|buildings_import|7|town-center:5|town-center|House 3 Lv. 3|House 3|3|"
     },
     {
       "severity": "Warning",
@@ -240,7 +245,8 @@
       "required_stage": null,
       "resolved_building_key": null,
       "resolution_confidence": "none",
-      "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+      "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+      "warning_id": "buildings|unresolved_prerequisite|buildings_import|8|town-center:6|town-center|Iron Mine Lv. 5|Iron Mine|5|"
     },
     {
       "severity": "Warning",
@@ -257,7 +263,8 @@
       "required_stage": null,
       "resolved_building_key": null,
       "resolution_confidence": "none",
-      "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+      "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+      "warning_id": "buildings|unresolved_prerequisite|buildings_import|9|town-center:7|town-center|Mill Lv. 6|Mill|6|"
     },
     {
       "severity": "Warning",
@@ -273,7 +280,8 @@
       "required_level": 1,
       "required_stage": null,
       "resolution_confidence": "none",
-      "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+      "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+      "warning_id": "buildings|unresolved_prerequisite|buildings_import|143|barracks:1|barracks|Watchtower Lv. 1|Watchtower|1|"
     }
   ],
   "prerequisiteResolution": {
@@ -291,7 +299,8 @@
         "required_stage": null,
         "resolved_building_key": null,
         "resolution_confidence": "none",
-        "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+        "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+        "warning_id": "buildings|unresolved_prerequisite|buildings_import|4|town-center:2|town-center|Sawmill Lv. 1|Sawmill|1|"
       },
       {
         "sheet": "buildings_import",
@@ -304,7 +313,8 @@
         "required_stage": null,
         "resolved_building_key": null,
         "resolution_confidence": "none",
-        "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+        "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+        "warning_id": "buildings|unresolved_prerequisite|buildings_import|5|town-center:3|town-center|House 1 Lv. 2|House 1|2|"
       },
       {
         "sheet": "buildings_import",
@@ -317,7 +327,8 @@
         "required_stage": null,
         "resolved_building_key": null,
         "resolution_confidence": "none",
-        "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+        "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+        "warning_id": "buildings|unresolved_prerequisite|buildings_import|6|town-center:4|town-center|Quarry Lv. 3|Quarry|3|"
       },
       {
         "sheet": "buildings_import",
@@ -330,7 +341,8 @@
         "required_stage": null,
         "resolved_building_key": null,
         "resolution_confidence": "none",
-        "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+        "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+        "warning_id": "buildings|unresolved_prerequisite|buildings_import|7|town-center:5|town-center|Hero Hall Lv. 1|Hero Hall|1|"
       },
       {
         "sheet": "buildings_import",
@@ -343,7 +355,8 @@
         "required_stage": null,
         "resolved_building_key": null,
         "resolution_confidence": "none",
-        "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+        "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+        "warning_id": "buildings|unresolved_prerequisite|buildings_import|7|town-center:5|town-center|House 3 Lv. 3|House 3|3|"
       },
       {
         "sheet": "buildings_import",
@@ -356,7 +369,8 @@
         "required_stage": null,
         "resolved_building_key": null,
         "resolution_confidence": "none",
-        "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+        "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+        "warning_id": "buildings|unresolved_prerequisite|buildings_import|8|town-center:6|town-center|Iron Mine Lv. 5|Iron Mine|5|"
       },
       {
         "sheet": "buildings_import",
@@ -369,7 +383,8 @@
         "required_stage": null,
         "resolved_building_key": null,
         "resolution_confidence": "none",
-        "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+        "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+        "warning_id": "buildings|unresolved_prerequisite|buildings_import|9|town-center:7|town-center|Mill Lv. 6|Mill|6|"
       },
       {
         "sheet": "buildings_import",
@@ -2916,7 +2931,8 @@
         "required_level": 1,
         "required_stage": null,
         "resolution_confidence": "none",
-        "unresolved_reason": "No canonical building_key exists in the supplied catalog."
+        "unresolved_reason": "No canonical building_key exists in the supplied catalog.",
+        "warning_id": "buildings|unresolved_prerequisite|buildings_import|143|barracks:1|barracks|Watchtower Lv. 1|Watchtower|1|"
       },
       {
         "sheet": "buildings_import",
@@ -9615,6 +9631,16 @@
       }
     ]
   },
+  "warningIds": [
+    "buildings|unresolved_prerequisite|buildings_import|4|town-center:2|town-center|Sawmill Lv. 1|Sawmill|1|",
+    "buildings|unresolved_prerequisite|buildings_import|5|town-center:3|town-center|House 1 Lv. 2|House 1|2|",
+    "buildings|unresolved_prerequisite|buildings_import|6|town-center:4|town-center|Quarry Lv. 3|Quarry|3|",
+    "buildings|unresolved_prerequisite|buildings_import|7|town-center:5|town-center|Hero Hall Lv. 1|Hero Hall|1|",
+    "buildings|unresolved_prerequisite|buildings_import|7|town-center:5|town-center|House 3 Lv. 3|House 3|3|",
+    "buildings|unresolved_prerequisite|buildings_import|8|town-center:6|town-center|Iron Mine Lv. 5|Iron Mine|5|",
+    "buildings|unresolved_prerequisite|buildings_import|9|town-center:7|town-center|Mill Lv. 6|Mill|6|",
+    "buildings|unresolved_prerequisite|buildings_import|143|barracks:1|barracks|Watchtower Lv. 1|Watchtower|1|"
+  ],
   "transformations": [],
   "comparison": {
     "newRecords": null,

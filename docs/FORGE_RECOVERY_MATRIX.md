@@ -317,3 +317,14 @@ publication request is reopened.
 The replacement preview is `dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j` at
 `https://kingshot-forge-qhbttrt5d-clarksim-7474s-projects.vercel.app`, exact
 commit `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf`, status `READY`.
+
+## REL-001 publication integrity recovery — 20 July 2026
+
+The eight-warning/seven-record discrepancy was caused by two unresolved
+prerequisites on one progression record being collapsed into one record-level
+warning state. Recovery preserves the existing import run and adds eight
+append-only warning identities linked to it. Reconciliation and certification
+pass by identity; no Buildings projection, publication, relationship/search
+refresh or rollback was created. Any future identity loss, addition or
+duplication must fail the release gate regardless of matching counts. See
+`releases/REL-001-PUBLICATION-INTEGRITY.md`.

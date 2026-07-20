@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { buildingsContract } from '../../shared/data-pipeline/buildingsContract.js'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../../server/database/supabaseAdmin.js'
+import { withWarningId } from '../../shared/data-pipeline/warningIdentity.js'
 
 type SheetRows = Record<string, Record<string, unknown>[]>
 
@@ -30,7 +31,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
       }
       const { data: records, error: recordsError } = await supabase.from('forge_import_records').select('id,import_run_id,sheet_name,source_row,external_key,original_values,editorial_values,issue_state,editorial_note,created_at').eq('import_run_id', run.id).order('sheet_name').order('source_row')
       if (recordsError) throw new Error(`Unable to load staged Buildings records: ${recordsError.message}`)
-      response.status(200).json({ status: 'success', data: { run, records: records ?? [] } })
+      const { data: warnings, error: warningsError } = await supabase.from('forge_import_warnings').select('warning_id,import_run_id,import_record_id,dataset_key,sheet_name,source_row,record_id,building_key,code,severity,message,source_text,parsed_name,required_level,required_stage,occurred_at,details').eq('import_run_id', run.id).order('occurred_at').order('warning_id')
+      if (warningsError) throw new Error(`Unable to load staged warning identities: ${warningsError.message}`)
+      response.status(200).json({ status: 'success', data: { run, records: records ?? [], warnings: warnings ?? [] } })
       return
     }
     if (request.method !== 'POST') {
@@ -76,12 +79,15 @@ export default async function handler(request: VercelRequest, response: VercelRe
         .eq('import_run_id', existing.id)
       if (existingRecordsError) throw new Error(`Unable to read the existing staged run: ${existingRecordsError.message}`)
       const records = existingRecords ?? []
+      const { data: existingWarnings, error: existingWarningsError } = await supabase.from('forge_import_warnings').select('warning_id').eq('import_run_id', existing.id).order('warning_id')
+      if (existingWarningsError) throw new Error(`Unable to read immutable warning identities: ${existingWarningsError.message}`)
       response.status(200).json({ status: 'success', data: {
         importRunId: existing.id,
         state: existing.state,
         stagedCatalog: records.filter(record => record.sheet_name === 'buildings_catalog').length,
         stagedProgression: records.filter(record => record.sheet_name === 'buildings_import').length,
         warningRows: Number((existing.validation_result as { counts?: { warnings?: unknown } } | null)?.counts?.warnings ?? records.filter(record => record.issue_state === 'warning').length),
+        warningIds: (existingWarnings ?? []).map(record => record.warning_id),
         rejectedRows: records.filter(record => record.issue_state === 'rejected').length,
         reused: true,
       } })
@@ -110,9 +116,35 @@ export default async function handler(request: VercelRequest, response: VercelRe
       ...sheets.buildings_catalog.map((values, index) => ({ import_run_id: run.id, sheet_name: 'buildings_catalog', source_row: index + 2, external_key: String(values.building_key ?? ''), original_values: values, issue_state: issueFor('buildings_catalog', index + 2) })),
       ...sheets.buildings_import.map((values, index) => ({ import_run_id: run.id, sheet_name: 'buildings_import', source_row: index + 2, external_key: String(values.record_id ?? ''), original_values: values, issue_state: issueFor('buildings_import', index + 2) })),
     ]
-    const { error: recordsError } = await supabase.from('forge_import_records').insert(records)
+    const { data: insertedRecords, error: recordsError } = await supabase.from('forge_import_records').insert(records).select('id,sheet_name,source_row,external_key')
     if (recordsError) throw new Error(`Unable to stage import records: ${recordsError.message}`)
-    response.status(200).json({ status: 'success', data: { importRunId: run.id, state: run.state, stagedCatalog: sheets.buildings_catalog.length, stagedProgression: sheets.buildings_import.length, warningRows: Number((validationResult.counts as Record<string, unknown> | undefined)?.warnings ?? records.filter(record => record.issue_state === 'warning').length), rejectedRows: records.filter(record => record.issue_state === 'rejected').length, reused: false } })
+    const warningSourceRows = prerequisiteRows.filter(row => row.unresolved_reason).map(row => withWarningId({
+      dataset: 'buildings', code: 'unresolved_prerequisite', sheet: String(row.sheet), row: Number(row.row), record_id: String(row.record_id), building_key: String(row.building_key), source_text: String(row.source_text), parsed_name: row.parsed_name ? String(row.parsed_name) : null, required_level: row.required_level == null ? null : Number(row.required_level), required_stage: row.required_stage == null ? null : Number(row.required_stage), unresolved_reason: String(row.unresolved_reason),
+    }))
+    const warningRecords = warningSourceRows.map(warning => ({
+      warning_id: warning.warning_id,
+      import_run_id: run.id,
+      import_record_id: insertedRecords?.find(record => record.sheet_name === warning.sheet && record.source_row === warning.row && record.external_key === warning.record_id)?.id ?? null,
+      dataset_key: warning.dataset,
+      sheet_name: warning.sheet,
+      source_row: warning.row,
+      record_id: warning.record_id,
+      building_key: warning.building_key,
+      code: warning.code,
+      severity: 'warning',
+      message: `Prerequisite ${warning.source_text} could not be mapped to a canonical building_key.`,
+      source_text: warning.source_text,
+      parsed_name: warning.parsed_name,
+      required_level: warning.required_level,
+      required_stage: warning.required_stage,
+      occurred_at: new Date().toISOString(),
+      details: { unresolved_reason: warning.unresolved_reason },
+    }))
+    if (warningRecords.length) {
+      const { error: warningError } = await supabase.from('forge_import_warnings').insert(warningRecords)
+      if (warningError) throw new Error(`Unable to stage immutable warning identities: ${warningError.message}`)
+    }
+    response.status(200).json({ status: 'success', data: { importRunId: run.id, state: run.state, stagedCatalog: sheets.buildings_catalog.length, stagedProgression: sheets.buildings_import.length, warningRows: warningSourceRows.length, warningIds: warningSourceRows.map(warning => warning.warning_id), rejectedRows: records.filter(record => record.issue_state === 'rejected').length, reused: false } })
   } catch (error) {
     if (error instanceof ForgeAuthenticationError) {
       fail(response, error.statusCode, error.message)

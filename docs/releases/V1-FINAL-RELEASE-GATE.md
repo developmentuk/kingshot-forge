@@ -127,3 +127,18 @@ The corrected preview artifact is deployment
 `dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j`, exact commit
 `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf`, status `READY`. The gate remains
 blocked until an approved owner session reviews it.
+
+## REL-001 publication integrity — 20 July 2026
+
+REL-001 reconciles the eight validation warning identities for import run
+`cc925b58-ac6e-4776-875a-1021067118c4`. Two warnings on `town-center:5` row 7
+had been collapsed into one record-level warning state. The append-only
+`forge_import_warnings` table now stores one identity per warning, and the
+validation, import-run, review, publication-gate and audit certification
+compare identity sets rather than counts. See
+[`REL-001-PUBLICATION-INTEGRITY.md`](REL-001-PUBLICATION-INTEGRITY.md).
+
+REL-001 certification: **PASS** for identity reconciliation. Buildings remain
+unpublished, with no publication version, relationship refresh, search refresh
+or rollback created. The overall Version 1.0 recommendation remains
+**Not Ready** pending the existing owner-authenticated and operational gates.
