@@ -19,3 +19,9 @@ The previous blank protected preview was not accepted because its tested
 hostname did not correspond to deployment
 `dpl_GMV4tBog8kVhUAt598qiQfa9YDsq`; a corrected deployment must be validated by
 its exact deployment ID, commit and protected route.
+
+Corrected preview: `dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j`,
+`https://kingshot-forge-qhbttrt5d-clarksim-7474s-projects.vercel.app`, commit
+`4f60adef84c9ab7e28063658a4e6ec1b8a0186bf`, Vercel status `READY`. The
+available browser session reached Vercel login, so owner visual acceptance is
+still pending an approved authenticated session.

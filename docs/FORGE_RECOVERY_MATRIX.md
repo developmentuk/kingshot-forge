@@ -313,3 +313,7 @@ progression, 710 resolved prerequisite mappings and 8 unresolved warnings.
 Buildings catalog and progression projections remain empty. The owner must
 review the exact protected deployment and warning decisions before any
 publication request is reopened.
+
+The replacement preview is `dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j` at
+`https://kingshot-forge-qhbttrt5d-clarksim-7474s-projects.vercel.app`, exact
+commit `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf`, status `READY`.

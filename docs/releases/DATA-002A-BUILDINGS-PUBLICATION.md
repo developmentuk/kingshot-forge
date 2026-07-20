@@ -40,3 +40,10 @@ The protected preview routes are `/admin/content-studio`, `/admin/imports`,
 Publication controls remain unavailable. The previous blank evidence was
 caused by testing a hostname that did not resolve to the supplied deployment
 ID, not by an HTTP 200 application-health guarantee.
+
+Corrected preview artifact: deployment
+`dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j`, URL
+`https://kingshot-forge-qhbttrt5d-clarksim-7474s-projects.vercel.app`, exact
+deployed commit `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf`, status `READY`.
+The authenticated browser check stopped at Vercel login; owner visual
+acceptance and role/capability checks therefore remain pending owner sign-in.

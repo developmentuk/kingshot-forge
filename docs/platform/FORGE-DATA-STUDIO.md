@@ -31,3 +31,8 @@ progression records, retains 710 resolved prerequisite mappings and exposes 8
 unresolved warnings with source row, record ID, original text, parsed name,
 required level and unresolved reason. Public Buildings projections remain
 empty; review routes are authenticated and publication-disabled.
+
+The replacement protected preview is deployment
+`dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j`, deployed from commit
+`4f60adef84c9ab7e28063658a4e6ec1b8a0186bf` and verified `READY`. Browser
+authentication remains an owner handoff requirement.

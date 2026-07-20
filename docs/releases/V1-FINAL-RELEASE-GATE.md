@@ -122,3 +122,8 @@ prerequisite warnings and no published Buildings rows. This gate remains
 blocked pending owner review of the exact protected deployment, warning
 decisions, field-level diff, responsive Buildings routes and publication/
 rollback summary.
+
+The corrected preview artifact is deployment
+`dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j`, exact commit
+`4f60adef84c9ab7e28063658a4e6ec1b8a0186bf`, status `READY`. The gate remains
+blocked until an approved owner session reviews it.

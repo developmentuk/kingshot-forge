@@ -499,3 +499,7 @@ total, 710 resolved mappings, 8 unresolved warnings, and zero published
 Buildings rows. The previous blank preview is attributed to a deployment
 hostname mismatch; the replacement must be checked by exact deployment ID,
 commit, protected route and browser console/network evidence.
+
+The corrected preview is deployment `dpl_Bo5KoB4FR5DMi68GyVEFXrtsDd1j` at
+`https://kingshot-forge-qhbttrt5d-clarksim-7474s-projects.vercel.app`, deployed
+from `4f60adef84c9ab7e28063658a4e6ec1b8a0186bf` with Vercel status `READY`.
