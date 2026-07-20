@@ -19,8 +19,9 @@ Phase 1 verification passed: the REL-001 migration is applied, the single
 Buildings import run remains `review_required`, 10 catalogue and 587
 progression records are staged, eight warning identities reconcile, and zero
 Buildings rows are published. No approved owner/admin, editorial, ordinary
-player, User A or User B sessions were available, and the exact approval phrase
-`Approve Buildings Publication` was not supplied. Publication was not
+player, User A or User B sessions were available. The owner supplied the exact
+approval phrase `Approve Buildings Publication`, but this branch has no
+supported atomic Buildings publication operation. Publication was not
 attempted. See [`REL-002-FINAL-OWNER-ACCEPTANCE.md`](REL-002-FINAL-OWNER-ACCEPTANCE.md).
 
 ## UX-002 remediation

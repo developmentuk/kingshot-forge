@@ -37,7 +37,9 @@ created.
 
 The protected preview routes are `/admin/content-studio`, `/admin/imports`,
 `/admin/data/buildings`, `/buildings`, and `/buildings/:buildingKey`.
-Publication controls remain unavailable. The previous blank evidence was
+Publication controls remain unavailable. The owner has now supplied the
+publication approval phrase, but the current branch has no supported atomic
+Buildings publication operation, so no mutation was attempted. The previous blank evidence was
 caused by testing a hostname that did not resolve to the supplied deployment
 ID, not by an HTTP 200 application-health guarantee.
 
@@ -52,6 +54,6 @@ acceptance and role/capability checks therefore remain pending owner sign-in.
 
 The REL-001 warning-identity migration is applied. The existing run remains
 `review_required` with 10 catalogue, 587 progression and 8 immutable warning
-identities; published Buildings remain empty. REL-002 could not proceed to
-owner review or publication because approved authenticated role sessions and
-the exact `Approve Buildings Publication` decision were unavailable.
+identities; published Buildings remain empty. The owner supplied
+`Approve Buildings Publication`, but REL-002 stopped before mutation because
+this branch has no supported atomic Buildings publication operation.

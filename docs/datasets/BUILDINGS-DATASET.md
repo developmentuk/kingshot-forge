@@ -16,6 +16,9 @@ validated workbook. The owner preview reports 8 warnings even where two
 warnings share source row 7; the warnings are prerequisite entries, not a
 deduplicated row count.
 
-REL-002 owner acceptance remains pending. The eight warnings must receive
-explicit owner/editor decisions before publication; no placeholder catalogue
-records may be created.
+REL-002 owner acceptance supplied the decision `Approve Buildings
+Publication`, with each warning classified as `Accepted Structured External
+Reference` and dependency status `Deferred Catalogue Dependency`. The current
+branch has no supported atomic Buildings publication operation, so no
+publication write was attempted and no placeholder catalogue records may be
+created.

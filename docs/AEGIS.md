@@ -516,7 +516,8 @@ unpublished; publication must continue to fail if any identity set differs.
 ## REL-002 owner acceptance gate — 20 July 2026
 
 Release-candidate verification and REL-001 migration application passed. Final
-owner-authenticated role sessions and the exact publication approval phrase
-were unavailable, so Buildings remain unpublished and Version 1.0 remains
+owner-authenticated role sessions remain unavailable. The owner supplied the
+publication approval phrase, but this branch has no supported atomic Buildings
+publication operation, so Buildings remain unpublished and Version 1.0 remains
 **Not Ready**. Leaked-password protection remains disabled and accepted only as
 a temporary Free-plan risk; it is not enabled.

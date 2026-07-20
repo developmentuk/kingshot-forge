@@ -332,8 +332,8 @@ duplication must fail the release gate regardless of matching counts. See
 ## REL-002 owner acceptance blocker — 20 July 2026
 
 The REL-001 migration is applied and the existing run still reconciles eight
-warning identities across 10 catalogue and 587 progression records. No
-approved owner/admin, editorial, ordinary-player, User A or User B sessions
-were available for final acceptance, and no exact publication approval phrase
-was supplied. Recovery must stop before publication until those owner actions
-are complete.
+warning identities across 10 catalogue and 587 progression records. The owner
+supplied `Approve Buildings Publication`, but this branch has no supported
+atomic Buildings publication path. Recovery must stop before publication;
+adding the missing publication and warning-decision contracts is outside
+REL-002 scope.
