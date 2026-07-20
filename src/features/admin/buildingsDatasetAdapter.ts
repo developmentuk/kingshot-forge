@@ -13,7 +13,6 @@ import {
 
 import {
   createRowsFromRecords,
-  createSlugId,
   isRecordObject,
   readNumberValue,
   readStringValue,
@@ -21,72 +20,53 @@ import {
   type DatasetAdapter,
 } from "./datasetAdapters";
 
-function getBuildingKey(
-  record: Record<string, unknown>,
-  index: number,
-): string {
-  const key =
-    readStringValue(record.key);
-
-  if (key) {
-    return key;
-  }
-
-  const name =
-    readStringValue(record.name);
-
-  return createSlugId(
-    name ?? "",
-    `building-${index + 1}`,
-  );
-}
-
-function getBuildingRowId(
-  record: Record<string, unknown>,
-  index: number,
-): string {
-  return getBuildingKey(
-    record,
-    index,
-  );
+function getBuildingKey(record: Record<string, unknown>): string | null {
+  return readStringValue(record.building_key);
 }
 
 function createBuildingEditorRecord(
   record: Record<string, unknown>,
-  index: number,
 ): RecordEditorRecord {
-  const key = getBuildingKey(
-    record,
-    index,
-  );
+  const key = getBuildingKey(record);
+  if (!key) throw new Error("Published Buildings record is missing building_key.");
+  const progression = Array.isArray(record.progression) ? record.progression : [];
+  const costs = progression.flatMap((row) => {
+    if (!isRecordObject(row)) return [];
+    return [[
+      readNumberValue(row.stage ?? row.base_level) ?? 0,
+      readNumberValue(row.bread) ?? 0,
+      readNumberValue(row.wood) ?? 0,
+      readNumberValue(row.stone) ?? 0,
+      readNumberValue(row.iron) ?? 0,
+      readNumberValue(row.truegold) ?? 0,
+      readNumberValue(row.upgrade_time_seconds) ?? 0,
+    ]];
+  });
 
   return {
     id: key,
     values: {
       key,
-      name:
-        readStringValue(
-          record.name,
-        ) ?? `Building ${index + 1}`,
+      name: readStringValue(record.building_name) ?? "",
 
       maxLevel:
         readNumberValue(
-          record.max_level,
+          record.standard_max_level,
         ),
 
       source:
         readStringValue(
-          record.source,
+          record.source_url,
         ) ?? "",
 
       note:
         readStringValue(
-          record.note,
+          record.verification_note,
         ) ?? "",
 
       costs:
         toRecordEditorValue(
-          record.costs,
+          costs,
         ),
 
       isActive:
@@ -97,18 +77,16 @@ function createBuildingEditorRecord(
 
       sourceUpdated:
         readStringValue(
-          record.source_updated_at,
+          record.updated_at,
         ),
 
       sourceVerified:
         readStringValue(
-          record.source_verified,
+          record.verification_status,
         ),
 
       sourceAccuracyScore:
-        readNumberValue(
-          record.source_accuracy_score,
-        ),
+        null,
 
       sourceName:
         readStringValue(
@@ -119,6 +97,8 @@ function createBuildingEditorRecord(
         readStringValue(
           record.source_url,
         ),
+
+      progression: toRecordEditorValue(progression),
     },
   };
 }
@@ -130,65 +110,40 @@ export const buildingsDatasetAdapter:
     createBrowserDefinition(
       result: DatasetLoadResult,
     ): DatasetBrowserDefinition {
+      const canonicalRecords = result.records.filter((value): value is Record<string, unknown> => isRecordObject(value) && Boolean(getBuildingKey(value)) && Boolean(readStringValue(value.building_name)));
       const rows =
         createRowsFromRecords(
-          result.records,
-          (
-            building,
-            index,
-          ) => {
-            const key =
-              getBuildingKey(
-                building,
-                index,
-              );
-
-            const name =
-              readStringValue(
-                building.name,
-              ) ??
-              `Building ${
-                index + 1
-              }`;
-
-            const costs =
-              Array.isArray(
-                building.costs,
-              )
-                ? building.costs
-                : [];
+          canonicalRecords,
+          (building) => {
+            const key = getBuildingKey(building);
+            const name = readStringValue(building.building_name);
+            if (!key || !name) throw new Error("Published Buildings record is missing canonical identity fields.");
+            const progression = Array.isArray(building.progression) ? building.progression : [];
 
             return {
-              id: getBuildingRowId(
-                building,
-                index,
-              ),
+              id: key,
 
               values: {
                 name,
                 key,
 
-                maxLevel:
-                  toCellValue(
-                    building.max_level,
-                  ),
+                maxLevel: toCellValue(building.standard_max_level),
 
-                upgradeRows:
-                  costs.length,
+                upgradeRows: progression.length,
 
                 confidence:
                   toCellValue(
-                    building.source_accuracy_score,
+                  building.verification_note,
                   ),
 
                 active:
                   toCellValue(
-                    building.is_active,
+                  building.editorial_status,
                   ),
 
                 sourceUpdated:
                   toCellValue(
-                    building.source_updated_at,
+                  building.updated_at,
                   ),
               },
             };
@@ -267,21 +222,14 @@ export const buildingsDatasetAdapter:
           continue;
         }
 
-        const recordId =
-          getBuildingRowId(
-            value,
-            index,
-          );
+        const recordId = getBuildingKey(value);
 
-        if (
-          recordId !== rowId
-        ) {
+        if (recordId !== rowId) {
           continue;
         }
 
         return createBuildingEditorRecord(
           value,
-          index,
         );
       }
 

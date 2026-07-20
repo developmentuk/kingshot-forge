@@ -532,3 +532,12 @@ hostname. A valid session on an earlier preview is not evidence for the repaired
 deployment. REL-004 completed owner-only Content Studio, audit, rollback and
 role checks on deployment `dpl_J3JPWgMNpA5iX37kEqTPXvkRmUgV`; no authentication
 boundary was bypassed.
+
+## HOTFIX-001 Buildings Admin projection
+
+The Buildings Admin read model is canonical and grouped by `building_key`: 10
+catalogue entities contain 587 nested progression records, while publication
+storage retains 597 records. Placeholder identity generation is prohibited;
+load failures must surface an unavailable/retry state. Buildings edits remain
+draft-only through the editorial workflow, with published and staged data
+server/read-policy protected.

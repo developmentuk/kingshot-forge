@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+
+const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
+const loader = read('server/data-engine/loadPublishedBuildingsDataset.ts')
+const adapter = read('src/features/admin/buildingsDatasetAdapter.ts')
+const publicPage = read('src/pages/BuildingsBrowserPage.tsx')
+const detail = read('src/features/admin/AdminDatasetDetailPage.tsx')
+const schema = read('src/features/admin/recordEditor/buildingsRecordEditorSchema.ts')
+const editor = read('src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx')
+
+assert.match(loader, /progressionByBuilding/)
+assert.match(loader, /progressionCount/)
+assert.match(loader, /totalPublicationRecords/)
+assert.doesNotMatch(loader, /const records = \[\s*\.\.\.\(\(buildings/) 
+assert.doesNotMatch(adapter, /Building \$\{index \+ 1\}/)
+assert.doesNotMatch(adapter, /building-\$\{index \+ 1\}/)
+assert.match(adapter, /record\.building_key/)
+assert.match(adapter, /record\.progression/)
+assert.match(publicPage, /Array\.isArray\(r\.progression\)/)
+assert.match(detail, /No demo or fallback records are being substituted\./)
+assert.match(detail, /Progression records/)
+assert.match(schema, /allowCreate:[\s\S]*?false/)
+assert.match(schema, /allowDelete:[\s\S]*?false/)
+assert.match(schema, /key: "progression"/)
+assert.match(editor, /runEditorialAction<.*?save_draft/s)
+assert.match(editor, /state\.head\.status === "draft"/)
+console.log('Buildings admin projection contract passed.')

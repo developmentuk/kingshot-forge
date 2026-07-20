@@ -39,3 +39,11 @@ authentication remains an owner handoff requirement.
 # REL-003 Content Studio path
 
 The Buildings review screen is manifest-gated. Owner-approved warning decisions are persisted through a server-only RPC, and publication requires exact warning identity equality, a manifest hash, the existing import run, and an idempotency key. Publication and refreshes are audit-linked; rollback is append-only.
+
+## HOTFIX-001 Buildings read model
+
+Data Studio distinguishes catalogue entities from progression storage. The
+Buildings Admin directory must show 10 canonical buildings and per-building
+progression counts; provenance separately reports 587 progression rows and
+597 total publication records. The browser consumes published rows only and
+must not synthesize placeholders when the source is unavailable.

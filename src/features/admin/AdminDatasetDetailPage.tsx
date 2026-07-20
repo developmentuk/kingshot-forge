@@ -118,6 +118,11 @@ function formatFetchedAt(value: string): string {
     : date.toLocaleString();
 }
 
+function getBuildingsProvenance(result: DatasetLoadResult | null): Record<string, unknown> | null {
+  if (!result || !result.metadata || typeof result.metadata.provenance !== "object" || result.metadata.provenance === null) return null;
+  return result.metadata.provenance as Record<string, unknown>;
+}
+
 export function AdminDatasetDetailPage() {
   const { hasPermission, role } = useRole();
   const { datasetId } =
@@ -241,6 +246,7 @@ export function AdminDatasetDetailPage() {
     dataset?.capabilities.browsing &&
     adapter,
   );
+  const buildingsProvenance = getBuildingsProvenance(liveDatasetResult);
 
   useEffect(() => {
     setSelectedRow(null);
@@ -618,11 +624,23 @@ export function AdminDatasetDetailPage() {
           <>
             <dl className="admin-dataset-source-summary">
               <div>
-                <dt>Records loaded</dt>
+                <dt>{datasetId === "buildings" ? "Catalogue records" : "Records loaded"}</dt>
                 <dd>
-                  {liveDatasetResult.recordCount}
+                  {String(datasetId === "buildings" ? (buildingsProvenance?.catalogueCount ?? liveDatasetResult.recordCount) : liveDatasetResult.recordCount)}
                 </dd>
               </div>
+              {datasetId === "buildings" && (
+                <>
+                  <div>
+                    <dt>Progression records</dt>
+                    <dd>{String(buildingsProvenance?.progressionCount ?? "—")}</dd>
+                  </div>
+                  <div>
+                    <dt>Total publication records</dt>
+                    <dd>{String(buildingsProvenance?.totalPublicationRecords ?? "—")}</dd>
+                  </div>
+                </>
+              )}
               <div>
                 <dt>Source status</dt>
                 <dd>Available</dd>

@@ -299,6 +299,13 @@ export const buildingsRecordEditorSchema:
         order:
           30,
       },
+
+      {
+        id: "published-progression",
+        title: "Published progression",
+        description: "Published progression remains read-only here. Save changes through an editorial draft.",
+        order: 40,
+      },
     ],
 
     fields: [
@@ -498,6 +505,16 @@ export const buildingsRecordEditorSchema:
           validate:
             validateUpgradeCosts,
         },
+      },
+
+      {
+        key: "progression",
+        label: "Associated progression records",
+        type: "readonly",
+        section: "published-progression",
+        order: 10,
+        readOnly: true,
+        formatValue: (value) => JSON.stringify(value, null, 2),
       },
     ],
 

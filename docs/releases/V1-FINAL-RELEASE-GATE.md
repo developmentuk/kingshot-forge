@@ -170,3 +170,11 @@ Operations Centre, User Management, Render Engine/Calibration Lab, Personal
 Progression, rollback-preview, responsive and console/network checks.
 Recommendation: **Ready for Owner Production Approval**. Production promotion
 remains a separate owner action and was not performed.
+
+## HOTFIX-001 gate update
+
+The Buildings Admin projection correction is required before the next
+production promotion. The protected-preview gate must confirm 10 directory
+entities, 587 nested progression rows, 597 publication storage records,
+canonical editor identity, draft-only saves, no staged leakage and ordinary
+player denial. Production remains unchanged until those checks pass.

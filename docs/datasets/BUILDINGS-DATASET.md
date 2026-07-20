@@ -31,3 +31,12 @@ projection publicly: 10 catalogue records and 587 progression records. The
 existing import run and eight structured external prerequisite decisions remain
 unchanged; Content Studio now reads queue timestamps from canonical
 `requested_at`.
+
+## HOTFIX-001 Admin projection correction
+
+The Admin Buildings page now consumes a grouped published projection: 10
+catalogue rows, each carrying its associated progression, with 587 progression
+rows represented in total. The 597 publication records remain a storage
+count, not a directory-row count. Placeholder Building names/keys are not
+generated. Editor views expose the canonical progression read-only and save
+only through editorial draft actions.
