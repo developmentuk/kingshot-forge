@@ -24,3 +24,10 @@ deployment ID `dpl_GMV4tBog8kVhUAt598qiQfa9YDsq` resolves to
 The corrected import surface now loads authenticated import-run detail,
 preserves `review_required` as the initial state, displays the eight
 unresolved prerequisite records and keeps publication disabled during review.
+
+The owner review run is `cc925b58-ac6e-4776-875a-1021067118c4` in project
+`hrvdhjscwitqpwjhnjkm`, state `review_required`. It stages 10 catalog and 587
+progression records, retains 710 resolved prerequisite mappings and exposes 8
+unresolved warnings with source row, record ID, original text, parsed name,
+required level and unresolved reason. Public Buildings projections remain
+empty; review routes are authenticated and publication-disabled.

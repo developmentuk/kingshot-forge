@@ -492,3 +492,10 @@ The owner returned DATA-002A for corrections. The corrected workflow records
 `review_required` import runs, exposes authenticated staged record detail and
 the eight unresolved prerequisite warnings, and keeps publication disabled
 until a later explicit owner decision. No publication has occurred.
+
+The recovery evidence is import run `cc925b58-ac6e-4776-875a-1021067118c4` in
+Supabase project `hrvdhjscwitqpwjhnjkm`: 10 catalog, 587 progression, 597
+total, 710 resolved mappings, 8 unresolved warnings, and zero published
+Buildings rows. The previous blank preview is attributed to a deployment
+hostname mismatch; the replacement must be checked by exact deployment ID,
+commit, protected route and browser console/network evidence.

@@ -306,3 +306,10 @@ not correspond to deployment `dpl_GMV4tBog8kVhUAt598qiQfa9YDsq`. Recovery now
 requires the corrected protected preview, authenticated staging of the
 unchanged Buildings workbook, visible prerequisite review and owner approval;
 publication remains prohibited during correction.
+
+The corrected recovery evidence now exists in Supabase as run
+`cc925b58-ac6e-4776-875a-1021067118c4` (`review_required`): 10 catalog, 587
+progression, 710 resolved prerequisite mappings and 8 unresolved warnings.
+Buildings catalog and progression projections remain empty. The owner must
+review the exact protected deployment and warning decisions before any
+publication request is reopened.

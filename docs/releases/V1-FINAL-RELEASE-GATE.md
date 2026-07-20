@@ -115,3 +115,10 @@ staging mutation or publication existed. The requested deployment ID was
 verified as READY, but the previously tested hostname was a different
 deployment URL. A corrected preview with authenticated import-run detail and
 publication-disabled Buildings review is required before this gate can advance.
+
+The recovery run is now `cc925b58-ac6e-4776-875a-1021067118c4` in Supabase
+project `hrvdhjscwitqpwjhnjkm`, with 10 catalog, 587 progression, 8 unresolved
+prerequisite warnings and no published Buildings rows. This gate remains
+blocked pending owner review of the exact protected deployment, warning
+decisions, field-level diff, responsive Buildings routes and publication/
+rollback summary.

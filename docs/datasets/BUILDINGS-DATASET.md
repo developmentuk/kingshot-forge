@@ -9,3 +9,9 @@ The 20 July 2026 owner workbook `KSForge_Buildings_Import_Ready_200726.xlsx` is 
 Generated reports: `artifacts/buildings-preflight.json`, `artifacts/buildings-preflight-summary.md`, `artifacts/buildings-validation-errors.csv`, `artifacts/buildings-validation-warnings.csv`, `artifacts/buildings-unresolved-prerequisites.csv` and `artifacts/buildings-change-preview.csv`. Live comparison found an empty Buildings baseline (0 catalog/progression rows), so all 597 workbook data records are new and no missing-existing records were identified. Staging remains pending an authenticated Forge actor; publication remains blocked pending owner approval.
 
 DATA-002A correction work keeps the workbook unchanged and adds an owner-visible staged review surface for the 10 catalog and 587 progression records. The eight unresolved prerequisite warnings remain explicit and unmapped until an owner or editor records a decision.
+
+The authenticated recovery run is `cc925b58-ac6e-4776-875a-1021067118c4` and
+remains `review_required`. Its source fingerprint and filename match the
+validated workbook. The owner preview reports 8 warnings even where two
+warnings share source row 7; the warnings are prerequisite entries, not a
+deduplicated row count.

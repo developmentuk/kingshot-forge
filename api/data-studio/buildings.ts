@@ -68,7 +68,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     })
     if (contractError) throw new Error(`Unable to register the Buildings contract: ${contractError.message}`)
 
-    const { data: existing } = await supabase.from('forge_import_runs').select('id, state').eq('dataset_key', 'buildings').eq('file_fingerprint', fingerprint).maybeSingle()
+    const { data: existing } = await supabase.from('forge_import_runs').select('id, state, validation_result').eq('dataset_key', 'buildings').eq('file_fingerprint', fingerprint).maybeSingle()
     if (existing) {
       const { data: existingRecords, error: existingRecordsError } = await supabase
         .from('forge_import_records')
@@ -81,7 +81,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         state: existing.state,
         stagedCatalog: records.filter(record => record.sheet_name === 'buildings_catalog').length,
         stagedProgression: records.filter(record => record.sheet_name === 'buildings_import').length,
-        warningRows: records.filter(record => record.issue_state === 'warning').length,
+        warningRows: Number((existing.validation_result as { counts?: { warnings?: unknown } } | null)?.counts?.warnings ?? records.filter(record => record.issue_state === 'warning').length),
         rejectedRows: records.filter(record => record.issue_state === 'rejected').length,
         reused: true,
       } })
@@ -112,7 +112,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     ]
     const { error: recordsError } = await supabase.from('forge_import_records').insert(records)
     if (recordsError) throw new Error(`Unable to stage import records: ${recordsError.message}`)
-    response.status(200).json({ status: 'success', data: { importRunId: run.id, state: run.state, stagedCatalog: sheets.buildings_catalog.length, stagedProgression: sheets.buildings_import.length, warningRows: records.filter(record => record.issue_state === 'warning').length, rejectedRows: records.filter(record => record.issue_state === 'rejected').length, reused: false } })
+    response.status(200).json({ status: 'success', data: { importRunId: run.id, state: run.state, stagedCatalog: sheets.buildings_catalog.length, stagedProgression: sheets.buildings_import.length, warningRows: Number((validationResult.counts as Record<string, unknown> | undefined)?.warnings ?? records.filter(record => record.issue_state === 'warning').length), rejectedRows: records.filter(record => record.issue_state === 'rejected').length, reused: false } })
   } catch (error) {
     if (error instanceof ForgeAuthenticationError) {
       fail(response, error.statusCode, error.message)
