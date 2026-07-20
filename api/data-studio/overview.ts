@@ -23,7 +23,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const supabase = getSupabaseAdmin()
     const [runsResult, queueResult] = await Promise.all([
       supabase.from('forge_import_runs').select('id,dataset_key,state,original_filename,validation_result,created_at,updated_at').eq('uploader_id', actor.userId).order('created_at', { ascending: false }).limit(25),
-      supabase.from('publication_queue').select('id,dataset_id,record_id,status,created_at,updated_at').order('created_at', { ascending: false }).limit(25),
+      supabase.from('publication_queue').select('id,dataset_id,record_id,status,requested_at,last_attempt_at,completed_at,cancelled_at').order('requested_at', { ascending: false }).limit(25),
     ])
     if (runsResult.error) throw new Error(`Unable to load import analytics: ${runsResult.error.message}`)
     if (queueResult.error) throw new Error(`Unable to load publication queue: ${queueResult.error.message}`)
