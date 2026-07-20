@@ -8,6 +8,7 @@ import { AuthProvider } from './context/AuthContext'
 import { RoleProvider } from './context/RoleContext'
 import { PlayerIdentityProvider } from './context/PlayerIdentityContext'
 import { FavouritesProvider } from './context/FavouritesContext'
+import AnalyticsRuntime from './components/AnalyticsRuntime'
 
 import './index.css'
 import './styles/kingshot-chat-calibration.css'
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
+        <AnalyticsRuntime />
         <RoleProvider>
           <PlayerIdentityProvider>
             <FavouritesProvider>

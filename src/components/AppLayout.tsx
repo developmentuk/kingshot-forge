@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import AccountMenu from './AccountMenu'
 import WorkspaceSwitcher from './WorkspaceSwitcher'
@@ -8,6 +8,7 @@ import { useRole } from '../context/RoleContext'
 import { getWorkspace, workspaceForPath, type WorkspaceNavItem } from '../navigation/workspaceRegistry'
 import { RELEASE_DISPLAY, SHORT_COMMIT_SHA } from '../config/release'
 import { SearchExperience } from '../features/search/SearchExperience'
+import { track, trackPageView } from '../platform/analytics/analytics'
 
 function NavigationLink({ item, onNavigate }: { item: WorkspaceNavItem; onNavigate?: () => void }) {
   const content = <><span className="app-navigation__icon" aria-hidden="true">{item.icon}</span><span>{item.label}</span>{item.status && <small className="navigation-status">{item.status}</small>}</>
@@ -42,10 +43,13 @@ function AppLayout() {
   const { user } = useAuth()
   const { hasPermission, loadingRole } = useRole()
   const location = useLocation()
+  const previousPath = useRef<string | undefined>(undefined)
   const workspace = getWorkspace(workspaceForPath(location.pathname))
   const visibleGroups = workspace.groups.map((group) => ({ ...group, items: group.items.filter((item) => !item.permission || hasPermission(item.permission)) })).filter((group) => group.items.length > 0)
 
   useEffect(() => { setNavigationOpen(false) }, [location.pathname])
+  useEffect(() => { trackPageView(location.pathname, previousPath.current); previousPath.current = location.pathname }, [location.pathname])
+  useEffect(() => { track('search_opened') }, [searchOpen])
   useEffect(() => { document.body.style.overflow = navigationOpen ? 'hidden' : ''; return () => { document.body.style.overflow = '' } }, [navigationOpen])
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {

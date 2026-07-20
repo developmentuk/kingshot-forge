@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import './search.css'
 import { resolveSearchDestination } from './searchDestination'
+import { track } from '../../platform/analytics/analytics'
 
 type SearchRecord = {
   id: string
@@ -50,7 +51,7 @@ async function readSearchResponse(response: Response): Promise<SearchApiBody> {
     throw new Error(response.status === 401 || response.status === 403 ? 'Search requires an active Forge session.' : 'Search is temporarily unavailable. Please try again shortly.')
   }
   const body = await response.json() as SearchApiBody
-  if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Search requires an active Forge session.' : 'Search is temporarily unavailable. Please try again shortly.')
+  if (!response.ok) { track('api_error', { endpoint_group: 'search', status: response.status }); throw new Error(response.status === 401 || response.status === 403 ? 'Search requires an active Forge session.' : 'Search is temporarily unavailable. Please try again shortly.') }
   if (body.status !== 'success' || !body.data) throw new Error(body.error?.message ?? 'Search is temporarily unavailable. Please try again shortly.')
   return body
 }
@@ -72,7 +73,7 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
   const didNavigateRef = useRef(false)
   const shortcut = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform) ? '⌘ K' : 'Ctrl K'
   const chooseSearch = useCallback((value: string) => { setQuery(value); setRecent((current) => { const next = [value, ...current.filter((item) => item !== value)].slice(0, 8); localStorage.setItem(RECENT_KEY, JSON.stringify(next)); return next }) }, [])
-  const openResult = useCallback((record: SearchRecord) => { const destination = resolveSearchDestination(record); if (!destination) return; didNavigateRef.current = true; chooseSearch(query.trim()); navigate(destination); onClose?.() }, [chooseSearch, navigate, onClose, query])
+  const openResult = useCallback((record: SearchRecord) => { const destination = resolveSearchDestination(record); if (!destination) return; track('search_result_clicked', { dataset: record.dataset }); didNavigateRef.current = true; chooseSearch(query.trim()); navigate(destination); onClose?.() }, [chooseSearch, navigate, onClose, query])
 
   useEffect(() => {
     if (!open || embedded) return
@@ -100,6 +101,8 @@ export function SearchExperience({ open = true, onClose, embedded = false, initi
         const response = await fetch(`/api/search?${params}` , { signal: controller.signal, headers: { Accept: 'application/json' } })
         const body = await readSearchResponse(response)
         setResults(body.data ?? null)
+        track('search_query', { query_length: query.trim().length, result_count: body.data?.meta.resultCount ?? 0, latency_ms: body.data?.meta.executionTimeMs ?? 0 })
+        if ((body.data?.meta.resultCount ?? 0) === 0) track('zero_result_search', { query_length: query.trim().length })
         setSelectedIndex(-1)
       } catch (caught) { if (!(caught instanceof DOMException && caught.name === 'AbortError')) { setResults(null); setError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable. Please try again shortly.') } } finally { setLoading(false) }
     }, query.trim() ? 160 : 0)

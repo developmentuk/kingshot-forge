@@ -157,6 +157,10 @@ or rollback created. The overall Version 1.0 recommendation remains
 
 Buildings publication is now certified for publication version 1: 10 catalogue rows, 587 progression rows, 8 reconciled warning IDs, 4 successful refresh stages, and immutable audit evidence. The publication RPC remains service-role-only and manifest-hash gated. Version 1 has rollback preview support but no prior publication to restore. Final Version 1 recommendation remains subject to the standard authenticated browser/console acceptance checks.
 
+## REL-005 observability foundation
+
+REL-005 is implemented locally as a post-launch observability foundation. It adds privacy-filtered GA4 and Forge analytics, server-only Supabase telemetry persistence, aggregate Admin Analytics reporting, global client error capture and operational documentation. Exact-commit preview deployment, live GA4 verification, migration application and owner review remain required before this sprint can be production-certified.
+
 ## REL-004 final browser acceptance — 20 July 2026
 
 REL-004 deployed repaired commit `1144aba77d6ab544a68719a28e563e5acceb58c9`

@@ -1,1 +1,11 @@
 @import "./platform/design-system/index.css";
+
+.analytics-tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0 1.5rem; }
+.analytics-tabs a { padding:.55rem .8rem; border:1px solid var(--forge-border, #334155); border-radius:.5rem; color:inherit; text-decoration:none; }
+.analytics-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1rem; }
+.analytics-panel { background:var(--forge-surface, #111827); border:1px solid var(--forge-border, #334155); border-radius:.75rem; padding:1rem; margin-bottom:1rem; }
+.analytics-panel h2 { margin-top:0; font-size:1rem; }
+.analytics-breakdown { list-style:none; padding:0; margin:0; }
+.analytics-breakdown li { display:flex; justify-content:space-between; gap:1rem; padding:.5rem 0; border-bottom:1px solid color-mix(in srgb, currentColor 15%, transparent); }
+.analytics-panel dl { display:grid; gap:.75rem; }
+.analytics-panel dl div { display:flex; justify-content:space-between; }

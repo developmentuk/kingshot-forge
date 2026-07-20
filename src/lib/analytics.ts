@@ -18,11 +18,7 @@ export type HeroSkillAnalyticsEvent = (typeof HERO_SKILL_ANALYTICS_EVENTS)[numbe
 
 declare global {
   interface Window {
-    gtag?: (
-      command: 'event',
-      eventName: string,
-      parameters?: Readonly<Record<string, string | number | boolean>>,
-    ) => void
+    gtag?: (command: 'js' | 'config' | 'event', eventName: string | Date, parameters?: Readonly<Record<string, string | number | boolean>>) => void
   }
 }
 

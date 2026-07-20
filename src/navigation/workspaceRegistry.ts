@@ -91,6 +91,7 @@ const moderationGroups = [
 
 const operationsGroups = [
   { title: 'Overview', items: [{ label: 'Operations dashboard', shortLabel: 'Overview', icon: '🛠️', path: '/operations' }] },
+  { title: 'Observability', items: [{ label: 'Analytics', shortLabel: 'Analytics', icon: '📊', path: '/admin/analytics', permission: 'cms.view' as ForgePermission }] },
   { title: 'Content operations', items: [
     { label: 'Content Studio', shortLabel: 'Studio', icon: '🧩', path: '/admin/content-studio', permission: 'cms.view' as ForgePermission },
     { label: 'Datasets', shortLabel: 'Data', icon: '🗄️', path: '/admin/datasets', permission: 'cms.view' as ForgePermission },

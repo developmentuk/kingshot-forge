@@ -17,7 +17,7 @@ const FORBIDDEN_ANALYTICS_KEY = /(alias|audit|character|evidence|forge|identifie
 
 declare global {
   interface Window {
-    gtag?: (command: "event", name: string, parameters?: Readonly<Record<string, string | number | boolean>>) => void
+    gtag?: (command: 'js' | 'config' | 'event', name: string | Date, parameters?: Readonly<Record<string, string | number | boolean>>) => void
   }
 }
 

@@ -34,6 +34,11 @@ function ReleaseNotesPage() {
         </div>
       </article>
 
+      <article className="release-entry">
+        <div className="release-entry__heading"><div><span className="release-entry__badge">Post-launch sprint</span><h2>REL-005 — Production Observability</h2><p>Privacy-safe analytics and operational insight foundation</p></div></div>
+        <p>Forge now has reusable GA4 route tracking, anonymous product events, search intelligence, error signals and protected Admin Analytics reporting.</p>
+      </article>
+
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>

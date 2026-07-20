@@ -44,6 +44,11 @@ export function AdminDashboardPage() {
       </section>
 
       <section className="admin-dashboard-grid">
+        <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">📊</span>
+          <div><h2>Analytics</h2><p>Understand usage, search intelligence, performance signals and operational failures.</p></div>
+          <Link to="/admin/analytics" className="button button--primary">Open analytics</Link>
+        </article>
           <article className="admin-dashboard-card">
           <span className="admin-dashboard-card__icon">🗄️</span>
           <div>

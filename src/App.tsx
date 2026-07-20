@@ -62,6 +62,7 @@ import { GiftRedemptionOperationsPage } from "./features/admin/GiftRedemptionOpe
 import { RenderEngineCalibrationPage } from "./features/admin/RenderEngineCalibrationPage";
 import { EditorialImportManagerPage } from "./features/admin/EditorialImportManagerPage";
 import { EditorialOperationsPage } from "./features/admin/editorial/EditorialOperationsPage";
+import { AnalyticsPage } from "./features/admin/AnalyticsPage";
 import { ForgeContentStudioPage } from "./features/admin/ForgeContentStudioPage";
 import BuildingsBrowserPage from "./pages/BuildingsBrowserPage";
 import WorkspaceRoute from "./components/WorkspaceRoute";
@@ -139,6 +140,7 @@ function App() {
         <Route path="moderation/reports" element={<WorkspaceRoute workspaceId="moderation"><OperationsStatusPage title="Reports" /></WorkspaceRoute>} />
 
         <Route path="admin" element={<ProtectedRoute permission="cms.view"><AdminDashboardPage /></ProtectedRoute>} />
+        <Route path="admin/analytics" element={<ProtectedRoute permission="cms.view"><AnalyticsPage /></ProtectedRoute>} />
         <Route path="admin/content-studio" element={<ProtectedRoute permission="cms.view"><ForgeContentStudioPage /></ProtectedRoute>} />
         <Route path="admin/datasets" element={<ProtectedRoute permission="cms.view"><AdminDatasetsPage /></ProtectedRoute>} />
         <Route path="admin/data/:datasetId" element={<ProtectedRoute permission="cms.view"><AdminDatasetDetailPage /></ProtectedRoute>} />

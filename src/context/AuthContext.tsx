@@ -12,6 +12,7 @@ import type {
   User,
 } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { track } from '../platform/analytics/analytics'
 
 type AuthContextValue = {
   session: Session | null
@@ -76,6 +77,8 @@ export function AuthProvider({
 
         setSession(nextSession)
         setLoading(false)
+        if (nextSession && _event === 'SIGNED_IN') track('login')
+        if (_event === 'SIGNED_OUT') track('logout')
       },
     )
 
