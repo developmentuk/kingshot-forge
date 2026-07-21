@@ -40,7 +40,7 @@ function publicRecord(row: Record<string, unknown>, counts = emptyReactionCounts
 async function actor(request: VercelRequest): Promise<ForgeActor> { return requireForgeActor(request) }
 async function moderator(request: VercelRequest) {
   const currentActor = await actor(request)
-  if (!currentActor.capabilities.includes('moderation.manage')) throw Object.assign(new Error('Moderator access is required.'), { statusCode: 403 })
+  if (!currentActor.capabilities.includes('community_art.moderate')) throw Object.assign(new Error('Community Art moderation capability is required.'), { statusCode: 403 })
   return currentActor
 }
 const columns = 'id,title,description,category,tags,artwork_text,raw_source_text,raw_source_sha256,raw_source_byte_length,normalised_text,approved_copy_payload,rendered_preview_payload,compatibility_profile,repair_operations,source_hash,approved_payload_hash,attribution_name,status,compatibility_status,character_count,line_count,created_at,moderated_at,published_at,submitter_feedback'

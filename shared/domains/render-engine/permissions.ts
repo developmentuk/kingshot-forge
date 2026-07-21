@@ -1,13 +1,11 @@
-export type RenderEngineCapability = 'render_engine.inspect' | 'render_engine.calibrate' | 'render_engine.queue.read' | 'render_engine.moderate' | 'render_engine.raw.read' | 'render_engine.calibration.write'
+export type RenderEngineCapability = 'render_engine.view' | 'render_engine.inspect' | 'render_engine.calibrate' | 'render_engine.manage_profiles' | 'community_art.moderate' | 'community_art.approve'
 export type RenderEngineActor = 'anonymous' | 'player' | 'verified_player' | 'contributor' | 'moderator' | 'administrator' | 'owner'
 
-export const RENDER_ENGINE_CAPABILITY_MATRIX: Record<RenderEngineCapability, RenderEngineActor[]> = {
-  'render_engine.inspect': ['moderator', 'administrator', 'owner'],
-  'render_engine.calibrate': ['administrator', 'owner'],
-  'render_engine.queue.read': ['moderator', 'administrator', 'owner'],
-  'render_engine.moderate': ['moderator', 'administrator', 'owner'],
-  'render_engine.raw.read': ['moderator', 'administrator', 'owner'],
-  'render_engine.calibration.write': ['administrator', 'owner'],
+export const RENDER_ENGINE_ROLE_CAPABILITIES: Record<Exclude<RenderEngineActor, 'anonymous' | 'player' | 'verified_player' | 'contributor'>, RenderEngineCapability[]> = {
+  moderator: ['render_engine.view', 'render_engine.inspect', 'community_art.moderate', 'community_art.approve'],
+  administrator: ['render_engine.view', 'render_engine.inspect', 'render_engine.calibrate', 'render_engine.manage_profiles', 'community_art.moderate', 'community_art.approve'],
+  owner: ['render_engine.view', 'render_engine.inspect', 'render_engine.calibrate', 'render_engine.manage_profiles', 'community_art.moderate', 'community_art.approve'],
 }
 
-export function canUseRenderEngine(actor: RenderEngineActor, capability: RenderEngineCapability): boolean { return RENDER_ENGINE_CAPABILITY_MATRIX[capability].includes(actor) }
+export const RENDER_ENGINE_CAPABILITIES = Object.keys(RENDER_ENGINE_ROLE_CAPABILITIES.owner) as RenderEngineCapability[]
+export function canUseRenderEngine(actor: RenderEngineActor, capability: RenderEngineCapability): boolean { return actor in RENDER_ENGINE_ROLE_CAPABILITIES && RENDER_ENGINE_ROLE_CAPABILITIES[actor as keyof typeof RENDER_ENGINE_ROLE_CAPABILITIES].includes(capability) }

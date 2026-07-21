@@ -4,6 +4,7 @@ import { analyseArtworkDetailed, cloneCalibration, DEFAULT_CALIBRATION, DEVICE_P
 import type { CalibrationConfiguration, DeviceProfile, DeviceProfileId, DeviceProfileOverrides, GlyphCalibration, GlyphFamily, SavedCalibrationProfile } from '../../render-engine'
 import { analyseText, repairText, RENDER_PROFILES, type RenderProfile } from '../../../shared/domains/art-studio/rendering'
 import { CANONICAL_RENDER_FIXTURES, getCanonicalFixture } from '../../render-engine/fixtures'
+import { useRole } from '../../context/RoleContext'
 import './renderEngineCalibration.css'
 
 const FAMILIES: GlyphFamily[] = ['space', 'ascii', 'box-drawing', 'unicode', 'emoji', 'pixel-circles', 'hearts', 'decorative-symbols']
@@ -26,6 +27,8 @@ function ZoomPanViewport({ children, zoom, pan, setZoom, setPan, label, classNam
 }
 
 export function RenderEngineCalibrationPage() {
+  const { hasPermission } = useRole()
+  const canCalibrate = hasPermission('render_engine.calibrate')
   const [fixtureId, setFixtureId] = useState(CANONICAL_RENDER_FIXTURES[0].id)
   const [benchmarkId, setBenchmarkId] = useState(RENDER_BENCHMARKS[0].id)
   const [deviceId, setDeviceId] = useState<DeviceProfileId>('android-default')
@@ -103,7 +106,7 @@ export function RenderEngineCalibrationPage() {
 
   const previewClasses = [`render-engine-lab__preview-surface--${background}`, showGrid ? 'render-engine-lab__preview-surface--grid' : '', showGuides ? 'render-engine-lab__preview-surface--guides' : ''].filter(Boolean).join(' ')
   const workspaceClasses = `render-engine-lab__workspace render-engine-lab__workspace--${comparisonMode} ${focusPreview ? 'render-engine-lab__workspace--focus' : ''}`
-  const calibrationControlsDisabled = !artwork || familyCount === 0
+  const calibrationControlsDisabled = !artwork || familyCount === 0 || !canCalibrate
   const benchmarkAvailability = getBenchmarkAvailability(benchmark)
 
   return <main className={`admin-page render-engine-lab ${focusPreview ? 'render-engine-lab--focus' : ''}`}>
