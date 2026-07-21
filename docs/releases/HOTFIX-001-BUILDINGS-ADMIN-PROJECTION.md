@@ -22,6 +22,16 @@ No published rows, import runs, or publication versions were changed. The
 Media Library and Building image control remain planned Version 1.1 work; no
 direct image URL field is introduced.
 
+## HOTFIX-001C base-state representation
+
+The canonical Town Center projection contains 71 records: 30 normal upgrade
+levels, one normal level-0 base state, four pre-Truegold rows and 36 Truegold
+stages. Record `town-center:0` is a valid base state with no costs,
+requirements or power and is not an editable upgrade level. The editor now
+reports canonical, upgrade, base-state and Truegold-stage counts explicitly,
+shows the base state in a read-only section, and keeps positive-integer
+validation limited to upgrade rows.
+
 ## Status
 
 Implemented locally on 20 July 2026. This hotfix is protected-preview-only;

@@ -48,3 +48,9 @@ and overlays only explicit values from a real draft; a missing draft is not an
 empty editable record. Standard cost levels map from `base_level`; Truegold
 uses its explicit `truegold_tier`/`stage` fields and is not coerced into the
 standard level column. Published progression is displayed read-only.
+
+Town Center count semantics are explicit: 71 canonical progression records,
+70 upgrade rows, 1 base-state record (`town-center:0`) and 36 Truegold stages.
+The base state is displayed separately and is not coerced into the positive
+whole-number upgrade grid. Other Buildings retain their canonical record and
+upgrade-row counts.

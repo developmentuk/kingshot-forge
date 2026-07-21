@@ -19,6 +19,10 @@ import {
   toCellValue,
   type DatasetAdapter,
 } from "./datasetAdapters";
+import {
+  classifyBuildingProgressionRow,
+  getBuildingProgressionCounts,
+} from "./buildingsProgressionSemantics";
 
 function getBuildingKey(record: Record<string, unknown>): string | null {
   return readStringValue(record.building_key);
@@ -30,8 +34,11 @@ function createBuildingEditorRecord(
   const key = getBuildingKey(record);
   if (!key) throw new Error("Published Buildings record is missing building_key.");
   const progression = Array.isArray(record.progression) ? record.progression : [];
+  const progressionRows = progression.filter(isRecordObject);
+  const progressionCounts = getBuildingProgressionCounts(progressionRows);
   const costs = progression.flatMap((row) => {
     if (!isRecordObject(row)) return [];
+    if (classifyBuildingProgressionRow(row) === "base-state") return [];
     const standardLevel = readNumberValue(row.base_level);
     if (standardLevel === null || !Number.isInteger(standardLevel) || standardLevel < 1) return [];
     return [[
@@ -101,6 +108,11 @@ function createBuildingEditorRecord(
         ),
 
       progression: toRecordEditorValue(progression),
+      canonicalRecordCount: progressionCounts.canonicalRecordCount,
+      upgradeRowCount: progressionCounts.upgradeRowCount,
+      baseStateCount: progressionCounts.baseStateCount,
+      truegoldStageCount: progressionCounts.truegoldStageCount,
+      baseState: toRecordEditorValue(progressionCounts.baseState),
     },
   };
 }
@@ -121,6 +133,8 @@ export const buildingsDatasetAdapter:
             const name = readStringValue(building.building_name);
             if (!key || !name) throw new Error("Published Buildings record is missing canonical identity fields.");
             const progression = Array.isArray(building.progression) ? building.progression : [];
+            const progressionRows = progression.filter(isRecordObject);
+            const progressionCounts = getBuildingProgressionCounts(progressionRows);
 
             return {
               id: key,
@@ -131,7 +145,10 @@ export const buildingsDatasetAdapter:
 
                 maxLevel: toCellValue(building.standard_max_level),
 
-                upgradeRows: progression.length,
+                canonicalRecordCount: progressionCounts.canonicalRecordCount,
+                upgradeRows: progressionCounts.upgradeRowCount,
+                baseStateCount: progressionCounts.baseStateCount,
+                truegoldStageCount: progressionCounts.truegoldStageCount,
 
                 confidence:
                   toCellValue(
@@ -176,10 +193,22 @@ export const buildingsDatasetAdapter:
             width: "100px",
           },
           {
+            key: "canonicalRecordCount",
+            label: "Canonical records",
+            sortable: true,
+            width: "130px",
+          },
+          {
             key: "upgradeRows",
             label: "Upgrade rows",
             sortable: true,
             width: "120px",
+          },
+          {
+            key: "baseStateCount",
+            label: "Base states",
+            sortable: true,
+            width: "100px",
           },
           {
             key: "confidence",
