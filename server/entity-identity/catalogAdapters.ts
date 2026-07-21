@@ -17,6 +17,8 @@ export function heroIdentity(row: Row): EntityAdapterRecord | null {
   const name = typeof row.name === 'string' ? row.name : null
   const forgeId = key ? createForgeId('hero', key) : null
   if (!key || !name || !forgeId) return null
-  const published = row.editorial_status === 'published' || row.status === 'published' || row.published_at != null
+  // public.heroes is the current canonical published projection; editorial
+  // drafts live outside this table and therefore never enter this adapter.
+  const published = row.editorial_status === 'published' || row.status === 'published' || row.published_at != null || row.is_active === true
   return { forgeId, canonicalRecordId: typeof row.id === 'string' ? row.id : key, displayName: name, slug: key, route: `/companion/heroes/${encodeURIComponent(key)}`, lifecycle: published ? 'published' : 'draft', sourceVersion: typeof row.published_version === 'string' || typeof row.published_version === 'number' ? String(row.published_version) : null, resolverMetadata: { source: 'public.heroes' } }
 }

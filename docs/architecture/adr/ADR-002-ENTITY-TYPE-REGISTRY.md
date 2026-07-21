@@ -1,6 +1,11 @@
 # ADR-002 — Entity-Type Registry
 
-**Status:** Accepted for future implementation
+**Status:** Accepted and implemented for the Sprint 1.1.1 foundation
+
+The live registry contains 22 rows with forced RLS. Public route policy is
+empty for registered domains without an implemented public page; their
+resolvers return no route and never guess one. Registered-only types remain
+safe metadata and fail closed when no published canonical record exists.
 
 Forge uses a governed registry keyed by `entity_type`. Each entry supplies resolver, canonical source, published-state test, route builder, Search adapter, capability policy, relationship/media/tag/progression eligibility, audit and archive behavior.
 

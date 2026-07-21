@@ -49,6 +49,10 @@ routes remain compatibility contracts. The review-gated registry migration is
 not applied, and this sprint does not complete Media Library, tags, authored
 relationships or Creator integrations.
 
+Sprint 1.1.1B applied the registry and route-policy migrations to the connected
+Supabase project after preflight. Live counts and RLS/grants were verified;
+canonical content and Buildings publication version 1 were unchanged.
+
 Forge is organised into explicit domains rather than isolated pages.
 
 ### Domain 0 — Editorial Intelligence

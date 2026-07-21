@@ -12,6 +12,7 @@ assert.equal(namespaceOf('hero.amadeus'), 'hero')
 assert.equal(localKeyOf('hero-skill.amadeus.royal-command'), 'amadeus.royal-command')
 assert.equal(forgeIdsEqual('hero.amadeus', 'hero.amadeus'), true)
 assert.equal(buildPublicRoute('building.town-center'), '/buildings/town-center')
+assert.equal(buildPublicRoute('event.bear-hunt'), null)
 assert.equal(entityTypeRegistry.listEnabled().length, 22)
 
 const resolver = new EntityResolver()

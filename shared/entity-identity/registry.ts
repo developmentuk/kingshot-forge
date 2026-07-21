@@ -8,22 +8,22 @@ const ENTITY_TYPE_ROWS = [
   ['hero_skill', 'hero-skill', 'hero-skill', 'public.published_hero_skills', 'published projection only', '/companion/heroes/:hero/skills', 'search.hero-skill', 'entity.hero.read', 'entity.hero.write', true, false, true, false, 'hide'],
   ['hero_gear', 'hero-gear', 'hero-gear', 'public.hero_gear', 'published projection only', '/companion/heroes/:hero/gear', 'search.hero-gear', 'entity.hero.read', 'entity.hero.write', true, false, true, false, 'hide'],
   ['hero_widget', 'hero-widget', 'hero-widget', 'public.hero_widgets', 'published projection only', '/companion/heroes/:hero', 'search.hero-widget', 'entity.hero.read', 'entity.hero.write', true, false, false, false, 'hide'],
-  ['event', 'event', 'event', 'public.events', 'published projection only', '/events/:slug', 'search.event', 'entity.event.read', 'entity.event.write', false, false, true, false, 'hide'],
-  ['troop', 'troop', 'troop', 'public.troops', 'published projection only', '/troops/:slug', 'search.troop', 'entity.troop.read', 'entity.troop.write', false, false, true, true, 'hide'],
-  ['gear', 'gear', 'gear', 'public.gear', 'published projection only', '/gear/:slug', 'search.gear', 'entity.gear.read', 'entity.gear.write', true, false, true, true, 'hide'],
-  ['charm', 'charm', 'charm', 'public.charm', 'published projection only', '/charms/:slug', 'search.charm', 'entity.charm.read', 'entity.charm.write', true, false, true, true, 'hide'],
-  ['research', 'research', 'research', 'public.research', 'published projection only', '/research/:slug', 'search.research', 'entity.research.read', 'entity.research.write', false, false, true, true, 'hide'],
-  ['war_academy', 'war-academy', 'war-academy', 'public.war_academy', 'published projection only', '/war-academy/:slug', 'search.war-academy', 'entity.war-academy.read', 'entity.war-academy.write', false, false, true, true, 'hide'],
+  ['event', 'event', 'event', 'public.events', 'published projection only', '', 'search.event', 'entity.event.read', 'entity.event.write', false, false, true, false, 'hide'],
+  ['troop', 'troop', 'troop', 'public.troops', 'published projection only', '', 'search.troop', 'entity.troop.read', 'entity.troop.write', false, false, true, true, 'hide'],
+  ['gear', 'gear', 'gear', 'public.gear', 'published projection only', '', 'search.gear', 'entity.gear.read', 'entity.gear.write', true, false, true, true, 'hide'],
+  ['charm', 'charm', 'charm', 'public.charm', 'published projection only', '', 'search.charm', 'entity.charm.read', 'entity.charm.write', true, false, true, true, 'hide'],
+  ['research', 'research', 'research', 'public.research', 'published projection only', '', 'search.research', 'entity.research.read', 'entity.research.write', false, false, true, true, 'hide'],
+  ['war_academy', 'war-academy', 'war-academy', 'public.war_academy', 'published projection only', '', 'search.war-academy', 'entity.war-academy.read', 'entity.war-academy.write', false, false, true, true, 'hide'],
   ['player', 'player', 'player', 'public.player_profiles', 'visibility=public', '/player/:localKey', 'search.player', 'entity.player.read', 'entity.player.write', true, false, true, false, 'hide'],
   ['alliance', 'alliance', 'alliance', 'public.alliances', 'visibility=public', '/alliances/:slug', 'search.alliance', 'entity.alliance.read', 'entity.alliance.write', true, false, true, false, 'hide'],
   ['kingdom', 'kingdom', 'kingdom', 'public.kingdoms', 'visibility=public', '/kingdoms/:slug', 'search.kingdom', 'entity.kingdom.read', 'entity.kingdom.write', false, false, true, false, 'hide'],
-  ['guide', 'guide', 'guide', 'public.guides', 'published projection only', '/guides/:slug', 'search.guide', 'entity.guide.read', 'entity.guide.write', true, false, true, false, 'hide'],
-  ['article', 'article', 'article', 'public.articles', 'published projection only', '/articles/:slug', 'search.article', 'entity.article.read', 'entity.article.write', true, false, true, false, 'hide'],
-  ['video', 'video', 'video', 'public.videos', 'published projection only', '/videos/:slug', 'search.video', 'entity.video.read', 'entity.video.write', true, false, true, false, 'hide'],
-  ['creator', 'creator', 'creator', 'public.creators', 'published projection only', '/creators/:slug', 'search.creator', 'entity.creator.read', 'entity.creator.write', true, false, true, false, 'hide'],
-  ['tool', 'tool', 'tool', 'public.tools', 'published projection only', '/tools/:slug', 'search.tool', 'entity.tool.read', 'entity.tool.write', false, false, true, false, 'hide'],
-  ['calculator', 'calculator', 'calculator', 'public.calculators', 'published projection only', '/calculators/:slug', 'search.calculator', 'entity.calculator.read', 'entity.calculator.write', false, false, true, false, 'hide'],
-  ['dataset', 'dataset', 'dataset', 'public.datasets', 'published projection only', '/datasets/:slug', 'search.dataset', 'entity.dataset.read', 'entity.dataset.write', false, false, false, false, 'retain'],
+  ['guide', 'guide', 'guide', 'public.guides', 'published projection only', '', 'search.guide', 'entity.guide.read', 'entity.guide.write', true, false, true, false, 'hide'],
+  ['article', 'article', 'article', 'public.articles', 'published projection only', '', 'search.article', 'entity.article.read', 'entity.article.write', true, false, true, false, 'hide'],
+  ['video', 'video', 'video', 'public.videos', 'published projection only', '', 'search.video', 'entity.video.read', 'entity.video.write', true, false, true, false, 'hide'],
+  ['creator', 'creator', 'creator', 'public.creators', 'published projection only', '', 'search.creator', 'entity.creator.read', 'entity.creator.write', true, false, true, false, 'hide'],
+  ['tool', 'tool', 'tool', 'public.tools', 'published projection only', '', 'search.tool', 'entity.tool.read', 'entity.tool.write', false, false, true, false, 'hide'],
+  ['calculator', 'calculator', 'calculator', 'public.calculators', 'published projection only', '', 'search.calculator', 'entity.calculator.read', 'entity.calculator.write', false, false, true, false, 'hide'],
+  ['dataset', 'dataset', 'dataset', 'public.datasets', 'published projection only', '', 'search.dataset', 'entity.dataset.read', 'entity.dataset.write', false, false, false, false, 'retain'],
 ] as const
 
 export const ENTITY_TYPE_DEFINITIONS: readonly EntityTypeDefinition[] = ENTITY_TYPE_ROWS.map(([key, namespace, resolverKey, canonicalSource, publishedStateRule, routePolicy, searchAdapterKey, requiredReadCapability, requiredWriteCapability, mediaEligible, tagEligible, relationshipEligible, progressionEligible, archiveBehaviour]) => ({ key, namespace, resolverKey, canonicalSource, publishedStateRule, routePolicy, searchAdapterKey, requiredReadCapability, requiredWriteCapability, mediaEligible, tagEligible, relationshipEligible, progressionEligible, archiveBehaviour, enabled: true }))
@@ -51,7 +51,7 @@ export function buildPublicRoute(forgeId: string, slug?: string | null): string 
   const parsed = parseForgeId(forgeId)
   if (!parsed) return null
   const definition = entityTypeRegistry.byNamespace(parsed.namespace)
-  if (!definition || !definition.enabled || definition.routePolicy.includes(':parent')) return null
+  if (!definition || !definition.enabled || !definition.routePolicy || definition.routePolicy.includes(':parent')) return null
   const route = definition.routePolicy.replace(':slug', encodeURIComponent(slug ?? parsed.localKey))
   return route.includes(':') ? null : route
 }

@@ -18,6 +18,8 @@ export class EntityResolver {
     this.adapters.set(adapter.resolverKey, adapter)
   }
 
+  registeredResolverKeys(): readonly string[] { return [...this.adapters.keys()].sort() }
+
   async resolve(value: unknown, mode: ResolutionMode, context: EntityResolutionContext = {}): Promise<ResolvedEntity> {
     const parsed = parseForgeId(value)
     const definition = parsed ? entityTypeRegistry.byNamespace(parsed.namespace) : null
