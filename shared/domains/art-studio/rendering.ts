@@ -90,4 +90,9 @@ export function hashText(value: string): string {
   for (const character of value) { hash ^= character.codePointAt(0)!; hash = Math.imul(hash, 16777619) }
   return `fnv1a-${(hash >>> 0).toString(16).padStart(8, '0')}`
 }
+export async function sha256Text(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value)
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+}
 export function copyApprovedPayload(value: string): Promise<void> { if (typeof navigator === 'undefined' || !navigator.clipboard) return Promise.reject(new Error('Clipboard is unavailable.')); return navigator.clipboard.writeText(value) }

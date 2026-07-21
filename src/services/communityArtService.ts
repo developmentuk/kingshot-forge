@@ -12,7 +12,7 @@ export type CommunityArtRecord = {
   category: CommunityArtCategory
   tags: string[]
   artworkText: string
-  rawSourceText: string
+  rawSourceText?: string
   normalisedText: string
   approvedCopyPayload: string | null
   renderedPreviewPayload: string

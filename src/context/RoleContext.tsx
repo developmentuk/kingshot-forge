@@ -41,6 +41,8 @@ export type ForgePermission =
   | 'cms.analytics.view'
   | 'platform.users.manage'
   | 'moderation.manage'
+  | 'render_engine.inspect'
+  | 'render_engine.calibrate'
   | 'beta.access'
   | 'contributions.submit'
   | 'applications.read'
