@@ -41,3 +41,13 @@ Local regression and contract checks pass. Protected-preview browser and
 authenticated owner/player acceptance remain required before production
 approval; no database mutation or Buildings publication occurred in this
 sprint.
+
+## Sprint preview evidence
+
+The exact candidate commit `8e8adfe62b7264b2079c4e4db35c69a04d62c3da` deployed
+READY to protected Vercel preview `dpl_DaqhW8QbfvoZWHbhHbfGH8yZAgdg` at
+`https://kingshot-forge-gi4i2vz99-clarksim-7474s-projects.vercel.app`.
+The available browser session reached the Vercel authentication wall before
+the application, so the 390/768/1280/1440 browser matrix and authenticated
+Console/Network/React/Supabase review remain owner-session blockers. Vercel
+runtime logs showed no error entries during the check.

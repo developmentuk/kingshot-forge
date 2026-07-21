@@ -211,3 +211,12 @@ still **Not Ready** until the exact protected preview has browser acceptance at
 390px, 768px, 1280px and 1440px, with authenticated player/owner sessions and
 clean Console/Network/React/Supabase diagnostics. Production promotion, merge
 and tagging remain prohibited.
+
+The exact sprint candidate `8e8adfe62b7264b2079c4e4db35c69a04d62c3da` is
+deployed READY as protected preview deployment
+`dpl_DaqhW8QbfvoZWHbhHbfGH8yZAgdg` at
+`https://kingshot-forge-gi4i2vz99-clarksim-7474s-projects.vercel.app`.
+The available browser session was stopped at the Vercel authentication wall
+before application rendering; no browser acceptance result is inferred from
+that state. Vercel runtime logs contained no error entries. Owner/player
+authentication is still required to complete the responsive and console gate.
