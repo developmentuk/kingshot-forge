@@ -3,6 +3,7 @@ import { KingshotArtRenderer } from '../../components/art/KingshotArtRenderer'
 import { analyseArtworkDetailed, cloneCalibration, DEFAULT_CALIBRATION, DEVICE_PROFILES, getBenchmarkArtwork, getBenchmarkAvailability, isSavedCalibrationProfile, loadCalibrationProfiles, makeCalibrationProfile, persistCalibrationProfiles, RENDER_BENCHMARKS, resolveDeviceProfile } from '../../render-engine'
 import type { CalibrationConfiguration, DeviceProfile, DeviceProfileId, DeviceProfileOverrides, GlyphCalibration, GlyphFamily, SavedCalibrationProfile } from '../../render-engine'
 import { analyseText, repairText, RENDER_PROFILES, type RenderProfile } from '../../../shared/domains/art-studio/rendering'
+import { CANONICAL_RENDER_FIXTURES, getCanonicalFixture } from '../../render-engine/fixtures'
 import './renderEngineCalibration.css'
 
 const FAMILIES: GlyphFamily[] = ['space', 'ascii', 'box-drawing', 'unicode', 'emoji', 'pixel-circles', 'hearts', 'decorative-symbols']
@@ -25,6 +26,7 @@ function ZoomPanViewport({ children, zoom, pan, setZoom, setPan, label, classNam
 }
 
 export function RenderEngineCalibrationPage() {
+  const [fixtureId, setFixtureId] = useState(CANONICAL_RENDER_FIXTURES[0].id)
   const [benchmarkId, setBenchmarkId] = useState(RENDER_BENCHMARKS[0].id)
   const [deviceId, setDeviceId] = useState<DeviceProfileId>('android-default')
   const [family, setFamily] = useState<GlyphFamily>('pixel-circles')
@@ -36,8 +38,8 @@ export function RenderEngineCalibrationPage() {
   const [status, setStatus] = useState('Unsaved changes')
   const [renderMode, setRenderMode] = useState<'artwork-only' | 'chat-simulation'>('chat-simulation')
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('side-by-side')
-  const [referenceUrl, setReferenceUrl] = useState<string>()
-  const [referenceName, setReferenceName] = useState<string>()
+  const [referenceUrl, setReferenceUrl] = useState<string | undefined>(CANONICAL_RENDER_FIXTURES[0].screenshots.chat)
+  const [referenceName, setReferenceName] = useState<string | undefined>('Kingshot chat reference')
   const [referenceZoom, setReferenceZoom] = useState(1)
   const [referencePan, setReferencePan] = useState<Pan>({ x: 0, y: 0 })
   const [referenceAlignment, setReferenceAlignment] = useState({ x: 0, y: 0, scale: 1, rotation: 0, opacity: .5 })
@@ -49,13 +51,14 @@ export function RenderEngineCalibrationPage() {
   const [focusPreview, setFocusPreview] = useState(false)
   const [importKey, setImportKey] = useState(0)
   const [sourceText, setSourceText] = useState('')
-  const [textProfileId, setTextProfileId] = useState('kingshot-chat-bubble')
+  const [textProfileId, setTextProfileId] = useState('kingshot-chat')
+  const fixture = getCanonicalFixture(fixtureId)
   const previousBenchmark = useRef(benchmarkId)
   const benchmark = RENDER_BENCHMARKS.find((item) => item.id === benchmarkId) ?? RENDER_BENCHMARKS[0]
   const benchmarkArtwork = getBenchmarkArtwork(benchmark)
-  const artwork = sourceText || benchmarkArtwork
+  const artwork = sourceText || fixture.text || benchmarkArtwork
   const analysis = useMemo(() => analyseArtworkDetailed(artwork), [artwork])
-  const textProfile: RenderProfile = RENDER_PROFILES[textProfileId] ?? RENDER_PROFILES['kingshot-chat-bubble']
+  const textProfile: RenderProfile = RENDER_PROFILES[textProfileId] ?? RENDER_PROFILES['kingshot-chat']
   const textDiagnostics = useMemo(() => analyseText(artwork, textProfile), [artwork, textProfile])
   const familyCount = analysis.familyCounts[family]
   const deviceProfile = useMemo(() => resolveDeviceProfile(deviceId, deviceOverrides), [deviceId, deviceOverrides])
@@ -88,6 +91,7 @@ export function RenderEngineCalibrationPage() {
   function updateCalibration(field: keyof GlyphCalibration, value: string) { setCalibration((current) => ({ ...current, [family]: { ...current[family], [field]: field === 'fontFamily' ? value : Number(value) } })) }
   function updateDevice(field: keyof DeviceProfile, value: string) { setDeviceOverrides((current) => ({ ...current, [deviceId]: { ...current[deviceId], [field]: Number(value) } })) }
   function selectBenchmark(value: string) { if (value !== benchmarkId && confirmDiscard()) setBenchmarkId(value) }
+  function selectFixture(value: string) { if (value === fixtureId || !confirmDiscard()) return; const next = getCanonicalFixture(value); setFixtureId(value); setSourceText(next.text); setReferenceUrl(next.screenshots.chat); setReferenceName('Kingshot chat reference'); setReferencePan({ x: 0, y: 0 }); setReferenceZoom(1) }
   function selectDevice(value: DeviceProfileId) { if (value !== deviceId && confirmDiscard()) setDeviceId(value) }
   function selectReference(event: React.ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (!file) return; if (referenceUrl) URL.revokeObjectURL(referenceUrl); setReferenceUrl(URL.createObjectURL(file)); setReferenceName(file.name); setReferencePan({ x: 0, y: 0 }); setReferenceZoom(1) }
   function removeReference() { if (referenceUrl) URL.revokeObjectURL(referenceUrl); setReferenceUrl(undefined); setReferenceName(undefined); setImportKey((key) => key + 1) }
@@ -103,6 +107,7 @@ export function RenderEngineCalibrationPage() {
   const benchmarkAvailability = getBenchmarkAvailability(benchmark)
 
   return <main className={`admin-page render-engine-lab ${focusPreview ? 'render-engine-lab--focus' : ''}`}>
+    <section className="render-engine-lab__panel"><label>Canonical fixture<select value={fixtureId} onChange={(event) => selectFixture(event.target.value)}>{CANONICAL_RENDER_FIXTURES.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label><p>{fixture.metadata.notes}</p><p>Reference captures: chat and game loaded from the committed fixture.</p></section>
     <section className="render-engine-lab__guide" aria-labelledby="render-engine-guide-title"><h2 id="render-engine-guide-title">Render Engine workflow</h2><ol><li>Select a benchmark.</li><li>Choose a device profile.</li><li>Pick a glyph family.</li><li>Adjust calibration.</li><li>Set overrides.</li><li>Upload artwork.</li><li>Use overlay mode.</li><li>Save or export.</li><li>Reset the session.</li></ol><p><strong>Legend:</strong> Ready = approved artwork · Metadata only = awaiting artwork · Broken reference = repair required. Current benchmark: {benchmarkAvailability}.</p></section>
     <section className="render-engine-lab__topbar"><div><p className="render-engine-lab__eyebrow">Forge Render Engine / Sprint 9.3</p><h1>Calibration Lab</h1><p>Browser-local visual calibration. No values or screenshots leave this session.</p></div><div className="render-engine-lab__actions"><span className={dirty ? 'render-engine-lab__save-state render-engine-lab__save-state--dirty' : 'render-engine-lab__save-state'}>{status}{lastSavedAt && !dirty && ` · ${new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}</span><button className="button button--primary" type="button" onClick={save}>Save calibration</button><button className="button button--secondary" type="button" onClick={() => saveAs()}>Save as new</button></div></section>
     <section className="render-engine-lab__toolbar"><label>Benchmark<select value={benchmarkId} onChange={(event) => selectBenchmark(event.target.value)}>{RENDER_BENCHMARKS.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label><label>Text profile<select value={textProfileId} onChange={(event) => setTextProfileId(event.target.value)}>{Object.values(RENDER_PROFILES).map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label><label>Device profile<select value={deviceId} onChange={(event) => selectDevice(event.target.value as DeviceProfileId)}>{Object.values(DEVICE_PROFILES).map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label><label>Glyph family<select value={family} onChange={(event) => setFamily(event.target.value as GlyphFamily)}>{FAMILIES.map((item) => <option key={item} value={item}>{familyLabel(item)}</option>)}</select></label><div className="render-engine-lab__status"><span>Selected family</span><strong>{familyLabel(family)}</strong><small>{familyCount} grapheme{familyCount === 1 ? '' : 's'} in this benchmark</small></div></section>
