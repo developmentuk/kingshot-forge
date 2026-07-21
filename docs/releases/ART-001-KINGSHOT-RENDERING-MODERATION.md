@@ -15,3 +15,12 @@ ART-002B committed the Render Engine Core and applied migration `20260721170000_
 ## Remaining acceptance gates
 
 Authenticated role sessions, live clipboard paste capture, responsive screenshots at 390/768/1280/1440, browser console/network capture and protected-preview role smoke testing remain owner-session evidence. No production deployment was made.
+
+## ART-002C access-control repair
+
+The owner false-denial regression was repaired in commit `b179e24`. Live
+migration `art002c_render_engine_capabilities` applied successfully with
+version `20260721171958`. Owner capabilities now resolve as four Render Engine
+capabilities plus two Community Art capabilities. Moderator capabilities are
+limited to view/inspect and Community Art moderation/approval. Verified players
+receive none of these capabilities by verification alone.

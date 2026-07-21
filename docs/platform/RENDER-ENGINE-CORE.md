@@ -17,3 +17,18 @@ Migration `20260721170000_art002_render_engine_core.sql` was applied to Supabase
 The canonical local fixture remains byte-identical: SHA-256 `c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79`, 386 bytes, 276 code points, 278 UTF-16 units, 10 lines and 9 CRLF sequences. No database publication rows were changed by ART-002B; the migration backfilled metadata for 12 existing submissions.
 
 The authenticated browser role matrix is not certified in this checkout because approved sessions for player, verified player, contributor, moderator, administrator and owner were not available. Verified-player access must be tested as a release-blocking owner action.
+
+## ART-002C access-control repair
+
+The regression root cause was a capability vocabulary mismatch: navigation used
+`cms.view`, the route used `render_engine.inspect`, and the live role-permission
+tables contained neither Render Engine capability. The owner therefore saw the
+link through CMS access but was denied by the route guard. ART-002C makes
+`render_engine.view` the page capability and adds explicit inspect, calibration,
+profile-management, Community Art moderation and Community Art approval keys.
+
+Owner and administrator receive all six capabilities; moderators receive
+view/inspect and Community Art moderation/approval; players, verified players
+and contributors receive none by default. RoleContext refreshes on sign-in,
+window focus, visibility changes and the `forge-capabilities-changed` event.
+API and RLS moderation checks use `community_art.moderate`.

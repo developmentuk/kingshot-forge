@@ -8,6 +8,11 @@ updates or reconstructs raw source from normalised or rendered text. The
 ART-002B migration verified this boundary live and recorded 12 metadata-only
 backfills without publication changes.
 
+ART-002C recovery rule: capability changes are additive, idempotent role-
+permission migrations. Session capability state refreshes on sign-in, focus,
+visibility change or an explicit capability-change event; verification status
+never substitutes for an administrative capability.
+
 ## ARCH-001 Forge Domain Model v1.0 — 21 July 2026
 
 Sprint 1.1.1 adds the stable identity contract, registry/resolver boundary,

@@ -62,7 +62,9 @@ stage metrics, reversible transformation audits, explicit engine capabilities,
 protected raw source, exact approved-payload clipboard writes and responsive
 calibration panes. ART-002B applied the source-boundary migration with FORCE RLS
 and live grant verification; authenticated role sessions remain an owner
-acceptance gate.
+acceptance gate. ART-002C aligned Render Engine navigation, route, API and RLS
+checks around explicit capabilities and repaired the owner false-denial caused
+by the missing live capability backfill.
 
 Forge is organised into explicit domains rather than isolated pages.
 
