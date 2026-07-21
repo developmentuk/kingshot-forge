@@ -11,21 +11,12 @@ export interface BuildingProgressionCounts {
   baseState: Record<string, unknown> | null;
 }
 
-function numberValue(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  return null;
-}
-
 export function classifyBuildingProgressionRow(
   row: Record<string, unknown>,
 ): BuildingProgressionRowKind {
-  const baseLevel = numberValue(row.base_level);
-  if (row.progression_phase === "normal" && baseLevel === 0) return "base-state";
-  if (row.progression_phase === "truegold") return "truegold-stage";
+  const kind: SharedRowKind = getBuildingProgressionSemantics(row).rowKind;
+  if (kind === "base-state") return "base-state";
+  if (kind === "truegold-tier" || kind === "truegold-sub-stage") return "truegold-stage";
   return "upgrade";
 }
 
@@ -47,3 +38,4 @@ export function getBuildingProgressionCounts(
     baseState: baseStates[0] ?? null,
   };
 }
+import { getBuildingProgressionSemantics, type BuildingProgressionRowKind as SharedRowKind } from "../../../shared/data-pipeline/buildingsProgressionOrdering";
