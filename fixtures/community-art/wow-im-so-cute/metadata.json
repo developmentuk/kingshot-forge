@@ -1,0 +1,31 @@
+{
+  "fixture_id": "community-art.wow-im-so-cute",
+  "title": "Wow I’m so cute...",
+  "fixture_version": 1,
+  "render_profile": "kingshot-chat",
+  "expected_status": "calibration_required",
+  "notes": "Canonical regression fixture for mixed-width Unicode, ideographic spaces, full-width punctuation, emoji, alignment, gallery rendering, and clipboard fidelity.",
+  "text": {
+    "filename": "wow-im-so-cute.txt",
+    "sha256": "c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79",
+    "line_count": 10,
+    "code_point_count": 267,
+    "utf16_code_unit_count": 269
+  },
+  "screenshots": [
+    {
+      "label": "chat",
+      "filename": "kingshot-reference-chat.png",
+      "sha256": "98e92f56a1fa539db4e685ce46d41bdd55cf68e9f9bf9b4ab194fbf589aac3f9",
+      "width": 759,
+      "height": 418
+    },
+    {
+      "label": "game",
+      "filename": "kingshot-reference-game.png",
+      "sha256": "19946bd23b111cf051ba63da911fdfacea44d9478431bc567229f37d8d01a44c",
+      "width": 671,
+      "height": 530
+    }
+  ]
+}
