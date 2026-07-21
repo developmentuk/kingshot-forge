@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import type { IngestionMode } from '../../shared/domains/art-studio/sourceEvidence'
 
 export type CommunityArtCategory = 'Cats' | 'Animals' | 'Characters' | 'Announcements' | 'Battle' | 'KvK' | 'Alliance' | 'Flags' | 'Pixel Art' | 'Nature' | 'Funny' | 'Gaming' | 'Seasonal' | 'Other'
 export type CommunityArtAttribution = 'profile' | 'custom' | 'anonymous'
@@ -34,6 +35,15 @@ export type CommunityArtRecord = {
   testedInKingshot?: boolean
   reactionCounts: CommunityArtReactionCounts
   myReaction: CommunityArtReactionType | null
+  ingestionMode?: IngestionMode
+  originalFilename?: string | null
+  originalMimeType?: string | null
+  exactBytePreserved?: boolean
+  detectedLineEnding?: string | null
+  crlfCount?: number | null
+  lfCount?: number | null
+  rawSourceSha256?: string | null
+  rawSourceByteLength?: number | null
   submitterContext?: {
     userId: string
     attributionType: CommunityArtAttribution
@@ -78,6 +88,12 @@ export function submitCommunityArt(input: {
   attributionName: string | null
   ownershipConfirmed: boolean
   guidelinesConfirmed: boolean
+  ingestionMode: Exclude<IngestionMode, 'legacy_import'>
+  originalFilename?: string | null
+  originalMimeType?: string | null
+  rawBytesBase64: string
+  browserReceivedText?: string | null
+  normalisationOperations?: Array<Record<string, unknown>>
 }) {
   return api<CommunityArtRecord>('submit', { method: 'POST', body: JSON.stringify({ ...input, requestId: input.requestId ?? crypto.randomUUID() }) })
 }
