@@ -17,6 +17,8 @@ deferred until protected-preview browser acceptance is complete.
 ## ARCH-001 — Forge Domain Model v1.0
 
 Architecture/documentation sprint complete on the current HOTFIX-002 candidate.
+The ART-002 Render Engine Core is implemented on the focused branch; protected
+preview and owner acceptance remain release gates before promotion.
 See [`architecture/FORGE-DOMAIN-MODEL.md`](architecture/FORGE-DOMAIN-MODEL.md)
 and ADR-001 through ADR-008. This does not mark the Entity Engine, Media
 Library, shared tags, authored relationships or Creator integrations complete.

@@ -56,7 +56,11 @@ canonical content and Buildings publication version 1 were unchanged.
 ART-001 adds a shared, profile-driven Kingshot text analyzer and preserves
 Community Art raw source separately from normalized, rendered-preview and
 approved copy payloads. Public gallery and clipboard behavior consume only the
-approved payload; moderation repair history is append-only and auditable.
+approved payload; moderation repair history is append-only and auditable. ART-002
+promotes this to the shared Render Engine Core with immutable binary artifacts,
+stage metrics, reversible transformation audits, explicit engine capabilities,
+protected raw source, exact approved-payload clipboard writes and responsive
+calibration panes.
 
 Forge is organised into explicit domains rather than isolated pages.
 

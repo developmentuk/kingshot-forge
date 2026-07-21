@@ -1,5 +1,11 @@
 # Forge Recovery Matrix — Sprints R1–R4
 
+## ART-002 Render Engine recovery boundary
+
+Raw artifacts are immutable. Recovery restores a new approved payload version
+from preserved raw bytes and the append-only transformation audit; it never
+updates or reconstructs raw source from normalised or rendered text.
+
 ## ARCH-001 Forge Domain Model v1.0 — 21 July 2026
 
 Sprint 1.1.1 adds the stable identity contract, registry/resolver boundary,
