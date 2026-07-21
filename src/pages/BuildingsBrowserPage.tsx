@@ -3,7 +3,9 @@ import { Link, useParams } from 'react-router-dom'
 import { fetchDataset } from '../features/admin/dataEngineApi'
 import { ForgeConnections } from '../features/search/SearchExperience'
 import { formatDuration, formatNumber } from '../utils/formatters'
+import { sortBuildingProgression } from '../../shared/data-pipeline/buildingsProgressionOrdering'
 import '../styles/buildingsBrowser.css'
+import '../styles/buildingsProgressionPolish.css'
 
 type Building = { key: string; name: string; category: string; description: string; maxLevel: number | null; truegold: boolean; progression: Record<string, unknown>[]; source?: string }
 const text = (value: unknown, fallback = '') => typeof value === 'string' ? value : fallback
@@ -42,7 +44,7 @@ export default function BuildingsBrowserPage() {
 
 function BuildingDetail({ building, error }: { building: Building | null | undefined; error: string }) {
   if (!building) return <main className="buildings-browser"><p className="buildings-state">{error || 'Building not found in the published projection.'}</p><Link to="/buildings">Back to Buildings</Link></main>
-  const progression = [...building.progression].sort((a, b) => (number(a.stage ?? a.base_level) ?? 0) - (number(b.stage ?? b.base_level) ?? 0))
+  const progression = sortBuildingProgression(building.progression)
   const baseState = progression.filter((row) => row.progression_phase === 'normal' && number(row.base_level) === 0)
   const upgradeRows = progression.filter((row) => !baseState.includes(row))
   const truegoldRows = progression.filter((row) => row.progression_phase === 'truegold')

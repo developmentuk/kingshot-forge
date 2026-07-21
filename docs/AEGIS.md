@@ -550,3 +550,19 @@ progression read-only with shared formatting. Player troop snapshots retain
 numeric compatibility values while the UI uses TG1–TG6 terminology. Forge
 Connections consumes published relationship results only and renders
 deduplicated domain-filtered cards with honest empty states.
+
+## Sprint 1.0.2 player experience stabilisation — 21 July 2026
+
+Buildings progression ordering is a shared contract. Consumers must order
+published rows from structured `progression_phase`, `base_level`, `stage` and
+`truegold_tier` metadata; displayed labels are presentation only and must not
+be used as sort keys. The canonical sequence is normal/base progression,
+pre-Truegold transition rows, then Truegold stage/tier rows as defined by the
+published workbook.
+
+Player Buildings remains published-only and read-only. Personal Progression
+continues to store the existing numeric snapshot schema, maps legacy T1–T5
+values without destructive conversion, and presents the player-facing troop
+labels as TG1–TG6 for Infantry, Cavalry and Archers. Forge Connections may show
+only published relationship results with a real relationship type and a
+supported destination; tags may enrich a card but cannot create a relationship.

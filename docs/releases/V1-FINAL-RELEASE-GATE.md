@@ -186,3 +186,28 @@ terminology and Forge Connections card/tab repair. The final gate remains
 blocked until the exact protected preview is verified at 390px, 768px, 1280px
 and 1440px by ordinary player and owner/admin sessions with clean
 console/network diagnostics.
+
+## Sprint 1.0.2 stabilisation update — 21 July 2026
+
+The current candidate repairs the verified Buildings progression ordering defect
+with a shared structured comparator used by publication loading, projection
+adaptation and the Player renderer. It keeps the published table read-only,
+improves numeric/duration/null presentation and bounded mobile scrolling, and
+adds a regression fixture for normal levels, transition rows and Truegold
+stage/tier ordering.
+
+Personal Progression verification confirms TG1–TG6 presentation for Infantry,
+Cavalry and Archers while retaining numeric compatibility for legacy T1–T5
+values. Save/reload/history use the existing snapshot path; no migration or
+canonical dataset mutation is part of this sprint.
+
+Forge Connections now carries relationship labels through the adapter and
+renders only published, deduplicated results with supported destinations. Cards
+separate icon, dataset/type, title, description, relationship explanation, tags
+and destination. Tag-only or fabricated relationships are excluded.
+
+Automated checks are the local evidence for this update. The release gate is
+still **Not Ready** until the exact protected preview has browser acceptance at
+390px, 768px, 1280px and 1440px, with authenticated player/owner sessions and
+clean Console/Network/React/Supabase diagnostics. Production promotion, merge
+and tagging remain prohibited.

@@ -24,6 +24,7 @@
     "test:buildings-admin-projection": "node scripts/test-buildings-admin-projection.mjs",
     "test:buildings-editor-hotfix": "node scripts/test-buildings-editor-hotfix.mjs",
     "test:buildings-editor-semantics": "node --experimental-strip-types scripts/test-buildings-editor-semantics.mjs",
+    "test:buildings-progression-ordering": "node --experimental-strip-types scripts/test-buildings-progression-ordering.mjs",
     "test:buildings-editor-retry": "node --experimental-strip-types scripts/test-buildings-editor-retry.mjs",
     "test:verification-centre": "node scripts/test-verification-centre.mjs",
     "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
@@ -47,7 +48,7 @@
     "test:ux003-contracts": "node scripts/test-ux003-contracts.mjs",
     "test:ux004-contracts": "node scripts/test-ux004-contracts.mjs",
     "test:rc4-security": "node scripts/test-rc4-security-hardening.mjs",
-    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:content-studio && npm run test:publication-integrity && npm run test:buildings-publication && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run test:auto-redeem && npm run test:render-engine && npm run test:search && npm run test:search-persistence && npm run test:search-performance && npm run test:search-api && npm run test:search-experience && npm run test:workspaces && npm run test:forge-identity && npm run test:favourites && npm run test:contributor-applications && npm run test:ux002-contracts && npm run test:ux003-contracts && npm run test:rc4-security && npm run lint && npm run build"
+    "check": "npm run validate:nodenext && npm run validate:pm2b && npm run validate:hero-skills && npm run validate:hero-skills-governance && npm run validate:editorial-platform && npm run validate:verification-centre && npm run validate:player-identity && npm run validate:art-studio && npm run test:editorial-api && npm run test:content-studio && npm run test:publication-integrity && npm run test:buildings-publication && npm run test:buildings-progression-ordering && npm run test:verification-centre && npm run test:hero-skills-governance && npm run test:player-identity && npm run test:art-studio && npm run test:auto-redeem && npm run test:render-engine && npm run test:search && npm run test:search-persistence && npm run test:search-performance && npm run test:search-api && npm run test:search-experience && npm run test:workspaces && npm run test:forge-identity && npm run test:favourites && npm run test:contributor-applications && npm run test:ux002-contracts && npm run test:ux003-contracts && npm run test:rc4-security && npm run lint && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",

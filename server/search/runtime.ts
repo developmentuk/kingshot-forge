@@ -25,7 +25,8 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
     const targetId = value(item, 'targetId', 'target_id', 'id')
     const targetDataset = value(item, 'targetDataset', 'target_dataset', 'dataset')
     const type = value(item, 'type', 'relationshipType', 'relationship_type')
-    return targetId && targetDataset && type ? [{ targetId, targetDataset, type }] : []
+    const label = value(item, 'label', 'relationshipLabel', 'relationship_label')
+    return targetId && targetDataset && type ? [{ targetId, targetDataset, type, ...(label ? { label } : {}) }] : []
   }) : []
   return {
     id, dataset, title,
