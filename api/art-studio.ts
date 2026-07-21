@@ -3,12 +3,15 @@ import { requireForgeActor, type ForgeActor } from '../server/auth/requireForgeA
 import { getSupabaseAdmin } from '../server/database/supabaseAdmin.js'
 import { validateTextArtwork, type TextArtworkValidationIssue } from '../shared/domains/art-studio/textValidation.js'
 import { analyseText, hashText, repairText, RENDER_PROFILES, sha256Text, type RepairOperation } from '../shared/domains/art-studio/rendering.js'
+import { randomUUID } from 'node:crypto'
 
 const CATEGORIES = new Set(['Cats', 'Animals', 'Characters', 'Announcements', 'Battle', 'KvK', 'Alliance', 'Flags', 'Pixel Art', 'Nature', 'Funny', 'Gaming', 'Seasonal', 'Other'])
 const COMPATIBILITY = new Set(['untested', 'needs_testing', 'verified', 'known_issues'])
 const REACTION_TYPES = new Set(['like', 'heart', 'smile', 'wow'])
 
-function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
+function fail(response: VercelResponse, status: number, message: string, referenceId?: string) { response.status(status).json({ status: 'error', message, ...(referenceId ? { referenceId } : {}) }) }
+function correlationId(request: VercelRequest): string { const value = request.headers['x-correlation-id']; return typeof value === 'string' && /^[a-zA-Z0-9._:-]{8,120}$/.test(value) ? value : randomUUID() }
+function requestId(value: unknown): string { return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ? value : randomUUID() }
 function body(request: VercelRequest): Record<string, unknown> { return (request.body && typeof request.body === 'object' ? request.body : {}) as Record<string, unknown> }
 function sizeClass(lines: number): 'compact' | 'standard' | 'large' { return lines <= 3 ? 'compact' : lines <= 8 ? 'standard' : 'large' }
 function emptyReactionCounts() { return { like: 0, heart: 0, smile: 0, wow: 0 } }
@@ -99,6 +102,8 @@ async function react(request: VercelRequest, response: VercelResponse) {
 
 async function submit(request: VercelRequest, response: VercelResponse) {
   const currentActor = await actor(request)
+  const referenceId = correlationId(request)
+  if (!currentActor.capabilities.includes('contributions.submit')) { fail(response, 403, 'Your account is not currently permitted to submit artwork. Contact Forge support if this looks wrong.', referenceId); return }
   const input = body(request)
   const title = typeof input.title === 'string' ? input.title : ''
   const description = typeof input.description === 'string' ? input.description : ''
@@ -123,9 +128,13 @@ async function submit(request: VercelRequest, response: VercelResponse) {
     attributionName = typeof profile?.display_name === 'string' && profile.display_name.trim() ? profile.display_name : null
     if (!attributionName) { fail(response, 400, 'Complete a Forge display name before using profile attribution.'); return }
   }
-  const { data, error } = await admin.from('community_art_submissions').insert({ user_id: currentActor.userId, title, description, category, tags, artwork_text: artworkText, raw_source_text: artworkText, normalised_text: artworkText.replace(/\r\n?/g, '\n'), rendered_preview_payload: artworkText.replace(/\r\n?/g, '\n'), compatibility_profile: profile.id, repair_operations: repaired.operations, source_hash: await sha256Text(artworkText), attribution_type: attributionType, attribution_name: attributionName, ownership_confirmed: true, guidelines_confirmed: true, status: 'pending', compatibility_status: diagnostics.warnings.length ? 'needs_testing' : 'untested' }).select(columns).single()
-  if (error || !data) throw error ?? new Error('Unable to save submission.')
-  response.status(201).json({ status: 'success', data: record(data as Record<string, unknown>) })
+  const submissionRequestId = requestId(input.requestId)
+  // The atomic command assigns status: 'pending' and never creates approved_copy_payload.
+  const { data: command, error } = await admin.rpc('submit_community_art_submission', { p_request_id: submissionRequestId, p_user_id: currentActor.userId, p_submission: { title, description, category, tags, artworkText, attributionType, attributionName }, p_normalised_text: artworkText.replace(/\r\n?/g, '\n'), p_rendered_preview_payload: artworkText.replace(/\r\n?/g, '\n'), p_compatibility_profile: profile.id, p_repair_operations: repaired.operations, p_compatibility_status: diagnostics.warnings.length ? 'needs_testing' : 'untested', p_character_count: Array.from(artworkText).length, p_line_count: artworkText.replace(/\r\n?/g, '\n').split('\n').length })
+  if (error || !command || typeof command !== 'object') { console.error('[art-studio-submit]', { referenceId, userId: currentActor.userId, code: error?.code, message: error?.message, details: error?.details, hint: error?.hint }); fail(response, 500, 'Your artwork could not be submitted right now. Please retry using the same form. Reference ID: ' + referenceId, referenceId); return }
+  const result = command as { created?: boolean; submission?: Record<string, unknown> }
+  if (!result.submission) { console.error('[art-studio-submit]', { referenceId, userId: currentActor.userId, message: 'Atomic command returned no submission.' }); fail(response, 500, 'Your artwork could not be submitted right now. Reference ID: ' + referenceId, referenceId); return }
+  response.status(result.created === false ? 200 : 201).json({ status: 'success', data: record(result.submission), idempotent: result.created === false, referenceId })
 }
 
 async function moderateSubmission(request: VercelRequest, response: VercelResponse) {
@@ -179,6 +188,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
       hint: diagnostic?.hint,
     })
     const statusCode = typeof error === 'object' && error && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500
-    fail(response, statusCode, statusCode === 500 ? 'The Art Studio service is temporarily unavailable.' : 'You do not have permission for this action.')
+    const referenceId = correlationId(request)
+    console.error('[art-studio]', { referenceId, method: request.method, action, name: error instanceof Error ? error.name : diagnostic?.name, code: diagnostic?.code, message: diagnostic?.message, details: diagnostic?.details, hint: diagnostic?.hint })
+    fail(response, statusCode, statusCode === 500 ? `The Art Studio service is temporarily unavailable. Reference ID: ${referenceId}` : 'You do not have permission for this action.', referenceId)
   }
 }

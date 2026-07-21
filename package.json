@@ -35,6 +35,7 @@
     "test:render-engine": "node scripts/test-render-engine.mjs && node scripts/test-render-engine-persistence.mjs && node --import tsx scripts/test-render-permissions.mjs && node --import tsx scripts/test-render-repair.mjs",
     "test:render": "node --import tsx scripts/test-render.mjs && node --import tsx scripts/test-render-core.mjs",
     "test:art001-rendering": "node --import tsx scripts/test-art001-rendering.mjs",
+    "test:art002g-submission": "node scripts/test-art002g-submission.mjs",
     "test:auto-redeem": "node scripts/test-auto-redeem.mjs && node scripts/test-auto-redeem-ui.mjs && node scripts/test-auto-redeem-admin.mjs",
     "test:search": "node scripts/test-search.mjs",
     "test:search-persistence": "node scripts/test-search-persistence.mjs",

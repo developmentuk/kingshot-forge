@@ -1,0 +1,35 @@
+# ART-002G / Community Art submission hotfix
+
+## Diagnosis
+
+Starting HEAD: `37858ed20580a0337eb0929ea97c74b46bce257f`.
+
+The production-equivalent 500 is a schema/handler contract mismatch introduced by ART-002. The live `community_art_submissions` table requires `raw_source_sha256` and `raw_source_byte_length` (`NOT NULL`), while the submit handler inserted `raw_source_text` but omitted both required columns. The insert therefore failed before the response was created. The live schema and grants were inspected read-only; no production row was changed.
+
+The handler also used a direct service-role insert, had no explicit `contributions.submit` check, no idempotency key, and no atomic submission audit write.
+
+## Contract after the fix
+
+`POST /api/art-studio?action=submit` now requires an authenticated actor with `contributions.submit`, validates the existing ART-002 text contract, accepts a UUID `requestId`, and calls the service-role-only `submit_community_art_submission` RPC. The RPC writes the pending submission, immutable raw source metadata, normalized/rendered preview values and one `submitted` audit event in one transaction. Repeating the same `(user_id, requestId)` returns the existing row without creating a duplicate.
+
+Submission does not set `approved_copy_payload`, `approved_payload_hash`, `approved_payload_version`, or create a payload-version row. Moderation remains the only approval path.
+
+## Safety and evidence
+
+- Raw fixture hash: `c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79`.
+- Raw fixture byte length: 386 bytes.
+- Raw CRLF evidence: 9 CRLF sequences preserved by the client and hashed from UTF-8 bytes.
+- Anonymous users are denied by bearer authentication.
+- Contributors/explicitly permitted actors submit; verified status does not grant moderation.
+- Moderation and raw-source reads remain capability/RLS protected.
+- Player errors contain a safe category and correlation/reference ID; SQL details stay in server logs.
+
+## Preview gate
+
+No production deployment was made. A preview must apply migration `20260721213000_art002g_atomic_community_art_submission.sql`, deploy the hotfix branch `hotfix/1.0.3-community-art-submission`, and pass the permitted-player, duplicate-retry, RLS, moderation-continuity and network checks before promotion.
+
+## Validation
+
+Passed: `npm run test:art002g-submission`, `npm run build`, `npx tsc -p tsconfig.server.json --noEmit`, `npm run validate:nodenext`, and `git diff --check`.
+
+Recommendation: **Needs Correction** until an authenticated preview acceptance run confirms the RPC and migration against the preview database. Do not promote to production yet.

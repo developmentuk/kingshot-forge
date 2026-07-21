@@ -13,6 +13,12 @@ permission migrations. Session capability state refreshes on sign-in, focus,
 visibility change or an explicit capability-change event; verification status
 never substitutes for an administrative capability.
 
+ART-002G recovery rule: a player submission is accepted only through the
+service-authoritative atomic command. The command writes the pending row,
+immutable raw hash/byte length and audit event together, keyed by a request UUID.
+Failures leave no partial submission; retrying the same request is read-safe and
+does not create a duplicate. Approval and publication remain separate gates.
+
 ## ARCH-001 Forge Domain Model v1.0 — 21 July 2026
 
 Sprint 1.1.1 adds the stable identity contract, registry/resolver boundary,

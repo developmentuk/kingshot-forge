@@ -66,6 +66,12 @@ acceptance gate. ART-002C aligned Render Engine navigation, route, API and RLS
 checks around explicit capabilities and repaired the owner false-denial caused
 by the missing live capability backfill.
 
+ART-002G records the community-art submission recovery boundary: authenticated
+player capability is checked server-side; raw UTF-8 source metadata is computed
+at the database boundary; submission, pending status and audit are atomic; and
+idempotent request IDs prevent duplicate rows. Submission is not approval and
+must not create a public or approved payload.
+
 Forge is organised into explicit domains rather than isolated pages.
 
 ### Domain 0 — Editorial Intelligence

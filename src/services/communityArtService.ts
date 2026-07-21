@@ -68,6 +68,7 @@ export function listMyCommunityArtReactions() { return api<Array<{ artworkId: st
 export function reactToCommunityArt(input: { artworkId: string; reactionType: CommunityArtReactionType | null }) { return api<{ artworkId: string; reactionCounts: CommunityArtReactionCounts; myReaction: CommunityArtReactionType | null }>('react', { method: 'POST', body: JSON.stringify(input) }) }
 
 export function submitCommunityArt(input: {
+  requestId?: string
   title: string
   description: string
   category: CommunityArtCategory
@@ -78,7 +79,7 @@ export function submitCommunityArt(input: {
   ownershipConfirmed: boolean
   guidelinesConfirmed: boolean
 }) {
-  return api<CommunityArtRecord>('submit', { method: 'POST', body: JSON.stringify(input) })
+  return api<CommunityArtRecord>('submit', { method: 'POST', body: JSON.stringify({ ...input, requestId: input.requestId ?? crypto.randomUUID() }) })
 }
 
 export function moderateCommunityArt(input: {

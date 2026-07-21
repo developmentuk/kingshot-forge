@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "fixture_id": "community-art.wow-im-so-cute",
+  "source_policy": "read-only",
+  "reference_policy": "read-only",
+  "contexts": {
+    "kingshot-chat": {
+      "reference": "kingshot-reference-chat.png",
+      "screenshot_scale": 1,
+      "browser_scale": 1,
+      "same_line_count": true,
+      "visible_line_breaks": "preserved",
+      "anchors": [
+        {"line":1,"left":185,"right":468,"baseline":96},{"line":2,"left":185,"right":449,"baseline":127},
+        {"line":3,"left":244,"right":428,"baseline":181},{"line":4,"left":244,"right":430,"baseline":208},
+        {"line":5,"left":244,"right":527,"baseline":236},{"line":6,"left":244,"right":526,"baseline":264},
+        {"line":7,"left":244,"right":527,"baseline":292},{"line":8,"left":244,"right":527,"baseline":321},
+        {"line":9,"left":244,"right":526,"baseline":351},{"line":10,"left":244,"right":526,"baseline":384}
+      ],
+      "tolerance_px": {"left_edge": 4,"line_width": 6,"baseline": 3},
+      "root_cause": ["font family approximation", "emoji width", "ideographic-space width", "full-width punctuation width", "line-height", "baseline"],
+      "residual_limitations": ["Kingshot font assets are not available to Forge", "reference capture includes chat-bubble padding and device rasterisation", "manual anchors cannot distinguish browser scale from screenshot scale without device metadata"]
+    },
+    "kingshot-alliance-chat": {
+      "reference": "kingshot-reference-chat.png",
+      "inherits": "kingshot-chat",
+      "profile_version": 2
+    },
+    "kingshot-mail": {
+      "reference": "kingshot-reference-game.png",
+      "inherits": "kingshot-chat",
+      "profile_version": 2
+    }
+  }
+}

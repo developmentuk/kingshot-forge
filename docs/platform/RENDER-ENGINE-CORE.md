@@ -18,6 +18,10 @@ The canonical local fixture remains byte-identical: SHA-256 `c4b0112b0e43312d1bb
 
 The authenticated browser role matrix is not certified in this checkout because approved sessions for player, verified player, contributor, moderator, administrator and owner were not available. Verified-player access must be tested as a release-blocking owner action.
 
+## ART-002G submission repair
+
+ART-002G repaired the post-ART-002 insert contract: `raw_source_sha256` and `raw_source_byte_length` are now computed and persisted by the atomic service-role submission command. The command also records `submission_request_id` for duplicate prevention and appends a pending submission audit event. No approved payload or calibration ownership is required at submit time.
+
 ## ART-002C access-control repair
 
 The regression root cause was a capability vocabulary mismatch: navigation used

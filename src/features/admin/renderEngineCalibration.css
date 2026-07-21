@@ -120,6 +120,23 @@
 .render-engine-lab__metadata-panel { margin-top: 0; }
 @media (max-width: 700px) { .render-engine-lab__profile-bar { align-items: stretch; flex-direction: column; } .render-engine-lab__profile-bar > label:first-child { min-width: 0; } .render-engine-lab__preview-surface, .render-engine-lab__reference-surface { min-height: 280px; } .render-engine-lab__actions { width: 100%; } .render-engine-lab__save-state { flex: 1 1 100%; } }
 
+.render-engine-lab__calibration-workflow { display: grid; gap: .8rem; margin-bottom: .85rem; border: 1px solid var(--lab-accent); border-radius: .7rem; padding: .8rem; background: linear-gradient(135deg, rgba(240,187,76,.08), var(--lab-panel)); }
+.render-engine-lab__workflow-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.render-engine-lab__workflow-steps button { width: 100%; min-height: 2rem; border: 1px solid var(--lab-border); border-radius: .35rem; padding: .3rem; color: var(--lab-muted); background: var(--lab-panel-soft); font: inherit; font-size: .65rem; text-align: left; cursor: pointer; }
+.render-engine-lab__workflow-steps li.is-active button { border-color: var(--lab-accent); color: #241806; background: var(--lab-accent); }
+.render-engine-lab__workflow-steps li.is-complete button { border-color: #4d9b68; color: #b9f0ca; }
+.render-engine-lab__calibration-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem; }
+.render-engine-lab__calibration-controls label { display: grid; gap: .2rem; color: var(--lab-muted); font-size: .68rem; }
+.render-engine-lab__calibration-controls input, .render-engine-lab__calibration-controls select { min-height: 2rem; width: 7rem; }
+.render-engine-lab__anchor-table { overflow: auto; border: 1px solid var(--lab-border); border-radius: .45rem; }
+.render-engine-lab__anchor-table table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: .68rem; }
+.render-engine-lab__anchor-table th, .render-engine-lab__anchor-table td { border-bottom: 1px solid var(--lab-border); padding: .35rem; text-align: right; }
+.render-engine-lab__anchor-table th:first-child, .render-engine-lab__anchor-table td:first-child { text-align: left; }
+.render-engine-lab__anchor-table input { width: 4.5rem; min-height: 1.7rem; }
+.render-engine-lab__anchor-table button { border: 1px solid #58708a; border-radius: .3rem; padding: .25rem .4rem; color: var(--lab-muted); background: #08111c; font: inherit; font-size: .64rem; cursor: pointer; }
+.render-engine-lab__anchor-table .is-good { color: #b9f0ca; } .render-engine-lab__anchor-table .is-risk { color: #ffd18b; }
+.render-engine-lab__calibration-evidence { margin: 0; color: var(--lab-muted); font-size: .7rem; }
+
 .render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__topbar,
 .render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__toolbar,
 .render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__source-panel,

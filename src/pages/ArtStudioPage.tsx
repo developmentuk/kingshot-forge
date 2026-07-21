@@ -216,6 +216,7 @@ function SubmissionForm({ signedIn, onSignIn, onSubmitted }: { signedIn: boolean
   const [guidelines, setGuidelines] = useState(false)
   const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [submissionRequestId] = useState(() => crypto.randomUUID())
   const [error, setError] = useState<string | null>(null)
   if (!signedIn) return <div className="art-studio-auth-card"><h2>Sign in to submit chat art</h2><p>Submissions are tied to your Forge identity so status and attribution remain clear.</p><button type="button" className="button button--primary" onClick={onSignIn}>Continue with Google</button></div>
   const issues = validateTextArtwork({ title, description, artwork: artworkText, tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean), attributionType, attributionName: attributionType === 'anonymous' ? null : attributionName })
@@ -229,7 +230,7 @@ function SubmissionForm({ signedIn, onSignIn, onSubmitted }: { signedIn: boolean
     if (validationIssues.length) { setError(validationIssues.map((issue) => issue.message).join(' ')); return }
     setSaving(true)
     try {
-      const record = await submitCommunityArt({ title, description, category, tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean), artworkText, attributionType, attributionName: attributionType === 'anonymous' ? null : attributionName, ownershipConfirmed: ownership, guidelinesConfirmed: guidelines })
+      const record = await submitCommunityArt({ requestId: submissionRequestId, title, description, category, tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean), artworkText, attributionType, attributionName: attributionType === 'anonymous' ? null : attributionName, ownershipConfirmed: ownership, guidelinesConfirmed: guidelines })
       onSubmitted(record)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'We couldn’t submit your artwork. Your draft is still here — please try again.')
