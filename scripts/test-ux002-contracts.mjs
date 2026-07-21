@@ -8,7 +8,7 @@ const checks = [
   ['search uses router navigation', 'src/features/search/SearchExperience.tsx', /navigate\(/],
   ['search skips focus restoration after navigation', 'src/features/search/SearchExperience.tsx', /didNavigateRef/],
   ['Forge Connections has an intentional empty state', 'src/features/search/SearchExperience.tsx', /No related Forge content has been published yet/],
-  ['Render Engine is permission-gated in navigation', 'src/navigation/workspaceRegistry.ts', /Render Engine.*cms\.view/],
+  ['Render Engine is permission-gated in navigation', 'src/navigation/workspaceRegistry.ts', /Render Engine.*render_engine\.view/],
   ['KvK has both presentation modes', 'src/pages/KvkTrackerPage.tsx', /KvkView.*cards.*compact/s],
   ['operations and settings use dark Forge surfaces', 'src/App.css', /UX-002 shared dark surface reconciliation/],
 ]
