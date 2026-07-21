@@ -5,6 +5,7 @@ import type {
 
 import {
   BuildingCostsField,
+  type BuildingProgressionSummary,
 } from "./BuildingCostsField.js";
 
 import type {
@@ -387,6 +388,19 @@ export function RecordEditorField({
       break;
 
     case "building-costs":
+      const progressionSummary: BuildingProgressionSummary | undefined =
+        typeof record.values.canonicalRecordCount === "number" &&
+        typeof record.values.upgradeRowCount === "number" &&
+        typeof record.values.baseStateCount === "number" &&
+        typeof record.values.truegoldStageCount === "number"
+          ? {
+              canonicalRecordCount: record.values.canonicalRecordCount,
+              upgradeRowCount: record.values.upgradeRowCount,
+              baseStateCount: record.values.baseStateCount,
+              truegoldStageCount: record.values.truegoldStageCount,
+              baseState: record.values.baseState ?? null,
+            }
+          : undefined;
       fieldControl = (
         <BuildingCostsField
           id={inputId}
@@ -399,6 +413,7 @@ export function RecordEditorField({
             describedByIds ||
             undefined
           }
+          progressionSummary={progressionSummary}
           onChange={
             handleBuildingCostsChange
           }

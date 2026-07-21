@@ -23,6 +23,8 @@
     "test:buildings-publication": "node scripts/test-buildings-publication.mjs",
     "test:buildings-admin-projection": "node scripts/test-buildings-admin-projection.mjs",
     "test:buildings-editor-hotfix": "node scripts/test-buildings-editor-hotfix.mjs",
+    "test:buildings-editor-semantics": "node --experimental-strip-types scripts/test-buildings-editor-semantics.mjs",
+    "test:buildings-editor-retry": "node --experimental-strip-types scripts/test-buildings-editor-retry.mjs",
     "test:verification-centre": "node scripts/test-verification-centre.mjs",
     "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
     "validate:player-identity": "node scripts/validate-player-identity.mjs",
