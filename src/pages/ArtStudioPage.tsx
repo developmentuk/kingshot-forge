@@ -212,6 +212,7 @@ function SubmissionForm({ signedIn, onSignIn, onSubmitted }: { signedIn: boolean
   const [tags, setTags] = useState('')
   const [artworkText, setArtworkText] = useState('')
   const [ingestionMode, setIngestionMode] = useState<Exclude<IngestionMode, 'legacy_import'>>('text_paste')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [rawBytesBase64, setRawBytesBase64] = useState('')
   const [fileEvidence, setFileEvidence] = useState<{ filename: string; mimeType: string; sha256: string; bytes: number; lineEnding: DetectedLineEnding; crlfCount: number; lfCount: number; lineCount: number; codePoints: number } | null>(null)
   const [attributionType, setAttributionType] = useState<CommunityArtAttribution>('profile')
@@ -228,30 +229,40 @@ function SubmissionForm({ signedIn, onSignIn, onSubmitted }: { signedIn: boolean
   void diagnostics
   async function selectSource(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
-    if (!file) return
+    if (!file) { clearSource(); setError('Choose a .txt file before submitting in file-upload mode.'); return }
     const isTxt = file.name.toLowerCase().endsWith('.txt')
-    if (!isTxt || (file.type && file.type !== 'text/plain')) { setError('Upload a .txt file with MIME type text/plain.'); return }
-    if (file.size > 100_000) { setError('Keep uploaded source files to 100,000 bytes or fewer.'); return }
+    if (!isTxt || (file.type && file.type !== 'text/plain')) { setSelectedFile(null); setFileEvidence(null); setRawBytesBase64(''); setError('Upload a .txt file with MIME type text/plain.'); return }
+    if (file.size > 100_000) { setSelectedFile(null); setFileEvidence(null); setRawBytesBase64(''); setError('Keep uploaded source files to 100,000 bytes or fewer.'); return }
     try {
       const bytes = new Uint8Array(await file.arrayBuffer())
       const decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
       const evidence = inspectSourceText(decoded, bytes)
+      setSelectedFile(file)
       setIngestionMode('file_upload')
       setRawBytesBase64(bytesToBase64(bytes))
       setArtworkText(decoded)
       setFileEvidence({ filename: file.name, mimeType: file.type || 'text/plain', sha256: await sha256Bytes(bytes), bytes: evidence.byteLength, lineEnding: evidence.lineEnding, crlfCount: evidence.crlfCount, lfCount: evidence.lfCount, lineCount: decoded.split(/\r\n?|\n/).length, codePoints: Array.from(decoded).length })
       setError(null)
-    } catch { setError('The file is not valid UTF-8 text and was not loaded.') }
+    } catch { clearSource(); setError('The file is not valid UTF-8 text and was not loaded.') }
+  }
+  function clearSource() {
+    setSelectedFile(null)
+    setFileEvidence(null)
+    setRawBytesBase64('')
+    setArtworkText('')
+    setIngestionMode('text_paste')
+    setError(null)
   }
   async function submit(event: React.FormEvent) {
     event.preventDefault()
     if (saving) return
     setError(null)
     const validationIssues = [...issues, ...(!ownership || !guidelines ? [{ field: 'artwork' as const, message: 'Confirm ownership and the community guidelines before submitting.' }] : [])]
+    if (ingestionMode === 'file_upload' && (!selectedFile || !fileEvidence || !rawBytesBase64)) validationIssues.push({ field: 'artwork' as const, message: 'Choose and keep a valid .txt file attached before submitting.' })
     if (validationIssues.length) { setError(validationIssues.map((issue) => issue.message).join(' ')); return }
     setSaving(true)
     try {
-      const receivedBytes = rawBytesBase64 || bytesToBase64(new TextEncoder().encode(artworkText))
+      const receivedBytes = ingestionMode === 'file_upload' ? rawBytesBase64 : bytesToBase64(new TextEncoder().encode(artworkText))
       const record = await submitCommunityArt({ requestId: submissionRequestId, title, description, category, tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean), artworkText, attributionType, attributionName: attributionType === 'anonymous' ? null : attributionName, ownershipConfirmed: ownership, guidelinesConfirmed: guidelines, ingestionMode, originalFilename: fileEvidence?.filename ?? null, originalMimeType: fileEvidence?.mimeType ?? null, rawBytesBase64: receivedBytes, browserReceivedText: ingestionMode === 'file_upload' ? null : artworkText, normalisationOperations: [] })
       onSubmitted(record)
     } catch (caught) {

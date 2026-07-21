@@ -129,13 +129,15 @@ async function submit(request: VercelRequest, response: VercelResponse) {
     if (!attributionName) { fail(response, 400, 'Complete a Forge display name before using profile attribution.'); return }
   }
   const submissionRequestId = requestId(input.requestId)
-  const ingestionMode = input.ingestionMode === 'file_upload' || input.ingestionMode === 'manual_entry' ? input.ingestionMode : 'text_paste'
+  const ingestionMode = input.ingestionMode === 'file_upload' || input.ingestionMode === 'text_paste' || input.ingestionMode === 'manual_entry' ? input.ingestionMode : null
   const rawBytesBase64 = typeof input.rawBytesBase64 === 'string' ? input.rawBytesBase64 : ''
   const originalFilename = typeof input.originalFilename === 'string' ? input.originalFilename : null
   const originalMimeType = typeof input.originalMimeType === 'string' ? input.originalMimeType : null
   const browserReceivedText = typeof input.browserReceivedText === 'string' ? input.browserReceivedText : null
   const normalisationOperations = Array.isArray(input.normalisationOperations) ? input.normalisationOperations : repaired.operations
+  if (!ingestionMode) { fail(response, 400, 'Choose a supported source input mode.'); return }
   if (!rawBytesBase64) { fail(response, 400, 'Provide the source text or upload a .txt file.'); return }
+  if (ingestionMode === 'file_upload' && (!originalFilename || !originalMimeType || originalMimeType !== 'text/plain')) { fail(response, 400, 'A file upload requires a .txt filename and text/plain MIME type.'); return }
   // The atomic command assigns status: 'pending' and never creates approved_copy_payload.
   const { data: command, error } = await admin.rpc('submit_community_art_submission', { p_request_id: submissionRequestId, p_user_id: currentActor.userId, p_submission: { title, description, category, tags, artworkText, attributionType, attributionName }, p_normalised_text: artworkText.replace(/\r\n?/g, '\n'), p_rendered_preview_payload: artworkText.replace(/\r\n?/g, '\n'), p_compatibility_profile: profile.id, p_repair_operations: repaired.operations, p_compatibility_status: diagnostics.warnings.length ? 'needs_testing' : 'untested', p_character_count: Array.from(artworkText).length, p_line_count: artworkText.replace(/\r\n?/g, '\n').split('\n').length, p_ingestion_mode: ingestionMode, p_original_filename: originalFilename, p_original_mime_type: originalMimeType, p_raw_bytes_base64: rawBytesBase64, p_browser_received_text: browserReceivedText, p_normalisation_operations: normalisationOperations })
   if (error || !command || typeof command !== 'object') { console.error('[art-studio-submit]', { referenceId, userId: currentActor.userId, code: error?.code, message: error?.message, details: error?.details, hint: error?.hint }); fail(response, 500, 'Your artwork could not be submitted right now. Please retry using the same form. Reference ID: ' + referenceId, referenceId); return }
