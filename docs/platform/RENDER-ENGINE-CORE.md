@@ -9,3 +9,11 @@ The stages are raw bytes → raw Unicode → canonical Unicode → normalised Un
 Capabilities are explicit: anonymous public gallery, player own safe projection, contributor submission, moderator queue/raw/private-note access, administrator calibration and owner administration. Verified Player status grants no moderation capability. Forced RLS and explicit grants protect raw source and private notes.
 
 The UI uses memoised analysis, fixed-cell rendering and independently scrolling responsive panes. Large artwork must not expand the page viewport.
+
+## ART-002B certification evidence
+
+Migration `20260721170000_art002_render_engine_core.sql` was applied to Supabase project `hrvdhjscwitqpwjhnjkm` on 21 July 2026. Live catalog checks report `community_art_submissions` with RLS and FORCE RLS enabled, 12/12 existing rows hashed, and the immutable trigger installed. Direct grants deny `anon` and `authenticated` access to `raw_source_text` and legacy `artwork_text`; approved payload reads remain available. Payload-version writes are service-role-only.
+
+The canonical local fixture remains byte-identical: SHA-256 `c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79`, 386 bytes, 276 code points, 278 UTF-16 units, 10 lines and 9 CRLF sequences. No database publication rows were changed by ART-002B; the migration backfilled metadata for 12 existing submissions.
+
+The authenticated browser role matrix is not certified in this checkout because approved sessions for player, verified player, contributor, moderator, administrator and owner were not available. Verified-player access must be tested as a release-blocking owner action.

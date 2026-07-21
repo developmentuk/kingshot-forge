@@ -7,3 +7,5 @@ Safe automatic rules include derived line-ending conversion and profile-based ta
 Raw source is not a normalised value. Approved and clipboard payloads are independent stages, and clipboard writes originate only from approved payload state. Equality compares bytes, hash, UTF-16 units, code points and graphemes.
 
 Fixtures cover ASCII, emoji, full-width, mixed-width, ideographic spaces, invisible characters, names, banners, chat, Alliance Mail and Community Art. Regression compares raw/stage hashes, statistics, approved payload, prediction and clipboard equality.
+
+The canonical fixture proves the source boundary with 276 code points and 278 UTF-16 units. Local pipeline tests prove CRLF and tab deltas are explicit and auditable. Live clipboard equality and authenticated browser transition capture remain owner-session checks.

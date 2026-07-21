@@ -19,6 +19,9 @@ deferred until protected-preview browser acceptance is complete.
 Architecture/documentation sprint complete on the current HOTFIX-002 candidate.
 The ART-002 Render Engine Core is implemented on the focused branch; protected
 preview and owner acceptance remain release gates before promotion.
+ART-002B has applied and verified the source-boundary migration; role-session,
+responsive screenshot and live clipboard evidence remain before production
+promotion.
 See [`architecture/FORGE-DOMAIN-MODEL.md`](architecture/FORGE-DOMAIN-MODEL.md)
 and ADR-001 through ADR-008. This does not mark the Entity Engine, Media
 Library, shared tags, authored relationships or Creator integrations complete.

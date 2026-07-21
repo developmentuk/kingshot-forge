@@ -4,7 +4,9 @@
 
 Raw artifacts are immutable. Recovery restores a new approved payload version
 from preserved raw bytes and the append-only transformation audit; it never
-updates or reconstructs raw source from normalised or rendered text.
+updates or reconstructs raw source from normalised or rendered text. The
+ART-002B migration verified this boundary live and recorded 12 metadata-only
+backfills without publication changes.
 
 ## ARCH-001 Forge Domain Model v1.0 — 21 July 2026
 

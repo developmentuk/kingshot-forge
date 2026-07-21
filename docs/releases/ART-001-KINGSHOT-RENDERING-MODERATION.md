@@ -1,11 +1,17 @@
-# ART-001 — Kingshot rendering and moderation
+# ART-001 / ART-002B certification record
 
-ART-001 separates four values throughout Community Art: immutable `raw_source_text`, editorial `normalised_text`, versioned `approved_copy_payload`, and `rendered_preview_payload`. Public gallery and clipboard paths use the approved payload only; source text is never reconstructed from HTML or `innerText`.
+ART-002B committed the Render Engine Core and applied migration `20260721170000_art002_render_engine_core.sql` to Supabase project `hrvdhjscwitqpwjhnjkm`.
 
-The shared analyzer in `shared/domains/art-studio/rendering.ts` reports code points, Unicode block/name, grapheme count, UTF-16 length, whitespace classes, emoji, invisible controls, width class, profile-based predicted width, line overflow, risk and replacement candidates. Profiles are versioned data, not a global width constant.
+## Evidence
 
-Automatic repairs are deterministic and logged: CRLF/CR to LF, tabs to configured spaces, and known width-unstable punctuation replacements. Full-width and ideographic spaces are preserved unless a moderator explicitly edits them. Every approved payload stores its hash, profile and repair operations; raw source is protected by a database immutability trigger.
+- Branch: `feature/art-rendering-moderation-engine`
+- Final pushed commit at certification update: recorded in Git history
+- RLS: enabled and forced on `community_art_submissions`; immutable source trigger live
+- Direct grants: approved payload only for public reads; raw and legacy artwork source denied to `anon` and `authenticated`
+- Fixture: SHA-256 `c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79`; 276 code points / 278 UTF-16 units
+- Database mutation: 12 existing submissions received raw hash/byte metadata; no publication status or payload was changed
+- Local performance: pipeline inspection completed in 36.23 ms / 93.28 ms / 167.73 ms for 10 KB / 50 KB / 100 KB inputs
 
-Known limitation: the ART-001 brief references a separate “Wow I’m so cute…” upload, but no artwork attachment was present in the workspace. The checked-in mixed-width fixture is therefore a reproducible proxy and must be replaced or re-run with the exact supplied source during protected-preview acceptance.
+## Remaining acceptance gates
 
-No production deployment, Buildings publication change, Media Library work or Entity Identity work is part of ART-001.
+Authenticated role sessions, live clipboard paste capture, responsive screenshots at 390/768/1280/1440, browser console/network capture and protected-preview role smoke testing remain owner-session evidence. No production deployment was made.

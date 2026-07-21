@@ -60,7 +60,9 @@ approved payload; moderation repair history is append-only and auditable. ART-00
 promotes this to the shared Render Engine Core with immutable binary artifacts,
 stage metrics, reversible transformation audits, explicit engine capabilities,
 protected raw source, exact approved-payload clipboard writes and responsive
-calibration panes.
+calibration panes. ART-002B applied the source-boundary migration with FORCE RLS
+and live grant verification; authenticated role sessions remain an owner
+acceptance gate.
 
 Forge is organised into explicit domains rather than isolated pages.
 

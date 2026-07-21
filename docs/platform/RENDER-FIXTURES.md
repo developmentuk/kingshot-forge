@@ -17,3 +17,8 @@ Profiles are versioned in `shared/domains/art-studio/rendering.ts`: Desktop, For
 In Render Engine, select a canonical fixture, choose a profile, and use the screenshot comparison view. The left/source and centre/Forge views expose the generated diagnostics; the reference view accepts the chat or game capture. Zoom, pan, opacity, overlay, difference mode, and alignment controls are local calibration aids. Record observed drift by line in the calibration notes or moderation record, including limitations of the selected profile.
 
 Safe repairs are previews. Approval must create/use the approved payload version; raw source remains immutable and is never a public copy source.
+# ART-002B certification note
+
+The committed `wow-im-so-cute` fixture is the statistics authority: 276 code points, 278 UTF-16 units, 386 UTF-8 bytes, 10 lines and 9 CRLF sequences. Its SHA-256 is `c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79`.
+
+Fixture comparison is local and deterministic. Live database rows are not assumed to be this fixture; their raw artifact hashes and byte lengths were independently verified after the ART-002B migration.
