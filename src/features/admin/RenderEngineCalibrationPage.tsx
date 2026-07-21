@@ -85,7 +85,7 @@ export function RenderEngineCalibrationPage() {
   const textDiagnostics = useMemo(() => analyseText(artwork, textProfile), [artwork, textProfile])
   const familyCount = analysis.familyCounts[family]
   const deviceProfile = useMemo(() => resolveDeviceProfile(deviceId, deviceOverrides), [deviceId, deviceOverrides])
-  const measuredDrifts = useMemo(() => measureRenderDrift(artwork, textProfile, anchorRows, { cellWidth: deviceProfile.cellWidth, screenshotScale: screenshotScale * browserScale, predictedLeft: deviceProfile.bubblePadding }), [artwork, textProfile, anchorRows, deviceProfile.cellWidth, deviceProfile.bubblePadding, screenshotScale, browserScale])
+  const measuredDrifts = useMemo(() => measureRenderDrift(artwork, textProfile, anchorRows, { cellWidth: deviceProfile.cellWidth, lineHeightPx: deviceProfile.cellHeight * deviceProfile.lineHeight, screenshotScale: screenshotScale * browserScale, predictedLeft: deviceProfile.bubblePadding }), [artwork, textProfile, anchorRows, deviceProfile.cellWidth, deviceProfile.cellHeight, deviceProfile.lineHeight, deviceProfile.bubblePadding, screenshotScale, browserScale])
   const driftSummary = useMemo(() => summariseRenderDrift(measuredDrifts.filter((item) => item.right > item.left)), [measuredDrifts])
   const activeProfile = profiles.find((profile) => profile.id === activeProfileId)
   const savedDraft = activeProfile ? serialiseDraft(activeProfile.calibration, activeProfile.deviceOverrides, activeProfile.baseDeviceProfile, activeProfile.benchmarkId ?? '') : serialiseDraft(DEFAULT_CALIBRATION, {}, deviceId, benchmarkId)

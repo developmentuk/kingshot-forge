@@ -96,9 +96,10 @@ export function analyseText(value: string, profile: RenderProfile = RENDER_PROFI
 }
 
 /** Compare manually marked screenshot anchors with the current prediction. Pixel scale is explicit so screenshot/browser scaling is not hidden. */
-export function measureRenderDrift(value: string, profile: RenderProfile, anchors: LineAnchor[], options: { cellWidth?: number; predictedLeft?: number; predictedTop?: number; screenshotScale?: number } = {}): LineDrift[] {
+export function measureRenderDrift(value: string, profile: RenderProfile, anchors: LineAnchor[], options: { cellWidth?: number; lineHeightPx?: number; predictedLeft?: number; predictedTop?: number; screenshotScale?: number } = {}): LineDrift[] {
   const cellWidth = options.cellWidth ?? 10
   const scale = options.screenshotScale ?? 1
+  const lineHeightPx = options.lineHeightPx ?? profile.lineHeight * cellWidth
   const predictedLeft = options.predictedLeft ?? 0
   const diagnostics = analyseText(value, profile)
   return anchors.map((anchor) => {
@@ -109,9 +110,9 @@ export function measureRenderDrift(value: string, profile: RenderProfile, anchor
     const predictedRight = lineLeft + predictedWidth
     const actualWidth = anchor.right - anchor.left
     const predictedTop = options.predictedTop ?? ((anchors[0]?.baseline ?? 0) - profile.baseline)
-    const predictedBaseline = predictedTop + (line?.line ? (line.line - 1) * profile.lineHeight * cellWidth : 0) + profile.baseline
+    const predictedBaseline = predictedTop + (line?.line ? (line.line - 1) * lineHeightPx : 0) + profile.baseline
     const previousBaseline = anchors[anchor.line - 2]?.baseline
-    return { ...anchor, predictedLeft: lineLeft, predictedRight, predictedWidth, actualWidth, leftDrift: lineLeft - anchor.left, rightDrift: predictedRight - anchor.right, widthDrift: predictedWidth - actualWidth, baselineDrift: anchor.baseline === undefined ? null : predictedBaseline - anchor.baseline, lineHeightDrift: anchor.line > 1 && previousBaseline !== undefined && anchor.baseline !== undefined ? (anchor.baseline - previousBaseline) - profile.lineHeight * cellWidth : null }
+    return { ...anchor, predictedLeft: lineLeft, predictedRight, predictedWidth, actualWidth, leftDrift: lineLeft - anchor.left, rightDrift: predictedRight - anchor.right, widthDrift: predictedWidth - actualWidth, baselineDrift: anchor.baseline === undefined ? null : predictedBaseline - anchor.baseline, lineHeightDrift: anchor.line > 1 && previousBaseline !== undefined && anchor.baseline !== undefined ? (anchor.baseline - previousBaseline) - lineHeightPx : null }
   })
 }
 
