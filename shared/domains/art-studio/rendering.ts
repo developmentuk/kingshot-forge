@@ -48,7 +48,10 @@ function diagnosticsFor(glyph: string, profile: RenderProfile): CharacterDiagnos
   return { character: glyph, codePoint: codePoint(glyph), name: unicodeName(glyph), block: block(glyph), grapheme: glyph, widthClass, browserWidth, kingshotWidth, status, risk: control ? 'high' : status === 'width_unstable' || status === 'emoji_risk' ? 'medium' : status === 'unknown' ? 'low' : 'none', replacementCandidates: PUNCTUATION_REPLACEMENTS[glyph] ? [PUNCTUATION_REPLACEMENTS[glyph]] : [] }
 }
 
-function graphemes(value: string): string[] { return typeof Intl !== 'undefined' && 'Segmenter' in Intl ? Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value), (item) => item.segment) : Array.from(value) }
+function graphemes(value: string): string[] {
+  const IntlWithSegmenter = Intl as typeof Intl & { Segmenter?: new (locale?: string | string[], options?: { granularity: 'grapheme' }) => { segment(input: string): Iterable<{ segment: string }> } }
+  return typeof IntlWithSegmenter.Segmenter === 'function' ? Array.from(new IntlWithSegmenter.Segmenter(undefined, { granularity: 'grapheme' }).segment(value), (item) => item.segment) : Array.from(value)
+}
 export function analyseText(value: string, profile: RenderProfile = RENDER_PROFILES['kingshot-chat-bubble']): TextDiagnostics {
   const lines = value.replace(/\r\n?/g, '\n').split('\n')
   const lineDiagnostics = lines.map((source, index) => { const chars = graphemes(source).map((glyph) => diagnosticsFor(glyph, profile)); const estimatedWidth = chars.reduce((sum, item) => sum + item.kingshotWidth, 0); const overflow = Math.max(0, estimatedWidth - profile.maximumSafeLineWidth); const warnings = [...new Set(chars.filter((item) => item.status !== 'verified_safe').map((item) => `${item.codePoint} ${item.status.replaceAll('_', ' ')}`))]; if (overflow) warnings.push(`predicted overflow: ${overflow} cells`); return { line: index + 1, source, graphemes: chars.length, estimatedWidth, overflow, characters: chars, warnings } })
