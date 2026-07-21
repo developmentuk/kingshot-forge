@@ -31,9 +31,11 @@ No production application deployment, merge or tag was made. Migration
 Supabase project `hrvdhjscwitqpwjhnjkm` as `art002g_atomic_community_art_submission`
 at `20260721194617`.
 
-The exact commit `a1f77b52375430fdceec967afa5ccdd3e0e5a824` is deployed as protected
-Vercel preview `dpl_6r9D1ir8BsLz5B41TXLAC9EYYafv` at
-`https://kingshot-forge-96isetlvx-clarksim-7474s-projects.vercel.app` with target
+The original code candidate is `a1f77b52375430fdceec967afa5ccdd3e0e5a824`; the
+final branch HEAD is `da0031120b9745a8e7251955b4e7d208e1ea63ef` after documentation
+and calibration-measurement follow-ups. The final HEAD is deployed as protected
+Vercel preview `dpl_BddrLUggLLj5RcGpnQLzjbzzyXmx` at
+`https://kingshot-forge-rbcnor9jv-clarksim-7474s-projects.vercel.app` with target
 `preview` and state `READY`. Unauthenticated submit against the preview returned a
 safe 401 `Protected deployment`; authenticated player/moderator acceptance remains
 owner-gated.
