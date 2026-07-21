@@ -178,3 +178,11 @@ production promotion. The protected-preview gate must confirm 10 directory
 entities, 587 nested progression rows, 597 publication storage records,
 canonical editor identity, draft-only saves, no staged leakage and ordinary
 player denial. Production remains unchanged until those checks pass.
+
+## HOTFIX-002 gate update
+
+The candidate adds Player Buildings navigation/readability, TG1–TG6 troop
+terminology and Forge Connections card/tab repair. The final gate remains
+blocked until the exact protected preview is verified at 390px, 768px, 1280px
+and 1440px by ordinary player and owner/admin sessions with clean
+console/network diagnostics.

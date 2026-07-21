@@ -36,14 +36,15 @@ function numberFrom(value: unknown): number | null {
 }
 
 function getTroopOptions(data: unknown, troopKey: string): SelectOption[] {
+  const playerTroopName = troopKey === 'lancer' ? 'Cavalry' : troopKey === 'marksman' ? 'Archers' : 'Infantry'
+  const labelFor = (tier: number) => `TG${tier} ${playerTroopName}`
   if (Array.isArray(data)) {
     return data
       .map((value) => asRecord(value))
       .filter((record): record is DatasetRecord => record?.troop_type === troopKey)
       .map((record) => {
         const tier = numberFrom(record.tier)
-        const playerTroopName = troopKey === 'lancer' ? 'Cavalry' : troopKey === 'marksman' ? 'Archers' : 'Infantry'
-        return tier === null ? null : { value: tier, label: typeof record.label === 'string' ? record.label.replace(/Lancer/gi, 'Cavalry').replace(/Marksman/gi, 'Archers') : `T${tier} ${playerTroopName}` }
+        return tier === null || tier < 1 || tier > 6 ? null : { value: tier, label: labelFor(tier) }
       })
       .filter((option): option is SelectOption => option !== null)
       .sort((left, right) => left.value - right.value)
@@ -53,14 +54,10 @@ function getTroopOptions(data: unknown, troopKey: string): SelectOption[] {
   const troop = asRecord(troops?.[troopKey])
   const tiers = asRecord(troop?.tiers)
   if (!tiers) return []
-  const playerTroopName = troopKey === 'lancer' ? 'Cavalry' : troopKey === 'marksman' ? 'Archers' : 'Infantry'
-
   return Object.entries(tiers)
-    .map(([key, value]) => {
-      const tier = asRecord(value)
+    .map(([key]) => {
       const number = numberFrom(key.replace(/^t/i, ''))
-      const rawLabel = typeof tier?.label === 'string' ? tier.label : `T${number} ${playerTroopName}`
-      return number === null ? null : { value: number, label: rawLabel.replace(/Lancer/gi, 'Cavalry').replace(/Marksman/gi, 'Archers') }
+      return number === null || number < 1 || number > 6 ? null : { value: number, label: labelFor(number) }
     })
     .filter((option): option is SelectOption => option !== null)
     .sort((left, right) => left.value - right.value)

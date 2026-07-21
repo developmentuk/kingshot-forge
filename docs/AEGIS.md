@@ -541,3 +541,12 @@ storage retains 597 records. Placeholder identity generation is prohibited;
 load failures must surface an unavailable/retry state. Buildings edits remain
 draft-only through the editorial workflow, with published and staged data
 server/read-policy protected.
+
+## HOTFIX-002 player readability and connections
+
+The candidate keeps published Buildings immutable, exposes the existing
+published `/buildings` routes through Player navigation, and renders published
+progression read-only with shared formatting. Player troop snapshots retain
+numeric compatibility values while the UI uses TG1–TG6 terminology. Forge
+Connections consumes published relationship results only and renders
+deduplicated domain-filtered cards with honest empty states.

@@ -27,6 +27,7 @@ const mobileNavigation: WorkspaceNavItem[] = [
   { label: 'Gift Codes', shortLabel: 'Codes', icon: '🎁', path: '/gift-codes' },
   { label: 'My Forge', shortLabel: 'My Forge', icon: '⭐', path: '/my-forge' },
   { label: 'Personal Progression', shortLabel: 'Progression', icon: '📈', path: '/my-forge/progression' },
+  { label: 'Buildings', shortLabel: 'Buildings', icon: '🏛️', path: '/buildings' },
 ]
 
 function MobileBottomLink({ item }: { item: WorkspaceNavItem }) {
