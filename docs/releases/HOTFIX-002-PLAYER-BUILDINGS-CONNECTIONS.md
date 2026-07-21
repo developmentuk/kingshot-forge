@@ -63,3 +63,26 @@ settings had no document-level horizontal overflow after the containment fix.
 Console diagnostics returned no warnings or errors. The available session was
 not authenticated for Personal Progression save/reload/history or owner/admin
 routes, so those acceptance gates remain open. No write was attempted.
+
+## HOTFIX-002C progression correction — 21 July 2026
+
+ARCH-001 was preserved separately on `architecture/forge-domain-model-v1` at
+`a96b52f0dde3fbc30e427375ff524f831c518d69`; those documentation changes are
+not part of this hotfix branch. The published Buildings contract is sufficient
+for hierarchical progression: `progression_phase`, `base_level`,
+`truegold_tier`, `stage`, `original_row` (source sequence), `level_label` and
+`record_id`. `row_kind` and the display label are derived by the shared
+semantic adapter; labels are never parsed for ordering.
+
+The shared comparator now orders phase, standard level, Truegold tier,
+Truegold sub-stage, source sequence and record ID. The renderer produces
+`TGn` for stage 0 and `TGn-m` for sub-stages, preserving every published row.
+Town Center remains 71 rows (31 standard, 4 pre-Truegold, 36 Truegold,
+including one base-state row); Barracks, Embassy and Infirmary remain 70;
+Academy and Storehouse remain 30; War Academy remains 36. The current
+published rows contain five sub-stages per TG1–TG7 and a TG8 base row; the
+implementation remains data-driven for future variable counts.
+
+The authenticated Personal Progression and owner/admin protected-preview
+gates remain unperformed in the available session. No player snapshot write,
+cleanup, publication, migration or production action was performed.

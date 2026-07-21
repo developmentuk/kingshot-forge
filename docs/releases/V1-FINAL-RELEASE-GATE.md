@@ -187,6 +187,23 @@ blocked until the exact protected preview is verified at 390px, 768px, 1280px
 and 1440px by ordinary player and owner/admin sessions with clean
 console/network diagnostics.
 
+## HOTFIX-002C progression semantics update — 21 July 2026
+
+The hotfix branch now consumes the published Buildings semantic fields
+`progression_phase`, `base_level`, `truegold_tier`, `stage`, `original_row`,
+`level_label` and `record_id` through one shared ordering/label utility. The
+utility distinguishes standard, transition, Truegold tier and Truegold
+sub-stage rows; it renders `TG1`, `TG1-1`, and so on from structured values and
+does not sort or parse rendered labels. ARCH-001 documentation is isolated on
+`architecture/forge-domain-model-v1` and is not mixed into the hotfix.
+
+The current published projection was inspected read-only: Town Center 71,
+Barracks/Embassy/Infirmary 70 each, Academy/Storehouse 30 each, and War
+Academy 36. No database mutation or publication/version change occurred.
+The final recommendation remains **Not Ready** pending authenticated
+Personal Progression save/reload, owner/admin acceptance, exact replacement
+preview checks at 390/768/1280/1440, and clean console/network evidence.
+
 ## Sprint 1.0.2 stabilisation update — 21 July 2026
 
 The current candidate repairs the verified Buildings progression ordering defect
