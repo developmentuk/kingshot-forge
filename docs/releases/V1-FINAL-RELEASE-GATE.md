@@ -220,3 +220,13 @@ The available browser session was stopped at the Vercel authentication wall
 before application rendering; no browser acceptance result is inferred from
 that state. Vercel runtime logs contained no error entries. Owner/player
 authentication is still required to complete the responsive and console gate.
+
+Final protected preview follow-up: deployment
+`dpl_8HZMLotXRroegNV6hg8Z2g2PTjH8` at
+`https://kingshot-forge-yitsh9nhw-clarksim-7474s-projects.vercel.app` passed
+Player View checks for Buildings directory/deep links, structured ordering,
+read-only tables, navigation/dashboard discoverability and document overflow
+at 390/768/1280/1440. Console diagnostics were empty. Personal Progression
+save/reload/history and owner/admin routes were not authenticated in the
+available session, so the final gate remains Not Ready; no write was attempted
+and database mutation count remains zero.

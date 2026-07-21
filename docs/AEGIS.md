@@ -566,3 +566,11 @@ values without destructive conversion, and presents the player-facing troop
 labels as TG1–TG6 for Infantry, Cavalry and Archers. Forge Connections may show
 only published relationship results with a real relationship type and a
 supported destination; tags may enrich a card but cannot create a relationship.
+
+Sprint 1.0.2 preview follow-up: Player View acceptance verified the Buildings
+directory and seven required Buildings deep links, corrected normal-before-
+Truegold ordering, read-only published tables, navigation/dashboard
+discoverability and no document-level horizontal overflow at 390/768/1280/1440.
+Console diagnostics were empty. Personal Progression save/reload/history and
+owner/admin acceptance remain unverified because the available session was not
+authenticated for those routes; no write was attempted.

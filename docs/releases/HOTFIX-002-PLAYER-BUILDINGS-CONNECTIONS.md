@@ -51,3 +51,15 @@ The available browser session reached the Vercel authentication wall before
 the application, so the 390/768/1280/1440 browser matrix and authenticated
 Console/Network/React/Supabase review remain owner-session blockers. Vercel
 runtime logs showed no error entries during the check.
+
+The final protected preview follow-up is deployment
+`dpl_8HZMLotXRroegNV6hg8Z2g2PTjH8` at
+`https://kingshot-forge-yitsh9nhw-clarksim-7474s-projects.vercel.app`.
+Player View acceptance verified the Buildings directory and the Town Center,
+Academy, Barracks, Embassy, Infirmary, Storehouse and War Academy deep links.
+Town Center rendered normal levels before workbook-defined Truegold stages;
+published tables remained read-only; and the requested 390/768/1280/1440
+settings had no document-level horizontal overflow after the containment fix.
+Console diagnostics returned no warnings or errors. The available session was
+not authenticated for Personal Progression save/reload/history or owner/admin
+routes, so those acceptance gates remain open. No write was attempted.
