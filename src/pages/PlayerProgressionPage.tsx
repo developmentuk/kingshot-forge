@@ -36,34 +36,29 @@ function numberFrom(value: unknown): number | null {
 }
 
 function getTroopOptions(data: unknown, troopKey: string): SelectOption[] {
+  const playerTroopName = troopKey === 'lancer' ? 'Cavalry' : troopKey === 'marksman' ? 'Archers' : 'Infantry'
+  const labelFor = (tier: number) => `TG${tier} ${playerTroopName}`
+  const options = new Map<number, SelectOption>(Array.from({ length: 6 }, (_, index) => [index + 1, { value: index + 1, label: labelFor(index + 1) }]))
   if (Array.isArray(data)) {
-    return data
+    data
       .map((value) => asRecord(value))
       .filter((record): record is DatasetRecord => record?.troop_type === troopKey)
-      .map((record) => {
+      .forEach((record) => {
         const tier = numberFrom(record.tier)
-        const playerTroopName = troopKey === 'lancer' ? 'Cavalry' : troopKey === 'marksman' ? 'Archers' : 'Infantry'
-        return tier === null ? null : { value: tier, label: typeof record.label === 'string' ? record.label.replace(/Lancer/gi, 'Cavalry').replace(/Marksman/gi, 'Archers') : `T${tier} ${playerTroopName}` }
+        if (tier !== null && tier >= 1 && tier <= 6) options.set(tier, { value: tier, label: labelFor(tier) })
       })
-      .filter((option): option is SelectOption => option !== null)
-      .sort((left, right) => left.value - right.value)
+    return [...options.values()].sort((left, right) => left.value - right.value)
   }
   const root = asRecord(data)
   const troops = asRecord(root?.troops)
   const troop = asRecord(troops?.[troopKey])
   const tiers = asRecord(troop?.tiers)
-  if (!tiers) return []
-  const playerTroopName = troopKey === 'lancer' ? 'Cavalry' : troopKey === 'marksman' ? 'Archers' : 'Infantry'
-
-  return Object.entries(tiers)
-    .map(([key, value]) => {
-      const tier = asRecord(value)
+  if (!tiers) return [...options.values()]
+  Object.entries(tiers).forEach(([key]) => {
       const number = numberFrom(key.replace(/^t/i, ''))
-      const rawLabel = typeof tier?.label === 'string' ? tier.label : `T${number} ${playerTroopName}`
-      return number === null ? null : { value: number, label: rawLabel.replace(/Lancer/gi, 'Cavalry').replace(/Marksman/gi, 'Archers') }
+      if (number !== null && number >= 1 && number <= 6) options.set(number, { value: number, label: labelFor(number) })
     })
-    .filter((option): option is SelectOption => option !== null)
-    .sort((left, right) => left.value - right.value)
+  return [...options.values()].sort((left, right) => left.value - right.value)
 }
 
 function getTruegoldOptions(data: unknown): SelectOption[] {

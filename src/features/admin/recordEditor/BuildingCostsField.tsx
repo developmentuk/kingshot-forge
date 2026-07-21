@@ -5,6 +5,7 @@ import type {
 import type {
   RecordEditorValue,
 } from "./recordEditorSchema.js";
+import { formatDuration as formatDurationShared, formatNumber as formatNumberShared } from "../../../utils/formatters.js";
 
 type BuildingCostRow = [
   number,
@@ -160,6 +161,18 @@ export function BuildingCostsField({
   const rows =
     normaliseRows(value);
   const baseState = progressionSummary?.baseState;
+
+  if (disabled) {
+    return (
+      <section className="building-costs-readonly" aria-label="Published progression">
+        {progressionSummary && <p className="building-costs-readonly__summary">
+          {formatNumberShared(progressionSummary.canonicalRecordCount)} canonical records · {formatNumberShared(progressionSummary.upgradeRowCount)} upgrade rows · {formatNumberShared(progressionSummary.baseStateCount)} base-state record · {formatNumberShared(progressionSummary.truegoldStageCount)} Truegold stages
+        </p>}
+        {rows.length ? <div className="building-costs-editor__scroll"><table className="building-costs-editor__table building-costs-editor__table--readonly"><thead><tr>{COST_COLUMN_LABELS.map((label) => <th key={label}>{label}</th>)}</tr></thead><tbody>{rows.map((row, rowIndex) => <tr key={`${row[0]}-${rowIndex}`}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cellIndex === 0 ? formatNumberShared(cell) : cellIndex === 6 ? formatDurationShared(cell) : formatNumberShared(cell)}</td>)}</tr>)}</tbody></table></div> : <p className="building-costs-editor__empty">No published progression rows.</p>}
+        <p className="building-costs-readonly__note">Published progression is read-only. Draft editing is unavailable for this published record.</p>
+      </section>
+    )
+  }
 
   function updateCell(
     rowIndex: number,

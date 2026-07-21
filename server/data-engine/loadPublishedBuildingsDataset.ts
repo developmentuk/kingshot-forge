@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 
 import type { DatasetLoadResult } from './runner.js'
 import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
+import { sortBuildingProgression } from '../../shared/data-pipeline/buildingsProgressionOrdering.js'
 
 type Row = Record<string, unknown>
 
@@ -38,7 +39,7 @@ export async function loadPublishedBuildingsDataset(): Promise<DatasetLoadResult
     const key = typeof row.building_key === 'string' ? row.building_key : ''
     const name = typeof row.building_name === 'string' ? row.building_name : ''
     if (!key || !name) return []
-    const buildingProgression = progressionByBuilding.get(key) ?? []
+    const buildingProgression = sortBuildingProgression(progressionByBuilding.get(key) ?? [])
     return [{
       ...row,
       key,

@@ -12,3 +12,26 @@
 .forge-connections__discovery { display: none; }
 .forge-result--informational { cursor: default; opacity: .86; }
 .forge-connection-card__open { display: block; margin-top: .45rem; color: #f0bb4c; font-size: .72rem; font-weight: 800; }
+.forge-connections { margin-top: 1.5rem; padding: 1.1rem; border: 1px solid #344255; border-radius: 1rem; background: #0e1a29; }
+.forge-connections__heading { display: flex; justify-content: space-between; gap: 1rem; align-items: end; }
+.forge-connections__heading h2 { margin: .25rem 0; color: #f7f2e8; }
+.forge-connections__heading p:last-child { margin: .25rem 0 0; color: #aab6c5; font-size: .8rem; }
+.forge-connections__heading > a { color: #9ecdf7; white-space: nowrap; font-size: .75rem; }
+.forge-connections__tabs { display: flex; gap: .45rem; overflow-x: auto; margin: 1rem 0 .25rem; padding-bottom: .25rem; }
+.forge-connections__tabs button { border: 1px solid #344255; border-radius: 999px; padding: .45rem .7rem; background: #142338; color: #aab6c5; font: inherit; font-size: .72rem; white-space: nowrap; cursor: pointer; }
+.forge-connections__tabs button:hover, .forge-connections__tabs button:focus-visible, .forge-connections__tabs button.is-active { border-color: #e6ab38; color: #f7f2e8; box-shadow: 0 0 0 2px rgba(230,171,56,.12); outline: 0; }
+.forge-connections__tabs button span { margin-left: .35rem; color: #e6ab38; }
+.forge-connections__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(235px, 1fr)); gap: .75rem; }
+.forge-connection-card { display: grid; grid-template-columns: auto minmax(0,1fr); align-content: start; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid #344255; border-radius: .75rem; background: #111e2d; color: inherit; }
+.forge-connection-card:hover { border-color: #e6ab38; }
+.forge-connection-card__icon { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; flex: 0 0 auto; border: 1px solid #40516a; border-radius: .65rem; background: #1b3049; color: #e6ab38; overflow: hidden; }
+.forge-connection-card__icon img { width: 100%; height: 100%; object-fit: cover; }
+.forge-connection-card__body { min-width: 0; }
+.forge-connection-card__body > strong { display: block; margin: .35rem 0; color: #f7f2e8; font-size: .95rem; line-height: 1.25; overflow-wrap: anywhere; }
+.forge-connection-card__body > p { margin: .35rem 0; color: #aab6c5; font-size: .78rem; line-height: 1.45; overflow-wrap: anywhere; }
+.forge-connection-card__category { display: block; color: #9ecdf7; font-size: .72rem; }
+.forge-connection-card__tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .45rem; }
+.forge-connection-card__tags span { padding: .18rem .35rem; border-radius: 999px; background: #1b3049; color: #dce5ef; font-size: .65rem; }
+.forge-connection-card__why strong { color: #f7f2e8; }
+@media (max-width: 700px) { .forge-connections__heading { align-items: start; flex-direction: column; } .forge-connections__heading > a { white-space: normal; } .forge-connections { padding: .85rem; } }
+@media (max-width: 420px) { .forge-connections__grid { grid-template-columns: minmax(0, 1fr); } .forge-connection-card { padding: .75rem; } .forge-connection-card__body > p { line-height: 1.5; } }

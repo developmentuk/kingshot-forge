@@ -59,7 +59,7 @@ export async function getPublicProgression(playerAccountId: string): Promise<Pla
 }
 
 function validateTier(value: number | null, label: string, supportedValues?: ReadonlySet<number>) {
-  if (value !== null && (value < 1 || value > 12)) throw new Error(`${label} must be between T1 and T12.`)
+  if (value !== null && (value < 1 || value > 6)) throw new Error(`${label} must be between TG1 and TG6.`)
   if (value !== null && supportedValues && !supportedValues.has(value)) {
     throw new Error(`${label} is not available in the published dataset.`)
   }

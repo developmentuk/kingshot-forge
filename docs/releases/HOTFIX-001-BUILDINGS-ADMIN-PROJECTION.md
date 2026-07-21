@@ -67,3 +67,9 @@ safeguards. Database verification is read-only and must confirm publication
 counts and no orphan progression rows. Protected-preview browser acceptance
 must verify the owner/admin view and ordinary-player denial without staged
 leakage.
+
+## HOTFIX-002 continuation
+
+The published progression reader removes disabled editable controls and
+duplicate raw/formatted values. Player-facing Buildings uses the same published
+projection and does not create a second Buildings source.

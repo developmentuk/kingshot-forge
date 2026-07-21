@@ -178,3 +178,72 @@ production promotion. The protected-preview gate must confirm 10 directory
 entities, 587 nested progression rows, 597 publication storage records,
 canonical editor identity, draft-only saves, no staged leakage and ordinary
 player denial. Production remains unchanged until those checks pass.
+
+## HOTFIX-002 gate update
+
+The candidate adds Player Buildings navigation/readability, TG1–TG6 troop
+terminology and Forge Connections card/tab repair. The final gate remains
+blocked until the exact protected preview is verified at 390px, 768px, 1280px
+and 1440px by ordinary player and owner/admin sessions with clean
+console/network diagnostics.
+
+## HOTFIX-002C progression semantics update — 21 July 2026
+
+The hotfix branch now consumes the published Buildings semantic fields
+`progression_phase`, `base_level`, `truegold_tier`, `stage`, `original_row`,
+`level_label` and `record_id` through one shared ordering/label utility. The
+utility distinguishes standard, transition, Truegold tier and Truegold
+sub-stage rows; it renders `TG1`, `TG1-1`, and so on from structured values and
+does not sort or parse rendered labels. ARCH-001 documentation is isolated on
+`architecture/forge-domain-model-v1` and is not mixed into the hotfix.
+
+The current published projection was inspected read-only: Town Center 71,
+Barracks/Embassy/Infirmary 70 each, Academy/Storehouse 30 each, and War
+Academy 36. No database mutation or publication/version change occurred.
+The final recommendation remains **Not Ready** pending authenticated
+Personal Progression save/reload, owner/admin acceptance, exact replacement
+preview checks at 390/768/1280/1440, and clean console/network evidence.
+
+## Sprint 1.0.2 stabilisation update — 21 July 2026
+
+The current candidate repairs the verified Buildings progression ordering defect
+with a shared structured comparator used by publication loading, projection
+adaptation and the Player renderer. It keeps the published table read-only,
+improves numeric/duration/null presentation and bounded mobile scrolling, and
+adds a regression fixture for normal levels, transition rows and Truegold
+stage/tier ordering.
+
+Personal Progression verification confirms TG1–TG6 presentation for Infantry,
+Cavalry and Archers while retaining numeric compatibility for legacy T1–T5
+values. Save/reload/history use the existing snapshot path; no migration or
+canonical dataset mutation is part of this sprint.
+
+Forge Connections now carries relationship labels through the adapter and
+renders only published, deduplicated results with supported destinations. Cards
+separate icon, dataset/type, title, description, relationship explanation, tags
+and destination. Tag-only or fabricated relationships are excluded.
+
+Automated checks are the local evidence for this update. The release gate is
+still **Not Ready** until the exact protected preview has browser acceptance at
+390px, 768px, 1280px and 1440px, with authenticated player/owner sessions and
+clean Console/Network/React/Supabase diagnostics. Production promotion, merge
+and tagging remain prohibited.
+
+The exact sprint candidate `8e8adfe62b7264b2079c4e4db35c69a04d62c3da` is
+deployed READY as protected preview deployment
+`dpl_DaqhW8QbfvoZWHbhHbfGH8yZAgdg` at
+`https://kingshot-forge-gi4i2vz99-clarksim-7474s-projects.vercel.app`.
+The available browser session was stopped at the Vercel authentication wall
+before application rendering; no browser acceptance result is inferred from
+that state. Vercel runtime logs contained no error entries. Owner/player
+authentication is still required to complete the responsive and console gate.
+
+Final protected preview follow-up: deployment
+`dpl_8HZMLotXRroegNV6hg8Z2g2PTjH8` at
+`https://kingshot-forge-yitsh9nhw-clarksim-7474s-projects.vercel.app` passed
+Player View checks for Buildings directory/deep links, structured ordering,
+read-only tables, navigation/dashboard discoverability and document overflow
+at 390/768/1280/1440. Console diagnostics were empty. Personal Progression
+save/reload/history and owner/admin routes were not authenticated in the
+available session, so the final gate remains Not Ready; no write was attempted
+and database mutation count remains zero.

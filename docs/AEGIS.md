@@ -541,3 +541,36 @@ storage retains 597 records. Placeholder identity generation is prohibited;
 load failures must surface an unavailable/retry state. Buildings edits remain
 draft-only through the editorial workflow, with published and staged data
 server/read-policy protected.
+
+## HOTFIX-002 player readability and connections
+
+The candidate keeps published Buildings immutable, exposes the existing
+published `/buildings` routes through Player navigation, and renders published
+progression read-only with shared formatting. Player troop snapshots retain
+numeric compatibility values while the UI uses TG1–TG6 terminology. Forge
+Connections consumes published relationship results only and renders
+deduplicated domain-filtered cards with honest empty states.
+
+## Sprint 1.0.2 player experience stabilisation — 21 July 2026
+
+Buildings progression ordering is a shared contract. Consumers must order
+published rows from structured `progression_phase`, `base_level`, `stage` and
+`truegold_tier` metadata; displayed labels are presentation only and must not
+be used as sort keys. The canonical sequence is normal/base progression,
+pre-Truegold transition rows, then Truegold stage/tier rows as defined by the
+published workbook.
+
+Player Buildings remains published-only and read-only. Personal Progression
+continues to store the existing numeric snapshot schema, maps legacy T1–T5
+values without destructive conversion, and presents the player-facing troop
+labels as TG1–TG6 for Infantry, Cavalry and Archers. Forge Connections may show
+only published relationship results with a real relationship type and a
+supported destination; tags may enrich a card but cannot create a relationship.
+
+Sprint 1.0.2 preview follow-up: Player View acceptance verified the Buildings
+directory and seven required Buildings deep links, corrected normal-before-
+Truegold ordering, read-only published tables, navigation/dashboard
+discoverability and no document-level horizontal overflow at 390/768/1280/1440.
+Console diagnostics were empty. Personal Progression save/reload/history and
+owner/admin acceptance remain unverified because the available session was not
+authenticated for those routes; no write was attempted.

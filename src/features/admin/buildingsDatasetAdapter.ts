@@ -23,6 +23,7 @@ import {
   classifyBuildingProgressionRow,
   getBuildingProgressionCounts,
 } from "./buildingsProgressionSemantics";
+import { sortBuildingProgression } from "../../../shared/data-pipeline/buildingsProgressionOrdering";
 
 function getBuildingKey(record: Record<string, unknown>): string | null {
   return readStringValue(record.building_key);
@@ -33,7 +34,7 @@ function createBuildingEditorRecord(
 ): RecordEditorRecord {
   const key = getBuildingKey(record);
   if (!key) throw new Error("Published Buildings record is missing building_key.");
-  const progression = Array.isArray(record.progression) ? record.progression : [];
+  const progression = sortBuildingProgression(Array.isArray(record.progression) ? record.progression.filter(isRecordObject) : []);
   const progressionRows = progression.filter(isRecordObject);
   const progressionCounts = getBuildingProgressionCounts(progressionRows);
   const costs = progression.flatMap((row) => {
@@ -132,7 +133,7 @@ export const buildingsDatasetAdapter:
             const key = getBuildingKey(building);
             const name = readStringValue(building.building_name);
             if (!key || !name) throw new Error("Published Buildings record is missing canonical identity fields.");
-            const progression = Array.isArray(building.progression) ? building.progression : [];
+            const progression = sortBuildingProgression(Array.isArray(building.progression) ? building.progression.filter(isRecordObject) : []);
             const progressionRows = progression.filter(isRecordObject);
             const progressionCounts = getBuildingProgressionCounts(progressionRows);
 

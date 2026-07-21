@@ -5,3 +5,8 @@
   margin-top: 1.25rem;
   padding-top: 1.25rem;
 }
+
+.building-costs-readonly { display: grid; gap: .75rem; }
+.building-costs-readonly__summary, .building-costs-readonly__note { margin: 0; color: #8f9daf; font-size: .78rem; line-height: 1.45; }
+.building-costs-editor__table--readonly { min-width: 760px; }
+.building-costs-editor__table--readonly td { color: #e6edf5; font-variant-numeric: tabular-nums; white-space: nowrap; }

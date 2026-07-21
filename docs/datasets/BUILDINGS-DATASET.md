@@ -22,6 +22,13 @@ Reference` and dependency status `Deferred Catalogue Dependency`. The current
 branch has no supported atomic Buildings publication operation, so no
 publication write was attempted and no placeholder catalogue records may be
 created.
+
+## HOTFIX-002 consumption contract
+
+Player Buildings consumes the published-only projection and does not edit,
+duplicate or republish canonical data. The detail view renders one read-only
+row per canonical progression record, labels the Town Center base-state record
+and Truegold stages, and formats resources, power, durations and nulls once.
 # Publication status
 
 Buildings is published through Forge Content Studio version 1 with 10 catalogue records, 587 progression records, and eight retained structured external prerequisite references. Runtime consumers must use the published-only Supabase projection and its provenance metadata.
