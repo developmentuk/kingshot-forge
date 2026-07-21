@@ -53,6 +53,11 @@ Sprint 1.1.1B applied the registry and route-policy migrations to the connected
 Supabase project after preflight. Live counts and RLS/grants were verified;
 canonical content and Buildings publication version 1 were unchanged.
 
+ART-001 adds a shared, profile-driven Kingshot text analyzer and preserves
+Community Art raw source separately from normalized, rendered-preview and
+approved copy payloads. Public gallery and clipboard behavior consume only the
+approved payload; moderation repair history is append-only and auditable.
+
 Forge is organised into explicit domains rather than isolated pages.
 
 ### Domain 0 — Editorial Intelligence

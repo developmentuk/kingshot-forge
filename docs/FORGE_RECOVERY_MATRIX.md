@@ -188,6 +188,10 @@ R8 evidence is recorded in `docs/recovery/SPRINT-R8-PLAYER-PLATFORM-RECOVERY.md`
 
 ## Recovery decisions
 
+ART-001 keeps Community Art inside the existing editorial workflow. It adds
+payload versions and raw-source immutability, but does not create a second CMS,
+alter Buildings publication, or begin Media Library/Entity Identity work.
+
 - `src/navigation/workspaceRegistry.ts` remains the single navigation contract. The shell consumes it; it does not create a second menu model.
 - Existing `/admin/*` routes remain compatibility aliases for recovered operational slices. Workspace routing is additive and does not bypass server permissions.
 - Workspace preferences are presentation state only. `WorkspaceRoute`, `ProtectedRoute`, API capability checks and Supabase RLS remain authoritative.

@@ -5,3 +5,4 @@ export * from "./lifecycle.js";
 export * from "./rateLimits.js";
 export * from "./types.js";
 export * from "./validation.js";
+export * from "./rendering.js";

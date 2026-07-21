@@ -12,6 +12,14 @@ export type CommunityArtRecord = {
   category: CommunityArtCategory
   tags: string[]
   artworkText: string
+  rawSourceText: string
+  normalisedText: string
+  approvedCopyPayload: string | null
+  renderedPreviewPayload: string
+  compatibilityProfile: string
+  repairOperations: Array<Record<string, unknown>>
+  sourceHash: string | null
+  approvedPayloadHash: string | null
   attribution: string | null
   status: 'pending' | 'approved' | 'rejected' | 'published'
   compatibilityStatus: CommunityArtCompatibility
@@ -83,6 +91,8 @@ export function moderateCommunityArt(input: {
   description?: string
   category?: CommunityArtCategory
   tags?: string[]
+  approvedPayload?: string
+  repairOperations?: Array<Record<string, unknown>>
 }) {
   return api<CommunityArtRecord>('moderate', { method: 'POST', body: JSON.stringify(input) })
 }

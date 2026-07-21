@@ -1,5 +1,10 @@
 # Forge Domain Model v1.0
 
+Community Art rendering is a projection concern within the existing editorial
+domain: raw submissions remain immutable, approved text payloads are versioned,
+and public consumers resolve the published payload/profile pair. The Render
+Engine is shared diagnostics infrastructure, not a second content system.
+
 **Status:** Proposed canonical architecture; documentation only  
 **Date:** 21 July 2026  
 **Repository:** `developmentuk/kingshot-forge`  

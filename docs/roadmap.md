@@ -1,5 +1,12 @@
 # Kingshot Forge roadmap
 
+## ART-001 — Kingshot rendering and moderation
+
+The shared Render Engine now owns Community Art Unicode diagnostics, profile
+width prediction, safe repair previews, approved-payload clipboard behavior and
+gallery rendering contracts. Protected-preview role acceptance and exact
+uploaded-fixture evidence remain release gates.
+
 ## HOTFIX-002 — Player Buildings and Connections
 
 Implementation candidate: repair the published Buildings reader, expose Player
