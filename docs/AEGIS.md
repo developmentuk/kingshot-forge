@@ -77,6 +77,29 @@ Public/Admin UI → Domain Service → Platform Service → Repository Contract 
 
 Dependencies point inward toward stable contracts. Domain code may extend shared platform behaviour but must not bypass dataset, editorial, publishing, permission, history or audit services.
 
+## Forge Domain Model v1.0 — architecture baseline
+
+`docs/architecture/FORGE-DOMAIN-MODEL.md` is the canonical shared domain model
+for future Forge domains. It is an architecture/documentation decision, not an
+implementation claim. It establishes namespace-qualified stable Forge IDs, a
+fail-closed entity-type registry, semantic progression rows, variable Truegold
+stages, governed tags, authored-versus-derived relationships, a future
+immutable-version Media Library, and published-only consumer resolution.
+
+The model reuses the current editorial engine (`editorial_record_heads`,
+`editorial_record_versions`, `editorial_audit_events`, `publication_queue`) and
+current published Search projections. `search_relationship_projections`
+remains derived and rebuildable, not an authored relationship store. Buildings
+remains the compatibility baseline through `buildings` and
+`building_progression`, including explicit phase/tier/stage fields, base-state
+rows and publication history.
+
+The Entity Engine, Media Library, shared tag store and authored Relationship
+CMS remain future capabilities. They must not be marked complete or introduced
+by documentation alone. The first safe implementation sprint is the stable
+identity foundation, gated on HOTFIX-002 protected-preview acceptance and owner
+approval of the model.
+
 ## Editorial Intelligence
 
 Editorial Intelligence converts external observations and community knowledge into governed evidence suitable for editorial review.

@@ -1,5 +1,40 @@
 # Forge Recovery Matrix — Sprints R1–R4
 
+## ARCH-001 Forge Domain Model v1.0 — 21 July 2026
+
+This architecture sprint is documentation-only on branch
+`hotfix/1.0.1-player-buildings-connections`, starting at HEAD
+`a833d2c979bae70704ba297df577b44ac57988d9`. It created no migration, made no
+Supabase/schema/publication mutation, and did not deploy, merge or tag.
+
+The canonical model is [`docs/architecture/FORGE-DOMAIN-MODEL.md`](architecture/FORGE-DOMAIN-MODEL.md).
+It records the current-state boundary and preserves the recovery invariant
+that published projections are authoritative for public reads. Stable Forge IDs
+are proposed as `namespace.local-key`; progression is semantic and
+data-driven; Truegold stage counts are variable per tier; authored relationships
+are distinct from rebuildable Search projections; and future media/tag/CMS
+capabilities remain planned.
+
+### Recovery decisions
+
+- HOTFIX-002 acceptance remains the first gate. ARCH-001 does not reopen
+  publication or replace the accepted Buildings publication/recovery path.
+- Existing editorial heads, immutable versions, audit events, publication queue,
+  Data Studio import runs and Buildings publication records remain in place.
+- Search and Forge Connections must continue to resolve published-only records;
+  stale or failed derived refreshes retain the prior good projection.
+- No fixed Truegold sub-stage count may be introduced. Existing Buildings
+  compatibility fields are mapped by an adapter and sorted semantically.
+- The Entity Engine, Media Library, shared tag store and authored relationship
+  CMS are future work and are **not complete**.
+
+### Exact next implementation gate
+
+After HOTFIX-002 protected-preview acceptance, the recommended first sprint is
+the Stable Entity Identity Foundation: registry contracts, adapter validation,
+collision/alias/route tests and a shadow identity report. A schema or published
+data migration is not implied and requires a separate approved change record.
+
 Status: **RC1 assessed — Not Ready for Version 1.0**
 Branch: `recovery/0.9.0-rc3-feature-reconciliation`  
 R4 validation head: `bfbd89ec5a230ab50c01dedd3134201d2ab759bc`
