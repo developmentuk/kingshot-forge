@@ -13,10 +13,16 @@
 }
 
 .building-table-scroll {
+  min-width: 0;
   max-width: 100%;
   overflow-x: auto;
   overflow-y: visible;
   scrollbar-gutter: stable;
+}
+
+.building-detail-grid > *,
+.building-progression-panel {
+  min-width: 0;
 }
 
 .forge-connection-card__icon {
