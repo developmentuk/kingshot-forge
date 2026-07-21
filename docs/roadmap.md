@@ -1,5 +1,12 @@
 # Kingshot Forge roadmap
 
+## ART-001 — Kingshot rendering and moderation
+
+The shared Render Engine now owns Community Art Unicode diagnostics, profile
+width prediction, safe repair previews, approved-payload clipboard behavior and
+gallery rendering contracts. Protected-preview role acceptance and exact
+uploaded-fixture evidence remain release gates.
+
 ## HOTFIX-002 — Player Buildings and Connections
 
 Implementation candidate: repair the published Buildings reader, expose Player
@@ -10,6 +17,11 @@ deferred until protected-preview browser acceptance is complete.
 ## ARCH-001 — Forge Domain Model v1.0
 
 Architecture/documentation sprint complete on the current HOTFIX-002 candidate.
+The ART-002 Render Engine Core is implemented on the focused branch; protected
+preview and owner acceptance remain release gates before promotion.
+ART-002B has applied and verified the source-boundary migration; role-session,
+responsive screenshot and live clipboard evidence remain before production
+promotion.
 See [`architecture/FORGE-DOMAIN-MODEL.md`](architecture/FORGE-DOMAIN-MODEL.md)
 and ADR-001 through ADR-008. This does not mark the Entity Engine, Media
 Library, shared tags, authored relationships or Creator integrations complete.
@@ -24,3 +36,7 @@ resolution, and produce a shadow identity report. Preserve current database
 IDs, routes, Buildings publication tables and Search projections. No migration,
 schema alteration, publication mutation or Entity Engine implementation is part
 of this sprint.
+
+Sprint 1.1.1 implementation is now staged on the feature branch with a
+review-gated registry migration. The migration is intentionally unapplied until
+the architecture checkpoint and live RLS verification pass.

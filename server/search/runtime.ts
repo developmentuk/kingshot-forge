@@ -5,6 +5,7 @@ import { SearchEngine, SearchProviderRegistry, type SearchProvider, type SearchR
 import { SearchIndexCache } from '../../shared/search/cache.js'
 import { SearchProjectionRefreshService } from '../../shared/search/refresh.js'
 import { getSearchProjectionRepository } from './repository.js'
+import { createForgeId } from '../../shared/entity-identity/forgeId.js'
 
 const STATUS_VALUES = new Set<SearchRecordStatus>(['draft', 'in_review', 'approved', 'published', 'archived', 'deprecated'])
 
@@ -21,6 +22,7 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
   if (!id || !title) return null
   const rawStatus = value(record, 'status')
   const status: SearchRecordStatus = rawStatus && STATUS_VALUES.has(rawStatus as SearchRecordStatus) ? rawStatus as SearchRecordStatus : 'published'
+  const forge_id = forgeIdForDataset(dataset, id)
   const relationships = Array.isArray(record.relationships) ? record.relationships.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object')).flatMap((item) => {
     const targetId = value(item, 'targetId', 'target_id', 'id')
     const targetDataset = value(item, 'targetDataset', 'target_dataset', 'dataset')
@@ -29,7 +31,7 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
     return targetId && targetDataset && type ? [{ targetId, targetDataset, type, ...(label ? { label } : {}) }] : []
   }) : []
   return {
-    id, dataset, title,
+    id, forge_id, dataset, title,
     subtitle: value(record, 'subtitle', 'role', 'category'),
     summary: value(record, 'summary', 'description', 'best_use'),
     keywords: [value(record, 'name'), value(record, 'slug'), value(record, 'role'), value(record, 'troop_type')].filter((item): item is string => Boolean(item)),
@@ -47,6 +49,11 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
     confidence: value(record, 'confidence') as SearchRecord['confidence'],
     confidence_label: value(record, 'confidence_label', 'confidenceLabel'),
   }
+}
+
+function forgeIdForDataset(dataset: DatasetKey, id: string) {
+  const namespace = ({ heroes: 'hero', 'hero-skills': 'hero-skill', buildings: 'building', events: 'event', troops: 'troop', gear: 'gear', charm: 'charm', research: 'research', 'war-academy': 'war-academy' } as Record<string, string>)[dataset]
+  return namespace ? createForgeId(namespace, id) : null
 }
 
 function createProvider(dataset: DatasetKey): SearchProvider {

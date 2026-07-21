@@ -28,7 +28,15 @@
 .render-engine-lab__status { display: grid; align-content: center; gap: .15rem; border-left: 1px solid var(--lab-border); padding-left: .75rem; color: var(--lab-muted); font-size: .7rem; }
 .render-engine-lab__status strong { color: var(--lab-accent); font-size: .9rem; text-transform: capitalize; }
 .render-engine-lab__status small { color: var(--lab-muted); }
-.render-engine-lab__workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: .75rem; min-height: 360px; }
+.render-engine-lab__workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: .75rem; min-height: 360px; min-width: 0; }
+.render-engine-lab__pipeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; min-width: 0; }
+.render-engine-lab__pipeline article { min-width: 0; overflow: auto; border: 1px solid var(--lab-border); border-radius: .7rem; padding: .75rem; color: var(--lab-text); background: var(--lab-panel); }
+.render-engine-lab__pipeline h2 { margin: 0 0 .45rem; font-size: .9rem; }
+.render-engine-lab__pipeline pre { max-height: 10rem; margin: 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: .72rem/1.35 ui-monospace, monospace; }
+.render-engine-lab__pipeline small { color: var(--lab-muted); font-size: .65rem; }
+.render-engine-lab__unicode-list { display: flex; max-height: 10rem; flex-wrap: wrap; gap: .2rem; overflow: auto; }
+.render-engine-lab__unicode-list span { border: 1px solid var(--lab-border); border-radius: .25rem; padding: .2rem; font: .75rem ui-monospace, monospace; }
+.render-engine-lab__unicode-list small { display: block; color: var(--lab-accent); font-size: .55rem; }
 .render-engine-lab__inspector { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr) minmax(240px, .8fr); gap: .75rem; }
 .render-engine-lab__panel { min-width: 0; border: 1px solid var(--lab-border); border-radius: .7rem; padding: .85rem; color: var(--lab-text); background: var(--lab-panel); }
 .render-engine-lab__panel h2 { margin: 0; color: var(--lab-text); font-size: 1.15rem; }
@@ -73,7 +81,8 @@
 .render-engine-lab__warning { color: #ffd18b !important; }
 .render-engine-lab__panel .forge-render-engine__analysis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 950px) { .render-engine-lab__toolbar, .render-engine-lab__inspector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .render-engine-lab__status { border-left: 0; padding-left: 0; } .render-engine-lab__inspector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .render-engine-lab__inspector > :first-child { grid-column: 1 / -1; } }
-@media (max-width: 700px) { .render-engine-lab__topbar { align-items: flex-start; flex-direction: column; } .render-engine-lab__workspace, .render-engine-lab__toolbar, .render-engine-lab__inspector { grid-template-columns: 1fr; } .render-engine-lab__controls { grid-template-columns: 1fr; } .render-engine-lab__panel .forge-render-engine__analysis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1050px) { .render-engine-lab__pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .render-engine-lab__topbar { align-items: flex-start; flex-direction: column; } .render-engine-lab__workspace, .render-engine-lab__pipeline, .render-engine-lab__toolbar, .render-engine-lab__inspector { grid-template-columns: 1fr; } .render-engine-lab__controls { grid-template-columns: 1fr; } .render-engine-lab__panel .forge-render-engine__analysis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .render-engine-lab__profile-bar { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem; padding: .55rem .7rem; border: 1px solid var(--lab-border); border-radius: .7rem; background: var(--lab-panel-soft); }
 .render-engine-lab__profile-bar > label:first-child { display: grid; min-width: 220px; flex: 1 1 240px; gap: .25rem; color: var(--lab-muted); font-size: .7rem; font-weight: 750; }
@@ -110,3 +119,37 @@
 .render-engine-lab--focus .render-engine-lab__workspace { min-height: calc(100vh - 2rem); }
 .render-engine-lab__metadata-panel { margin-top: 0; }
 @media (max-width: 700px) { .render-engine-lab__profile-bar { align-items: stretch; flex-direction: column; } .render-engine-lab__profile-bar > label:first-child { min-width: 0; } .render-engine-lab__preview-surface, .render-engine-lab__reference-surface { min-height: 280px; } .render-engine-lab__actions { width: 100%; } .render-engine-lab__save-state { flex: 1 1 100%; } }
+
+.render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__topbar,
+.render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__toolbar,
+.render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__source-panel,
+.render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__pipeline,
+.render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__profile-bar,
+.render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__workspace,
+.render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__inspector,
+.render-engine-lab:not(.render-engine-lab--advanced) > .render-engine-lab__metadata-panel { display: none; }
+.render-engine-lab__mode-bar, .render-engine-lab__repair-panel { display: grid; gap: .75rem; margin-bottom: .85rem; border: 1px solid var(--lab-border); border-radius: .7rem; padding: .8rem; background: var(--lab-panel); }
+.render-engine-lab__mode-bar { grid-template-columns: 1fr auto auto; align-items: center; }
+.render-engine-lab__repair-quick-actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: .85rem; }
+.render-engine-lab__mode-bar p, .render-engine-lab__repair-panel p { margin: .2rem 0 0; color: var(--lab-muted); font-size: .76rem; line-height: 1.4; }
+.render-engine-lab__role-note { color: var(--lab-accent); font-size: .72rem; font-weight: 750; white-space: nowrap; }
+.render-engine-lab__repair-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: .75rem; }
+.render-engine-lab__repair-grid article, .render-engine-lab__warning-card { border: 1px solid var(--lab-border); border-radius: .5rem; padding: .65rem; background: var(--lab-panel-soft); }
+.render-engine-lab__repair-grid h3, .render-engine-lab__warning-cards h3 { margin: 0 0 .45rem; color: var(--lab-text); font-size: .85rem; }
+.render-engine-lab__repair-grid h3 small { color: var(--lab-muted); font-size: .65rem; font-weight: 500; }
+.render-engine-lab__repair-source { max-height: 230px; margin: 0; overflow: auto; white-space: pre-wrap; color: #d8e4ee; font: .72rem/1.5 ui-monospace, monospace; }
+.render-engine-lab__hash { overflow-wrap: anywhere; color: var(--lab-accent) !important; font: .65rem ui-monospace, monospace; }
+.render-engine-lab__repair-actions, .render-engine-lab__repair-footer, .render-engine-lab__repair-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .45rem; }
+.render-engine-lab__repair-controls { margin: .75rem 0; border-top: 1px solid var(--lab-border); padding-top: .75rem; }
+.render-engine-lab__repair-controls label { display: grid; min-width: 150px; flex: 1 1 150px; gap: .25rem; color: var(--lab-muted); font-size: .7rem; }
+.render-engine-lab__warning-cards { display: grid; gap: .45rem; margin-top: .75rem; }
+.render-engine-lab__warning-card.is-selected { border-color: var(--lab-accent); box-shadow: 0 0 0 1px rgba(240,187,76,.25); }
+.render-engine-lab__warning-card > button:first-child { display: grid; grid-template-columns: auto 1fr; width: 100%; gap: .55rem; border: 0; padding: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.render-engine-lab__warning-card > button:first-child span:not(.render-engine-lab__warning-glyph) { display: grid; gap: .15rem; }
+.render-engine-lab__warning-card strong { color: var(--lab-text); font-size: .72rem; }
+.render-engine-lab__warning-card small { color: var(--lab-muted); font-size: .65rem; }
+.render-engine-lab__warning-glyph { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--lab-accent); border-radius: .35rem; color: var(--lab-accent); background: #08111c; font-size: 1rem; }
+.render-engine-lab__warning-card > div { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .5rem; }
+.render-engine-lab__warning-card > div button { border: 1px solid #58708a; border-radius: .3rem; padding: .25rem .4rem; color: var(--lab-muted); background: #08111c; font: inherit; font-size: .64rem; cursor: pointer; }
+.render-engine-lab__repair-footer { justify-content: space-between; border-top: 1px solid var(--lab-border); padding-top: .7rem; color: var(--lab-muted); font-size: .68rem; }
+@media (max-width: 700px) { .render-engine-lab__mode-bar, .render-engine-lab__repair-grid { grid-template-columns: 1fr; } .render-engine-lab__role-note { white-space: normal; } .render-engine-lab__repair-footer { align-items: stretch; flex-direction: column; } }

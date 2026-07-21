@@ -153,7 +153,7 @@ function App() {
         <Route path="admin/player-identity" element={<ProtectedRoute permission="platform.users.manage"><PlayerSupportWorkspacePage /></ProtectedRoute>} />
         <Route path="admin/player-identity/:caseId" element={<ProtectedRoute permission="platform.users.manage"><PlayerSupportWorkspacePage /></ProtectedRoute>} />
         <Route path="admin/gift-redemption" element={<ProtectedRoute permission="cms.view"><GiftRedemptionOperationsPage /></ProtectedRoute>} />
-        <Route path="admin/render-engine" element={<ProtectedRoute permission="cms.view"><RenderEngineCalibrationPage /></ProtectedRoute>} />
+        <Route path="admin/render-engine" element={<ProtectedRoute permission="render_engine.view"><RenderEngineCalibrationPage /></ProtectedRoute>} />
         <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><EditorialImportManagerPage /></ProtectedRoute>} />
         <Route path="admin/history" element={<ProtectedRoute permission="cms.history.view"><EditorialOperationsPage mode="history" /></ProtectedRoute>} />
         <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><SearchExplorerPage /></ProtectedRoute>} />

@@ -41,6 +41,12 @@ export type ForgePermission =
   | 'cms.analytics.view'
   | 'platform.users.manage'
   | 'moderation.manage'
+  | 'render_engine.view'
+  | 'render_engine.inspect'
+  | 'render_engine.calibrate'
+  | 'render_engine.manage_profiles'
+  | 'community_art.moderate'
+  | 'community_art.approve'
   | 'beta.access'
   | 'contributions.submit'
   | 'applications.read'
@@ -155,6 +161,14 @@ export function RoleProvider({
 
     void refreshRole()
   }, [authLoading, refreshRole])
+
+  useEffect(() => {
+    const refreshIfVisible = () => { if (document.visibilityState === 'visible') void refreshRole() }
+    window.addEventListener('focus', refreshIfVisible)
+    document.addEventListener('visibilitychange', refreshIfVisible)
+    window.addEventListener('forge-capabilities-changed', refreshIfVisible)
+    return () => { window.removeEventListener('focus', refreshIfVisible); document.removeEventListener('visibilitychange', refreshIfVisible); window.removeEventListener('forge-capabilities-changed', refreshIfVisible) }
+  }, [refreshRole])
 
   const hasPermission = useCallback(
     (permission: ForgePermission) =>

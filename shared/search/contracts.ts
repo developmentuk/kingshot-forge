@@ -1,4 +1,5 @@
 export type SearchDataset = string
+import type { ForgeId } from '../entity-identity/contracts.js'
 
 export type SearchRecordStatus =
   | 'draft'
@@ -40,6 +41,7 @@ export type RelationshipConfidence = 'editorial_verified' | 'dataset_verified' |
 
 export interface SearchRecord {
   id: string
+  forge_id?: ForgeId | null
   dataset: SearchDataset
   title: string
   subtitle: string | null

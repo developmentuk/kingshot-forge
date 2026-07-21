@@ -1,4 +1,5 @@
 import type { SearchRecord, SearchRelationship, SearchVisibility } from './contracts.js'
+import { isValidForgeId } from '../entity-identity/forgeId.js'
 import { SEARCH_PROJECTION_SCHEMA_VERSION, type SearchProjection } from './persistence.js'
 
 export interface ProjectionBuildResult {
@@ -10,10 +11,12 @@ export function buildSearchProjection(record: SearchRecord, now: string, relatio
   if (record.status !== 'published') return { failure: { code: 'not_published', message: 'Only published records may enter the public search projection.' } }
   if (!record.published_at) return { failure: { code: 'missing_published_at', message: 'Published records require published_at.' } }
   if (record.canonical_url !== null && !isSafeCanonicalUrl(record.canonical_url)) return { failure: { code: 'invalid_canonical_url', message: 'canonical_url must be a relative path or HTTPS URL.' } }
+  if (record.forge_id !== undefined && record.forge_id !== null && !isValidForgeId(record.forge_id)) return { failure: { code: 'invalid_forge_id', message: 'Search records must expose a valid Forge ID when provided.' } }
   if (!isValidPermissions(record.permissions)) return { failure: { code: 'invalid_permissions', message: 'Search permissions contain an invalid visibility value.' } }
   const projectionBase = {
     source_dataset: record.dataset,
     source_record_id: record.id,
+    forge_id: record.forge_id ?? null,
     source_version_id: record.source_version_id ?? null,
     source_publication_id: record.source_publication_id ?? null,
     title: record.title.trim(),

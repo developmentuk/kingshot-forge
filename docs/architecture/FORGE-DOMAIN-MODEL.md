@@ -1,5 +1,10 @@
 # Forge Domain Model v1.0
 
+Community Art rendering is a projection concern within the existing editorial
+domain: raw submissions remain immutable, approved text payloads are versioned,
+and public consumers resolve the published payload/profile pair. The Render
+Engine is shared diagnostics infrastructure, not a second content system.
+
 **Status:** Proposed canonical architecture; documentation only  
 **Date:** 21 July 2026  
 **Repository:** `developmentuk/kingshot-forge`  
@@ -223,4 +228,4 @@ No stage marks future capabilities complete until implementation, publication, s
 
 ADRs `ADR-001` through `ADR-008` record the decisions that constrain future implementation. The exact first implementation sprint is **Stable Entity Identity Foundation** after HOTFIX-002 protected-preview acceptance: define registry contracts, normalise/validate IDs in adapters, add collision/alias/route-resolution tests, and produce a shadow identity report. It must not create a new table or migrate published data in that sprint unless a separately approved schema change follows this document.
 
-Implementation of the Entity Engine, Media Library and Relationship CMS may **not safely begin yet**. Architecture work may begin; feature implementation is gated on HOTFIX-002 acceptance, owner approval of this model, and a reviewed migration/API contract for the first slice.
+Implementation of the Entity Engine, Media Library and Relationship CMS may **not safely begin yet**. Architecture work may begin; feature implementation is gated on HOTFIX-002 acceptance, owner approval of this model, and a reviewed migration/API contract for the first slice. The shared Render Engine Core is an independent platform service and may be consumed by future text generators without introducing Community Art-specific logic.

@@ -1,6 +1,29 @@
 # Forge Recovery Matrix — Sprints R1–R4
 
+## ART-002 Render Engine recovery boundary
+
+Raw artifacts are immutable. Recovery restores a new approved payload version
+from preserved raw bytes and the append-only transformation audit; it never
+updates or reconstructs raw source from normalised or rendered text. The
+ART-002B migration verified this boundary live and recorded 12 metadata-only
+backfills without publication changes.
+
+ART-002C recovery rule: capability changes are additive, idempotent role-
+permission migrations. Session capability state refreshes on sign-in, focus,
+visibility change or an explicit capability-change event; verification status
+never substitutes for an administrative capability.
+
 ## ARCH-001 Forge Domain Model v1.0 — 21 July 2026
+
+Sprint 1.1.1 adds the stable identity contract, registry/resolver boundary,
+Buildings/Hero compatibility adapters and additive Search Forge IDs on a
+feature branch. The Supabase registry migration remains unapplied pending the
+architecture checkpoint, RLS review and owner-approved live verification. No
+Buildings publication, Hero record or production data was changed.
+
+The migration and route-policy hardening have since been applied and verified
+on the connected project. This does not authorize production deployment or
+mark Media Library, tags or authored relationships complete.
 
 This architecture sprint is documentation-only on branch
 `hotfix/1.0.1-player-buildings-connections`, starting at HEAD
@@ -177,6 +200,10 @@ R8 evidence is recorded in `docs/recovery/SPRINT-R8-PLAYER-PLATFORM-RECOVERY.md`
   gates.
 
 ## Recovery decisions
+
+ART-001 keeps Community Art inside the existing editorial workflow. It adds
+payload versions and raw-source immutability, but does not create a second CMS,
+alter Buildings publication, or begin Media Library/Entity Identity work.
 
 - `src/navigation/workspaceRegistry.ts` remains the single navigation contract. The shell consumes it; it does not create a second menu model.
 - Existing `/admin/*` routes remain compatibility aliases for recovered operational slices. Workspace routing is additive and does not bypass server permissions.

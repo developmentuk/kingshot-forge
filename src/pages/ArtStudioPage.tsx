@@ -5,6 +5,7 @@ import KingshotArtRenderer, { type ArtworkRenderMode } from '../components/art/K
 import { artTemplates, type ArtTemplate } from '../data/artTemplates'
 import { countArtworkCharacters, countArtworkLines, ART_STUDIO_TEXT_LIMITS, validateTextArtwork } from '../../shared/domains/art-studio/textValidation'
 import { COMMUNITY_ART_CATEGORIES, listCommunityGallery, listMyCommunityArt, listMyCommunityArtReactions, reactToCommunityArt, submitCommunityArt, type CommunityArtAttribution, type CommunityArtCategory, type CommunityArtReactionCounts, type CommunityArtReactionType, type CommunityArtRecord } from '../services/communityArtService'
+import { analyseText, copyApprovedPayload, hashText, RENDER_PROFILES } from '../../shared/domains/art-studio/rendering'
 
 // The shared renderer keeps the studio view's <pre> text-preservation contract.
 
@@ -32,6 +33,14 @@ function localRecord(item: ArtTemplate): GalleryRecord {
     category: item.category,
     tags: item.tags,
     artworkText: item.art,
+    rawSourceText: item.art,
+    normalisedText: item.art.replace(/\r\n?/g, '\n'),
+    approvedCopyPayload: item.art,
+    renderedPreviewPayload: item.art,
+    compatibilityProfile: 'kingshot-chat-bubble',
+    repairOperations: [],
+    sourceHash: hashText(item.art),
+    approvedPayloadHash: hashText(item.art),
     attribution: item.author ?? item.submittedBy ?? null,
     status: 'published',
     compatibilityStatus: item.testedInKingshot ? 'verified' : 'needs_testing',
@@ -53,7 +62,7 @@ function compatibilityLabel(value: GalleryRecord['compatibilityStatus']) {
 }
 
 function copyText(text: string): Promise<void> {
-  return navigator.clipboard.writeText(text)
+  return copyApprovedPayload(text)
 }
 
 function ArtStudioPage() {
@@ -95,7 +104,7 @@ function ArtStudioPage() {
   const gallery = useMemo<GalleryRecord[]>(() => {
     const items = [
       ...artTemplates.filter((item) => item.status === 'Published').map(localRecord),
-      ...remote.map((item) => ({ ...item, source: 'Community Submission', testedInKingshot: item.compatibilityStatus === 'verified' })),
+      ...remote.map((item) => ({ ...item, artworkText: item.approvedCopyPayload ?? item.renderedPreviewPayload ?? item.artworkText, source: 'Community Submission', testedInKingshot: item.compatibilityStatus === 'verified' })),
     ]
     return [...new Map(items.map((item) => [item.id, item])).values()]
   }, [remote])
@@ -120,7 +129,7 @@ function ArtStudioPage() {
   async function copyArt(artwork: string) {
     try {
       await copyText(artwork)
-      setCopyMessage('Artwork copied exactly.')
+      setCopyMessage(`Approved payload copied exactly · ${hashText(artwork)} · ${artwork.length} UTF-16 units`)
       window.setTimeout(() => setCopyMessage(''), 1800)
     } catch {
       setCopyMessage('Copy failed. Select the artwork in the preview and copy it manually.')
@@ -210,6 +219,8 @@ function SubmissionForm({ signedIn, onSignIn, onSubmitted }: { signedIn: boolean
   const [error, setError] = useState<string | null>(null)
   if (!signedIn) return <div className="art-studio-auth-card"><h2>Sign in to submit chat art</h2><p>Submissions are tied to your Forge identity so status and attribution remain clear.</p><button type="button" className="button button--primary" onClick={onSignIn}>Continue with Google</button></div>
   const issues = validateTextArtwork({ title, description, artwork: artworkText, tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean), attributionType, attributionName: attributionType === 'anonymous' ? null : attributionName })
+  const diagnostics = analyseText(artworkText, RENDER_PROFILES['kingshot-chat-bubble'])
+  void diagnostics
   async function submit(event: React.FormEvent) {
     event.preventDefault()
     if (saving) return

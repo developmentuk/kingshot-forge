@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import { canUseRenderEngine, RENDER_ENGINE_ROLE_CAPABILITIES } from '../shared/domains/render-engine/permissions.ts'
+
+assert.equal(canUseRenderEngine('owner', 'render_engine.view'), true)
+assert.equal(canUseRenderEngine('administrator', 'render_engine.manage_profiles'), true)
+assert.equal(canUseRenderEngine('moderator', 'render_engine.inspect'), true)
+assert.equal(canUseRenderEngine('moderator', 'render_engine.manage_profiles'), false)
+for (const actor of ['anonymous', 'player', 'verified_player', 'contributor']) assert.equal(canUseRenderEngine(actor, 'render_engine.view'), false)
+assert.deepEqual(RENDER_ENGINE_ROLE_CAPABILITIES.owner, RENDER_ENGINE_ROLE_CAPABILITIES.administrator)
+const app = fs.readFileSync('src/App.tsx', 'utf8')
+const navigation = fs.readFileSync('src/navigation/workspaceRegistry.ts', 'utf8')
+const api = fs.readFileSync('api/art-studio.ts', 'utf8')
+const account = fs.readFileSync('src/components/AccountMenu.tsx', 'utf8')
+const renderPage = fs.readFileSync('src/features/admin/RenderEngineCalibrationPage.tsx', 'utf8')
+assert.match(app, /admin\/render-engine.*render_engine\.view/)
+assert.match(navigation, /Render Engine.*render_engine\.view/)
+assert.match(api, /community_art\.moderate/)
+assert.doesNotMatch(api, /is_verified.*moderate|verified.*moderation/i)
+assert.match(account, /Forge role:/)
+assert.match(renderPage, /Repair Artwork/)
+assert.match(renderPage, /Calibrate Renderer/)
+assert.match(renderPage, /render_engine\.manage_profiles/)
+assert.match(renderPage, /disabled=\{!canManageProfiles/)
+console.log('Render permission tests passed: role matrix, navigation/route alignment, API capability guard and verification isolation.')

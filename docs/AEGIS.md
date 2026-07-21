@@ -39,6 +39,33 @@ The Buildings workbook preflight passed with 10 catalog rows, 587 progression ro
 
 ## Domain Architecture
 
+### Stable Forge entity identity — Sprint 1.1.1
+
+Forge IDs are namespace-qualified, immutable identifiers in the form
+`namespace.local-key`. The server-authoritative registry and resolver fail
+closed for invalid IDs, unknown namespaces, disabled types and unpublished
+records. Search may carry a Forge ID additively; existing projection IDs and
+routes remain compatibility contracts. The review-gated registry migration is
+not applied, and this sprint does not complete Media Library, tags, authored
+relationships or Creator integrations.
+
+Sprint 1.1.1B applied the registry and route-policy migrations to the connected
+Supabase project after preflight. Live counts and RLS/grants were verified;
+canonical content and Buildings publication version 1 were unchanged.
+
+ART-001 adds a shared, profile-driven Kingshot text analyzer and preserves
+Community Art raw source separately from normalized, rendered-preview and
+approved copy payloads. Public gallery and clipboard behavior consume only the
+approved payload; moderation repair history is append-only and auditable. ART-002
+promotes this to the shared Render Engine Core with immutable binary artifacts,
+stage metrics, reversible transformation audits, explicit engine capabilities,
+protected raw source, exact approved-payload clipboard writes and responsive
+calibration panes. ART-002B applied the source-boundary migration with FORCE RLS
+and live grant verification; authenticated role sessions remain an owner
+acceptance gate. ART-002C aligned Render Engine navigation, route, API and RLS
+checks around explicit capabilities and repaired the owner false-denial caused
+by the missing live capability backfill.
+
 Forge is organised into explicit domains rather than isolated pages.
 
 ### Domain 0 — Editorial Intelligence

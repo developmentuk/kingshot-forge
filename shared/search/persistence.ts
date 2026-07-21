@@ -6,6 +6,7 @@ export interface SearchProjection {
   projection_id: string
   source_dataset: string
   source_record_id: string
+  forge_id: string | null
   source_version_id: string | null
   source_publication_id: string | null
   title: string
@@ -93,6 +94,7 @@ export interface SearchProjectionRepository {
 export function projectionToSearchRecord(projection: SearchProjection): SearchRecord {
   return {
     id: projection.source_record_id,
+    forge_id: projection.forge_id as SearchRecord['forge_id'],
     dataset: projection.source_dataset,
     title: projection.title,
     subtitle: projection.subtitle,
