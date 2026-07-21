@@ -32,7 +32,7 @@
     "test:player-identity": "node scripts/test-player-identity.mjs && node scripts/test-player-identity-vertical-slice.mjs && node scripts/test-player-verification-boundary.mjs && node scripts/test-player-link-service.mjs",
     "test:art-studio": "node scripts/test-art-studio-foundation.mjs && node scripts/test-art-studio-player-attribution.mjs && node scripts/test-community-art-submission.mjs && node scripts/test-community-art-ux.mjs",
     "test:art-studio-attribution": "node scripts/test-art-studio-player-attribution.mjs",
-    "test:render-engine": "node scripts/test-render-engine.mjs && node scripts/test-render-engine-persistence.mjs && node --import tsx scripts/test-render-permissions.mjs",
+    "test:render-engine": "node scripts/test-render-engine.mjs && node scripts/test-render-engine-persistence.mjs && node --import tsx scripts/test-render-permissions.mjs && node --import tsx scripts/test-render-repair.mjs",
     "test:render": "node --import tsx scripts/test-render.mjs && node --import tsx scripts/test-render-core.mjs",
     "test:art001-rendering": "node --import tsx scripts/test-art001-rendering.mjs",
     "test:auto-redeem": "node scripts/test-auto-redeem.mjs && node scripts/test-auto-redeem-ui.mjs && node scripts/test-auto-redeem-admin.mjs",

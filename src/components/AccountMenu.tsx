@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { usePlayerIdentity } from '../context/PlayerIdentityContext'
+import { useRole } from '../context/RoleContext'
 
 function getVerificationLabel(status: string) {
   switch (status) {
@@ -32,6 +33,7 @@ function AccountMenu() {
     playerAccount,
     loadingPlayerAccount,
   } = usePlayerIdentity()
+  const { role, loadingRole } = useRole()
 
   const [errorMessage, setErrorMessage] = useState('')
   const [working, setWorking] = useState(false)
@@ -70,7 +72,7 @@ function AccountMenu() {
     }
   }
 
-  if (loading || loadingPlayerAccount) {
+  if (loading || loadingPlayerAccount || loadingRole) {
     return (
       <div className="account-menu account-menu--loading">
         Loading…
@@ -143,6 +145,9 @@ function AccountMenu() {
                 {getVerificationLabel(
                   playerAccount.verification_status,
                 )}
+              </small>
+              <small className="account-menu__forge-role">
+                Forge role: {role}
               </small>
             </>
           ) : (
