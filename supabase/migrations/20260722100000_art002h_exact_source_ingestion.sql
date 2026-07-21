@@ -87,7 +87,7 @@ begin
   raw_hash := encode(extensions.digest(source_bytes, 'sha256'), 'hex');
   decoded_hash := encode(extensions.digest(convert_to(decoded_text_value, 'UTF8'), 'sha256'), 'hex');
   browser_hash := case when p_browser_received_text is null then null else encode(extensions.digest(convert_to(p_browser_received_text, 'UTF8'), 'sha256'), 'hex') end;
-  line_crlf := length(decoded_text_value) - length(replace(decoded_text_value, chr(13) || chr(10), ''));
+  line_crlf := (length(decoded_text_value) - length(replace(decoded_text_value, chr(13) || chr(10), ''))) / 2;
   line_lf := length(replace(decoded_text_value, chr(13) || chr(10), '')) - length(replace(replace(decoded_text_value, chr(13) || chr(10), ''), chr(10), ''));
   has_bom := left(decoded_text_value, 1) = chr(65279) or left(encode(source_bytes, 'hex'), 6) = 'efbbbf';
   has_trailing_newline := right(decoded_text_value, 1) = chr(10) or right(decoded_text_value, 1) = chr(13);

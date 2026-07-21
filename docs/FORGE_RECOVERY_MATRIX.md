@@ -419,4 +419,11 @@ rollback preview was inspected and its confirmation dismissed without a
 mutation. Production promotion remains a separate owner-authorised action.
 # REL-003 recovery note
 
+## ART-002H recovery boundary
+
+Exact file ingestion and browser-text ingestion are separate evidence paths.
+Recovery must never rewrite raw source, approved payload or audit history to make
+Forge prediction appear closer to Kingshot. ART-003 calibration remains on its
+feature branch until its measured drift is within the agreed release tolerance.
+
 Buildings version 1 is published as `bpub-a8070ae2-beef-4abe-81d8-4e338f768f75`. Recovery uses `preview_buildings_rollback` followed by the service-role rollback RPC; the first version correctly has no prior target. Publication snapshots, warning decisions, prerequisite decisions, editorial versions, and audit events are immutable.

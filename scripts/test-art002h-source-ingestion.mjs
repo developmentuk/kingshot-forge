@@ -21,6 +21,16 @@ const pastedEvidence = inspectSourceText(pasted, new TextEncoder().encode(pasted
 assert.equal(pastedEvidence.lineEnding, 'lf')
 assert.notEqual(crypto.createHash('sha256').update(fixtureBytes).digest('hex'), crypto.createHash('sha256').update(pasted, 'utf8').digest('hex'))
 
+const evidenceText = '\uFEFFa\t\u3000b\uFF01\r\n\r\n'
+const evidenceBytes = new TextEncoder().encode(evidenceText)
+const evidence = inspectSourceText(evidenceText, evidenceBytes)
+assert.equal(evidence.bomPresent, true)
+assert.equal(evidence.crlfCount, 2)
+assert.equal(evidence.lfCount, 0)
+assert.equal(evidence.trailingNewline, true)
+assert.equal(evidenceBytes.includes(0x09), true)
+assert.match(migration, /line_crlf := \(length\(decoded_text_value\).*\) \/ 2/)
+
 for (const mode of ['file_upload', 'text_paste', 'manual_entry', 'legacy_import']) assert.match(migration, new RegExp(mode))
 for (const field of ['raw_bytes', 'decoded_text_sha256', 'detected_line_ending', 'crlf_count', 'browser_received_text', 'normalisation_operations']) assert.match(migration, new RegExp(field))
 assert.match(migration, /extensions\.digest\(source_bytes, 'sha256'\)/)

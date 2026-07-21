@@ -17,6 +17,19 @@ Submission never creates an approved payload or payload-version history entry. A
 The ART-002G candidate is certified in protected preview only. Authenticated player
 and moderator sessions are still required to certify the live submission, retry,
 moderation and Gallery path before promotion.
+
+## ART-002H exact source boundary
+
+Forge distinguishes `file_upload`, `text_paste`, `manual_entry` and
+`legacy_import`. A `.txt` upload is read as an `ArrayBuffer`, transported as
+base64, decoded with fatal UTF-8 validation and hashed at the database boundary.
+Stored evidence includes filename/MIME, exact bytes, byte length/hash, decoded
+hash, BOM, CRLF/LF counts, trailing newline and normalisation operations.
+
+Paste/manual entry records the browser-received string and its UTF-8 bytes
+honestly; it does not claim equality with an external file because browsers can
+normalise line endings. Public and own-submission projections never expose raw
+bytes. ART-003 remains separate and is excluded from the production candidate.
 # ART-002B role boundary
 
 Community Art uses the shared Render Engine. Anonymous and public projections receive approved payloads only. Contributors submit pending records. Moderation queue, raw source and private notes require the explicit `moderation.manage` capability; verified status alone never grants them. Approval and publication remain server-authorised operations.

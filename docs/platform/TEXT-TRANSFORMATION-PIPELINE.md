@@ -9,3 +9,11 @@ Raw source is not a normalised value. Approved and clipboard payloads are indepe
 Fixtures cover ASCII, emoji, full-width, mixed-width, ideographic spaces, invisible characters, names, banners, chat, Alliance Mail and Community Art. Regression compares raw/stage hashes, statistics, approved payload, prediction and clipboard equality.
 
 The canonical fixture proves the source boundary with 276 code points and 278 UTF-16 units. Local pipeline tests prove CRLF and tab deltas are explicit and auditable. Live clipboard equality and authenticated browser transition capture remain owner-session checks.
+
+## Source ingestion evidence
+
+File upload preserves the original UTF-8 byte sequence, including BOM, CRLF/CR/LF,
+tabs, ideographic spaces, full-width punctuation and trailing newline. Its raw
+SHA-256 and byte length are calculated from those bytes. Paste and manual entry
+record exactly what Forge receives from the browser and separately record the
+browser text/hash; they do not assert external-file equality.

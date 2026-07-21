@@ -72,6 +72,12 @@ at the database boundary; submission, pending status and audit are atomic; and
 idempotent request IDs prevent duplicate rows. Submission is not approval and
 must not create a public or approved payload.
 
+ART-002H records exact-source semantics: file uploads preserve bytes and source
+metadata; paste/manual entry records browser-received text without an external
+file-equality claim; raw bytes remain moderator-only evidence. ART-003 stays
+outside the release candidate while visual calibration remains materially
+inaccurate.
+
 Forge is organised into explicit domains rather than isolated pages.
 
 ### Domain 0 — Editorial Intelligence

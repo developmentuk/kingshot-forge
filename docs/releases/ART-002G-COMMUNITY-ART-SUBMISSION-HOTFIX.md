@@ -50,3 +50,11 @@ Recommendation: **Ready for Owner Acceptance**. Production promotion remains blo
 until the owner supplies permitted player and moderator sessions and completes the
 labelled fixture submission, duplicate retry, moderation, Gallery, clipboard and
 responsive browser checks.
+
+## ART-002H correction
+
+The ART-002G textarea path was not an exact external-file ingestion path: the
+browser-received value used LF line endings and differed from the canonical CRLF
+fixture bytes. ART-002H preserves that fact and introduces separate exact `.txt`
+upload and browser-paste evidence. It does not alter an approved payload to hide
+the discrepancy.

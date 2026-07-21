@@ -28,6 +28,11 @@ adjustments never mutate source or approved payload. The canonical fixture is a
 10-line calibration benchmark. Font assets and device-scale metadata remain the
 principal residual limitations.
 
+ART-002H makes the source boundary explicit: exact file bytes are an immutable
+input artifact, while pasted text is a separately labelled browser-received
+artifact. Prediction profiles may consume decoded text, but cannot rewrite either
+artifact or the approved payload.
+
 ## ART-002C access-control repair
 
 The regression root cause was a capability vocabulary mismatch: navigation used
