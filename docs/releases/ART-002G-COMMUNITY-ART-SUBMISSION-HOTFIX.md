@@ -26,10 +26,25 @@ Submission does not set `approved_copy_payload`, `approved_payload_hash`, `appro
 
 ## Preview gate
 
-No production deployment was made. A preview must apply migration `20260721213000_art002g_atomic_community_art_submission.sql`, deploy the hotfix branch `hotfix/1.0.3-community-art-submission`, and pass the permitted-player, duplicate-retry, RLS, moderation-continuity and network checks before promotion.
+No production application deployment, merge or tag was made. Migration
+`20260721213000_art002g_atomic_community_art_submission.sql` was applied to
+Supabase project `hrvdhjscwitqpwjhnjkm` as `art002g_atomic_community_art_submission`
+at `20260721194617`.
+
+The exact commit `a1f77b52375430fdceec967afa5ccdd3e0e5a824` is deployed as protected
+Vercel preview `dpl_6r9D1ir8BsLz5B41TXLAC9EYYafv` at
+`https://kingshot-forge-96isetlvx-clarksim-7474s-projects.vercel.app` with target
+`preview` and state `READY`. Unauthenticated submit against the preview returned a
+safe 401 `Protected deployment`; authenticated player/moderator acceptance remains
+owner-gated.
 
 ## Validation
 
-Passed: `npm run test:art002g-submission`, `npm run build`, `npx tsc -p tsconfig.server.json --noEmit`, `npm run validate:nodenext`, and `git diff --check`.
+Passed: `npm run test:art002g-submission`, `npm run test:art-studio`, `npm run test:render`, `npm run test:render-engine`, `npm run check`, `npm run build`, `npx tsc -p tsconfig.server.json --noEmit`, `npm run validate:nodenext`, and `git diff --check`.
 
-Recommendation: **Needs Correction** until an authenticated preview acceptance run confirms the RPC and migration against the preview database. Do not promote to production yet.
+No submission or audit data rows were created during migration or preview checks.
+
+Recommendation: **Ready for Owner Acceptance**. Production promotion remains blocked
+until the owner supplies permitted player and moderator sessions and completes the
+labelled fixture submission, duplicate retry, moderation, Gallery, clipboard and
+responsive browser checks.

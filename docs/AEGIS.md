@@ -630,3 +630,11 @@ discoverability and no document-level horizontal overflow at 390/768/1280/1440.
 Console diagnostics were empty. Personal Progression save/reload/history and
 owner/admin acceptance remain unverified because the available session was not
 authenticated for those routes; no write was attempted.
+## ART-002G / ART-003 release boundary
+
+Community Art submission uses a service-role-only atomic RPC with server-owned raw
+hash/byte length, request UUID idempotency and an append-only audit event. Render
+calibration is a separate prediction-only capability with context-specific profiles;
+it does not grant moderation or alter approved payloads. The exact candidate is in a
+protected READY preview, with authenticated player/moderator acceptance still required
+before production promotion.

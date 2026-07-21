@@ -40,3 +40,9 @@ of this sprint.
 Sprint 1.1.1 implementation is now staged on the feature branch with a
 review-gated registry migration. The migration is intentionally unapplied until
 the architecture checkpoint and live RLS verification pass.
+
+ART-002G is implemented on `hotfix/1.0.3-community-art-submission` with an atomic
+service-role submission RPC, server-computed raw-source metadata, request UUID
+idempotency and append-only audit. ART-003 adds Kingshot context render profiles and
+local screenshot calibration. The exact candidate is in a protected READY preview;
+owner player/moderator browser acceptance remains the promotion gate.

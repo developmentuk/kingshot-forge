@@ -22,6 +22,12 @@ The authenticated browser role matrix is not certified in this checkout because 
 
 ART-002G repaired the post-ART-002 insert contract: `raw_source_sha256` and `raw_source_byte_length` are now computed and persisted by the atomic service-role submission command. The command also records `submission_request_id` for duplicate prevention and appends a pending submission audit event. No approved payload or calibration ownership is required at submit time.
 
+ART-003 adds versioned Kingshot chat, alliance-chat and mail prediction profiles.
+Screenshot anchors measure left/right width, baseline and line-height drift; profile
+adjustments never mutate source or approved payload. The canonical fixture is a
+10-line calibration benchmark. Font assets and device-scale metadata remain the
+principal residual limitations.
+
 ## ART-002C access-control repair
 
 The regression root cause was a capability vocabulary mismatch: navigation used
