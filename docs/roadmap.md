@@ -24,3 +24,7 @@ resolution, and produce a shadow identity report. Preserve current database
 IDs, routes, Buildings publication tables and Search projections. No migration,
 schema alteration, publication mutation or Entity Engine implementation is part
 of this sprint.
+
+Sprint 1.1.1 implementation is now staged on the feature branch with a
+review-gated registry migration. The migration is intentionally unapplied until
+the architecture checkpoint and live RLS verification pass.

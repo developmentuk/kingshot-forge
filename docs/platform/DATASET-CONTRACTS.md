@@ -10,3 +10,10 @@ The correction checkpoint uses `review_required` for an authenticated staged imp
 # REL-003 Buildings contract
 
 Buildings publication preserves source fingerprint, contract/parser provenance, publication version, import-run linkage, and warning identity metadata. Published reads exclude staged rows and require `editorial_status = 'published'` with a non-null published version.
+# Stable identity compatibility
+
+Published dataset records may expose a `forge_id` alongside their existing
+dataset key, record ID and Search projection ID. Existing identifiers remain
+valid compatibility inputs and are not replaced or deleted. Adapters derive
+Forge IDs from canonical keys, reject ambiguous mappings and omit invalid or
+disabled targets from public Search.

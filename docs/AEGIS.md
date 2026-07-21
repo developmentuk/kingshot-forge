@@ -39,6 +39,16 @@ The Buildings workbook preflight passed with 10 catalog rows, 587 progression ro
 
 ## Domain Architecture
 
+### Stable Forge entity identity — Sprint 1.1.1
+
+Forge IDs are namespace-qualified, immutable identifiers in the form
+`namespace.local-key`. The server-authoritative registry and resolver fail
+closed for invalid IDs, unknown namespaces, disabled types and unpublished
+records. Search may carry a Forge ID additively; existing projection IDs and
+routes remain compatibility contracts. The review-gated registry migration is
+not applied, and this sprint does not complete Media Library, tags, authored
+relationships or Creator integrations.
+
 Forge is organised into explicit domains rather than isolated pages.
 
 ### Domain 0 — Editorial Intelligence

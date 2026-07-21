@@ -2,6 +2,12 @@
 
 ## ARCH-001 Forge Domain Model v1.0 — 21 July 2026
 
+Sprint 1.1.1 adds the stable identity contract, registry/resolver boundary,
+Buildings/Hero compatibility adapters and additive Search Forge IDs on a
+feature branch. The Supabase registry migration remains unapplied pending the
+architecture checkpoint, RLS review and owner-approved live verification. No
+Buildings publication, Hero record or production data was changed.
+
 This architecture sprint is documentation-only on branch
 `hotfix/1.0.1-player-buildings-connections`, starting at HEAD
 `a833d2c979bae70704ba297df577b44ac57988d9`. It created no migration, made no
