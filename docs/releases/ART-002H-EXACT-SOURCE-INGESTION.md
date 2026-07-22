@@ -12,9 +12,9 @@ The candidate was validated with `npm run check`, which completed successfully i
 
 ## ART-002M preview evidence
 
-- Deployment: `dpl_9x66cjKxxemZmwBH1PhzHzLTYr8H`
-- URL: https://kingshot-forge-q2a4df6rr-clarksim-7474s-projects.vercel.app
+- Deployment: `dpl_BaaAqjGBkUfkefYFURRD3heNgBD3`
+- URL: https://kingshot-forge-cj5rungq8-clarksim-7474s-projects.vercel.app
 - Status: READY, preview target
-- Commit: `c79474fb65f5e7c92ee041ece336132f89d5a6f3`
+- Commit: `895b4a3e9c40e1cdf257ee15dc728ed806fcb329`
 - Supabase binding: `kingshot-forge` project `prj_qoxc7FGYaVFAwtREvHpB5viQguO7`
 - Protection: SSO for all non-custom-domain deployments; Git fork protection enabled.
