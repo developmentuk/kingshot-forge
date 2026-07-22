@@ -1,0 +1,4812 @@
+{
+  "fixture_id": "community-art.wow-im-so-cute",
+  "source_sha256": "c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79",
+  "source_byte_length": 386,
+  "decoded_text_sha256": "c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79",
+  "code_point_count": 276,
+  "grapheme_count": 258,
+  "entries": [
+    {
+      "line": 1,
+      "column": 1,
+      "glyph": "💭",
+      "code_point": "U+1F4AD",
+      "unicode_name": "THOUGHT BALLOON",
+      "utf8_bytes": [
+        "f0",
+        "9f",
+        "92",
+        "ad"
+      ],
+      "utf16_units": [
+        55357
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 1,
+      "column": 2,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 1,
+      "column": 3,
+      "glyph": "💭",
+      "code_point": "U+1F4AD",
+      "unicode_name": "THOUGHT BALLOON",
+      "utf8_bytes": [
+        "f0",
+        "9f",
+        "92",
+        "ad"
+      ],
+      "utf16_units": [
+        55357
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 1,
+      "column": 4,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 1,
+      "column": 5,
+      "glyph": "W",
+      "code_point": "U+0057",
+      "unicode_name": "UNICODE CHARACTER U+0057",
+      "utf8_bytes": [
+        "57"
+      ],
+      "utf16_units": [
+        87
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 1,
+      "column": 6,
+      "glyph": "o",
+      "code_point": "U+006F",
+      "unicode_name": "UNICODE CHARACTER U+006F",
+      "utf8_bytes": [
+        "6f"
+      ],
+      "utf16_units": [
+        111
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 3
+    },
+    {
+      "line": 1,
+      "column": 7,
+      "glyph": "w",
+      "code_point": "U+0077",
+      "unicode_name": "UNICODE CHARACTER U+0077",
+      "utf8_bytes": [
+        "77"
+      ],
+      "utf16_units": [
+        119
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 1,
+      "column": 8,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 1,
+      "column": 9,
+      "glyph": "I",
+      "code_point": "U+0049",
+      "unicode_name": "UNICODE CHARACTER U+0049",
+      "utf8_bytes": [
+        "49"
+      ],
+      "utf16_units": [
+        73
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 1,
+      "column": 10,
+      "glyph": "’",
+      "code_point": "U+2019",
+      "unicode_name": "UNICODE CHARACTER U+2019",
+      "utf8_bytes": [
+        "e2",
+        "80",
+        "99"
+      ],
+      "utf16_units": [
+        8217
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 1,
+      "column": 11,
+      "glyph": "m",
+      "code_point": "U+006D",
+      "unicode_name": "UNICODE CHARACTER U+006D",
+      "utf8_bytes": [
+        "6d"
+      ],
+      "utf16_units": [
+        109
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 1,
+      "column": 12,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 1,
+      "column": 13,
+      "glyph": "s",
+      "code_point": "U+0073",
+      "unicode_name": "UNICODE CHARACTER U+0073",
+      "utf8_bytes": [
+        "73"
+      ],
+      "utf16_units": [
+        115
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 1,
+      "column": 14,
+      "glyph": "o",
+      "code_point": "U+006F",
+      "unicode_name": "UNICODE CHARACTER U+006F",
+      "utf8_bytes": [
+        "6f"
+      ],
+      "utf16_units": [
+        111
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 3
+    },
+    {
+      "line": 1,
+      "column": 15,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 1,
+      "column": 16,
+      "glyph": "c",
+      "code_point": "U+0063",
+      "unicode_name": "UNICODE CHARACTER U+0063",
+      "utf8_bytes": [
+        "63"
+      ],
+      "utf16_units": [
+        99
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 1,
+      "column": 17,
+      "glyph": "u",
+      "code_point": "U+0075",
+      "unicode_name": "UNICODE CHARACTER U+0075",
+      "utf8_bytes": [
+        "75"
+      ],
+      "utf16_units": [
+        117
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 1,
+      "column": 18,
+      "glyph": "t",
+      "code_point": "U+0074",
+      "unicode_name": "UNICODE CHARACTER U+0074",
+      "utf8_bytes": [
+        "74"
+      ],
+      "utf16_units": [
+        116
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 1,
+      "column": 19,
+      "glyph": "e",
+      "code_point": "U+0065",
+      "unicode_name": "UNICODE CHARACTER U+0065",
+      "utf8_bytes": [
+        "65"
+      ],
+      "utf16_units": [
+        101
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 1,
+      "column": 20,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 1,
+      "column": 21,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 1,
+      "column": 22,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 1,
+      "column": 23,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 1,
+      "column": 24,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 2,
+      "column": 1,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 2,
+      "column": 2,
+      "glyph": "t",
+      "code_point": "U+0074",
+      "unicode_name": "UNICODE CHARACTER U+0074",
+      "utf8_bytes": [
+        "74"
+      ],
+      "utf16_units": [
+        116
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 2,
+      "column": 3,
+      "glyph": "h",
+      "code_point": "U+0068",
+      "unicode_name": "UNICODE CHARACTER U+0068",
+      "utf8_bytes": [
+        "68"
+      ],
+      "utf16_units": [
+        104
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 2,
+      "column": 4,
+      "glyph": "i",
+      "code_point": "U+0069",
+      "unicode_name": "UNICODE CHARACTER U+0069",
+      "utf8_bytes": [
+        "69"
+      ],
+      "utf16_units": [
+        105
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 2,
+      "column": 5,
+      "glyph": "s",
+      "code_point": "U+0073",
+      "unicode_name": "UNICODE CHARACTER U+0073",
+      "utf8_bytes": [
+        "73"
+      ],
+      "utf16_units": [
+        115
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 2,
+      "column": 6,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 2,
+      "column": 7,
+      "glyph": "i",
+      "code_point": "U+0069",
+      "unicode_name": "UNICODE CHARACTER U+0069",
+      "utf8_bytes": [
+        "69"
+      ],
+      "utf16_units": [
+        105
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 2,
+      "column": 8,
+      "glyph": "s",
+      "code_point": "U+0073",
+      "unicode_name": "UNICODE CHARACTER U+0073",
+      "utf8_bytes": [
+        "73"
+      ],
+      "utf16_units": [
+        115
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 2,
+      "column": 9,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 2,
+      "column": 10,
+      "glyph": "d",
+      "code_point": "U+0064",
+      "unicode_name": "UNICODE CHARACTER U+0064",
+      "utf8_bytes": [
+        "64"
+      ],
+      "utf16_units": [
+        100
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 2,
+      "column": 11,
+      "glyph": "a",
+      "code_point": "U+0061",
+      "unicode_name": "UNICODE CHARACTER U+0061",
+      "utf8_bytes": [
+        "61"
+      ],
+      "utf16_units": [
+        97
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 2,
+      "column": 12,
+      "glyph": "n",
+      "code_point": "U+006E",
+      "unicode_name": "UNICODE CHARACTER U+006E",
+      "utf8_bytes": [
+        "6e"
+      ],
+      "utf16_units": [
+        110
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 2,
+      "column": 13,
+      "glyph": "g",
+      "code_point": "U+0067",
+      "unicode_name": "UNICODE CHARACTER U+0067",
+      "utf8_bytes": [
+        "67"
+      ],
+      "utf16_units": [
+        103
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 2,
+      "column": 14,
+      "glyph": "e",
+      "code_point": "U+0065",
+      "unicode_name": "UNICODE CHARACTER U+0065",
+      "utf8_bytes": [
+        "65"
+      ],
+      "utf16_units": [
+        101
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 2,
+      "column": 15,
+      "glyph": "r",
+      "code_point": "U+0072",
+      "unicode_name": "UNICODE CHARACTER U+0072",
+      "utf8_bytes": [
+        "72"
+      ],
+      "utf16_units": [
+        114
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 2,
+      "column": 16,
+      "glyph": "o",
+      "code_point": "U+006F",
+      "unicode_name": "UNICODE CHARACTER U+006F",
+      "utf8_bytes": [
+        "6f"
+      ],
+      "utf16_units": [
+        111
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 3
+    },
+    {
+      "line": 2,
+      "column": 17,
+      "glyph": "u",
+      "code_point": "U+0075",
+      "unicode_name": "UNICODE CHARACTER U+0075",
+      "utf8_bytes": [
+        "75"
+      ],
+      "utf16_units": [
+        117
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 2,
+      "column": 18,
+      "glyph": "s",
+      "code_point": "U+0073",
+      "unicode_name": "UNICODE CHARACTER U+0073",
+      "utf8_bytes": [
+        "73"
+      ],
+      "utf16_units": [
+        115
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 2,
+      "column": 19,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 2,
+      "column": 20,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 2,
+      "column": 21,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 2,
+      "column": 22,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 2,
+      "column": 23,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 3,
+      "column": 1,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 2,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 3,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 4,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 5,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 6,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 7,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 8,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 9,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 10,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 11,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 12,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 13,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 14,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 15,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 16,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 17,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 18,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 19,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 20,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 21,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 22,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 23,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 24,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 3,
+      "column": 25,
+      "glyph": "＿",
+      "code_point": "U+FF3F",
+      "unicode_name": "UNICODE CHARACTER U+FF3F",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "bf"
+      ],
+      "utf16_units": [
+        65343
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 3
+    },
+    {
+      "line": 3,
+      "column": 26,
+      "glyph": "_",
+      "code_point": "U+005F",
+      "unicode_name": "UNICODE CHARACTER U+005F",
+      "utf8_bytes": [
+        "5f"
+      ],
+      "utf16_units": [
+        95
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 3,
+      "column": 27,
+      "glyph": "＿",
+      "code_point": "U+FF3F",
+      "unicode_name": "UNICODE CHARACTER U+FF3F",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "bf"
+      ],
+      "utf16_units": [
+        65343
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 3
+    },
+    {
+      "line": 3,
+      "column": 28,
+      "glyph": "＿",
+      "code_point": "U+FF3F",
+      "unicode_name": "UNICODE CHARACTER U+FF3F",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "bf"
+      ],
+      "utf16_units": [
+        65343
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 3
+    },
+    {
+      "line": 3,
+      "column": 29,
+      "glyph": "_",
+      "code_point": "U+005F",
+      "unicode_name": "UNICODE CHARACTER U+005F",
+      "utf8_bytes": [
+        "5f"
+      ],
+      "utf16_units": [
+        95
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 3,
+      "column": 30,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 3,
+      "column": 31,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 3,
+      "column": 32,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 4,
+      "column": 1,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 2,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 3,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 4,
+      "column": 4,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 4,
+      "column": 5,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 4,
+      "column": 6,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 7,
+      "glyph": "／",
+      "code_point": "U+FF0F",
+      "unicode_name": "UNICODE CHARACTER U+FF0F",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "8f"
+      ],
+      "utf16_units": [
+        65295
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 4,
+      "column": 8,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 4,
+      "column": 9,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 10,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 4,
+      "column": 11,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 12,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 4,
+      "column": 13,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 14,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 4,
+      "column": 15,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 4,
+      "column": 16,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 17,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 4,
+      "column": 18,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 19,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 4,
+      "column": 20,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 21,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 4,
+      "column": 22,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 4,
+      "column": 23,
+      "glyph": "＼",
+      "code_point": "U+FF3C",
+      "unicode_name": "UNICODE CHARACTER U+FF3C",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "bc"
+      ],
+      "utf16_units": [
+        65340
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 4,
+      "column": 24,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 4,
+      "column": 25,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 5,
+      "column": 1,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 5,
+      "column": 2,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 5,
+      "column": 3,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 4,
+      "glyph": "／",
+      "code_point": "U+FF0F",
+      "unicode_name": "UNICODE CHARACTER U+FF0F",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "8f"
+      ],
+      "utf16_units": [
+        65295
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 5,
+      "column": 5,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 5,
+      "column": 6,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 5,
+      "column": 7,
+      "glyph": "'",
+      "code_point": "U+0027",
+      "unicode_name": "UNICODE CHARACTER U+0027",
+      "utf8_bytes": [
+        "27"
+      ],
+      "utf16_units": [
+        39
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 5,
+      "column": 8,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 9,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 5,
+      "column": 10,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 11,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 5,
+      "column": 12,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 13,
+      "glyph": "∧",
+      "code_point": "U+2227",
+      "unicode_name": "UNICODE CHARACTER U+2227",
+      "utf8_bytes": [
+        "e2",
+        "88",
+        "a7"
+      ],
+      "utf16_units": [
+        8743
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 5,
+      "column": 14,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 15,
+      "glyph": "_",
+      "code_point": "U+005F",
+      "unicode_name": "UNICODE CHARACTER U+005F",
+      "utf8_bytes": [
+        "5f"
+      ],
+      "utf16_units": [
+        95
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 5,
+      "column": 16,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 17,
+      "glyph": "∧",
+      "code_point": "U+2227",
+      "unicode_name": "UNICODE CHARACTER U+2227",
+      "utf8_bytes": [
+        "e2",
+        "88",
+        "a7"
+      ],
+      "utf16_units": [
+        8743
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 5,
+      "column": 18,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 19,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 5,
+      "column": 20,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 21,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 5,
+      "column": 22,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 5,
+      "column": 23,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 5,
+      "column": 24,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 5,
+      "column": 25,
+      "glyph": "＼",
+      "code_point": "U+FF3C",
+      "unicode_name": "UNICODE CHARACTER U+FF3C",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "bc"
+      ],
+      "utf16_units": [
+        65340
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 5,
+      "column": 26,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 5,
+      "column": 27,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 6,
+      "column": 1,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 6,
+      "column": 2,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 3,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 6,
+      "column": 4,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 5,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 6,
+      "column": 6,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 7,
+      "glyph": "_",
+      "code_point": "U+005F",
+      "unicode_name": "UNICODE CHARACTER U+005F",
+      "utf8_bytes": [
+        "5f"
+      ],
+      "utf16_units": [
+        95
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 6,
+      "column": 8,
+      "glyph": "∧",
+      "code_point": "U+2227",
+      "unicode_name": "UNICODE CHARACTER U+2227",
+      "utf8_bytes": [
+        "e2",
+        "88",
+        "a7"
+      ],
+      "utf16_units": [
+        8743
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 6,
+      "column": 9,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 10,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 6,
+      "column": 11,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 12,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 6,
+      "column": 13,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 14,
+      "glyph": "(",
+      "code_point": "U+0028",
+      "unicode_name": "UNICODE CHARACTER U+0028",
+      "utf8_bytes": [
+        "28"
+      ],
+      "utf16_units": [
+        40
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 6,
+      "column": 15,
+      "glyph": "˶",
+      "code_point": "U+02F6",
+      "unicode_name": "UNICODE CHARACTER U+02F6",
+      "utf8_bytes": [
+        "cb",
+        "b6"
+      ],
+      "utf16_units": [
+        758
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 6,
+      "column": 16,
+      "glyph": "˃",
+      "code_point": "U+02C3",
+      "unicode_name": "UNICODE CHARACTER U+02C3",
+      "utf8_bytes": [
+        "cb",
+        "83"
+      ],
+      "utf16_units": [
+        707
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 6,
+      "column": 17,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 18,
+      "glyph": "ᵕ",
+      "code_point": "U+1D55",
+      "unicode_name": "UNICODE CHARACTER U+1D55",
+      "utf8_bytes": [
+        "e1",
+        "b5",
+        "95"
+      ],
+      "utf16_units": [
+        7509
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 6,
+      "column": 19,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 20,
+      "glyph": "˂",
+      "code_point": "U+02C2",
+      "unicode_name": "UNICODE CHARACTER U+02C2",
+      "utf8_bytes": [
+        "cb",
+        "82"
+      ],
+      "utf16_units": [
+        706
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 6,
+      "column": 21,
+      "glyph": "˶",
+      "code_point": "U+02F6",
+      "unicode_name": "UNICODE CHARACTER U+02F6",
+      "utf8_bytes": [
+        "cb",
+        "b6"
+      ],
+      "utf16_units": [
+        758
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 6,
+      "column": 22,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 23,
+      "glyph": ")",
+      "code_point": "U+0029",
+      "unicode_name": "UNICODE CHARACTER U+0029",
+      "utf8_bytes": [
+        "29"
+      ],
+      "utf16_units": [
+        41
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 6,
+      "column": 24,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 25,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 6,
+      "column": 26,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 27,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 6,
+      "column": 28,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 29,
+      "glyph": "∧",
+      "code_point": "U+2227",
+      "unicode_name": "UNICODE CHARACTER U+2227",
+      "utf8_bytes": [
+        "e2",
+        "88",
+        "a7"
+      ],
+      "utf16_units": [
+        8743
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 6,
+      "column": 30,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 31,
+      "glyph": "_",
+      "code_point": "U+005F",
+      "unicode_name": "UNICODE CHARACTER U+005F",
+      "utf8_bytes": [
+        "5f"
+      ],
+      "utf16_units": [
+        95
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 6,
+      "column": 32,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 6,
+      "column": 33,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 6,
+      "column": 34,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 6,
+      "column": 35,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 7,
+      "column": 1,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 7,
+      "column": 2,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 3,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 7,
+      "column": 4,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 5,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 7,
+      "column": 6,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 7,
+      "column": 7,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 8,
+      "glyph": "˂",
+      "code_point": "U+02C2",
+      "unicode_name": "UNICODE CHARACTER U+02C2",
+      "utf8_bytes": [
+        "cb",
+        "82"
+      ],
+      "utf16_units": [
+        706
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 7,
+      "column": 9,
+      "glyph": "˶",
+      "code_point": "U+02F6",
+      "unicode_name": "UNICODE CHARACTER U+02F6",
+      "utf8_bytes": [
+        "cb",
+        "b6"
+      ],
+      "utf16_units": [
+        758
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 7,
+      "column": 10,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 11,
+      "glyph": ")",
+      "code_point": "U+0029",
+      "unicode_name": "UNICODE CHARACTER U+0029",
+      "utf8_bytes": [
+        "29"
+      ],
+      "utf16_units": [
+        41
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 7,
+      "column": 12,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 7,
+      "column": 13,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 14,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 7,
+      "column": 15,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 16,
+      "glyph": "∧",
+      "code_point": "U+2227",
+      "unicode_name": "UNICODE CHARACTER U+2227",
+      "utf8_bytes": [
+        "e2",
+        "88",
+        "a7"
+      ],
+      "utf16_units": [
+        8743
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 7,
+      "column": 17,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 18,
+      "glyph": "_",
+      "code_point": "U+005F",
+      "unicode_name": "UNICODE CHARACTER U+005F",
+      "utf8_bytes": [
+        "5f"
+      ],
+      "utf16_units": [
+        95
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 7,
+      "column": 19,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 20,
+      "glyph": "∧",
+      "code_point": "U+2227",
+      "unicode_name": "UNICODE CHARACTER U+2227",
+      "utf8_bytes": [
+        "e2",
+        "88",
+        "a7"
+      ],
+      "utf16_units": [
+        8743
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 6
+    },
+    {
+      "line": 7,
+      "column": 21,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 22,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 7,
+      "column": 23,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 24,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 7,
+      "column": 25,
+      "glyph": "(",
+      "code_point": "U+0028",
+      "unicode_name": "UNICODE CHARACTER U+0028",
+      "utf8_bytes": [
+        "28"
+      ],
+      "utf16_units": [
+        40
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 7,
+      "column": 26,
+      "glyph": "˶",
+      "code_point": "U+02F6",
+      "unicode_name": "UNICODE CHARACTER U+02F6",
+      "utf8_bytes": [
+        "cb",
+        "b6"
+      ],
+      "utf16_units": [
+        758
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 7,
+      "column": 27,
+      "glyph": "˃",
+      "code_point": "U+02C3",
+      "unicode_name": "UNICODE CHARACTER U+02C3",
+      "utf8_bytes": [
+        "cb",
+        "83"
+      ],
+      "utf16_units": [
+        707
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 2
+    },
+    {
+      "line": 7,
+      "column": 28,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 29,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 7,
+      "column": 30,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 7,
+      "column": 31,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 7,
+      "column": 32,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 7,
+      "column": 33,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 8,
+      "column": 1,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 8,
+      "column": 2,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 3,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 8,
+      "column": 4,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 5,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 8,
+      "column": 6,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 7,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 8,
+      "column": 8,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 8,
+      "column": 9,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 10,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 8,
+      "column": 11,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 12,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 8,
+      "column": 13,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 14,
+      "glyph": "(",
+      "code_point": "U+0028",
+      "unicode_name": "UNICODE CHARACTER U+0028",
+      "utf8_bytes": [
+        "28"
+      ],
+      "utf16_units": [
+        40
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 8,
+      "column": 15,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 8,
+      "column": 16,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 17,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 8,
+      "column": 18,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 19,
+      "glyph": ")",
+      "code_point": "U+0029",
+      "unicode_name": "UNICODE CHARACTER U+0029",
+      "utf8_bytes": [
+        "29"
+      ],
+      "utf16_units": [
+        41
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 8,
+      "column": 20,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 21,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 8,
+      "column": 22,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 23,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 8,
+      "column": 24,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 8,
+      "column": 25,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 26,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 8,
+      "column": 27,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 8,
+      "column": 28,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 8,
+      "column": 29,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 8,
+      "column": 30,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 8,
+      "column": 31,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 9,
+      "column": 1,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 9,
+      "column": 2,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 9,
+      "column": 3,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 9,
+      "column": 4,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 9,
+      "column": 5,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 9,
+      "column": 6,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 9,
+      "column": 7,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 9,
+      "column": 8,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 9,
+      "column": 9,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 9,
+      "column": 10,
+      "glyph": "／",
+      "code_point": "U+FF0F",
+      "unicode_name": "UNICODE CHARACTER U+FF0F",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "8f"
+      ],
+      "utf16_units": [
+        65295
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 9,
+      "column": 11,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 9,
+      "column": 12,
+      "glyph": "(",
+      "code_point": "U+0028",
+      "unicode_name": "UNICODE CHARACTER U+0028",
+      "utf8_bytes": [
+        "28"
+      ],
+      "utf16_units": [
+        40
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 9,
+      "column": 13,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 9,
+      "column": 14,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 9,
+      "column": 15,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 9,
+      "column": 16,
+      "glyph": ")",
+      "code_point": "U+0029",
+      "unicode_name": "UNICODE CHARACTER U+0029",
+      "utf8_bytes": [
+        "29"
+      ],
+      "utf16_units": [
+        41
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 9,
+      "column": 17,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 9,
+      "column": 18,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 9,
+      "column": 19,
+      "glyph": "＼",
+      "code_point": "U+FF3C",
+      "unicode_name": "UNICODE CHARACTER U+FF3C",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "bc"
+      ],
+      "utf16_units": [
+        65340
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 9,
+      "column": 20,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 9,
+      "column": 21,
+      "glyph": "/",
+      "code_point": "U+002F",
+      "unicode_name": "UNICODE CHARACTER U+002F",
+      "utf8_bytes": [
+        "2f"
+      ],
+      "utf16_units": [
+        47
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 14
+    },
+    {
+      "line": 9,
+      "column": 22,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 9,
+      "column": 23,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 9,
+      "column": 24,
+      "glyph": "\r",
+      "code_point": "U+000D",
+      "unicode_name": "CARRIAGE RETURN",
+      "utf8_bytes": [
+        "0d"
+      ],
+      "utf16_units": [
+        13
+      ],
+      "whitespace_type": "carriage_return",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 9,
+      "column": 25,
+      "glyph": "\n",
+      "code_point": "U+000A",
+      "unicode_name": "LINE FEED",
+      "utf8_bytes": [
+        "0a"
+      ],
+      "utf16_units": [
+        10
+      ],
+      "whitespace_type": "line_feed",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 10,
+      "column": 1,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 10,
+      "column": 2,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 10,
+      "column": 3,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 10,
+      "column": 4,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 10,
+      "column": 5,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 10,
+      "column": 6,
+      "glyph": ".",
+      "code_point": "U+002E",
+      "unicode_name": "UNICODE CHARACTER U+002E",
+      "utf8_bytes": [
+        "2e"
+      ],
+      "utf16_units": [
+        46
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 9
+    },
+    {
+      "line": 10,
+      "column": 7,
+      "glyph": "／",
+      "code_point": "U+FF0F",
+      "unicode_name": "UNICODE CHARACTER U+FF0F",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "8f"
+      ],
+      "utf16_units": [
+        65295
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 10,
+      "column": 8,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 10,
+      "column": 9,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 10,
+      "column": 10,
+      "glyph": "し",
+      "code_point": "U+3057",
+      "unicode_name": "UNICODE CHARACTER U+3057",
+      "utf8_bytes": [
+        "e3",
+        "81",
+        "97"
+      ],
+      "utf16_units": [
+        12375
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 10,
+      "column": 11,
+      "glyph": "ー",
+      "code_point": "U+30FC",
+      "unicode_name": "UNICODE CHARACTER U+30FC",
+      "utf8_bytes": [
+        "e3",
+        "83",
+        "bc"
+      ],
+      "utf16_units": [
+        12540
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 10,
+      "column": 12,
+      "glyph": "-",
+      "code_point": "U+002D",
+      "unicode_name": "UNICODE CHARACTER U+002D",
+      "utf8_bytes": [
+        "2d"
+      ],
+      "utf16_units": [
+        45
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 10,
+      "column": 13,
+      "glyph": "J",
+      "code_point": "U+004A",
+      "unicode_name": "UNICODE CHARACTER U+004A",
+      "utf8_bytes": [
+        "4a"
+      ],
+      "utf16_units": [
+        74
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 1
+    },
+    {
+      "line": 10,
+      "column": 14,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 10,
+      "column": 15,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 10,
+      "column": 16,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 10,
+      "column": 17,
+      "glyph": "　",
+      "code_point": "U+3000",
+      "unicode_name": "IDEOGRAPHIC SPACE",
+      "utf8_bytes": [
+        "e3",
+        "80",
+        "80"
+      ],
+      "utf16_units": [
+        12288
+      ],
+      "whitespace_type": "ideographic_space",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 27
+    },
+    {
+      "line": 10,
+      "column": 18,
+      "glyph": "＼",
+      "code_point": "U+FF3C",
+      "unicode_name": "UNICODE CHARACTER U+FF3C",
+      "utf8_bytes": [
+        "ef",
+        "bc",
+        "bc"
+      ],
+      "utf16_units": [
+        65340
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "verified_in_specific_context",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 4
+    },
+    {
+      "line": 10,
+      "column": 19,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    },
+    {
+      "line": 10,
+      "column": 20,
+      "glyph": "|",
+      "code_point": "U+007C",
+      "unicode_name": "UNICODE CHARACTER U+007C",
+      "utf8_bytes": [
+        "7c"
+      ],
+      "utf16_units": [
+        124
+      ],
+      "whitespace_type": "none",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 30
+    },
+    {
+      "line": 10,
+      "column": 21,
+      "glyph": " ",
+      "code_point": "U+0020",
+      "unicode_name": "SPACE",
+      "utf8_bytes": [
+        "20"
+      ],
+      "utf16_units": [
+        32
+      ],
+      "whitespace_type": "space",
+      "compatibility_classification": "unverified",
+      "source_origin": "fixtures/community-art/wow-im-so-cute/{wow-im-so-cute.txt,kingshot-reference-chat.png,kingshot-reference-game.png}",
+      "occurrence_count": 104
+    }
+  ]
+}
