@@ -19,3 +19,6 @@ The canonical `wow-im-so-cute` evidence preserves 10 lines and visible breaks. T
 reference screenshots still have residual differences from the unavailable Kingshot
 font, device rasterisation and unrecorded browser/device scale. Exact pixel
 equivalence is not claimed until owner-provided screenshots include that metadata.
+## Preservation policy
+
+Compatibility classification is evidence, not permission to mutate. `unverified` does not mean `unsupported`; width warnings, emoji, ideographic spaces and full-width characters remain unchanged. Kingshot screenshot/source observations are fixture-scoped evidence for their specific context.

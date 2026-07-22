@@ -17,3 +17,6 @@ tabs, ideographic spaces, full-width punctuation and trailing newline. Its raw
 SHA-256 and byte length are calculated from those bytes. Paste and manual entry
 record exactly what Forge receives from the browser and separately record the
 browser text/hash; they do not assert external-file equality.
+## Exact-source guarantee
+
+The pipeline records hashes and deltas at each stage. Raw source, moderation draft, approved payload, Gallery payload and clipboard payload are equal for unchanged approval. Line-ending transport differences are declared separately; visible characters, spaces and line structure are not silently changed.

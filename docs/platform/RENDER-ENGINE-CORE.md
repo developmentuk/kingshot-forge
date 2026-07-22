@@ -47,3 +47,6 @@ view/inspect and Community Art moderation/approval; players, verified players
 and contributors receive none by default. RoleContext refreshes on sign-in,
 window focus, visibility changes and the `forge-capabilities-changed` event.
 API and RLS moderation checks use `community_art.moderate`.
+## ART-002L boundary
+
+Prediction and width approximation are display-only. The render engine does not normalize, trim, replace punctuation, expand tabs or collapse whitespace in Community Art payload paths. Repairs are moderator-confirmed operations with an immutable source-versus-approved diff.

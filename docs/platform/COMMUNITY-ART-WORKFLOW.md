@@ -39,3 +39,6 @@ Live RLS verification confirmed raw and legacy source columns are not directly g
 ART-002C replaces the ambiguous `moderation.manage` gate for this workflow with
 `community_art.moderate` and keeps `community_art.approve` separate for action
 authorization. Verified Player is never used as a capability source.
+## Preservation-first moderation
+
+Moderation begins from exact decoded raw source. “Apply all safe repairs” is not a payload mutation: unknown, width-unstable, full-width, ideographic-space and emoji warnings are suggestions only. Approval unchanged is valid; any differing approval requires a moderator-confirmed operation and an exact diff.

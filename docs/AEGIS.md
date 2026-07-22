@@ -644,3 +644,6 @@ calibration is a separate prediction-only capability with context-specific profi
 it does not grant moderation or alter approved payloads. The exact candidate is in a
 protected READY preview, with authenticated player/moderator acceptance still required
 before production promotion.
+## Character preservation control
+
+AEGIS treats silent character mutation as a publication integrity failure. Community Art warnings must remain warnings unless a moderator explicitly approves a reversible edit. Existing submissions are audited and reported for owner review; they are never rewritten by the preservation audit.
