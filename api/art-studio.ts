@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireForgeActor, type ForgeActor } from '../server/auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../server/database/supabaseAdmin.js'
 import { validateTextArtwork, type TextArtworkValidationIssue } from '../shared/domains/art-studio/textValidation.js'
-import { analyseText, hashText, repairText, RENDER_PROFILES, sha256Text, type RepairOperation } from '../shared/domains/art-studio/rendering.js'
+import { analyseText, hashText, RENDER_PROFILES, sha256Text, type RepairOperation } from '../shared/domains/art-studio/rendering.js'
 import { randomUUID } from 'node:crypto'
 
 const CATEGORIES = new Set(['Cats', 'Animals', 'Characters', 'Announcements', 'Battle', 'KvK', 'Alliance', 'Flags', 'Pixel Art', 'Nature', 'Funny', 'Gaming', 'Seasonal', 'Other'])
@@ -117,7 +117,6 @@ async function submit(request: VercelRequest, response: VercelResponse) {
   if (!input.ownershipConfirmed || !input.guidelinesConfirmed) issues.push({ field: 'artwork', message: 'Confirm ownership and the community guidelines before submitting.' })
   if (issues.length) { fail(response, 400, issues[0].message); return }
   const profile = RENDER_PROFILES['kingshot-chat-bubble']
-  const repaired = repairText(artworkText, profile)
   const diagnostics = analyseText(artworkText, profile)
   const admin = getSupabaseAdmin()
   const { data: recent } = await admin.from('community_art_submissions').select('id').eq('user_id', currentActor.userId).gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
@@ -134,12 +133,12 @@ async function submit(request: VercelRequest, response: VercelResponse) {
   const originalFilename = typeof input.originalFilename === 'string' ? input.originalFilename : null
   const originalMimeType = typeof input.originalMimeType === 'string' ? input.originalMimeType : null
   const browserReceivedText = typeof input.browserReceivedText === 'string' ? input.browserReceivedText : null
-  const normalisationOperations = Array.isArray(input.normalisationOperations) ? input.normalisationOperations : repaired.operations
+  const normalisationOperations = Array.isArray(input.normalisationOperations) ? input.normalisationOperations : []
   if (!ingestionMode) { fail(response, 400, 'Choose a supported source input mode.'); return }
   if (!rawBytesBase64) { fail(response, 400, 'Provide the source text or upload a .txt file.'); return }
   if (ingestionMode === 'file_upload' && (!originalFilename || !originalMimeType || originalMimeType !== 'text/plain')) { fail(response, 400, 'A file upload requires a .txt filename and text/plain MIME type.'); return }
   // The atomic command assigns status: 'pending' and never creates approved_copy_payload.
-  const { data: command, error } = await admin.rpc('submit_community_art_submission', { p_request_id: submissionRequestId, p_user_id: currentActor.userId, p_submission: { title, description, category, tags, artworkText, attributionType, attributionName }, p_normalised_text: artworkText.replace(/\r\n?/g, '\n'), p_rendered_preview_payload: artworkText.replace(/\r\n?/g, '\n'), p_compatibility_profile: profile.id, p_repair_operations: repaired.operations, p_compatibility_status: diagnostics.warnings.length ? 'needs_testing' : 'untested', p_character_count: Array.from(artworkText).length, p_line_count: artworkText.replace(/\r\n?/g, '\n').split('\n').length, p_ingestion_mode: ingestionMode, p_original_filename: originalFilename, p_original_mime_type: originalMimeType, p_raw_bytes_base64: rawBytesBase64, p_browser_received_text: browserReceivedText, p_normalisation_operations: normalisationOperations })
+  const { data: command, error } = await admin.rpc('submit_community_art_submission', { p_request_id: submissionRequestId, p_user_id: currentActor.userId, p_submission: { title, description, category, tags, artworkText, attributionType, attributionName }, p_normalised_text: artworkText, p_rendered_preview_payload: artworkText, p_compatibility_profile: profile.id, p_repair_operations: [], p_compatibility_status: diagnostics.warnings.length ? 'needs_testing' : 'untested', p_character_count: Array.from(artworkText).length, p_line_count: artworkText.split('\n').length, p_ingestion_mode: ingestionMode, p_original_filename: originalFilename, p_original_mime_type: originalMimeType, p_raw_bytes_base64: rawBytesBase64, p_browser_received_text: browserReceivedText, p_normalisation_operations: normalisationOperations })
   if (error || !command || typeof command !== 'object') { console.error('[art-studio-submit]', { referenceId, userId: currentActor.userId, code: error?.code, message: error?.message, details: error?.details, hint: error?.hint }); fail(response, 500, 'Your artwork could not be submitted right now. Please retry using the same form. Reference ID: ' + referenceId, referenceId); return }
   const result = command as { created?: boolean; submission?: Record<string, unknown> }
   if (!result.submission) { console.error('[art-studio-submit]', { referenceId, userId: currentActor.userId, message: 'Atomic command returned no submission.' }); fail(response, 500, 'Your artwork could not be submitted right now. Reference ID: ' + referenceId, referenceId); return }
@@ -158,12 +157,14 @@ async function moderateSubmission(request: VercelRequest, response: VercelRespon
   const repairOperations = Array.isArray(input.repairOperations) ? input.repairOperations as RepairOperation[] : []
   if (!id || !action || !COMPATIBILITY.has(compatibilityStatus) || note.length > 4000 || feedback.length > 2000 || (approvedPayload !== null && approvedPayload.length > 20000)) { fail(response, 400, 'Check the moderation fields and try again.'); return }
   const admin = getSupabaseAdmin()
-  const { data: current, error: readError } = await admin.from('community_art_submissions').select('status,normalised_text').eq('id', id).maybeSingle()
+  const { data: current, error: readError } = await admin.from('community_art_submissions').select('status,raw_source_text,normalised_text,approved_copy_payload').eq('id', id).maybeSingle()
   if (readError || !current) { fail(response, 404, 'Submission not found.'); return }
   if ((action === 'approve' || action === 'reject') && current.status !== 'pending') { fail(response, 409, 'Only pending submissions can be reviewed.'); return }
   if (action === 'publish' && current.status !== 'approved') { fail(response, 409, 'Only approved submissions can be published.'); return }
   const nextStatus = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : action === 'publish' ? 'published' : current.status
-  const payload = approvedPayload ?? (typeof current.normalised_text === 'string' ? current.normalised_text : null)
+  const payload = approvedPayload ?? (typeof current.raw_source_text === 'string' ? current.raw_source_text : null)
+  const differsFromSource = payload !== current.raw_source_text
+  if ((action === 'approve' || action === 'publish') && differsFromSource && !repairOperations.some((operation) => operation && operation.kind === 'moderator-confirmed')) { fail(response, 409, 'Confirm every payload change with a moderator-approved audit operation.'); return }
   const update = { status: nextStatus, compatibility_status: compatibilityStatus, moderation_note_private: note || null, submitter_feedback: feedback || null, approved_copy_payload: action === 'approve' || action === 'publish' ? payload : undefined, approved_payload_hash: action === 'approve' || action === 'publish' ? (payload ? await sha256Text(payload) : null) : undefined, repair_operations: repairOperations, approved_payload_version: action === 'approve' || action === 'publish' ? 1 : undefined, moderated_by: currentActor.userId, moderated_at: new Date().toISOString(), published_at: action === 'publish' ? new Date().toISOString() : null }
   const { data, error } = await admin.from('community_art_submissions').update(update).eq('id', id).eq('status', current.status).select(columns).maybeSingle()
   if (error || !data) { fail(response, 409, 'The submission changed before this action completed.'); return }

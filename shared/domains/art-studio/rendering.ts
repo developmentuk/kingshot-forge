@@ -1,5 +1,5 @@
 export type CompatibilityStatus = 'verified_safe' | 'likely_safe' | 'width_unstable' | 'unsupported' | 'invisible_control' | 'emoji_supported' | 'emoji_risk' | 'unknown'
-export type RepairKind = 'line-endings' | 'tabs' | 'duplicate-invisible' | 'known-punctuation' | 'manual-edit'
+export type RepairKind = 'line-endings' | 'tabs' | 'duplicate-invisible' | 'known-punctuation' | 'manual-edit' | 'moderator-confirmed'
 export type RepairOperation = { kind: RepairKind; line: number | null; before: string; after: string; reason: string }
 export type RenderProfile = {
   id: string
@@ -122,12 +122,11 @@ export function summariseRenderDrift(drifts: LineDrift[]) {
 }
 
 export function repairText(value: string, profile: RenderProfile = RENDER_PROFILES['kingshot-chat-bubble']): { text: string; operations: RepairOperation[] } {
-  const operations: RepairOperation[] = []; let text = value
-  if (/\r\n?|\r/.test(text)) { const after = text.replace(/\r\n?/g, '\n'); operations.push({ kind: 'line-endings', line: null, before: 'CRLF/CR', after: 'LF', reason: 'Deterministic clipboard line endings' }); text = after }
-  const lines = text.split('\n').map((line, index) => { if (!line.includes('\t')) return line; const after = line.replace(/\t/g, ' '.repeat(profile.widthMultipliers.tab)); operations.push({ kind: 'tabs', line: index + 1, before: line, after, reason: `Tabs use ${profile.widthMultipliers.tab} configured cells` }); return after })
-  text = lines.join('\n')
-  for (const [before, after] of Object.entries(PUNCTUATION_REPLACEMENTS)) if (text.includes(before)) { text = text.split(before).join(after); operations.push({ kind: 'known-punctuation', line: null, before, after, reason: 'Known width-unstable punctuation replacement; review before approval' }) }
-  return { text, operations }
+  // Prediction is allowed to report width risk, but it must not edit the payload.
+  // Explicit moderator edits use the render-engine repair helpers and are audited
+  // separately. `profile` remains part of this API for callers that calculate risk.
+  void profile
+  return { text: value, operations: [] }
 }
 
 export function reverseRepairs(value: string, operations: RepairOperation[]): string {
