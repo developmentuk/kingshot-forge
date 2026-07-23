@@ -1,0 +1,22 @@
+{
+  "archive_id": "FRKS-ARCHIVE-S4-DATA-ENGINE",
+  "sources": [
+    {"id":"SRC-001","name":"KingshotPro heroes JSON","url":"https://kingshotpro.com/data/heroes.json","type":"community dataset","used_for":["heroes"],"notes":"Preserve _meta provenance; hero tier fields are editorial."},
+    {"id":"SRC-002","name":"KingshotPro hero XP JSON","url":"https://kingshotpro.com/data/hero-xp.json","type":"community dataset","used_for":["hero-xp"],"notes":"Deployment capacity above level 15 is estimated."},
+    {"id":"SRC-003","name":"KingshotPro shards JSON","url":"https://kingshotpro.com/data/shards.json","type":"community dataset","used_for":["shards"],"notes":"Low-confidence estimates requiring in-game confirmation."},
+    {"id":"SRC-004","name":"KingshotPro gear JSON","url":"https://kingshotpro.com/data/gear.json","type":"community dataset","used_for":["gear"],"notes":"Newest Red tiers need further in-game verification."},
+    {"id":"SRC-005","name":"KingshotPro charm JSON","url":"https://kingshotpro.com/data/charm.json","type":"community dataset","used_for":["charm"],"notes":"Stat ladder is independently corroborated in-game according to source metadata."},
+    {"id":"SRC-006","name":"KingshotPro troops JSON","url":"https://kingshotpro.com/data/troops.json","type":"community dataset","used_for":["troops"],"notes":"Estimated tiers must remain visibly flagged."},
+    {"id":"SRC-007","name":"KingshotPro buildings JSON","url":"https://kingshotpro.com/data/buildings.json","type":"community dataset","used_for":["buildings"],"notes":"Some rows are estimated and the supplied catalogue is partial."},
+    {"id":"SRC-008","name":"KingshotPro Truegold JSON","url":"https://kingshotpro.com/data/truegold.json","type":"community dataset","used_for":["truegold"],"notes":"Most values cross-checked; War Academy carries lower confidence."},
+    {"id":"SRC-009","name":"KingshotPro War Academy JSON","url":"https://kingshotpro.com/data/war-academy.json","type":"community dataset","used_for":["war-academy"],"notes":"Single-source evidence."},
+    {"id":"SRC-010","name":"KingshotPro VIP JSON","url":"https://kingshotpro.com/data/vip.json","type":"community dataset","used_for":["vip"],"notes":"Source metadata reports multi-source confirmation."},
+    {"id":"SRC-011","name":"KingshotPro events JSON","url":"https://kingshotpro.com/data/events.json","type":"observational dataset","used_for":["events"],"notes":"Cadence can change with live operations."},
+    {"id":"SRC-012","name":"KingshotPro masters JSON","url":"https://kingshotpro.com/data/masters.json","type":"community dataset","used_for":["masters"],"notes":"Roster reliable; power and manuscript totals conflict."},
+    {"id":"SRC-013","name":"KingshotPro KvK JSON","url":"https://kingshotpro.com/data/kvk.json","type":"community dataset","used_for":["kvk"],"notes":"Cross-verified according to source metadata."},
+    {"id":"SRC-014","name":"KingShot.net OpenAPI document","url":"KingShot.net /api documentation","type":"API specification","used_for":["player-info","kvk-seasons","kvk-matches","gift-codes","kingdom-tracker","health"],"notes":"Player lookup states a six requests per minute limit."},
+    {"id":"SRC-015","name":"justncodes/ks-giftcode","url":"https://github.com/justncodes/ks-giftcode","type":"GitHub repository","used_for":["gift-code redemption research"],"notes":"Reference material only; code and legality/security must be reviewed before adaptation."},
+    {"id":"SRC-016","name":"Vercel Functions documentation","url":"https://vercel.com/docs/functions","type":"official documentation","used_for":["API runtime","cron"],"notes":"Used during architecture review."},
+    {"id":"SRC-017","name":"Supabase API key and security documentation","url":"https://supabase.com/docs/guides/api","type":"official documentation","used_for":["server credentials","RLS","grants"],"notes":"Used during architecture review."}
+  ]
+}
