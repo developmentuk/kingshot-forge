@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-07-23",
+  "terms": [
+    {
+      "canonical_term": "Forge Research & Knowledge System",
+      "preferred_short_name": "FRKS",
+      "definition": "The permanent, version-controlled knowledge layer for Forge research, evidence, decisions, specifications, terminology and validation.",
+      "aliases": ["Forge Knowledge Library", "Forge Reference Library"],
+      "deprecated_names": [],
+      "authority": "docs/frks/README.md"
+    },
+    {
+      "canonical_term": "AEGIS",
+      "definition": "The authoritative operational constitution for Kingshot Forge.",
+      "aliases": ["Project Constitution"],
+      "deprecated_names": ["Separate Forge Constitution"],
+      "authority": "docs/AEGIS.md"
+    },
+    {
+      "canonical_term": "FRKS Commit",
+      "definition": "The repository update that preserves lasting knowledge created by significant research, design, verification, migration or delivery work.",
+      "aliases": ["Knowledge Commit"],
+      "deprecated_names": [],
+      "authority": "docs/frks/README.md"
+    },
+    {
+      "canonical_term": "War Academy",
+      "definition": "Forge's current preferred user-facing name for the relevant building and research domain.",
+      "aliases": ["Academy"],
+      "deprecated_names": [],
+      "authority": "canonical Buildings and War Academy datasets"
+    },
+    {
+      "canonical_term": "Infirmary",
+      "definition": "Forge's current preferred user-facing building term.",
+      "aliases": ["Clinic", "Hospital"],
+      "deprecated_names": [],
+      "authority": "canonical Buildings dataset"
+    },
+    {
+      "canonical_term": "Food",
+      "definition": "Canonical resource term used by Forge.",
+      "aliases": ["Bread"],
+      "deprecated_names": [],
+      "authority": "canonical resource terminology"
+    }
+  ]
+}
