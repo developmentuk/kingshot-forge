@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-07-23",
+  "nodes": [
+    {"id":"FRKS-KNOW-001","type":"knowledge_system","label":"FRKS"},
+    {"id":"ADR-012","type":"decision","label":"Cost-Conscious Development"},
+    {"id":"ADR-013","type":"decision","label":"Safe Database Migration Workflow"},
+    {"id":"FRKS-REF-001","type":"reference","label":"RoeBot Kingshot JavaDocs"},
+    {"id":"DATASET-BUILDINGS","type":"dataset","label":"Buildings"},
+    {"id":"DOMAIN-EDITORIAL-INTELLIGENCE","type":"domain","label":"Editorial Intelligence"},
+    {"id":"PLATFORM-SUPABASE","type":"platform","label":"Supabase"},
+    {"id":"DOC-AEGIS","type":"document","label":"AEGIS"}
+  ],
+  "edges": [
+    {"from":"FRKS-KNOW-001","to":"DOC-AEGIS","relationship":"governed_by"},
+    {"from":"FRKS-KNOW-001","to":"DOMAIN-EDITORIAL-INTELLIGENCE","relationship":"supports"},
+    {"from":"ADR-012","to":"PLATFORM-SUPABASE","relationship":"constrains_cost_usage"},
+    {"from":"ADR-013","to":"PLATFORM-SUPABASE","relationship":"governs_migrations"},
+    {"from":"ADR-013","to":"ADR-012","relationship":"implements"},
+    {"from":"FRKS-REF-001","to":"DATASET-BUILDINGS","relationship":"supports_gap_analysis"},
+    {"from":"FRKS-REF-001","to":"DOMAIN-EDITORIAL-INTELLIGENCE","relationship":"is_evidence_for"}
+  ]
+}
