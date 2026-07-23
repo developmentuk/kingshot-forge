@@ -296,3 +296,15 @@ Desktop is the primary authoring surface. Mobile must support operational review
 ## Definition of done
 
 VISION-001 is complete only when an authorised administrator can create, test and publish a reusable mapping through Vision Studio; at least one extractor host can execute behind the plugin boundary; extracted proposals preserve complete evidence, confidence, validation and conflict history; confirmation reaches only a registered domain proposal operation; and permissions, privacy, retention, desktop/mobile and deployed-runtime gates are validated.
+## VISION-001C1 authoring boundary
+
+Vision Studio authoring is server-authoritative. Browser code calls the Forge
+Vision API boundary and never mutates Vision tables directly. The boundary
+supports registry reads, Draft screen-type and mapping-version creation,
+immutable Published/Deprecated successor creation, Draft/Testing metadata
+updates and Draft-to-Testing submission. All targets are selected from the
+governed Field Registry; arbitrary tables, columns, SQL and authored code are
+not accepted. Until the VISION-001A migration is approved and applied, the
+boundary reports persistence as unavailable and the Studio must not imply that
+authoring succeeded. The temporary `cms.view` navigation gate remains in
+place until it can be replaced by `vision.admin.read` after migration approval.
