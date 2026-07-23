@@ -8,14 +8,20 @@ const foundationCapabilities = [
   {
     icon: '🧩',
     title: 'Extractor Plugins',
-    status: 'First adapter ready',
-    detail: 'Provider-neutral OCR, computer-vision and AI-vision plugin contracts with primary, fallback and comparison roles.',
+    status: 'First worker ready',
+    detail: 'Provider-neutral OCR, computer-vision and AI-vision contracts with a bounded local Tesseract worker implementation.',
+  },
+  {
+    icon: '⚙️',
+    title: 'Worker Runtime',
+    status: 'Host implemented',
+    detail: 'Versioned NDJSON jobs, health gates, ImageMagick preprocessing and hard timeout, byte, pixel and token ceilings.',
   },
   {
     icon: '🧪',
     title: 'Test Bench',
-    status: 'Persistence designed',
-    detail: 'Authorised reference evidence, expected values, extractor comparison, diagnostics and append-only test results.',
+    status: 'Runtime fixture ready',
+    detail: 'Synthetic OCR acceptance evidence plus governed reference tests, expected values and append-only test-result contracts.',
   },
   {
     icon: '🔎',
@@ -28,6 +34,7 @@ const foundationCapabilities = [
 const pipelineStages = [
   'Published mapping selection',
   'Region and anchor resolution',
+  'Bounded image preprocessing',
   'Extractor plugin execution',
   'Confidence assessment',
   'Governed validation',
@@ -50,8 +57,8 @@ export function VisionStudioPage() {
         </div>
         <div className="vision-studio__programme-status" aria-label="VISION-001 programme status">
           <span>Programme</span>
-          <strong>VISION-001</strong>
-          <small>Platform foundation</small>
+          <strong>VISION-001B</strong>
+          <small>Extractor host foundation</small>
         </div>
       </section>
 
@@ -61,8 +68,8 @@ export function VisionStudioPage() {
           <h2 id="vision-foundation-heading">Foundation boundary</h2>
           <p>
             No Kingshot screen mapping is configured in this milestone. The checked-in database migration
-            remains unapplied, and no native extractor worker is deployed. This surface records the honest
-            platform state while the reusable foundations are completed.
+            remains unapplied, and the native worker is not hosted by the browser or Vercel deployment.
+            The worker code, protocol and repeatable runtime fixtures are ready for a separately configured host.
           </p>
         </div>
       </section>
@@ -88,20 +95,22 @@ export function VisionStudioPage() {
             <p className="admin-page__eyebrow">Extractor catalogue</p>
             <h2>Tesseract OCR</h2>
           </div>
-          <span className="vision-studio__status vision-studio__status--testing">Integration contract ready</span>
+          <span className="vision-studio__status vision-studio__status--testing">Local worker code ready</span>
         </div>
 
         <div className="vision-studio__extractor-grid">
           <div><span>Plugin key</span><strong>ocr.tesseract.cli</strong></div>
           <div><span>Family</span><strong>OCR</strong></div>
-          <div><span>Execution</span><strong>Local worker</strong></div>
+          <div><span>Execution</span><strong>Separate local worker</strong></div>
           <div><span>Cost profile</span><strong>Zero recurring cost</strong></div>
+          <div><span>Preprocessor</span><strong>ImageMagick CLI</strong></div>
+          <div><span>Protocol</span><strong>forge-vision-worker.v1</strong></div>
         </div>
 
         <p className="vision-studio__muted">
-          The supplied archive is retained as an upstream source reference, not bundled into Forge. Runtime
-          activation requires a pinned native installation, trained language data, worker resource controls
-          and deployment validation.
+          The supplied archive remains an upstream source reference rather than a Forge web dependency.
+          Runtime activation requires the documented pinned Tesseract installation, trained language data,
+          ImageMagick availability and an independently supervised worker process.
         </p>
       </section>
 
