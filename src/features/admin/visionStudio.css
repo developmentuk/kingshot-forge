@@ -1,0 +1,205 @@
+.vision-studio {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.vision-studio__hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--border-color, rgba(148, 163, 184, 0.24));
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.88));
+}
+
+.vision-studio__hero h1,
+.vision-studio__panel h2,
+.vision-studio__notice h2,
+.vision-studio__card h2 {
+  margin: 0;
+}
+
+.vision-studio__programme-status {
+  min-width: 11rem;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  border-radius: 0.9rem;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.vision-studio__programme-status span,
+.vision-studio__programme-status small,
+.vision-studio__extractor-grid span,
+.vision-studio__governance span {
+  color: var(--text-muted, #94a3b8);
+}
+
+.vision-studio__programme-status strong {
+  font-size: 1.15rem;
+}
+
+.vision-studio__notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  border-radius: 1rem;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.vision-studio__notice > div:first-child {
+  font-size: 1.5rem;
+}
+
+.vision-studio__notice p,
+.vision-studio__card p,
+.vision-studio__muted {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.55;
+}
+
+.vision-studio__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.vision-studio__card,
+.vision-studio__panel,
+.vision-studio__governance {
+  border: 1px solid var(--border-color, rgba(148, 163, 184, 0.24));
+  border-radius: 1rem;
+  background: var(--surface-color, rgba(15, 23, 42, 0.72));
+}
+
+.vision-studio__card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.vision-studio__card-icon {
+  font-size: 1.45rem;
+}
+
+.vision-studio__card-heading,
+.vision-studio__panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vision-studio__card-heading span,
+.vision-studio__status {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.vision-studio__status--testing {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fde68a;
+}
+
+.vision-studio__panel {
+  padding: clamp(1rem, 2.5vw, 1.4rem);
+}
+
+.vision-studio__extractor-grid,
+.vision-studio__governance {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.vision-studio__extractor-grid {
+  margin-top: 1rem;
+}
+
+.vision-studio__extractor-grid > div,
+.vision-studio__governance > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border-radius: 0.8rem;
+  background: rgba(148, 163, 184, 0.07);
+}
+
+.vision-studio__extractor-grid strong,
+.vision-studio__governance strong {
+  overflow-wrap: anywhere;
+}
+
+.vision-studio__pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vision-studio__pipeline li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border-radius: 0.8rem;
+  background: rgba(56, 189, 248, 0.07);
+}
+
+.vision-studio__pipeline li > span {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.16);
+  color: #bae6fd;
+  font-weight: 800;
+}
+
+.vision-studio__governance {
+  padding: 1rem;
+}
+
+@media (max-width: 900px) {
+  .vision-studio__extractor-grid,
+  .vision-studio__governance,
+  .vision-studio__pipeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .vision-studio__hero,
+  .vision-studio__card-heading,
+  .vision-studio__panel-heading {
+    flex-direction: column;
+  }
+
+  .vision-studio__programme-status {
+    width: 100%;
+  }
+
+  .vision-studio__grid,
+  .vision-studio__extractor-grid,
+  .vision-studio__governance,
+  .vision-studio__pipeline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
