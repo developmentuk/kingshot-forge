@@ -71,6 +71,12 @@ export function AdminDashboardPage() {
         </article>}
 
         <article className="admin-dashboard-card">
+          <span className="admin-dashboard-card__icon">👁️</span>
+          <div><h2>Vision Studio</h2><p>Review the configurable mapping, extractor, confidence, validation and evidence platform foundation.</p></div>
+          <Link to="/admin/vision-studio" className="button button--primary">Open Vision Studio</Link>
+        </article>
+
+        <article className="admin-dashboard-card">
           <span className="admin-dashboard-card__icon">🧭</span>
           <div>
             <h2>Verification Centre</h2>
