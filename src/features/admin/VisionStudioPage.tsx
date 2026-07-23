@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react'
+import { loadVisionAuthoring, type VisionAuthoringSnapshot } from '../../services/visionAuthoringService'
+
 const foundationCapabilities = [
   {
     icon: '🗺️',
@@ -44,6 +47,9 @@ const pipelineStages = [
 ] as const
 
 export function VisionStudioPage() {
+  const [snapshot, setSnapshot] = useState<VisionAuthoringSnapshot | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => { void loadVisionAuthoring().then(setSnapshot).catch((value: unknown) => setError(value instanceof Error ? value.message : 'Vision Studio is unavailable.')) }, [])
   return (
     <main className="admin-page vision-studio">
       <section className="vision-studio__hero">
@@ -57,8 +63,8 @@ export function VisionStudioPage() {
         </div>
         <div className="vision-studio__programme-status" aria-label="VISION-001 programme status">
           <span>Programme</span>
-          <strong>VISION-001B</strong>
-          <small>Extractor host foundation</small>
+            <strong>VISION-001C1</strong>
+            <small>{snapshot ? 'Authoring boundary ready' : 'Persistence preflight'}</small>
         </div>
       </section>
 
@@ -67,11 +73,21 @@ export function VisionStudioPage() {
         <div>
           <h2 id="vision-foundation-heading">Foundation boundary</h2>
           <p>
-            No Kingshot screen mapping is configured in this milestone. The checked-in database migration
-            remains unapplied, and the native worker is not hosted by the browser or Vercel deployment.
-            The worker code, protocol and repeatable runtime fixtures are ready for a separately configured host.
+            {error ?? 'No Kingshot screen mapping is configured. The Vision migration is not applied in the connected environment. Authoring actions remain unavailable until persistence is approved and applied. The browser never writes Vision tables directly.'}
           </p>
         </div>
+      </section>
+
+      <section className="vision-studio__panel" aria-labelledby="vision-registry-heading">
+        <div className="vision-studio__panel-heading"><div><p className="admin-page__eyebrow">Authoring foundation</p><h2 id="vision-registry-heading">Screen types and mapping versions</h2></div><span className="vision-studio__status vision-studio__status--testing">{snapshot ? 'Loaded' : 'Unavailable'}</span></div>
+        {!snapshot && !error && <p role="status" className="vision-studio__muted">Loading governed Vision registries…</p>}
+        {error && <p role="alert" className="vision-studio__muted">{error}</p>}
+        {snapshot && <div className="vision-studio__authoring-grid"><div><h3>Screen-type registry</h3>{snapshot.screenTypes.length === 0 ? <p className="vision-studio__muted">No configurable screen types have been authored.</p> : <ul>{snapshot.screenTypes.map((item) => <li key={item.id}><strong>{item.label}</strong><span>{item.screen_key}</span></li>)}</ul>}</div><div><h3>Mapping lifecycle</h3>{snapshot.versions.length === 0 ? <p className="vision-studio__muted">No mapping versions exist yet.</p> : <ul>{snapshot.versions.map((item) => <li key={item.id}><strong>v{item.version}</strong><span>{item.status}</span></li>)}</ul>}</div></div>}
+      </section>
+
+      <section className="vision-studio__grid" aria-label="Governed Vision catalogues">
+        <article className="vision-studio__card"><div><h2>Field Registry catalogue</h2><p>{snapshot ? `${snapshot.fields.length} enabled governed fields available.` : 'Unavailable until the persistence migration is applied.'}</p></div></article>
+        <article className="vision-studio__card"><div><h2>Extractor catalogue</h2><p>{snapshot ? `${snapshot.extractors.length} enabled provider-neutral plugins available.` : 'Unavailable until the persistence migration is applied.'}</p></div></article>
       </section>
 
       <section className="vision-studio__grid" aria-label="Forge Vision capabilities">
