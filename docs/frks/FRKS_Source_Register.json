@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-07-23",
+  "sources": [
+    {
+      "id": "SRC-ROEBOT-JAVADOCS",
+      "name": "RoeBot Kingshot JavaDocs",
+      "url": "https://javadocs.roebot.net/com/lssbot/core/api/game/kingshot/package-summary.html",
+      "type": "third_party_javadocs",
+      "status": "reviewed",
+      "canonical": false,
+      "reliability": "source-authoritative for RoeBot interfaces only",
+      "limitations": [
+        "Not an official Kingshot API",
+        "Models screen automation and recognition abstractions",
+        "Does not establish live game values or canonical terminology",
+        "Must not be imported directly into published datasets"
+      ],
+      "related_assets": [
+        "docs/frks/references/roebot/ROEBOT_KINGSHOT_JAVADOCS_REVIEW.md",
+        "docs/frks/references/roebot/forge_roebot_kingshot_reference.json"
+      ]
+    }
+  ]
+}
