@@ -1,0 +1,20 @@
+{
+  "archive_id": "FRKS-ARCHIVE-S4-DATA-ENGINE",
+  "documents": [
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Report.md","type":"FRKS report","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Metadata.json","type":"knowledge metadata","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Dataset_Index.json","type":"dataset index","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Document_Index.json","type":"document index","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Decision_Register.json","type":"decision register","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Source_Register.json","type":"source register","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Terminology.json","type":"terminology register","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Todo.json","type":"action register","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Gap_Analysis.md","type":"gap analysis","status":"created","canonical":true},
+    {"path":"docs/FRKS/sprint-4-data-engine/FRKS_Confidence_Report.md","type":"confidence report","status":"created","canonical":true},
+    {"path":"docs/ADR/ADR-DATA-001-dataset-centric-data-engine.md","type":"architecture decision record","status":"created","canonical":true},
+    {"path":"docs/architecture/DATA-ENGINE.md","type":"architecture","status":"created","canonical":true},
+    {"path":"docs/specifications/DATASET-MODULE-CONTRACT.md","type":"technical specification","status":"created","canonical":true},
+    {"path":"docs/releases/SPRINT-4-DATA-ENGINE.md","type":"sprint record","status":"created","canonical":true},
+    {"path":"docs/AEGIS.md","type":"project constitution","status":"existing reference","canonical":true}
+  ]
+}
