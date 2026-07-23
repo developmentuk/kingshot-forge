@@ -21,7 +21,7 @@ const adr = fs.readFileSync('docs/ADR/ADR-2026-07-23-FORGE-VISION-PLATFORM-SERVI
 const tesseractSource = fs.readFileSync('server/vision/extractors/tesseractCliExtractor.ts', 'utf8')
 const studioSource = fs.readFileSync('src/features/admin/VisionStudioPage.tsx', 'utf8')
 
-for (const table of [
+const visionTables = [
   'vision_field_registry',
   'vision_extractor_plugins',
   'vision_screen_types',
@@ -39,9 +39,13 @@ for (const table of [
   'vision_extraction_evidence',
   'vision_user_corrections',
   'vision_audit_events',
-]) {
+]
+const rlsBlock = migration.match(/foreach table_name in array array\[.*?end loop;/s)?.[0]
+assert.ok(rlsBlock, 'migration must contain the governed Vision RLS loop')
+assert.match(rlsBlock, /force row level security/, 'all Vision tables must FORCE RLS')
+for (const table of visionTables) {
   assert.match(migration, new RegExp(`create table public\\.${table}`), `${table} must exist`)
-  assert.match(migration, new RegExp(`alter table public\\.${table} force row level security`), `${table} must FORCE RLS`)
+  assert.match(rlsBlock, new RegExp(`'${table}'`), `${table} must be included in the FORCE RLS set`)
 }
 
 for (const evidenceColumn of [
