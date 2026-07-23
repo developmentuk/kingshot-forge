@@ -4,7 +4,9 @@ Status: prepared, unapplied
 Programme: VISION-001C2A  
 Required application order: `20260722193000_vision_001a_contracts_and_persistence.sql`, then the separately reviewed storage migration `20260723181223_vision_evidence_storage.sql`  
 Project: `hrvdhjscwitqpwjhnjkm`  
-Accepted preparation commit: `512f930ccfe53770d889b907d57c2005f4f4c30b`
+Accepted C1A baseline: `512f930ccfe53770d889b907d57c2005f4f4c30b`
+Activation-package commit: `78b46612efac6a093026e875d6d75115c165eaad`
+Owner-approved execution commit: supplied externally and captured in activation evidence. See `docs/operations/FORGE-VISION-ACTIVATION-MANIFEST.json`.
 
 This runbook is executable only after owner approval. It does not authorise
 activation by itself. Do not apply either migration while the approval gate is
@@ -19,7 +21,10 @@ be an authorised owner/admin for the post-activation acceptance checklist.
 
 Stop immediately if:
 
-- the checked-out commit is not the accepted commit recorded above;
+- no explicit owner-approved execution SHA is supplied;
+- the checked-out HEAD does not exactly equal the externally supplied execution SHA;
+- the working tree is not clean, the branch is not `feature/vision-mapper`, or HEAD does not descend from the activation-package commit;
+- either migration file fails the recorded SHA-256 digest check;
 - the target project is not `hrvdhjscwitqpwjhnjkm`;
 - migration `20260722193000` is already applied but has not been reconciled;
 - any `public.vision_%` object exists unexpectedly;
@@ -75,17 +80,18 @@ Forge platform roles recorded in the C1A preflight.
 
 ## 3. Application procedure
 
-1. Confirm the exact commit and project reference in the operator terminal.
-2. Review the complete unapplied migration and this runbook.
-3. Apply only `20260722193000_vision_001a_contracts_and_persistence.sql` through the approved Supabase migration workflow.
-4. Do not apply the storage migration in the same change window until the persistence verification below passes and a second approval is recorded.
-5. Capture migration history, catalog verification, policy/grant output and advisor output.
-6. After persistence acceptance, apply `20260723181223_vision_evidence_storage.sql` as a separate approved migration.
+1. Run `npm run verify:forge-vision-activation-preconditions -- --approved-sha <owner-approved-execution-sha>` and preserve the read-only JSON output. This command does not connect to Supabase or apply migrations.
+2. Confirm the exact commit and project reference in the operator terminal.
+3. Review the complete unapplied migration and this runbook.
+4. Apply only `20260722193000_vision_001a_contracts_and_persistence.sql` through the approved Supabase migration workflow.
+5. Do not apply the storage migration in the same change window until the persistence verification below passes and a second approval is recorded.
+6. Capture migration history, catalog verification, policy/grant output and advisor output.
+7. After persistence acceptance, apply `20260723181223_vision_evidence_storage.sql` as a separate approved migration.
 
-The original migration begins and commits a single transaction. It creates six
+The original migration begins and commits a single transaction. It creates seven
 enums, 17 tables, indexes, functions, triggers, policies, permission rows and
-grants. The storage migration is also transactional, but its `on conflict`
-bucket update is intentionally limited to the named `vision-evidence` bucket.
+grants. The storage migration is also transactional and does not overwrite an
+existing bucket configuration; its expected digest is recorded in the manifest.
 
 ## 4. Immediate persistence verification
 
@@ -102,7 +108,7 @@ permissions and no authored screen/mapping seeds. A failure is a stop gate.
 
 Required object counts and names:
 
-- six enums: `vision_mapping_status`, `vision_scan_status`, `vision_value_status`, `vision_extractor_family`, `vision_execution_mode`, `vision_plugin_status`, plus `vision_detection_method` (seven total);
+- seven enums: `vision_mapping_status`, `vision_scan_status`, `vision_value_status`, `vision_extractor_family`, `vision_execution_mode`, `vision_plugin_status`, and `vision_detection_method`;
 - 17 tables: field registry, extractor plugins, screen types, mapping versions, evidence images, mapping references, regions, field mappings, mapping extractors, mapping regions, test cases, test results, scan runs, scan values, extraction evidence, user corrections and audit events;
 - publication function `public.publish_vision_mapping_version(uuid)`;
 - immutability functions/triggers, append-only evidence triggers, four indexes beyond table constraints and all named policies in the migration;
@@ -174,6 +180,11 @@ Capture commit SHA, project ref, operator identity, timestamps, migration
 history, verifier JSON, table/type/function/trigger/index/policy/grant output,
 advisor findings, negative browser results, authenticated acceptance results,
 storage bucket configuration and preview URL.
+
+Migration integrity evidence at the activation package:
+
+- `supabase/migrations/20260722193000_vision_001a_contracts_and_persistence.sql`: `126b863fdc6b7114572083687f1376023ad6d3cb0c1dcecb37fbda40f7acc9ac`
+- `supabase/migrations/20260723181223_vision_evidence_storage.sql`: `0b7a3f7a0c8ac2db78bc9d172c7efcdff17ed4c807867ef67af80aadc77104dd`
 
 GO requires every stop gate, verifier check, advisor review, negative browser
 test and authorised acceptance item to pass. Until then, the recommendation is

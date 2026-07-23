@@ -1,0 +1,11 @@
+{
+  "projectRef": "hrvdhjscwitqpwjhnjkm",
+  "branch": "feature/vision-mapper",
+  "acceptedC1ABaseline": "512f930ccfe53770d889b907d57c2005f4f4c30b",
+  "activationPackageCommit": "78b46612efac6a093026e875d6d75115c165eaad",
+  "executionCommit": "EXTERNALLY_SUPPLIED_OWNER_APPROVAL",
+  "migrationSha256": {
+    "supabase/migrations/20260722193000_vision_001a_contracts_and_persistence.sql": "126b863fdc6b7114572083687f1376023ad6d3cb0c1dcecb37fbda40f7acc9ac",
+    "supabase/migrations/20260723181223_vision_evidence_storage.sql": "0b7a3f7a0c8ac2db78bc9d172c7efcdff17ed4c807867ef67af80aadc77104dd"
+  }
+}
