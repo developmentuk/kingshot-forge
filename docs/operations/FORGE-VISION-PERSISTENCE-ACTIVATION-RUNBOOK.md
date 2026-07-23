@@ -24,7 +24,7 @@ Stop immediately if:
 - no explicit owner-approved execution SHA is supplied;
 - the checked-out HEAD does not exactly equal the externally supplied execution SHA;
 - the working tree is not clean, the branch is not `feature/vision-mapper`, or HEAD does not descend from the activation-package commit;
-- either migration file fails the recorded SHA-256 digest check;
+- either migration's canonical Git blob at the approved execution commit fails the recorded SHA-256 digest check;
 - the target project is not `hrvdhjscwitqpwjhnjkm`;
 - migration `20260722193000` is already applied but has not been reconciled;
 - any `public.vision_%` object exists unexpectedly;
@@ -181,9 +181,11 @@ history, verifier JSON, table/type/function/trigger/index/policy/grant output,
 advisor findings, negative browser results, authenticated acceptance results,
 storage bucket configuration and preview URL.
 
+Migration integrity evidence at the activation package uses canonical raw Git blob bytes at the approved execution commit. Working-tree line endings are not the integrity authority: Windows CRLF conversion may change a filesystem digest without changing canonical repository content. Activation must still stop on any canonical Git blob mismatch, missing tracked blob or failed Git-object read. Migration staging must write canonical Git blob bytes rather than copying platform-converted working-tree bytes.
+
 Migration integrity evidence at the activation package:
 
-- `supabase/migrations/20260722193000_vision_001a_contracts_and_persistence.sql`: `126b863fdc6b7114572083687f1376023ad6d3cb0c1dcecb37fbda40f7acc9ac`
+- `supabase/migrations/20260722193000_vision_001a_contracts_and_persistence.sql`: `762dab82ccd9cbbbbec499184d8adfc285b9af9a3d40acbbdabe8a25aebacdaa`
 - `supabase/migrations/20260723181223_vision_evidence_storage.sql`: `0b7a3f7a0c8ac2db78bc9d172c7efcdff17ed4c807867ef67af80aadc77104dd`
 
 GO requires every stop gate, verifier check, advisor review, negative browser
