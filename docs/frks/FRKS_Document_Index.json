@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-07-23",
+  "documents": [
+    {"path":"docs/AEGIS.md","role":"authoritative_operational_constitution","status":"existing"},
+    {"path":"docs/FORGE_BLUEPRINT.md","role":"product_direction","status":"existing"},
+    {"path":"docs/ADR/ADR-012-cost-conscious-development.md","role":"binding_decision","status":"created"},
+    {"path":"docs/ADR/ADR-013-safe-database-migration-workflow.md","role":"binding_decision","status":"created"},
+    {"path":"docs/frks/README.md","role":"frks_operating_model","status":"created"},
+    {"path":"docs/frks/FRKS_Report.md","role":"migration_report","status":"created"},
+    {"path":"docs/frks/FRKS_Gap_Analysis.md","role":"gap_analysis","status":"created"},
+    {"path":"docs/frks/FRKS_Confidence_Report.md","role":"confidence_report","status":"created"},
+    {"path":"docs/frks/references/roebot/ROEBOT_KINGSHOT_JAVADOCS_REVIEW.md","role":"research_reference","status":"created"}
+  ]
+}
