@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-07-23",
+  "datasets": [
+    {
+      "id": "FRKS-REF-ROEBOT",
+      "title": "RoeBot Kingshot JavaDocs extracted reference",
+      "type": "non_canonical_reference",
+      "status": "reviewed",
+      "confidence": 85,
+      "canonical": false,
+      "purpose": "Terminology comparison, alias detection and dataset gap analysis",
+      "repository_location": "docs/frks/references/roebot/forge_roebot_kingshot_reference.json",
+      "related_canonical_datasets": ["buildings"],
+      "publication_allowed": false
+    }
+  ]
+}
