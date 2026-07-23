@@ -1,0 +1,20 @@
+{
+  "archive_id": "FRKS-ARCHIVE-S4-DATA-ENGINE",
+  "terms": [
+    {"term":"Dataset","definition":"A governed Kingshot information domain with a stable key, source contract, validation, normalisation and publication path.","aliases":["data source module"],"status":"canonical"},
+    {"term":"Dataset module","definition":"Server-side module that defines one dataset's source-specific contract and stable record identity.","aliases":["importer module"],"status":"canonical"},
+    {"term":"Data Engine","definition":"Shared platform service that executes dataset operations and records provenance, validation and outcomes.","aliases":[],"status":"canonical"},
+    {"term":"Operation","definition":"An explicit action performed against a dataset, such as preview, stage, apply, publish or rollback.","aliases":["sync action"],"status":"canonical"},
+    {"term":"Preview","definition":"Fetch, hash, validate and normalise a source without mutating canonical data.","aliases":["dry run"],"status":"canonical"},
+    {"term":"Stage","definition":"Persist raw evidence and normalised candidate facts for review without public publication.","aliases":["import"],"status":"canonical"},
+    {"term":"Apply","definition":"Create or update governed draft canonical records from accepted staged evidence.","aliases":[],"status":"canonical"},
+    {"term":"Publish","definition":"Create or update the approved published projection through server-side authorisation and immutable history.","aliases":[],"status":"canonical"},
+    {"term":"Rollback","definition":"Restore prior published behaviour by creating a new auditable version; history is not deleted.","aliases":[],"status":"canonical"},
+    {"term":"Sync","definition":"Informal trigger meaning check a source for change; it must not imply automatic publication.","aliases":[],"status":"restricted"},
+    {"term":"Importer","definition":"Legacy term for a dataset-specific module or the overall engine workflow.","aliases":[],"status":"deprecated due to ambiguity"},
+    {"term":"Source payload hash","definition":"Deterministic SHA-256 hash of canonicalised JSON used for provenance and unchanged detection.","aliases":["payload hash"],"status":"canonical"},
+    {"term":"Stable record key","definition":"Forge-owned immutable key that identifies a canonical record independently of display name.","aliases":["slug where contractually stable"],"status":"canonical"},
+    {"term":"Source-active","definition":"Soft-state indicating whether a record appears in the latest completely validated source snapshot.","aliases":["is_active"],"status":"canonical concept"},
+    {"term":"Town Center","definition":"Canonical Kingshot building term; do not use Furnace.","aliases":["Castle in legacy keys"],"status":"canonical"}
+  ]
+}
