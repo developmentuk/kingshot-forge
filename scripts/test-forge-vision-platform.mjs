@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 
 import { evaluateVisionConfidence } from '../server/vision/confidenceEngine.ts'
@@ -6,6 +7,7 @@ import { VisionExtractorRegistry } from '../server/vision/extractors/registry.ts
 import {
   TesseractCliExtractor,
   buildTesseractArguments,
+  parseTesseractLanguages,
   parseTesseractTsv,
 } from '../server/vision/extractors/tesseractCliExtractor.ts'
 import { validateVisionValue } from '../server/vision/validationEngine.ts'
@@ -97,6 +99,7 @@ assert.match(tesseractSource, /execFileAsync/, 'Tesseract must be invoked withou
 assert.doesNotMatch(tesseractSource, /\bexec\(/, 'Tesseract adapter must not use shell execution')
 assert.match(tesseractSource, /MAX_TIMEOUT_MS/, 'Tesseract work must have a bounded timeout')
 assert.match(tesseractSource, /tessedit_char_whitelist/, 'allowlisted OCR configuration should support bounded character sets')
+assert.match(tesseractSource, /--list-langs/, 'Tesseract health must verify trained language data')
 
 assert.equal(isNormalisedGeometry({ x: 0.1, y: 0.2, width: 0.3, height: 0.4 }), true)
 assert.equal(isNormalisedGeometry({ x: 0.8, y: 0.2, width: 0.3, height: 0.4 }), false)
@@ -151,6 +154,10 @@ const tsv = [
 const parsedTokens = parseTesseractTsv(tsv, 100, 50)
 assert.equal(parsedTokens.length, 2)
 assert.deepEqual(parsedTokens[0].normalisedBox, { x: 0.1, y: 0.1, width: 0.3, height: 0.2 })
+assert.deepEqual(
+  parseTesseractLanguages('List of available languages in /safe/tessdata (2):\neng\nosd\n'),
+  ['eng', 'osd'],
+)
 
 const args = buildTesseractArguments('/tmp/input.png', {
   language: 'eng',
@@ -169,11 +176,15 @@ const fakeRunner = {
   async run(executable, commandArgs, timeoutMs) {
     calls.push({ executable, commandArgs: [...commandArgs], timeoutMs })
     if (commandArgs[0] === '--version') return { stdout: 'tesseract 5.5.2\n', stderr: '' }
+    if (commandArgs.includes('--list-langs')) {
+      return { stdout: 'List of available languages in /safe/tessdata (1):\neng\n', stderr: '' }
+    }
     return { stdout: tsv, stderr: '' }
   },
 }
 const extractor = new TesseractCliExtractor({
   executablePath: '/safe/tesseract',
+  expectedEngineVersion: '5.5.2',
   commandRunner: fakeRunner,
   now: () => new Date('2026-07-23T12:00:00.000Z'),
 })
@@ -184,6 +195,7 @@ registry.register(extractor)
 assert.equal(registry.get('ocr.tesseract.cli'), extractor)
 assert.throws(() => registry.register(extractor), /already registered/)
 
+const extractionBytes = new Uint8Array([137, 80, 78, 71])
 const extraction = await extractor.extract({
   runId: 'run-1',
   mappingVersionId: 'version-1',
@@ -191,11 +203,11 @@ const extraction = await extractor.extract({
   fieldKey: 'example.field',
   image: {
     evidenceId: 'evidence-1',
-    sha256: 'a'.repeat(64),
+    sha256: createHash('sha256').update(extractionBytes).digest('hex'),
     mimeType: 'image/png',
     widthPx: 100,
     heightPx: 50,
-    bytes: new Uint8Array([137, 80, 78, 71]),
+    bytes: extractionBytes,
   },
   region: null,
   configuration: { language: 'eng', pageSegmentationMode: 6 },
@@ -206,6 +218,7 @@ assert.equal(extraction.tokens.length, 2)
 assert.ok(calls.every((call) => call.executable === '/safe/tesseract'))
 assert.ok(calls.every((call) => call.timeoutMs <= 60_000))
 
+const unsafeBytes = new Uint8Array([1])
 const unsafeExtractor = new TesseractCliExtractor({ commandRunner: fakeRunner })
 await assert.rejects(() => unsafeExtractor.extract({
   runId: 'run-2',
@@ -214,11 +227,11 @@ await assert.rejects(() => unsafeExtractor.extract({
   fieldKey: 'example.field',
   image: {
     evidenceId: 'evidence-2',
-    sha256: 'b'.repeat(64),
+    sha256: createHash('sha256').update(unsafeBytes).digest('hex'),
     mimeType: 'image/png',
     widthPx: 10,
     heightPx: 10,
-    bytes: new Uint8Array([1]),
+    bytes: unsafeBytes,
   },
   region: null,
   configuration: { language: 'eng;rm' },
