@@ -1,33 +1,36 @@
 # Forge Vision authenticated acceptance checklist
 
-Status: prepared; not executed in VISION-001C2A because no authorized owner/admin session was supplied and the persistence migration remains unapplied.
+Status: persistence is operationally accepted; `vision_screen_types_read` correction is applied; storage remains deferred. Authenticated acceptance has not been executed. VISION-001C3A prepares the harness and cleanup controls; authoring remains frozen pending a separately approved session.
 
-Use a disposable synthetic fixture and record the account, commit, migration state, timestamp, and preview URL. Do not use a real Kingshot mapping or production evidence.
+## Currently testable authenticated authoring acceptance
 
-## Access and authorization
+- Anonymous `GET` and `POST /api/vision` return 401.
+- Active users without `vision.admin.read` receive 403 for lists.
+- Read-only users can list screen types, mapping versions, enabled Field Registry entries and testing/active extractors, but receive 403 for mutations.
+- Active owner/admin actors with `vision.admin.read`, `vision.admin.edit` and `vision.admin.test` can create a disposable synthetic screen type, create a Draft version, update Draft metadata and submit it for Testing.
+- The empty state, extractor visibility, metadata reload, Testing status, permission-denied and API-error states can be evidenced in Vision Studio at narrow and desktop viewports.
 
-- [ ] Owner/admin can load Vision Studio through the temporary `cms.view` gate and the API accepts `vision.admin.read`.
-- [ ] A user without `vision.admin.read` cannot read privileged admin data.
-- [ ] A user without `vision.admin.edit` cannot create or mutate authoring data.
-- [ ] Anonymous requests cannot read or mutate Vision data.
-- [ ] Browser clients have no direct storage INSERT, UPDATE, or DELETE access.
+## Deferred acceptance
 
-## Authoring and persistence
+Regions, field mappings, extractor configuration, test cases/results, publication, published-successor acceptance, image evidence/storage, worker extraction, user corrections and append-only evidence flows are not exposed through the current authoring API and remain unaccepted.
 
-- [ ] Empty-state screen explains that no screen types or mappings are seeded.
-- [ ] The canonical Tesseract extractor is visible and correctly marked for its execution mode.
-- [ ] Owner/admin can create a Draft mapping version using only governed Field Registry targets.
-- [ ] Draft metadata, regions, field mappings, extractor configuration, and test case persist after reload.
-- [ ] Draft can enter Testing; published versions cannot be edited in place.
-- [ ] A published successor can be created without mutating the published predecessor.
-- [ ] Append-only test results, extraction evidence, corrections, and audit events reject update/delete attempts.
+## Controlled fixture
 
-## UX and operational checks
+Every execution uses a fresh UUID-like run ID and only these values:
 
-- [ ] Loading, empty, error, permission-denied, and success states are distinguishable.
-- [ ] Desktop and narrow viewport layouts remain usable without exposing privileged controls.
-- [ ] Browser console has no new errors; network requests contain no accidental direct database/storage writes.
-- [ ] Audit entries identify actor, action, entity, and correlation context.
-- [ ] Synthetic fixture and uploaded evidence are deleted through the approved cleanup procedure.
+- screen key: `acceptance-vision-<run-id>` (the persisted `screen_key` contract permits hyphens, not dots)
+- game key: `forge_acceptance`
+- label: `Forge Vision Acceptance <run-id>`
+- layout family: `synthetic_acceptance`
+- game version: `acceptance-only`
+- change note: `VISION-001C3 ACCEPTANCE — DISPOSABLE <run-id>`
 
-Evidence required for sign-off: screenshots or recording, request/response capture, verifier JSON output, database/storage read-only catalog output, and explicit confirmation that no real mapping was created.
+The fixture contains one screen type, one Draft mapping version, a metadata update and a Testing transition. It never includes real Kingshot screens, screenshots, fields, mappings, regions, scans, evidence or publication.
+
+## Future execution and evidence
+
+Run `npm run accept:forge-vision-authenticated -- --plan` first. Live execution requires `--execute`, an exact project/SHA/run ID/base URL, `FORGE_VISION_ACCEPTANCE_APPROVED=YES`, `FORGE_VISION_ACCEPTANCE_STORAGE_EXCLUDED=YES`, and a short-lived owner/admin bearer token provided only through `FORGE_VISION_ACCEPTANCE_ACCESS_TOKEN`.
+
+Clark should establish that session in the browser or local secure environment and supply only the short-lived token environment variable; credentials, cookies and session payloads must never be pasted into chat, committed or written to evidence. The runner redacts sensitive headers and token-like values and writes execution evidence outside the repository. Any failed mutation means cleanup is required before another run.
+
+Required sign-off evidence: redacted request/response summaries, screenshots, console and network review, acceptance/cleanup JSON, and read-only post-cleanup counts. Confirm no direct browser table writes or storage calls.

@@ -1,8 +1,8 @@
 # Forge Vision Persistence Activation Runbook
 
-Status: persistence applied; policy correction prepared/unapplied; storage unapplied
+Status: persistence and policy correction applied; storage unapplied; authenticated acceptance pending
 Programme: VISION-001C2A  
-Application order: `20260722193000_vision_001a_contracts_and_persistence.sql` applied; then the separately reviewed corrective migration `20260723120000_vision_screen_types_read_policy_fix.sql`; storage migration `20260723181223_vision_evidence_storage.sql` remains deferred
+Application order: `20260722193000_vision_001a_contracts_and_persistence.sql` and corrective migration `20260723120000_vision_screen_types_read_policy_fix.sql` applied; storage migration `20260723181223_vision_evidence_storage.sql` remains deferred
 Project: `hrvdhjscwitqpwjhnjkm`  
 Accepted C1A baseline: `512f930ccfe53770d889b907d57c2005f4f4c30b`
 Activation-package commit: `78b46612efac6a093026e875d6d75115c165eaad`
@@ -108,9 +108,8 @@ The live `vision_screen_types_read` policy was found to contain a restrictive
 qualification defect, not an exposure: its subquery used unqualified `id`,
 which PostgreSQL resolves against the inner `v` range variable. The corrective
 migration qualifies the outer row as `vision_screen_types.id`. Authoring and
-public consumption remain frozen pending owner approval and application of that
-correction. The correction is prepared and recorded in the manifest, but is not
-applied.
+public consumption remain frozen pending the separately approved authenticated
+acceptance session. The correction is applied and recorded in the manifest.
 
 Advisor observations recorded for follow-up (no index changes are included in
 this task): 34 of 44 Vision foreign keys lack covering indexes; six Vision
@@ -216,6 +215,5 @@ Migration integrity evidence at the activation package:
 
 GO requires every stop gate, verifier check, advisor review, negative browser
 test and authorised acceptance item to pass. Until then, the recommendation is
-NO-GO for applying the corrective and storage migrations, and authoring remains
-frozen. Persistence is applied; correction and storage are intentionally
-unapplied.
+NO-GO for storage activation and authoring release. Persistence and the policy
+correction are applied; authenticated acceptance remains the next gate.
