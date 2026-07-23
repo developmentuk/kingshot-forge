@@ -1,0 +1,22 @@
+{
+  "archive_id": "FRKS-ARCHIVE-S4-DATA-ENGINE",
+  "todos": [
+    {"id":"TODO-S4-001","title":"Remove browser-side privileged hero writes","priority":"critical","status":"open","depends_on":["server hero operation","admin API","acceptance testing"]},
+    {"id":"TODO-S4-002","title":"Implement hero dataset module","priority":"high","status":"open","depends_on":["dataset contract","registry","runner"]},
+    {"id":"TODO-S4-003","title":"Create server-side hero preview endpoint","priority":"high","status":"open","depends_on":["hero dataset module"]},
+    {"id":"TODO-S4-004","title":"Create import source and run persistence migrations","priority":"high","status":"open","depends_on":["schema review"]},
+    {"id":"TODO-S4-005","title":"Implement transactional hero apply operation with dataset lock","priority":"critical","status":"open","depends_on":["migrations","hero dataset module"]},
+    {"id":"TODO-S4-006","title":"Implement admin authentication and capability check","priority":"critical","status":"open","depends_on":["requireForgeActor","role/capability contract"]},
+    {"id":"TODO-S4-007","title":"Connect Admin Hero Sync panel to server API","priority":"high","status":"open","depends_on":["admin API"]},
+    {"id":"TODO-S4-008","title":"Preserve raw source snapshots and provenance","priority":"high","status":"open","depends_on":["evidence model","retention policy"]},
+    {"id":"TODO-S4-009","title":"Add status and run-history endpoints","priority":"medium","status":"open","depends_on":["run persistence"]},
+    {"id":"TODO-S4-010","title":"Add Vercel Cron endpoint secured by CRON_SECRET","priority":"medium","status":"open","depends_on":["operation runner","run persistence"]},
+    {"id":"TODO-S4-011","title":"Validate hero source against current authoritative references","priority":"high","status":"open","depends_on":["FRKS source review"]},
+    {"id":"TODO-S4-012","title":"Verify Masters power and manuscript definitions in-game","priority":"high","status":"open","depends_on":[]},
+    {"id":"TODO-S4-013","title":"Verify hero shard costs in-game","priority":"high","status":"open","depends_on":[]},
+    {"id":"TODO-S4-014","title":"Complete troop tiers and verify estimated records","priority":"high","status":"open","depends_on":[]},
+    {"id":"TODO-S4-015","title":"Confirm latest Governor Gear Red T3-T6 values in-game","priority":"medium","status":"open","depends_on":[]},
+    {"id":"TODO-S4-016","title":"Define source retention and snapshot expiry policy","priority":"medium","status":"open","depends_on":["storage assessment"]},
+    {"id":"TODO-S4-017","title":"Rotate any server credential exposed in historical chat or archives","priority":"critical","status":"owner verification required","depends_on":[]}
+  ]
+}
