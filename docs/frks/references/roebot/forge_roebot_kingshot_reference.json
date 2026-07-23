@@ -1,0 +1,56 @@
+{
+  "_meta": {
+    "dataset": "forge-roebot-kingshot-reference",
+    "title": "Forge RoeBot Kingshot JavaDocs Reference",
+    "created": "2026-07-23",
+    "source": "https://javadocs.roebot.net/com/lssbot/core/api/game/kingshot/package-summary.html",
+    "purpose": "Internal reference for terminology comparison and gap analysis only.",
+    "canonical": false,
+    "publication_allowed": false,
+    "limitations": [
+      "RoeBot screen-automation abstractions are not an official Kingshot API.",
+      "The source does not establish numerical game data, hero data, item IDs, research costs or event schedules.",
+      "All proposed canonical changes require separate Forge editorial verification.",
+      "Do not use this material to implement gameplay automation."
+    ]
+  },
+  "packages": {
+    "root": ["KingshotImages", "KingshotMenu", "KingshotMenuProvider", "KingshotViewport"],
+    "building": ["KingshotBuilding", "KingshotBuildingUpgrading"],
+    "march": ["KingshotMarch", "KingshotMarchFormationSlot", "KingshotMarchSuccessOdds", "KingshotSquadMarch"],
+    "messages": ["KingshotMessageBox", "KingshotTapAnywhere", "KingshotTooltip"],
+    "rss": ["KingReplenishResources"],
+    "search": ["KingshotSearchEntity", "KingshotSearchMenu"],
+    "sidenavigation": ["KingshotNavigationTarget", "KingshotSideNavigationMenu"],
+    "su": ["KingshotSpeedup"]
+  },
+  "enums": {
+    "KingshotBuilding": [
+      "ACADEMY", "ARENA", "BARRACKS", "BARRICADE", "CLINIC", "COMMAND_CENTER",
+      "CONQUERORS_CAMP", "COURT_OF_JUSTICE", "DEFENSE_TOWER", "EMBASSY",
+      "ENLISTMENT_OFFICE", "GUARD_STATION", "HERO_HALL", "HOUSE", "INFIRMARY",
+      "IRON_MINE", "KITCHEN", "MILL", "MONUMENT", "OCEANA", "QUARRY", "RANGE",
+      "SAWMILL", "STABLE", "STOREHOUSE", "SUGGESTION_BOX", "TOWN_CENTER", "WATCHTOWER"
+    ],
+    "KingshotNavigationTarget": [
+      "ADVANCED_RECRUITMENT", "ALLIANCE_CONTRIBUTION", "ARCHER", "CAVALRY",
+      "EPIC_RECRUITMENT", "INFANTRY", "ONLINE_REWARDS", "TECH_RESEARCH"
+    ],
+    "KingshotSearchEntity": ["BEASTS", "BREAD", "IRON", "STONE", "TERROR", "WOOD"],
+    "KingshotMarchSuccessOdds": ["CAUTION", "CERTAIN_TO_FAIL", "NOT_LIKELY", "QUITE_LIKELY"]
+  },
+  "forge_recommendations": {
+    "adopt": [
+      "Use stable machine keys alongside governed display names.",
+      "Evaluate RoeBot labels as aliases or gap candidates.",
+      "Preserve source, date, confidence and limitations.",
+      "Require editorial review before canonical use."
+    ],
+    "do_not_adopt": [
+      "Automated clicking or gameplay actions",
+      "RoeBot labels as unquestioned canonical terminology",
+      "Image templates or implementation assets without licensing review",
+      "Unsupported conclusions about hidden game IDs or mechanics"
+    ]
+  }
+}
