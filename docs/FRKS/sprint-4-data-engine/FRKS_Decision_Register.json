@@ -1,0 +1,13 @@
+{
+  "archive_id": "FRKS-ARCHIVE-S4-DATA-ENGINE",
+  "decisions": [
+    {"id":"ADR-DATA-001","title":"Adopt a dataset-centric, operation-based Data Engine","status":"accepted","importance":"high","confidence":95,"supersedes":["bespoke browser importers","importer-centric module naming"],"rationale":"The engine owns reusable operations while each dataset owns source-specific contracts and normalisation."},
+    {"id":"DEC-S4-001","title":"Use explicit browser/API/server/shared trust boundaries","status":"accepted","importance":"critical","confidence":100,"supersedes":["mixed src importer and privileged repository flow"],"rationale":"Prevents secrets and privileged mutations from entering the browser bundle."},
+    {"id":"DEC-S4-002","title":"Use VercelRequest and VercelResponse handlers","status":"accepted","importance":"high","confidence":100,"supersedes":["framework-style GET export","ambiguous Web Response handler"],"rationale":"This handler format was validated successfully in the Vite Vercel deployment."},
+    {"id":"DEC-S4-003","title":"Keep Supabase privileged credentials server-only","status":"accepted","importance":"critical","confidence":100,"supersedes":[],"rationale":"Server credentials bypass RLS and must never be exposed to client code."},
+    {"id":"DEC-S4-004","title":"Hash canonicalised source payloads with SHA-256","status":"accepted","importance":"high","confidence":100,"supersedes":[],"rationale":"Stable hashes support unchanged detection and provenance even when object property order differs."},
+    {"id":"DEC-S4-005","title":"Reject structurally invalid full datasets before mutation","status":"accepted","importance":"critical","confidence":95,"supersedes":["silent partial import"],"rationale":"A malformed source must not create a partial canonical catalogue or deactivate valid records."},
+    {"id":"DEC-S4-006","title":"Use stable Forge-owned record keys and soft deactivation","status":"accepted","importance":"critical","confidence":95,"supersedes":["display-name primary keys","automatic hard deletion"],"rationale":"Stable identity and recoverable history are required by AEGIS."},
+    {"id":"DEC-S4-007","title":"Use Vercel Cron as the initial scheduler","status":"accepted for initial implementation","importance":"medium","confidence":90,"supersedes":["split scheduling ownership"],"rationale":"The backend is Vercel-centred and static reference data does not require high-frequency refresh."}
+  ]
+}
