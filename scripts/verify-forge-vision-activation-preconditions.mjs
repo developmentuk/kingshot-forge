@@ -9,6 +9,9 @@ const manifest = JSON.parse(await readFile(new URL('../docs/operations/FORGE-VIS
 const args = process.argv.slice(2)
 const approvedIndex = args.indexOf('--approved-sha')
 const approvedSha = approvedIndex >= 0 ? args[approvedIndex + 1] : undefined
+const correctionMigrations = manifest.persistenceCorrections ?? []
+const correctionDigests = Object.fromEntries(correctionMigrations.map((migration) => [migration.path, migration.canonicalSha256]))
+const expectedMigrationDigests = { ...manifest.migrationSha256, ...correctionDigests }
 
 function git(...gitArgs) {
   return execFileSync('git', gitArgs, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
@@ -54,7 +57,7 @@ const canonicalMigrationDigests = {}
 const canonicalMigrationErrors = []
 const workingTreeMigrationDigests = {}
 const normalisedWorkingTreeMigrationDigests = {}
-for (const path of Object.keys(manifest.migrationSha256)) {
+for (const path of Object.keys(expectedMigrationDigests)) {
   try {
     canonicalMigrationDigests[path] = canonicalDigest(path)
   } catch (error) {
@@ -66,13 +69,13 @@ for (const path of Object.keys(manifest.migrationSha256)) {
     ? digestBytes(Buffer.from(workingTreeBytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8'))
     : null
 }
-const workingTreeDiffersFromCanonical = Object.fromEntries(Object.keys(manifest.migrationSha256).map((path) => [
+const workingTreeDiffersFromCanonical = Object.fromEntries(Object.keys(expectedMigrationDigests).map((path) => [
   path,
   canonicalMigrationDigests[path] && workingTreeMigrationDigests[path]
     ? canonicalMigrationDigests[path] !== workingTreeMigrationDigests[path]
     : null,
 ]))
-const lineEndingOnlyDifference = Object.fromEntries(Object.keys(manifest.migrationSha256).map((path) => [
+const lineEndingOnlyDifference = Object.fromEntries(Object.keys(expectedMigrationDigests).map((path) => [
   path,
   canonicalMigrationDigests[path] && workingTreeMigrationDigests[path] && normalisedWorkingTreeMigrationDigests[path]
     ? canonicalMigrationDigests[path] === normalisedWorkingTreeMigrationDigests[path]
@@ -88,7 +91,7 @@ const result = evaluateActivationPreconditions({
   expectedBranch: manifest.branch,
   activationPackageCommit: manifest.activationPackageCommit,
   canonicalMigrationDigests,
-  expectedMigrationDigests: manifest.migrationSha256,
+  expectedMigrationDigests,
   canonicalMigrationErrors,
   workingTreeMigrationDigests,
   workingTreeDiffersFromCanonical,

@@ -7,5 +7,16 @@
   "migrationSha256": {
     "supabase/migrations/20260722193000_vision_001a_contracts_and_persistence.sql": "762dab82ccd9cbbbbec499184d8adfc285b9af9a3d40acbbdabe8a25aebacdaa",
     "supabase/migrations/20260723181223_vision_evidence_storage.sql": "0b7a3f7a0c8ac2db78bc9d172c7efcdff17ed4c807867ef67af80aadc77104dd"
-  }
+  },
+  "persistenceCorrections": [
+    {
+      "version": "20260723120000",
+      "path": "supabase/migrations/20260723120000_vision_screen_types_read_policy_fix.sql",
+      "canonicalSha256": "1b58b5de9cd300ac4b6998fd5d9dc6c5f4c7c4431bb28e721342b4b50c034d64",
+      "purpose": "Correct the published screen-type read policy outer-row qualification.",
+      "predecessorMigration": "20260722193000",
+      "storageMigrationExcluded": true,
+      "status": "unapplied"
+    }
+  ]
 }

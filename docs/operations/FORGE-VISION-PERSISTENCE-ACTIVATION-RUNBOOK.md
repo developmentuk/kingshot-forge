@@ -1,16 +1,17 @@
 # Forge Vision Persistence Activation Runbook
 
-Status: prepared, unapplied  
+Status: persistence applied; policy correction prepared/unapplied; storage unapplied
 Programme: VISION-001C2A  
-Required application order: `20260722193000_vision_001a_contracts_and_persistence.sql`, then the separately reviewed storage migration `20260723181223_vision_evidence_storage.sql`  
+Application order: `20260722193000_vision_001a_contracts_and_persistence.sql` applied; then the separately reviewed corrective migration `20260723120000_vision_screen_types_read_policy_fix.sql`; storage migration `20260723181223_vision_evidence_storage.sql` remains deferred
 Project: `hrvdhjscwitqpwjhnjkm`  
 Accepted C1A baseline: `512f930ccfe53770d889b907d57c2005f4f4c30b`
 Activation-package commit: `78b46612efac6a093026e875d6d75115c165eaad`
 Owner-approved execution commit: supplied externally and captured in activation evidence. See `docs/operations/FORGE-VISION-ACTIVATION-MANIFEST.json`.
 
 This runbook is executable only after owner approval. It does not authorise
-activation by itself. Do not apply either migration while the approval gate is
-open.
+activation by itself. The persistence migration has already been applied under
+the recorded owner-approved execution evidence; do not apply the corrective or
+storage migration while their respective approval gates are open.
 
 ## 1. Preconditions and stop gates
 
@@ -26,7 +27,8 @@ Stop immediately if:
 - the working tree is not clean, the branch is not `feature/vision-mapper`, or HEAD does not descend from the activation-package commit;
 - either migration's canonical Git blob at the approved execution commit fails the recorded SHA-256 digest check;
 - the target project is not `hrvdhjscwitqpwjhnjkm`;
-- migration `20260722193000` is already applied but has not been reconciled;
+- the applied persistence migration or its live catalog evidence cannot be reconciled;
+- the corrective migration's canonical Git blob fails its recorded digest check;
 - any `public.vision_%` object exists unexpectedly;
 - a `vision-evidence` bucket exists unexpectedly;
 - the role enum, permission schema or auth references differ from the preflight;
@@ -74,7 +76,7 @@ where schemaname in ('public', 'storage')
 order by schemaname, tablename, policyname;
 ```
 
-Expected pre-activation state for Vision is zero tables, no Vision types or
+The historical pre-activation snapshot for Vision was zero tables, no Vision types or
 functions, no `vision-evidence` bucket, `pgcrypto` available, and the seven
 Forge platform roles recorded in the C1A preflight.
 
@@ -83,17 +85,40 @@ Forge platform roles recorded in the C1A preflight.
 1. Run `npm run verify:forge-vision-activation-preconditions -- --approved-sha <owner-approved-execution-sha>` and preserve the read-only JSON output. This command does not connect to Supabase or apply migrations.
 2. Confirm the exact commit and project reference in the operator terminal.
 3. Review the complete unapplied migration and this runbook.
-4. Apply only `20260722193000_vision_001a_contracts_and_persistence.sql` through the approved Supabase migration workflow.
-5. Do not apply the storage migration in the same change window until the persistence verification below passes and a second approval is recorded.
+4. The persistence migration is already recorded as applied; reconcile its live migration-history and catalog evidence.
+5. Apply only `20260723120000_vision_screen_types_read_policy_fix.sql` through a separately approved corrective-migration workflow.
 6. Capture migration history, catalog verification, policy/grant output and advisor output.
-7. After persistence acceptance, apply `20260723181223_vision_evidence_storage.sql` as a separate approved migration.
+7. Keep `20260723181223_vision_evidence_storage.sql` deferred until a separate approval and a fresh persistence/correction verification pass.
 
-The original migration begins and commits a single transaction. It creates seven
+The original migration begins and commits a single transaction. It created seven
 enums, 17 tables, indexes, functions, triggers, policies, permission rows and
 grants. The storage migration is also transactional and does not overwrite an
 existing bucket configuration; its expected digest is recorded in the manifest.
 
-## 4. Immediate persistence verification
+## 4. Immediate persistence verification and correction handover
+
+The owner-approved persistence application completed successfully. Independent
+live catalog verification confirmed the expected Vision contract: seven enums,
+17 tables, the governed publication function and policies, one seeded extractor
+plugin, and zero authored screen types, mapping versions or field mappings. The
+`vision-evidence` bucket is not present because the storage migration remains
+unapplied.
+
+The live `vision_screen_types_read` policy was found to contain a restrictive
+qualification defect, not an exposure: its subquery used unqualified `id`,
+which PostgreSQL resolves against the inner `v` range variable. The corrective
+migration qualifies the outer row as `vision_screen_types.id`. Authoring and
+public consumption remain frozen pending owner approval and application of that
+correction. The correction is prepared and recorded in the manifest, but is not
+applied.
+
+Advisor observations recorded for follow-up (no index changes are included in
+this task): 34 of 44 Vision foreign keys lack covering indexes; six Vision
+policies have auth RLS init-plan performance notices; and
+`publish_vision_mapping_version` has the expected authenticated `SECURITY
+DEFINER` advisor warning. Publication is guarded internally by
+`vision.admin.publish`, and `public`/`anon` cannot execute the publication
+function.
 
 Run the read-only verifier:
 
@@ -186,9 +211,11 @@ Migration integrity evidence at the activation package uses canonical raw Git bl
 Migration integrity evidence at the activation package:
 
 - `supabase/migrations/20260722193000_vision_001a_contracts_and_persistence.sql`: `762dab82ccd9cbbbbec499184d8adfc285b9af9a3d40acbbdabe8a25aebacdaa`
+- `supabase/migrations/20260723120000_vision_screen_types_read_policy_fix.sql`: `1b58b5de9cd300ac4b6998fd5d9dc6c5f4c7c4431bb28e721342b4b50c034d64`
 - `supabase/migrations/20260723181223_vision_evidence_storage.sql`: `0b7a3f7a0c8ac2db78bc9d172c7efcdff17ed4c807867ef67af80aadc77104dd`
 
 GO requires every stop gate, verifier check, advisor review, negative browser
 test and authorised acceptance item to pass. Until then, the recommendation is
-NO-GO for applying persistence or storage. This preparation milestone itself
-remains NO-GO because the live migration and bucket are intentionally absent.
+NO-GO for applying the corrective and storage migrations, and authoring remains
+frozen. Persistence is applied; correction and storage are intentionally
+unapplied.
