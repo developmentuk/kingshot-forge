@@ -1,0 +1,18 @@
+{
+  "archive_id": "FRKS-ARCHIVE-S4-DATA-ENGINE",
+  "datasets": [
+    {"key":"heroes","title":"Kingshot Hero Database","status":"first implementation target","source":"https://kingshotpro.com/data/heroes.json","confidence":95,"notes":"Identity fields are factual; rally, garrison, bear and joiner tiers are editorial judgements."},
+    {"key":"hero-xp","title":"Hero Level XP and Deployment Capacity","status":"future dataset module","source":"https://kingshotpro.com/data/hero-xp.json","confidence":70,"notes":"Deployment capacity above level 15 is estimated in the supplied source."},
+    {"key":"shards","title":"Hero Shard Star-Up Costs","status":"future dataset module","source":"https://kingshotpro.com/data/shards.json","confidence":45,"notes":"Community estimates; requires in-game verification."},
+    {"key":"gear","title":"Governor Gear","status":"future dataset module","source":"https://kingshotpro.com/data/gear.json","confidence":87,"notes":"Early-to-mid ladder strongly corroborated; newest Red tiers require in-game confirmation."},
+    {"key":"charm","title":"Governor Charm Costs","status":"future dataset module","source":"https://kingshotpro.com/data/charm.json","confidence":90,"notes":"Stat ladder has in-game corroboration."},
+    {"key":"troops","title":"Troop Training Data","status":"future dataset module","source":"https://kingshotpro.com/data/troops.json","confidence":70,"notes":"Several tiers are explicitly estimated; source sample is incomplete relative to its T1-T12 description."},
+    {"key":"buildings","title":"Building Upgrade Costs","status":"future dataset module","source":"https://kingshotpro.com/data/buildings.json","confidence":78,"notes":"Five core buildings in supplied source; some rows marked estimated."},
+    {"key":"truegold","title":"Truegold and Tempered Truegold Requirements","status":"future dataset module","source":"https://kingshotpro.com/data/truegold.json","confidence":92,"notes":"War Academy rows carry lower confidence than other buildings."},
+    {"key":"war-academy","title":"War Academy Research Costs","status":"future dataset module","source":"https://kingshotpro.com/data/war-academy.json","confidence":78,"notes":"Single-source reference; mirrored troop-category costs require validation."},
+    {"key":"vip","title":"VIP Levels","status":"future dataset module","source":"https://kingshotpro.com/data/vip.json","confidence":90,"notes":"1 VIP point equals 2 gems according to supplied source."},
+    {"key":"events","title":"Recurring Events","status":"future dataset module","source":"https://kingshotpro.com/data/events.json","confidence":70,"notes":"Cadences can shift with live scheduling and must not be treated as immutable."},
+    {"key":"masters","title":"Masters","status":"future dataset module","source":"https://kingshotpro.com/data/masters.json","confidence":50,"notes":"Roster is verified; power and manuscript totals conflict between sources."},
+    {"key":"kvk","title":"KvK Preparation Scoring","status":"future dataset module","source":"https://kingshotpro.com/data/kvk.json","confidence":90,"notes":"Cross-verified by the supplied source metadata."}
+  ]
+}
