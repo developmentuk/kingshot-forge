@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-07-23",
+  "decisions": [
+    {
+      "id": "ADR-012",
+      "title": "Cost-Conscious Development",
+      "status": "accepted",
+      "date": "2026-07-23",
+      "decision": "Prefer zero-cost workflows; paid infrastructure requires explicit owner approval and a documented justification.",
+      "document": "docs/ADR/ADR-012-cost-conscious-development.md",
+      "supersedes": [],
+      "related": ["ADR-013"]
+    },
+    {
+      "id": "ADR-013",
+      "title": "Safe Database Migration Workflow",
+      "status": "accepted",
+      "date": "2026-07-23",
+      "decision": "Generate and review migration SQL by default; production execution requires explicit owner approval.",
+      "document": "docs/ADR/ADR-013-safe-database-migration-workflow.md",
+      "supersedes": [],
+      "related": ["ADR-012"]
+    },
+    {
+      "id": "FRKS-DEC-001",
+      "title": "FRKS is a knowledge layer, not a competing constitution",
+      "status": "accepted",
+      "date": "2026-07-23",
+      "decision": "AEGIS remains the operational constitution; FRKS preserves and indexes knowledge and ADRs hold binding decisions.",
+      "document": "docs/frks/README.md",
+      "supersedes": ["Proposal to create a separate FORGE_CONSTITUTION.md"],
+      "related": ["ADR-012", "ADR-013"]
+    }
+  ]
+}
