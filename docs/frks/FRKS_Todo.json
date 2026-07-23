@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-07-23",
+  "items": [
+    {
+      "id": "FRKS-TODO-001",
+      "title": "Compare RoeBot building inventory with canonical Buildings dataset",
+      "status": "open",
+      "priority": "medium",
+      "owner": "Forge Editorial",
+      "reason": "RoeBot exposes additional building labels that may identify aliases, missing entities or non-upgradeable UI concepts.",
+      "constraints": ["Do not import directly", "Require editorial verification", "Preserve source provenance"],
+      "related": ["FRKS-REF-001", "buildings"]
+    },
+    {
+      "id": "FRKS-TODO-002",
+      "title": "Add FRKS Commit checks to future sprint close-out templates",
+      "status": "open",
+      "priority": "high",
+      "owner": "Aegis",
+      "reason": "Significant work should update permanent knowledge and authoritative documents before being considered complete.",
+      "related": ["FRKS-KNOW-001"]
+    },
+    {
+      "id": "FRKS-TODO-003",
+      "title": "Review safe migration ADR against existing database governance",
+      "status": "open",
+      "priority": "high",
+      "owner": "Forge Engineering",
+      "reason": "Avoid duplicate or conflicting rules and ensure existing migration conventions remain authoritative where more specific.",
+      "related": ["ADR-013", "docs/AEGIS.md", "governance/"]
+    }
+  ]
+}
