@@ -24,3 +24,25 @@ The current implementation deliberately does not claim Kingshot OCR accuracy. Sy
 - `npm run build` passes.
 - `npm run check` passes in 133.6 seconds.
 - No migration or live Supabase mutation was performed during implementation.
+
+## VISION-LINK-001A corrective pass
+
+The manual Player ID field is now populated immediately when OCR returns a
+safe numeric candidate. This only pre-fills the existing form: `Find Player`
+and `Link This Player` remain separate explicit actions, and the existing
+server-authoritative player-link service remains the source of truth.
+
+Completed account-linking evidence is tracked separately from its upload
+intent. Before completion, failures abandon the exact intent. After
+completion, cancellation or OCR failure uses the owner-only
+`cancel-evidence` operation, which deletes exactly the verified
+owner-scoped `scan_source` object through the Storage API, marks the metadata
+deleted, and retains an append-only `vision.evidence.owner_cancelled` audit.
+The operation is idempotent and rejects other owners, legal holds and
+unrelated evidence purposes. Raw OCR text is retained server-side only and
+is not returned to the browser.
+
+The Vercel preview reached READY, but authenticated Tesseract runtime health
+acceptance remains pending until the preview function can prove executable,
+language data, timeout and temporary-file support. No production promotion
+or live synthetic acceptance was performed in this corrective code pass.

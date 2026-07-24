@@ -112,6 +112,15 @@ The existing seven-day default is not applied blindly: reference and administrat
 - Published mappings remain immutable.
 
 Activation is **NO-GO** until the runbook is separately approved and its migration, policy collision, authenticated boundary, signed-URL, test-object cleanup and zero-object evidence are captured.
+
+## Account-linking cancellation
+
+Completed account-linking `scan_source` evidence may be cancelled only by its
+owner through the exact evidence ID. The server verifies owner equality,
+purpose, governed path and legal-hold state, deletes the exact object through
+the Storage API, marks metadata deleted and retains an append-only
+`vision.evidence.owner_cancelled` audit. This owner cancellation path is
+separate from reviewer-only retention deletion and is idempotent.
 ## VISION-001D1B halted activation and D1A3 repair
 
 The three evidence-storage migrations are applied in the approved order, but the synthetic activation remains halted and is not an acceptance pass. The retained incident contains two exact synthetic upload intents, one exact remaining object, zero evidence rows, and the append-only audit history. No live activation or cleanup is performed by the D1A3 repository repair.

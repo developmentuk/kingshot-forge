@@ -88,3 +88,13 @@ D1A6 repairs governance capture wiring; the exact cleanup remains pending the au
 ## Final incident closure
 
 The separately approved exact synthetic evidence cleanup completed once at `2026-07-24T17:37:18.700791Z` on `125c40a4f9d5c894c13a9bcd2f0a25bf726eca25`. The object, both upload intents, all evidence rows and all Storage objects are absent. Eight total Vision audit events remain, four incident-specific, and the original four VISION-001C audit events are unchanged. The private bucket and applied migrations remain active with governance controls intact. No activation, OCR or worker execution occurred.
+
+## VISION-LINK-001A status
+
+The subsequent OCR Account Linking MVP uses the already-provisioned private
+evidence boundary and does not reopen the closed synthetic incident. The
+corrective pass adds immediate safe Player ID prefill without lookup/link
+mutation, exact owner cancellation for completed account-linking evidence,
+and a browser response that excludes raw OCR text. Preview Tesseract runtime
+health, authenticated synthetic acceptance and real-screen calibration remain
+separate owner gates; no production promotion is claimed.

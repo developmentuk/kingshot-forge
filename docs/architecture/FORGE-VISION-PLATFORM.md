@@ -296,6 +296,16 @@ Desktop is the primary authoring surface. Mobile must support operational review
 ## Definition of done
 
 VISION-001 is complete only when an authorised administrator can create, test and publish a reusable mapping through Vision Studio; at least one extractor host can execute behind the plugin boundary; extracted proposals preserve complete evidence, confidence, validation and conflict history; confirmation reaches only a registered domain proposal operation; and permissions, privacy, retention, desktop/mobile and deployed-runtime gates are validated.
+
+## Account-linking screenshot boundary
+
+VISION-LINK-001A uses one configured Kingshot profile/account identity screen
+scope and the existing `scan_source` evidence contract. It returns structured
+Player ID, display name and kingdom candidates with evidence ID, mapping
+version, confidence and warnings. Raw OCR text remains server-side. Candidate
+confirmation never writes canonical identity data directly; the existing
+player-link service performs lookup, conflict checks and mutation only after
+the user completes the separate Find Player and Link This Player steps.
 ## VISION-001C1 authoring boundary
 
 Vision Studio authoring is server-authoritative. Browser code calls the Forge

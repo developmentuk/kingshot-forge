@@ -13,3 +13,19 @@ The final gateway repair replaces unavailable PostgreSQL system-view reads with 
 The single owner-approved exact cleanup executed successfully on 24 July 2026 at `2026-07-24T17:37:18.700791Z` using pushed cleanup SHA `125c40a4f9d5c894c13a9bcd2f0a25bf726eca25`. The exact object was removed through Storage API operations; both exact intents were abandoned/deleted as ordered. Final read-only verification found zero Storage objects, intents and evidence rows; total audits 8; incident audits 4; and the original four C3 audits retained. The private bucket, three migrations, policies, constraints, grants and forced RLS remain active. Activation was not retried and no further cleanup attempt is permitted without a new owner decision.
 
 Future exact cleanup requires a separately approved execution and must provide the manifest path, current approved cleanup SHA, project reference, actor UUID, approval flag, and provider expiry evidence. Plan mode is non-mutating. A failed or ambiguous step stops without automatic retry; audit events are never deleted.
+
+## VISION-LINK-001A account-linking correction
+
+The current Vision workstream includes the screenshot-assisted account-linking
+MVP. It uses the existing private evidence bucket and `scan_source` policy;
+it does not recreate the closed evidence incident. OCR candidates prefill the
+existing manual Player ID form only. Lookup and link confirmation remain
+separate explicit actions through the existing player-link service.
+
+Completed screenshot evidence has an exact owner cancellation path. The
+Storage API deletes only the verified object path, metadata is marked deleted,
+and `vision.evidence.owner_cancelled` is retained in the append-only audit.
+No prefix, wildcard or `storage.objects` SQL deletion is permitted. Raw OCR
+text is not part of the browser response. Preview runtime Tesseract health,
+real-screen calibration and authenticated synthetic acceptance remain open
+owner gates.

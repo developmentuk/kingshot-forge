@@ -13,7 +13,7 @@ export interface AccountLinkOcrCandidate {
 
 export interface AccountLinkOcrResult {
   readonly evidenceId: string
-  readonly rawText: string
+  readonly rawText?: string
   readonly candidates: readonly AccountLinkOcrCandidate[]
   readonly provenance: {
     readonly pluginKey: string

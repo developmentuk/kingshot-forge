@@ -116,6 +116,19 @@ export class VisionEvidenceStorageService {
     await this.options.repository.recordAudit({ eventType: 'vision.evidence.upload_abandoned', entityId: intent.id, actorId: actor.userId, payload: { reason: reason.trim() } })
   }
 
+  async cancelOwnerScanEvidence(actor: VisionEvidenceActor, evidenceId: string, reason: string): Promise<void> {
+    activeActor(actor)
+    if (!reason.trim() || reason.length > 240) throw new VisionEvidenceStorageError('invalid_deletion_reason', 'Evidence cancellation requires a bounded reason.')
+    const evidence = await this.options.repository.getEvidence(evidenceId)
+    if (!evidence || evidence.ownerUserId !== actor.userId) throw new VisionEvidenceStorageError('not_found', 'Vision evidence is unavailable to this actor.')
+    if (evidence.purpose !== 'scan_source' || !isVisionEvidencePath(evidence.path) || !evidence.path.startsWith(`${actor.userId}/scan_source/`)) throw new VisionEvidenceStorageError('forbidden', 'Only exact account-linking scan evidence may be cancelled by its owner.')
+    if (evidence.legalHold) throw new VisionEvidenceStorageError('legal_hold', 'Evidence under legal or moderation hold cannot be cancelled.')
+    if (evidence.deletedAt) return
+    await this.options.provider.deleteObject({ bucket: VISION_EVIDENCE_BUCKET, path: evidence.path })
+    await this.options.repository.markDeleted(evidence.id, this.now().toISOString())
+    await this.options.repository.recordAudit({ eventType: 'vision.evidence.owner_cancelled', entityId: evidence.id, actorId: actor.userId, payload: { purpose: evidence.purpose, exactObject: true, reason: reason.trim(), auditMetadataRetained: true } })
+  }
+
   async completeUpload(actor: VisionEvidenceActor, intentId: string, input: CompleteVisionEvidenceInput): Promise<VisionEvidenceMetadata> {
     activeActor(actor)
     const intent = await this.options.repository.getUploadIntent(intentId)
