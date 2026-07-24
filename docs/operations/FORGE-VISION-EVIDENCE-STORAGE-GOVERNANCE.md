@@ -112,3 +112,8 @@ The existing seven-day default is not applied blindly: reference and administrat
 - Published mappings remain immutable.
 
 Activation is **NO-GO** until the runbook is separately approved and its migration, policy collision, authenticated boundary, signed-URL, test-object cleanup and zero-object evidence are captured.
+## VISION-001D1B halted activation and D1A3 repair
+
+The three evidence-storage migrations are applied in the approved order, but the synthetic activation remains halted and is not an acceptance pass. The retained incident contains two exact synthetic upload intents, one exact remaining object, zero evidence rows, and the append-only audit history. No live activation or cleanup is performed by the D1A3 repository repair.
+
+D1A3 adds stable typed validation outcomes (`invalid_hash`, `invalid_dimensions`, `excessive_pixels`, and `invalid_image`) at the API boundary, with bounded provider-failure messages. The exact incident cleanup harness is fail-closed, requires explicit execution and approval gates, uses exact object existence/download checks rather than Storage listing, enforces the provider credential expiry margin, and blocks intent deletion until exact object absence is verified. Its tests are mocked and network-free.

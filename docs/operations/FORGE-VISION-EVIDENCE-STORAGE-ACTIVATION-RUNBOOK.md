@@ -40,3 +40,6 @@ Do not manually delete by prefix or issue SQL outside the approved migration wor
 ## Required evidence
 
 The repository-only mocked harness is `node --import tsx scripts/run-forge-vision-evidence-activation.mjs`; it performs exact local gates and a synthetic in-memory lifecycle. `--execute` is an explicit fail-closed boundary and is disabled in D1A2. Capture exact commit and migration hashes, project binding, migration ledger, bucket configuration, policies, anonymous denial, authenticated owner/reviewer matrix, signed URL expiry, synthetic object digest, zero-object post-cleanup counts, retained audit metadata, logs without secrets/URLs/image bytes, and the owner approval. Do not claim activation or legal compliance without this evidence.
+## Halted synthetic incident
+
+VISION-001D1B did not complete acceptance. The repository-only D1A3 repair provides `npm run cleanup:forge-vision-evidence-incident` as an exact-ID harness. Without `--execute` it is plan-only. Execution additionally requires the exact project, approved repository SHA, retained halted checkpoint, explicit approval flag, clean-repository gate, and a provider credential expiry safety margin. It must not be retried after a failure without a new owner decision.

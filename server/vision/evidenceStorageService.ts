@@ -17,11 +17,13 @@ import {
   type VisionEvidenceUploadUrl,
   assertVisionEvidenceDimensions,
   assertVisionEvidenceHash,
+  VisionEvidenceValidationError,
   extensionForVisionEvidenceMimeType,
   isUuid,
   isVisionEvidenceMimeType,
   isVisionEvidencePath,
 } from '../../shared/platform/vision/evidenceStorageContracts.js'
+import { VisionImageMetadataError } from '../../shared/platform/vision/imageMetadata.js'
 
 export class VisionEvidenceStorageError extends Error {
   readonly code: string
@@ -69,6 +71,12 @@ function assertPurposeAndUpload(purpose: VisionEvidencePurpose, uploadPurpose: s
   if (consentRecordedAt) dateFrom(consentRecordedAt, 'invalid_consent')
 }
 
+function mapExpectedValidation(error: unknown): never {
+  if (error instanceof VisionEvidenceValidationError) throw new VisionEvidenceStorageError(error.code, error.message)
+  if (error instanceof VisionImageMetadataError) throw new VisionEvidenceStorageError(error.code === 'pixel_limit_exceeded' ? 'excessive_pixels' : 'invalid_image', error.message)
+  throw error
+}
+
 export class VisionEvidenceStorageService {
   private readonly now: () => Date
   private readonly createId: () => string
@@ -92,9 +100,9 @@ export class VisionEvidenceStorageService {
       const upload = await this.options.provider.createSignedUploadUrl({ bucket: VISION_EVIDENCE_BUCKET, path: intent.storagePath, mimeType: input.mimeType, maxBytes: input.expectedBytes, intentExpiresAt: expiresAt })
       await this.options.repository.recordAudit({ eventType: 'vision.evidence.upload_intent_created', entityId: id, actorId: actor.userId, payload: { purpose: input.purpose, mimeType: input.mimeType, bytes: input.expectedBytes } })
       return { intent, upload }
-    } catch (error) {
+    } catch {
       await this.options.repository.markUploadAbandoned(intent.id, this.now().toISOString())
-      throw new VisionEvidenceStorageError('upload_intent_unavailable', error instanceof Error ? error.message : 'Vision evidence upload intent could not be created.')
+      throw new VisionEvidenceStorageError('upload_intent_unavailable', 'Vision evidence upload intent could not be created.')
     }
   }
 
@@ -118,9 +126,12 @@ export class VisionEvidenceStorageService {
     if (!isVisionEvidencePath(intent.storagePath) || !intent.storagePath.startsWith(`${intent.ownerUserId}/${intent.purpose}/`)) throw new VisionEvidenceStorageError('invalid_path', 'Vision evidence storage path is not server-generated and purpose-bound.')
     if (input.bytes !== intent.expectedBytes || input.bytes <= 0 || input.bytes > VISION_EVIDENCE_MAX_BYTES) throw new VisionEvidenceStorageError('byte_mismatch', 'Uploaded Vision evidence bytes do not match the reserved intent.')
     if (input.mimeType !== intent.expectedMimeType || !isVisionEvidenceMimeType(input.mimeType)) throw new VisionEvidenceStorageError('mime_mismatch', 'Uploaded Vision evidence MIME type does not match the reserved intent.')
-    assertVisionEvidenceHash(input.sha256)
-    assertVisionEvidenceDimensions(input.widthPx, input.heightPx)
-    const object = await this.options.provider.headObject({ bucket: VISION_EVIDENCE_BUCKET, path: intent.storagePath })
+    try {
+      assertVisionEvidenceHash(input.sha256)
+      assertVisionEvidenceDimensions(input.widthPx, input.heightPx)
+    } catch (error) { mapExpectedValidation(error) }
+    let object: Awaited<ReturnType<VisionEvidenceUploadProvider['headObject']>>
+    try { object = await this.options.provider.headObject({ bucket: VISION_EVIDENCE_BUCKET, path: intent.storagePath }) } catch (error) { mapExpectedValidation(error) }
     if (!object || object.bucket !== VISION_EVIDENCE_BUCKET || object.path !== intent.storagePath || object.bytes !== input.bytes || object.mimeType !== input.mimeType || object.sha256 !== input.sha256 || object.widthPx !== input.widthPx || object.heightPx !== input.heightPx) throw new VisionEvidenceStorageError('object_unverified', 'Vision evidence metadata does not match the stored object.')
     const duplicate = await this.options.repository.findActiveBySha256(input.sha256)
     if (duplicate) { await this.options.provider.deleteObject({ bucket: VISION_EVIDENCE_BUCKET, path: intent.storagePath }); throw new VisionEvidenceStorageError('duplicate_evidence', 'An active Vision evidence object with this digest already exists.') }
@@ -130,10 +141,10 @@ export class VisionEvidenceStorageService {
       await this.options.repository.markUploadCompleted(intent.id)
       await this.options.repository.recordAudit({ eventType: 'vision.evidence.verified', entityId: metadata.id, actorId: actor.userId, payload: { purpose: metadata.purpose, bytes: metadata.bytes, mimeType: metadata.mimeType } })
       return metadata
-    } catch (error) {
+     } catch {
       await this.options.repository.markUploadAbandoned(intent.id, this.now().toISOString())
       try { await this.options.provider.deleteObject({ bucket: VISION_EVIDENCE_BUCKET, path: intent.storagePath }) } catch { /* containment is reported below */ }
-      throw new VisionEvidenceStorageError('metadata_commit_failed', error instanceof Error ? error.message : 'Vision evidence metadata could not be committed; the object was not trusted.')
+      throw new VisionEvidenceStorageError('metadata_commit_failed', 'Vision evidence metadata could not be committed; the object was not trusted.')
     }
   }
 

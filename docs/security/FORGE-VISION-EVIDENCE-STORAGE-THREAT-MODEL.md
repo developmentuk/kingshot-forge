@@ -22,3 +22,6 @@ Scope: private screenshot evidence, upload intents, metadata, signed access and 
 | Legal/moderation hold deletion | `legal_hold` blocks retention deletion | Hold lifecycle approval |
 
 No legal compliance, deletion guarantee or privacy certification is claimed by this document. Those require separate legal, policy and operational review.
+## D1A3 boundary repair
+
+Malformed digests, dimensions, excessive pixel counts, and malformed image metadata are represented by stable typed storage errors and bounded 4xx responses. Provider infrastructure failures remain generic 500 responses without secrets, URLs, tokens, or image bytes. Incident cleanup is exact-ID, exact-path, expiry-gated, and containment-first.

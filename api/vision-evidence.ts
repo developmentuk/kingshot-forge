@@ -7,6 +7,10 @@ import { isUuid, isVisionEvidenceMimeType, type VisionEvidenceActor, type Vision
 const ACTIONS = new Set(['create-upload-intent', 'complete-upload', 'abandon-upload', 'get-evidence-metadata', 'create-read-url', 'request-deletion', 'execute-retention-deletion'])
 const PURPOSES = new Set(['mapping_reference', 'test_case', 'scan_source', 'evidence_crop'])
 
+export function mapVisionEvidenceErrorStatus(error: VisionEvidenceStorageError): number {
+  return error.code === 'unauthorised' ? 401 : error.code === 'forbidden' ? 403 : error.code === 'not_found' || error.code === 'intent_not_found' ? 404 : 422
+}
+
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
   try {
     const actor = await requireForgeActor(request)
@@ -18,7 +22,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     response.status(200).json({ status: 'success', data })
   } catch (error) {
     if (error instanceof ForgeAuthenticationError) { response.status(error.statusCode).json({ status: 'error', message: error.message }); return }
-    if (error instanceof VisionEvidenceStorageError) { response.status(error.code === 'unauthorised' ? 401 : error.code === 'forbidden' ? 403 : error.code === 'not_found' || error.code === 'intent_not_found' ? 404 : 422).json({ status: 'error', message: error.message }); return }
+    if (error instanceof VisionEvidenceStorageError) { response.status(mapVisionEvidenceErrorStatus(error)).json({ status: 'error', message: error.message }); return }
     console.error('[vision-evidence]', error instanceof Error ? error.name : 'UnknownError')
     response.status(500).json({ status: 'error', message: 'The Vision evidence service is temporarily unavailable.' })
   }

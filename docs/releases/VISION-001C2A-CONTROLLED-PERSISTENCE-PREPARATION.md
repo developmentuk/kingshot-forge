@@ -80,3 +80,6 @@ execution and its explicit `--execute` path fails closed in D1A2. A new
 unapplied adapter-support migration adds the exact byte-length column required
 by the verified metadata contract. Both prior migrations remain unchanged and
 unapplied; storage remains inactive and D1B remains separately owner-approved.
+## Follow-up status
+
+VISION-001D1B remains a halted synthetic activation. VISION-001D1A3 is repository-only repair work for typed validation and exact cleanup orchestration; it does not authorize activation, cleanup, migration changes, or production promotion.

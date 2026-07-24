@@ -74,3 +74,6 @@ server-authorised and canonical-write/worker-free. The mocked activation harness
 proves exact IDs, path, digest, dimensions, expiry, cross-boundary cleanup and
 retained audit events without network access. The adapter-support migration is
 prepared but unapplied. D1B remains separately owner-approved.
+## D1B status and D1A3 repair
+
+The evidence storage migrations are provisioned, but the synthetic activation is halted and remains NO-GO for acceptance. D1A3 repairs typed validation and adds a mocked exact incident cleanup harness; it does not access Supabase or change the live incident.

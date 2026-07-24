@@ -8,6 +8,7 @@ import {
   type VisionEvidenceMimeType,
   type VisionEvidenceUploadProvider,
   type VisionStoredObjectMetadata,
+  VisionEvidenceValidationError,
 } from '../../../shared/platform/vision/evidenceStorageContracts.js'
 import { inspectVisionImage } from '../../../shared/platform/vision/imageMetadata.js'
 
@@ -72,10 +73,10 @@ function assertBucketAndPath(bucket: string, path: string): void {
 }
 
 async function boundedBytes(file: StorageFile): Promise<Uint8Array> {
-  if (!file || typeof file.arrayBuffer !== 'function') throw new Error('Supabase returned an invalid evidence object body.')
-  if (typeof file.size === 'number' && (file.size < 1 || file.size > VISION_EVIDENCE_MAX_BYTES)) throw new Error('Supabase evidence object exceeds the governed byte limit.')
+  if (!file || typeof file.arrayBuffer !== 'function') throw new VisionEvidenceValidationError('invalid_image', 'Supabase returned an invalid evidence object body.')
+  if (typeof file.size === 'number' && (file.size < 1 || file.size > VISION_EVIDENCE_MAX_BYTES)) throw new VisionEvidenceValidationError('invalid_image', 'Supabase evidence object exceeds the governed byte limit.')
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (bytes.byteLength < 1 || bytes.byteLength > VISION_EVIDENCE_MAX_BYTES) throw new Error('Supabase evidence object exceeds the governed byte limit.')
+  if (bytes.byteLength < 1 || bytes.byteLength > VISION_EVIDENCE_MAX_BYTES) throw new VisionEvidenceValidationError('invalid_image', 'Supabase evidence object exceeds the governed byte limit.')
   return bytes
 }
 

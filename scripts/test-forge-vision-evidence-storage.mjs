@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { VisionEvidenceStorageError, VisionEvidenceStorageService } from '../server/vision/evidenceStorageService.ts'
+import { VisionImageMetadataError } from '../shared/platform/vision/imageMetadata.ts'
 
 globalThis.fetch = () => { throw new Error('Evidence storage tests must not access the network.') }
 
@@ -67,6 +68,17 @@ await expectCode(() => service.completeUpload(owner, intentResult.intent.id, ima
 const malformed = await service.createUploadIntent(owner, { ownerUserId: ownerId, purpose: 'mapping_reference', uploadPurpose: 'reference', mimeType: 'image/png', expectedBytes: image.bytes })
 mocks.intents.get(malformed.intent.id).storagePath = `../other/${malformed.intent.id}.png`
 await expectCode(() => service.completeUpload(owner, malformed.intent.id, image), 'invalid_path')
+
+async function validationCode(input, providerError) {
+  const validationMocks = createMocks(); const validationService = serviceWith(validationMocks)
+  const created = await validationService.createUploadIntent(owner, { ownerUserId: ownerId, purpose: 'test_case', uploadPurpose: 'validation', mimeType: 'image/png', expectedBytes: image.bytes })
+  validationMocks.provider.headObject = async () => { if (providerError) throw providerError; return { bucket: 'vision-evidence', path: created.intent.storagePath, ...image } }
+  await expectCode(() => validationService.completeUpload(owner, created.intent.id, { ...image, ...input }), input.sha256 && !/^[a-f0-9]{64}$/.test(input.sha256) ? 'invalid_hash' : input.widthPx === 0 ? 'invalid_dimensions' : providerError.code === 'pixel_limit_exceeded' ? 'excessive_pixels' : 'invalid_image')
+}
+await validationCode({ sha256: 'A'.repeat(64) })
+await validationCode({ widthPx: 0 })
+await validationCode({}, new VisionImageMetadataError('pixel_limit_exceeded', 'governed pixel limit'))
+await validationCode({}, new VisionImageMetadataError('malformed_image', 'malformed image'))
 
 const duplicate = await service.createUploadIntent(owner, { ownerUserId: ownerId, purpose: 'test_case', uploadPurpose: 'duplicate', mimeType: 'image/png', expectedBytes: image.bytes })
 mocks.objects.set(`vision-evidence/${duplicate.intent.storagePath}`, { bucket: 'vision-evidence', path: duplicate.intent.storagePath, ...image })

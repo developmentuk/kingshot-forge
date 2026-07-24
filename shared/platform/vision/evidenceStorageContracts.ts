@@ -21,6 +21,13 @@ export const VISION_EVIDENCE_RETENTION_POLICIES = {
 
 export type VisionEvidencePermission = 'vision.evidence.review' | 'vision.admin.read'
 
+export type VisionEvidenceValidationCode = 'invalid_hash' | 'invalid_dimensions' | 'excessive_pixels' | 'invalid_image'
+
+export class VisionEvidenceValidationError extends Error {
+  readonly code: VisionEvidenceValidationCode
+  constructor(code: VisionEvidenceValidationCode, message: string) { super(message); this.name = 'VisionEvidenceValidationError'; this.code = code }
+}
+
 export interface VisionEvidenceActor {
   userId: string | null
   accountStatus: 'active' | 'inactive'
@@ -140,9 +147,9 @@ export function isVisionEvidencePath(path: string): boolean {
 }
 
 export function assertVisionEvidenceHash(sha256: string): void {
-  if (!/^[a-f0-9]{64}$/.test(sha256)) throw new Error('Vision evidence requires a lowercase SHA-256 digest.')
+  if (!/^[a-f0-9]{64}$/.test(sha256)) throw new VisionEvidenceValidationError('invalid_hash', 'Vision evidence requires a lowercase SHA-256 digest.')
 }
 
 export function assertVisionEvidenceDimensions(widthPx: number, heightPx: number): void {
-  if (!Number.isInteger(widthPx) || widthPx <= 0 || !Number.isInteger(heightPx) || heightPx <= 0) throw new Error('Vision evidence dimensions must be positive integers.')
+  if (!Number.isInteger(widthPx) || widthPx <= 0 || !Number.isInteger(heightPx) || heightPx <= 0) throw new VisionEvidenceValidationError('invalid_dimensions', 'Vision evidence dimensions must be positive integers.')
 }
