@@ -25,9 +25,34 @@ Gaps requiring the prepared corrective migration `supabase/migrations/2026072414
 
 The corrective migration is prepared but must remain unapplied until a new owner-approved activation session. Neither migration is silently rewritten.
 
+## Upload-pattern decision
+
+The canonical pattern is **C: Supabase signed upload URL with exact server-owned
+path and intent binding**. Pattern A, server-mediated upload, would avoid a
+reusable browser credential but cannot safely claim support for the governed 16
+MiB maximum across the current Vercel request-body and function-timeout envelope
+without a separately approved hosting/runtime proof. Pattern B, authenticated
+direct upload, would require a new narrowly scoped Storage INSERT policy,
+authenticated-session binding, no-overwrite enforcement and an additional live
+RLS proof. Pattern C uses the existing provider behaviour, has zero recurring
+infrastructure cost, and keeps the browser unable to choose a bucket or path.
+
+Forge intent expiry is 15 minutes. Supabase's signed upload credential is
+represented as its actual two-hour lifetime and is never mislabeled as a
+15-minute token. A late upload therefore remains possible after Forge intent
+expiry; completion rejects expired intents, and the exact reserved path is
+quarantined/deleted by the governed orphan workflow. The two lifetimes are
+deliberately separate in the contracts and adapter response.
+
 ## Server-only boundary
 
 `server/vision/evidenceStorageService.ts` implements the provider-neutral orchestration boundary. Its provider adapter is the only layer permitted to know storage SDK details. Browser code receives no storage secret, bucket name authority, unrestricted path authority or permanent URL.
+
+`server/vision/evidence/supabaseVisionEvidenceRepository.ts` maps the exact
+upload-intent, evidence-image and append-only audit operations through the
+server Supabase client factory. `server/vision/evidence/supabaseVisionEvidenceProvider.ts`
+uses Storage API signed upload/read, exact-object download and exact-path remove;
+it never deletes `storage.objects` through SQL.
 
 Supported operations are:
 
@@ -48,7 +73,8 @@ The service never invokes OCR, starts a worker, writes canonical game data, sele
 2. Generate a server-owned path: `<owner-uuid>/<purpose>/<evidence-uuid>.<extension>`.
 3. Issue a short-lived signed upload URL for the fixed private bucket.
 4. Upload the object privately.
-5. HEAD the exact object and verify bytes, MIME, dimensions and SHA-256.
+5. Download the exact private object server-side with no-store semantics and
+   verify byte length, MIME signature, dimensions and SHA-256 from the bytes.
 6. Reject unsupported, oversized, malformed, duplicate or mismatched objects.
 7. Record verified evidence metadata only after object verification succeeds.
 8. Link evidence to a mapping reference, test case or scan through separately governed operations.

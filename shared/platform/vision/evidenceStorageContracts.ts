@@ -1,5 +1,8 @@
 export const VISION_EVIDENCE_BUCKET = 'vision-evidence' as const
 export const VISION_EVIDENCE_MAX_BYTES = 16 * 1024 * 1024
+export const VISION_EVIDENCE_MAX_PIXELS = 40_000_000
+export const VISION_EVIDENCE_INTENT_SECONDS = 15 * 60
+export const VISION_EVIDENCE_PROVIDER_UPLOAD_SECONDS = 2 * 60 * 60
 export const VISION_EVIDENCE_SIGNED_URL_MAX_SECONDS = 300
 
 export const VISION_EVIDENCE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/tiff'] as const
@@ -50,6 +53,7 @@ export interface VisionStoredObjectMetadata {
 
 export interface VisionEvidenceMetadata extends VisionStoredObjectMetadata {
   id: string
+  uploadIntentId: string
   ownerUserId: string | null
   purpose: VisionEvidencePurpose
   uploadPurpose: string
@@ -80,7 +84,11 @@ export interface CompleteVisionEvidenceInput {
 }
 
 export interface VisionEvidenceUploadUrl {
-  url: string
+  url: string | null
+  token: string
+  bucket: typeof VISION_EVIDENCE_BUCKET
+  path: string
+  providerLifetimeSeconds: typeof VISION_EVIDENCE_PROVIDER_UPLOAD_SECONDS
   expiresAt: string
 }
 
@@ -95,7 +103,7 @@ export interface VisionEvidenceUploadProvider {
     path: string
     mimeType: VisionEvidenceMimeType
     maxBytes: number
-    expiresAt: string
+    intentExpiresAt: string
   }): Promise<VisionEvidenceUploadUrl>
   headObject(input: { bucket: typeof VISION_EVIDENCE_BUCKET; path: string }): Promise<VisionStoredObjectMetadata | null>
   createSignedReadUrl(input: { bucket: typeof VISION_EVIDENCE_BUCKET; path: string; expiresAt: string }): Promise<VisionEvidenceReadUrl>

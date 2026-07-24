@@ -29,7 +29,7 @@ function createMocks() {
     async recordAudit(input) { audits.push(structuredClone(input)) },
   }
   const provider = {
-    async createSignedUploadUrl(input) { calls.signedUpload.push(input); return { url: `https://signed.invalid/upload/${input.path}`, expiresAt: input.expiresAt } },
+    async createSignedUploadUrl(input) { calls.signedUpload.push(input); return { url: null, token: 'mock-upload-token', bucket: input.bucket, path: input.path, providerLifetimeSeconds: 7200, expiresAt: new Date(now.getTime() + 7200000).toISOString() } },
     async headObject(input) { return objects.get(`${input.bucket}/${input.path}`) ?? null },
     async createSignedReadUrl(input) { calls.signedRead.push(input); return { url: `https://signed.invalid/read/${input.path}`, expiresAt: input.expiresAt } },
     async deleteObject(input) { calls.deleted.push(input); objects.delete(`${input.bucket}/${input.path}`) },
@@ -54,7 +54,7 @@ await expectCode(() => service.createUploadIntent(owner, { ownerUserId: ownerId,
 await expectCode(() => service.createUploadIntent(owner, { ownerUserId: ownerId, purpose: 'scan_source', uploadPurpose: 'test', mimeType: 'image/png', expectedBytes: 100 }), 'consent_required')
 
 const intentResult = await service.createUploadIntent(owner, { ownerUserId: ownerId, purpose: 'scan_source', uploadPurpose: 'player supplied scan', mimeType: 'image/png', expectedBytes: image.bytes, consentRecordedAt: now.toISOString() })
-assert.equal(intentResult.intent.storageBucket, 'vision-evidence'); assert.match(intentResult.intent.storagePath, new RegExp(`^${ownerId}/scan_source/`)); assert.ok(intentResult.upload.url.startsWith('https://signed.invalid/')); assert.ok(new Date(intentResult.upload.expiresAt) > now); assert.equal(mocks.calls.signedUpload[0].bucket, 'vision-evidence')
+assert.equal(intentResult.intent.storageBucket, 'vision-evidence'); assert.match(intentResult.intent.storagePath, new RegExp(`^${ownerId}/scan_source/`)); assert.equal(intentResult.upload.token, 'mock-upload-token'); assert.equal(intentResult.upload.providerLifetimeSeconds, 7200); assert.ok(new Date(intentResult.upload.expiresAt) > new Date(intentResult.intent.expiresAt)); assert.equal(mocks.calls.signedUpload[0].bucket, 'vision-evidence')
 await expectCode(() => service.completeUpload(owner, intentResult.intent.id, image), 'object_unverified')
 mocks.objects.set(`vision-evidence/${intentResult.intent.storagePath}`, { bucket: 'vision-evidence', path: intentResult.intent.storagePath, ...image })
 const completed = await service.completeUpload(owner, intentResult.intent.id, image)

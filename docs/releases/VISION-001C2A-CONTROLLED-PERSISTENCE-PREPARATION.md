@@ -63,3 +63,20 @@ it limits signed reads to five minutes, blocks duplicate active hashes and legal
 holds, deletes by exact evidence ID/path, and retains minimum audit metadata.
 Worker extraction, regions, field mappings, testing, publication, storage
 activation and any live object test are deferred to separately approved stages.
+
+## VISION-001D1A2 Supabase adapter and activation harness
+
+D1A2 resolved the pre-activation integration gaps without contacting Supabase.
+The selected upload pattern is an exact-path Supabase signed upload URL: Forge
+intent validity is 15 minutes while the provider credential is represented as
+its true two-hour lifetime. Completion never trusts client metadata or
+object-info alone; the server downloads the exact private object with no-store
+semantics, enforces the 16 MiB limit, computes SHA-256 from bytes and derives
+dimensions from bounded PNG/JPEG/WebP/TIFF headers before recording evidence.
+
+The concrete repository, Storage provider, server API actions and mocked
+activation harness are checked in. The harness defaults to synthetic in-memory
+execution and its explicit `--execute` path fails closed in D1A2. A new
+unapplied adapter-support migration adds the exact byte-length column required
+by the verified metadata contract. Both prior migrations remain unchanged and
+unapplied; storage remains inactive and D1B remains separately owner-approved.

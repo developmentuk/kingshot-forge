@@ -56,3 +56,21 @@ retention and audit isolation.
 No bucket, object, evidence row, worker job or live storage/API state was created
 or changed. The next stage requires separate owner approval and fresh activation
 evidence. D1A does not authorize D1D2 worker extraction.
+
+## VISION-001D1A2 adapter preparation
+
+D1A2 identified and resolved the missing concrete Supabase repository/provider
+boundary and the mismatch between the 15-minute Forge intent and Supabase's
+two-hour signed upload credential. The canonical decision is exact-path signed
+upload with explicit late-upload orphan containment. Server-side verification
+downloads exact private bytes, applies a 16 MiB bound, computes SHA-256, parses
+PNG/JPEG/WebP/TIFF signatures and dimensions, enforces a 40-million-pixel cap,
+and rejects signature/MIME disagreement or truncation.
+
+The repository maps upload intents, evidence metadata and append-only audit
+events through `getSupabaseAdmin`; the provider uses only Storage API download,
+signed URL and exact single-path remove. The API actions are strict,
+server-authorised and canonical-write/worker-free. The mocked activation harness
+proves exact IDs, path, digest, dimensions, expiry, cross-boundary cleanup and
+retained audit events without network access. The adapter-support migration is
+prepared but unapplied. D1B remains separately owner-approved.

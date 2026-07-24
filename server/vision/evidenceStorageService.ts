@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import {
   VISION_EVIDENCE_BUCKET,
+  VISION_EVIDENCE_INTENT_SECONDS,
   VISION_EVIDENCE_MAX_BYTES,
   VISION_EVIDENCE_RETENTION_POLICIES,
   VISION_EVIDENCE_SIGNED_URL_MAX_SECONDS,
@@ -84,11 +85,11 @@ export class VisionEvidenceStorageService {
     assertPurposeAndUpload(input.purpose, input.uploadPurpose, input.consentRecordedAt)
     const now = this.now()
     const id = this.createId()
-    const expiresAt = new Date(now.getTime() + 15 * 60000).toISOString()
+    const expiresAt = new Date(now.getTime() + VISION_EVIDENCE_INTENT_SECONDS * 1000).toISOString()
     const intent: VisionEvidenceUploadIntent = { id, ownerUserId: input.ownerUserId, purpose: input.purpose, uploadPurpose: input.uploadPurpose.trim(), storageBucket: VISION_EVIDENCE_BUCKET, storagePath: `${input.ownerUserId}/${input.purpose}/${id}.${extensionForVisionEvidenceMimeType(input.mimeType)}`, expectedMimeType: input.mimeType, expectedBytes: input.expectedBytes, expiresAt, consentRecordedAt: input.consentRecordedAt ?? null, status: 'created' }
     await this.options.repository.createUploadIntent(intent)
     try {
-      const upload = await this.options.provider.createSignedUploadUrl({ bucket: VISION_EVIDENCE_BUCKET, path: intent.storagePath, mimeType: input.mimeType, maxBytes: input.expectedBytes, expiresAt })
+      const upload = await this.options.provider.createSignedUploadUrl({ bucket: VISION_EVIDENCE_BUCKET, path: intent.storagePath, mimeType: input.mimeType, maxBytes: input.expectedBytes, intentExpiresAt: expiresAt })
       await this.options.repository.recordAudit({ eventType: 'vision.evidence.upload_intent_created', entityId: id, actorId: actor.userId, payload: { purpose: input.purpose, mimeType: input.mimeType, bytes: input.expectedBytes } })
       return { intent, upload }
     } catch (error) {
@@ -123,7 +124,7 @@ export class VisionEvidenceStorageService {
     if (!object || object.bucket !== VISION_EVIDENCE_BUCKET || object.path !== intent.storagePath || object.bytes !== input.bytes || object.mimeType !== input.mimeType || object.sha256 !== input.sha256 || object.widthPx !== input.widthPx || object.heightPx !== input.heightPx) throw new VisionEvidenceStorageError('object_unverified', 'Vision evidence metadata does not match the stored object.')
     const duplicate = await this.options.repository.findActiveBySha256(input.sha256)
     if (duplicate) { await this.options.provider.deleteObject({ bucket: VISION_EVIDENCE_BUCKET, path: intent.storagePath }); throw new VisionEvidenceStorageError('duplicate_evidence', 'An active Vision evidence object with this digest already exists.') }
-    const metadata: VisionEvidenceMetadata = { ...object, id: this.createId(), ownerUserId: intent.ownerUserId, purpose: intent.purpose, uploadPurpose: intent.uploadPurpose, consentRecordedAt: intent.consentRecordedAt, retentionUntil: retentionUntil({ ownerUserId: intent.ownerUserId, purpose: intent.purpose, uploadPurpose: intent.uploadPurpose, mimeType: intent.expectedMimeType, expectedBytes: intent.expectedBytes, consentRecordedAt: intent.consentRecordedAt }, intent.purpose, now, canReview(actor)), deletionRequestedAt: null, deletedAt: null, legalHold: false, verifiedAt: now.toISOString() }
+    const metadata: VisionEvidenceMetadata = { ...object, id: this.createId(), uploadIntentId: intent.id, ownerUserId: intent.ownerUserId, purpose: intent.purpose, uploadPurpose: intent.uploadPurpose, consentRecordedAt: intent.consentRecordedAt, retentionUntil: retentionUntil({ ownerUserId: intent.ownerUserId, purpose: intent.purpose, uploadPurpose: intent.uploadPurpose, mimeType: intent.expectedMimeType, expectedBytes: intent.expectedBytes, consentRecordedAt: intent.consentRecordedAt }, intent.purpose, now, canReview(actor)), deletionRequestedAt: null, deletedAt: null, legalHold: false, verifiedAt: now.toISOString() }
     try {
       await this.options.repository.createVerifiedEvidence(metadata)
       await this.options.repository.markUploadCompleted(intent.id)

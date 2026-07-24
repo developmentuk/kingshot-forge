@@ -5,7 +5,7 @@ Bucket: `vision-evidence`
 Separate migration: `supabase/migrations/20260723181223_vision_evidence_storage.sql`
 
 The frozen bucket foundation is private and accepts PNG, JPEG, WebP and TIFF
-images up to 16 MiB. It remains unapplied. The lifecycle correction is prepared
+images up to 16 MiB and 40 million pixels. It remains unapplied. The lifecycle correction is prepared
 in `supabase/migrations/20260724140000_vision_evidence_storage_governance.sql`;
 see the governance and activation runbook for the separate approval gate.
 The storage object path is server-generated and purpose-bound:
@@ -16,8 +16,8 @@ The storage object path is server-generated and purpose-bound:
 
 Allowed purposes are `mapping_reference`, `test_case`, `scan_source` and
 `evidence_crop`. The server creates an upload intent first, then creates the
-corresponding `vision_evidence_images` row only after exact object HEAD and
-SHA-256 verification. Browser clients never choose arbitrary bucket names,
+corresponding `vision_evidence_images` row only after exact private-byte
+download, signature, dimensions and SHA-256 verification. Browser clients never choose arbitrary bucket names,
 object paths or retention values.
 
 There are no authenticated INSERT, UPDATE or DELETE policies on
