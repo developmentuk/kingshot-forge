@@ -62,6 +62,7 @@ import { PlayerSupportWorkspacePage } from "./features/player-identity/PlayerSup
 import { GiftRedemptionOperationsPage } from "./features/admin/GiftRedemptionOperationsPage";
 import { RenderEngineCalibrationPage } from "./features/admin/RenderEngineCalibrationPage";
 import { VisionStudioPage } from "./features/admin/VisionStudioPage";
+import { VisionAccountLinkingAcceptancePage } from "./features/admin/VisionAccountLinkingAcceptancePage";
 import { EditorialImportManagerPage } from "./features/admin/EditorialImportManagerPage";
 import { EditorialOperationsPage } from "./features/admin/editorial/EditorialOperationsPage";
 import { AnalyticsPage } from "./features/admin/AnalyticsPage";
@@ -157,6 +158,7 @@ function App() {
         <Route path="admin/gift-redemption" element={<ProtectedRoute permission="cms.view"><GiftRedemptionOperationsPage /></ProtectedRoute>} />
         <Route path="admin/render-engine" element={<ProtectedRoute permission="render_engine.view"><RenderEngineCalibrationPage /></ProtectedRoute>} />
         <Route path="admin/vision-studio" element={<ProtectedRoute permission="cms.view"><VisionStudioPage /></ProtectedRoute>} />
+        <Route path="admin/vision/account-linking-acceptance" element={<ProtectedRoute permission="vision.scan.create"><VisionAccountLinkingAcceptancePage /></ProtectedRoute>} />
         <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><EditorialImportManagerPage /></ProtectedRoute>} />
         <Route path="admin/history" element={<ProtectedRoute permission="cms.history.view"><EditorialOperationsPage mode="history" /></ProtectedRoute>} />
         <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><SearchExplorerPage /></ProtectedRoute>} />
