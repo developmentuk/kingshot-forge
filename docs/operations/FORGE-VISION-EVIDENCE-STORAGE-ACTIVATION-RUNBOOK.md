@@ -43,3 +43,10 @@ The repository-only mocked harness is `node --import tsx scripts/run-forge-visio
 ## Halted synthetic incident
 
 VISION-001D1B did not complete acceptance. The repository-only D1A3 repair provides `npm run cleanup:forge-vision-evidence-incident` as an exact-ID harness. Without `--execute` it is plan-only. Execution additionally requires the exact project, approved repository SHA, retained halted checkpoint, explicit approval flag, clean-repository gate, and a provider credential expiry safety margin. It must not be retried after a failure without a new owner decision.
+## VISION-001D1A4 executable boundary
+
+The exact retained incident manifest is `docs/operations/FORGE-VISION-EVIDENCE-INCIDENT-MANIFEST.json`. The future runner command is:
+
+`npm run cleanup:forge-vision-evidence-incident -- --execute`
+
+Execution requires `FORGE_VISION_EVIDENCE_INCIDENT_MANIFEST_PATH`, `FORGE_VISION_EVIDENCE_INCIDENT_APPROVED_CLEANUP_SHA`, `FORGE_VISION_EVIDENCE_INCIDENT_PROJECT_REF`, `FORGE_VISION_EVIDENCE_INCIDENT_ACTOR_ID`, `FORGE_VISION_EVIDENCE_INCIDENT_APPROVED=true`, and provider expiry evidence. The approved cleanup SHA is compared to the current Git HEAD; the historical activation SHA is only retained in the manifest. No live cleanup was performed in D1A4.

@@ -1,0 +1,21 @@
+{
+  "incidentKey": "VISION-001D1B-HALTED-SYNTHETIC-ACTIVATION",
+  "activationSourceSha": "6ab837627a90ce56de1bc1f2e7170812989ae35e",
+  "projectRef": "hrvdhjscwitqpwjhnjkm",
+  "createdIntentId": "cb9c46a3-8731-4379-9097-6d09bd735363",
+  "abandonedIntentId": "cb239170-c310-45eb-9999-9eaa637f0a7a",
+  "bucket": "vision-evidence",
+  "objectPath": "d245eb2e-b295-4c9b-bcef-cd134bfe981a/scan_source/cb9c46a3-8731-4379-9097-6d09bd735363.png",
+  "expectedPreCleanupEvidenceCount": 0,
+  "expectedPreCleanupAuditCount": 7,
+  "expectedPostAbandonmentAuditCount": 8,
+  "expectedFinalAuditCount": 8,
+  "migrationNames": [
+    "20260723181223_vision_evidence_storage.sql",
+    "20260724140000_vision_evidence_storage_governance.sql",
+    "20260724153000_vision_evidence_adapter_support.sql"
+  ],
+  "historicalObjectOwnerUuid": "d245eb2e-b295-4c9b-bcef-cd134bfe981a",
+  "providerCredentialCreatedAt": null,
+  "providerCredentialExpiresAt": null
+}

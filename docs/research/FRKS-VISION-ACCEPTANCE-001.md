@@ -77,3 +77,6 @@ prepared but unapplied. D1B remains separately owner-approved.
 ## D1B status and D1A3 repair
 
 The evidence storage migrations are provisioned, but the synthetic activation is halted and remains NO-GO for acceptance. D1A3 repairs typed validation and adds a mocked exact incident cleanup harness; it does not access Supabase or change the live incident.
+## D1A4 status
+
+The live synthetic incident remains unchanged and acceptance remains NO-GO. D1A4 repairs gateway wiring, structured retained evidence, Git and expiry gates, and the seven-to-eight audit transition. A new owner approval is required before any exact cleanup attempt.

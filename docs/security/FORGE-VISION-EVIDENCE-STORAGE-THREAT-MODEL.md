@@ -25,3 +25,6 @@ No legal compliance, deletion guarantee or privacy certification is claimed by t
 ## D1A3 boundary repair
 
 Malformed digests, dimensions, excessive pixel counts, and malformed image metadata are represented by stable typed storage errors and bounded 4xx responses. Provider infrastructure failures remain generic 500 responses without secrets, URLs, tokens, or image bytes. Incident cleanup is exact-ID, exact-path, expiry-gated, and containment-first.
+## D1A4 cleanup controls
+
+Cleanup execution is gated by the current clean synchronized branch and an explicit approved cleanup SHA. Credential expiry must be at least five minutes in the past; provider creation fallback is exactly two hours, with no intent-expiry substitution. Exact object removal is containment-first and no SQL storage deletion, listing, prefixes, wildcard paths, or audit deletion is permitted.

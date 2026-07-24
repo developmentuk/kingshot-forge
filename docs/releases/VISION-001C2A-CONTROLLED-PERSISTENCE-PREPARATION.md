@@ -83,3 +83,6 @@ unapplied; storage remains inactive and D1B remains separately owner-approved.
 ## Follow-up status
 
 VISION-001D1B remains a halted synthetic activation. VISION-001D1A3 is repository-only repair work for typed validation and exact cleanup orchestration; it does not authorize activation, cleanup, migration changes, or production promotion.
+## D1A4 follow-up
+
+The migrations remain applied and the activation remains halted. D1A4 completes the repository cleanup boundary only; it does not retry activation or mutate the live incident.
