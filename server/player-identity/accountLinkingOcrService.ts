@@ -1,11 +1,11 @@
-import type { AccountLinkOcrResult } from '../../shared/domains/player-identity/accountLinkingOcr.js'
+import type { AccountLinkOcrRegionObservation, AccountLinkOcrResult } from '../../shared/domains/player-identity/accountLinkingOcr.js'
 import { TesseractCliExtractor } from '../vision/extractors/tesseractCliExtractor.js'
 import { TesseractJsAccountLinkOcrAdapter } from './tesseractJsAccountLinkOcrAdapter.js'
 import type { VisionExtractionRequest } from '../../shared/platform/vision/contracts.js'
 import { parseAccountLinkCandidates } from '../../shared/domains/player-identity/accountLinkingOcr.js'
 
 export interface AccountLinkOcrAdapter {
-  extract(request: VisionExtractionRequest): Promise<{ rawText: string; engineConfidence: number; provenance: AccountLinkOcrResult['provenance'] }>
+  extract(request: VisionExtractionRequest): Promise<{ rawText: string; engineConfidence: number; provenance: AccountLinkOcrResult['provenance']; regionObservations?: readonly AccountLinkOcrRegionObservation[]; diagnostics?: AccountLinkOcrResult['diagnostics'] }>
 }
 
 export class TesseractAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
@@ -28,12 +28,12 @@ export async function extractAccountLinkCandidates(input: {
   const adapter = input.adapter ?? new TesseractJsAccountLinkOcrAdapter()
   const extracted = await adapter.extract({
     runId: `account-link-${input.evidenceId}`,
-    mappingVersionId: 'account-linking-ocr-mvp',
-    mappingId: 'account-linking-ocr',
+    mappingVersionId: 'account-linking-kingshot-profile-v1',
+    mappingId: 'account-linking-kingshot-profile',
     fieldKey: 'player-identity',
     image: { evidenceId: input.evidenceId, bytes: input.bytes, sha256: input.sha256, mimeType: input.mimeType, widthPx: input.widthPx, heightPx: input.heightPx },
     region: null,
-    configuration: { language: 'eng', pageSegmentationMode: 6, ocrEngineMode: 1, preserveInterwordSpaces: true, characterWhitelist: null, timeoutMs: 30_000 },
+    configuration: { language: 'eng', pageSegmentationMode: 7, ocrEngineMode: 1, preserveInterwordSpaces: true, characterWhitelist: null, timeoutMs: 30_000, mappingVersion: 'account-linking-kingshot-profile-v1' },
   })
-  return { evidenceId: input.evidenceId, rawText: extracted.rawText, candidates: parseAccountLinkCandidates(extracted.rawText, input.evidenceId, extracted.engineConfidence), provenance: { pluginKey: extracted.provenance.pluginKey, pluginVersion: extracted.provenance.pluginVersion, engineName: extracted.provenance.engineName, engineVersion: extracted.provenance.engineVersion, executedAt: extracted.provenance.executedAt } }
+  return { evidenceId: input.evidenceId, rawText: extracted.rawText, candidates: parseAccountLinkCandidates(extracted.rawText, input.evidenceId, extracted.engineConfidence, { mappingVersion: 'account-linking-kingshot-profile-v1', regions: extracted.regionObservations }), diagnostics: extracted.diagnostics, provenance: { pluginKey: extracted.provenance.pluginKey, pluginVersion: extracted.provenance.pluginVersion, engineName: extracted.provenance.engineName, engineVersion: extracted.provenance.engineVersion, executedAt: extracted.provenance.executedAt } }
 }
