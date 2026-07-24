@@ -3,19 +3,32 @@ import { pathToFileURL } from 'node:url'
 
 function fail(message, checkpoint, cause) { const error = new Error(message); error.acceptanceResult = { ...checkpoint, failure: { step: checkpoint.failedStep ?? 'unknown', status: checkpoint.status, cleanupRequired: checkpoint.cleanupRequired, checkpointPath: checkpoint.checkpointPath } }; error.cause = cause; throw error }
 function responseError(response, baseUrl) { return `Acceptance request failed with HTTP ${response.status} from ${baseUrl.hostname}.` }
-function assertListPreflight(result, fixture) {
+function assertListPreflight(result) {
   const data = result.data; const meta = result.meta
   if (!Array.isArray(data?.screenTypes) || !Array.isArray(data?.versions) || !Array.isArray(data?.extractors)) throw new Error('Acceptance list preflight returned an incomplete Forge payload.')
   if (!meta?.deploymentSha || !meta?.actor || meta.actor.accountStatus !== 'active' || !['vision.admin.read', 'vision.admin.edit', 'vision.admin.test'].every((permission) => meta.actor.permissionKeys?.includes(permission))) throw new Error('Acceptance list preflight did not attest the deployment SHA and active actor permissions.')
-  if (data.screenTypes.some((screen) => screen.screen_key === fixture.screenKey) || data.versions.some((version) => String(version.change_note ?? '').includes(fixture.runId))) throw new Error('Acceptance collision scan found an existing synthetic fixture for this run ID.')
   if (!data.extractors.some((extractor) => extractor.plugin_key === 'ocr.tesseract.cli')) throw new Error('Acceptance preflight requires canonical ocr.tesseract.cli extractor availability.')
   return meta
 }
-function assertFixtureState(data, checkpoint, fixture) {
-  const screen = data.screenTypes?.find((item) => item.id === checkpoint.created.screenTypeId)
-  if (!screen || screen.screen_key !== fixture.screenKey) throw new Error('Verification could not find the exact synthetic screen type.')
-  const versions = data.versions?.filter((item) => checkpoint.created.mappingVersionIds.includes(item.id)) ?? []
-  if (versions.length !== checkpoint.created.mappingVersionIds.length || versions.some((item) => item.screen_type_id !== screen.id || item.status !== 'testing' || item.layout_family !== fixture.layoutFamily || item.game_version !== fixture.gameVersion || item.change_note !== `${fixture.changeNote} metadata-updated`)) throw new Error('Verification found incomplete or incorrect synthetic mapping-version state.')
+function assertExecuteCollision(data, fixture) {
+  if (data.screenTypes.some((screen) => screen.screen_key === fixture.screenKey) || data.versions.some((version) => String(version.change_note ?? '').includes(fixture.runId))) throw new Error('Acceptance collision scan found an existing synthetic fixture for this run ID.')
+}
+function exactIds(value, label) {
+  const ids = (value ?? '').split(',').filter(Boolean)
+  if (!ids.length || ids.some((id) => !/^[0-9a-f-]{36}$/i.test(id)) || new Set(ids).size !== ids.length) throw new Error(`Verification requires exact ${label}.`)
+  return ids
+}
+function assertFixtureState(data, checkpoint, fixture, screenTypeId, mappingVersionIds) {
+  const screens = data.screenTypes ?? []
+  const matchingScreens = screens.filter((item) => item.screen_key === fixture.screenKey)
+  if (matchingScreens.length !== 1 || matchingScreens[0].id !== screenTypeId || matchingScreens[0].game_key !== fixture.gameKey) throw new Error('Verification did not find exactly the checkpoint synthetic screen type.')
+  const runIdScreens = screens.filter((item) => String(item.screen_key ?? '').toLowerCase().includes(fixture.runId.toLowerCase()))
+  if (runIdScreens.length !== 1 || runIdScreens[0].id !== screenTypeId) throw new Error('Verification found an additional synthetic screen carrying the run ID.')
+  const runIdVersions = (data.versions ?? []).filter((item) => String(item.change_note ?? '').includes(fixture.runId))
+  const expectedSet = new Set(mappingVersionIds)
+  if (runIdVersions.length !== mappingVersionIds.length || runIdVersions.some((item) => !expectedSet.has(item.id))) throw new Error('Verification found an additional mapping version carrying the run ID.')
+  const versions = (data.versions ?? []).filter((item) => expectedSet.has(item.id))
+  if (versions.length !== mappingVersionIds.length || versions.some((item) => item.screen_type_id !== screenTypeId || item.version !== 1 || item.status !== 'testing' || item.layout_family !== fixture.layoutFamily || item.game_version !== fixture.gameVersion || item.change_note !== `${fixture.changeNote} metadata-updated`)) throw new Error('Verification found incomplete or incorrect synthetic mapping-version state.')
 }
 
 export async function runAcceptance({ args = process.argv.slice(2), environment = process.env, fetchImpl = globalThis.fetch, cwd = process.cwd(), repositoryGate = assertRepositoryGate } = {}) {
@@ -31,6 +44,9 @@ export async function runAcceptance({ args = process.argv.slice(2), environment 
     ? readCheckpoint(runId, environment).checkpoint
     : { ...plan, repository, correlationId, checkpointPath: null, status: 'planned', cleanupRequired: false, created: { screenTypeId: null, mappingVersionIds: [] }, mutationPerformed: false, timestamp: new Date().toISOString() }
   if (mode === '--verify' && (checkpoint.approvedSha !== approvedSha || checkpoint.baseUrlOrigin !== baseUrl.origin || checkpoint.runId !== runId)) throw new Error('Verification checkpoint does not match the exact approved SHA, base URL, and run ID.')
+  const verifyScreenTypeId = mode === '--verify' ? value('--screen-type-id') : null
+  const verifyMappingVersionIds = mode === '--verify' ? exactIds(value('--mapping-version-ids'), 'comma-separated mapping-version IDs') : []
+  if (mode === '--verify' && (!/^[0-9a-f-]{36}$/i.test(verifyScreenTypeId ?? '') || verifyScreenTypeId !== checkpoint.created?.screenTypeId || verifyMappingVersionIds.join(',') !== (checkpoint.created?.mappingVersionIds ?? []).join(','))) throw new Error('Verification IDs must exactly match the retained acceptance checkpoint.')
   checkpoint.checkpointPath = writeCheckpoint(checkpoint, environment)
   const save = (patch) => { checkpoint = { ...checkpoint, ...patch, timestamp: new Date().toISOString() }; checkpoint.checkpointPath = writeCheckpoint(checkpoint, environment); return checkpoint }
   const safeRequest = async (step, body) => {
@@ -44,15 +60,13 @@ export async function runAcceptance({ args = process.argv.slice(2), environment 
   }
   try {
     const list = await safeRequest(plan.sequence[0])
-    const meta = assertListPreflight(list, fixture)
+    const meta = assertListPreflight(list)
     if (meta.deploymentSha !== approvedSha) throw new Error('Acceptance deployment SHA attestation does not match --approved-sha.')
     if (mode === '--verify') {
-      const suppliedIds = (value('--mapping-version-ids') ?? '').split(',').filter(Boolean); const expected = { ...checkpoint, created: { screenTypeId: value('--screen-type-id'), mappingVersionIds: suppliedIds } }
-      if (!expected.created.screenTypeId || !expected.created.mappingVersionIds.length) throw new Error('Verification requires exact --screen-type-id and --mapping-version-ids.')
-      if (expected.created.screenTypeId !== checkpoint.created?.screenTypeId || expected.created.mappingVersionIds.join(',') !== (checkpoint.created?.mappingVersionIds ?? []).join(',')) throw new Error('Verification IDs must exactly match the retained acceptance checkpoint.')
-      assertFixtureState(list.data, expected, fixture)
-      return { ...save({ ...expected, status: 'verified', verification: { deploymentSha: meta.deploymentSha, actor: meta.actor } }), externalRequestMade: true }
+      assertFixtureState(list.data, checkpoint, fixture, verifyScreenTypeId, verifyMappingVersionIds)
+      return { ...save({ status: 'verified', cleanupRequired: true, created: { screenTypeId: verifyScreenTypeId, mappingVersionIds: verifyMappingVersionIds }, mutationPerformed: checkpoint.mutationPerformed, deleted: undefined, verification: { deploymentSha: meta.deploymentSha, actor: meta.actor } }), externalRequestMade: true }
     }
+    assertExecuteCollision(list.data, fixture)
     const screen = await safeRequest(plan.sequence[1], fixture); const screenTypeId = screen.data?.id
     if (!screenTypeId) throw new Error('Acceptance screen creation returned no screen-type ID.')
     save({ status: 'screen-created', failedStep: undefined, cleanupRequired: true, mutationPerformed: true, created: { screenTypeId, mappingVersionIds: [] } })

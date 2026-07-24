@@ -10,10 +10,10 @@ The target screen must use `acceptance-vision-<run-id>` and `forge_acceptance`. 
 
 ## Cleanup order and retention
 
-The expected fixture has no children, so cleanup deletes only the exact mapping version IDs and then the exact screen type. Child inspection covers mapping references, regions, field mappings, test cases/results, scan runs and extraction evidence; any non-zero count blocks cleanup. Database immutability and append-only triggers are never weakened.
+The expected fixture has no children, so cleanup deletes only the exact mapping version IDs and then the exact screen type. Child inspection is schema-aware: `vision_mapping_reference_images` has a composite primary key and no `id` column, so every inspected table declares its real `mapping_version_id` filter/select column. The runner uses exact-count/head queries, fails closed on query errors, and blocks on any non-zero count. Database immutability and append-only triggers are never weakened.
 
 Vision audit events are append-only and remain retained. Authoring writes one safe audit event after each fixture mutation. Cleanup reads and reports retained audit IDs/count, rejects credential-like audit payloads, and never deletes audit history.
 
 ## Failure and evidence
 
-The runner creates a redacted cleanup plan only after all guards pass, verifies the exact records are gone afterwards, and atomically updates the same restricted checkpoint. On failure, do not retry blindly or use manual SQL: preserve the redacted report and seek a separate owner decision. Real mappings, player screenshots and storage objects are prohibited from this fixture.
+The runner creates a redacted cleanup plan only after all guards pass, verifies the exact records are gone afterwards, and atomically updates the same restricted checkpoint. Audit events are retained and never deleted. Current fixture cleanup is exact-ID only and requires a new separately approved session. On failure, do not retry blindly or use manual SQL: preserve the redacted report and seek that owner decision. Real mappings, player screenshots and storage objects are prohibited from this fixture.

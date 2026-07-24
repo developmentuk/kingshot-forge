@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url'
 
 function ids(value) { const result = (value ?? '').split(',').filter(Boolean); if (!result.length || result.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) throw new Error('Cleanup requires exact comma-separated UUID mapping-version IDs.'); return result }
 
-export async function cleanupAcceptance({ args = process.argv.slice(2), environment = process.env, cwd = process.cwd(), adminFactory } = {}) {
+export async function cleanupAcceptance({ args = process.argv.slice(2), environment = process.env, cwd = process.cwd(), adminFactory, repositoryGate = assertRepositoryGate } = {}) {
   const { flags, value } = parseArgs(args)
   if (!flags.has('--execute-cleanup')) throw new Error('Cleanup requires --execute-cleanup.')
   if (environment.FORGE_VISION_ACCEPTANCE_CLEANUP_APPROVED !== 'YES') throw new Error('Cleanup requires FORGE_VISION_ACCEPTANCE_CLEANUP_APPROVED=YES.')
@@ -16,15 +16,23 @@ export async function cleanupAcceptance({ args = process.argv.slice(2), environm
   const checkpoint = retained.checkpoint
   if (checkpoint.runId !== runId || checkpoint.created?.screenTypeId !== screenTypeId || (checkpoint.created?.mappingVersionIds ?? []).join(',') !== mappingVersionIds.join(',')) throw new Error('Cleanup IDs must exactly match the retained acceptance checkpoint.')
   if (!checkpoint.cleanupRequired) throw new Error('Cleanup checkpoint does not require a fixture cleanup.')
-  const repository = assertRepositoryGate({ approvedSha: value('--approved-sha'), cwd })
+  const repository = repositoryGate({ approvedSha: value('--approved-sha'), cwd })
   const admin = adminFactory ? await adminFactory() : (await import('../server/database/supabaseAdmin.js')).getSupabaseAdmin()
   const screen = await admin.from('vision_screen_types').select('id,screen_key,game_key,label,description').eq('id', screenTypeId).maybeSingle()
   if (screen.error || !screen.data || screen.data.game_key !== ACCEPTANCE.gameKey || !screen.data.screen_key.startsWith(ACCEPTANCE.screenKeyPrefix) || !screen.data.screen_key.includes(runId)) throw new Error('Cleanup target is not the exact synthetic acceptance screen type.')
   const versions = await admin.from('vision_mapping_versions').select('id,status,screen_type_id,change_note').in('id', mappingVersionIds)
   if (versions.error || versions.data.length !== mappingVersionIds.length || versions.data.some((row) => row.screen_type_id !== screenTypeId || !['draft', 'testing'].includes(row.status) || !row.change_note.includes(runId))) throw new Error('Cleanup target versions are incomplete, non-acceptance, or no longer safely deletable.')
-  const childTables = ['vision_mapping_reference_images','vision_regions','vision_field_mappings','vision_test_cases','vision_test_results','vision_scan_runs','vision_extraction_evidence']
+  const childInspections = [
+    { table: 'vision_mapping_reference_images', filterColumn: 'mapping_version_id', selectColumn: 'mapping_version_id' },
+    { table: 'vision_regions', filterColumn: 'mapping_version_id', selectColumn: 'mapping_version_id' },
+    { table: 'vision_field_mappings', filterColumn: 'mapping_version_id', selectColumn: 'mapping_version_id' },
+    { table: 'vision_test_cases', filterColumn: 'mapping_version_id', selectColumn: 'mapping_version_id' },
+    { table: 'vision_test_results', filterColumn: 'mapping_version_id', selectColumn: 'mapping_version_id' },
+    { table: 'vision_scan_runs', filterColumn: 'mapping_version_id', selectColumn: 'mapping_version_id' },
+    { table: 'vision_extraction_evidence', filterColumn: 'mapping_version_id', selectColumn: 'mapping_version_id' },
+  ]
   const childCounts = {}
-  for (const table of childTables) { const column = table === 'vision_test_results' || table === 'vision_scan_runs' || table === 'vision_extraction_evidence' ? 'mapping_version_id' : 'mapping_version_id'; const result = await admin.from(table).select('id', { count: 'exact', head: true }).in(column, mappingVersionIds); if (result.error) throw new Error(`Cleanup child inspection failed for ${table}.`); childCounts[table] = result.count ?? 0 }
+  for (const inspection of childInspections) { const result = await admin.from(inspection.table).select(inspection.selectColumn, { count: 'exact', head: true }).in(inspection.filterColumn, mappingVersionIds); if (result.error) throw new Error(`Cleanup child inspection failed for ${inspection.table}.`); childCounts[inspection.table] = result.count ?? 0 }
   if (Object.values(childCounts).some((count) => count !== 0)) throw new Error('Cleanup refuses fixture records with unexpected child records.')
   const audits = await admin.from('vision_audit_events').select('id,entity_id,payload').in('entity_id', [screenTypeId, ...mappingVersionIds])
   if (audits.error || (audits.data ?? []).some((audit) => /bearer\s+|token|secret|cookie|password|authorization|x-vercel-protection-bypass|x-vercel-set-bypass-cookie/i.test(JSON.stringify(audit.payload)))) throw new Error('Cleanup refuses retained audit payloads that may contain credentials.')
