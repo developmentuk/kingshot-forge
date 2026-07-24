@@ -25,18 +25,19 @@ for (const folder of entries) {
     screenshotReports.push({ label: screenshot.label, sha256: sha256(bytes), dimensions: pngSize(bytes), hashMatches: sha256(bytes) === screenshot.sha256, dimensionsMatch: equal(pngSize(bytes), { width: screenshot.width, height: screenshot.height }) })
   }
   const repaired = repairText(source, profile)
-  const approvedPayload = repaired.text
-  const clipboardPayload = approvedPayload
-  const statsMatch = metadata.text.line_count === diagnostics.lineCount && metadata.text.code_point_count === diagnostics.codePointCount && metadata.text.utf16_code_unit_count === diagnostics.utf16Length
+  const approvedPayload = source
+  const clipboardPayload = source
+  const fullWidthCharacters = diagnostics.lines.flatMap((line) => line.characters).filter((character) => character.widthClass === 'full').length
+  const statsMatch = metadata.text.line_count === diagnostics.lineCount && metadata.text.code_point_count === diagnostics.codePointCount && metadata.text.grapheme_count === diagnostics.graphemeCount && metadata.text.utf16_code_unit_count === diagnostics.utf16Length && metadata.text.unicode_statistics.ordinary_spaces === diagnostics.ordinarySpaces && metadata.text.unicode_statistics.ideographic_spaces === diagnostics.ideographicSpaces && metadata.text.unicode_statistics.emoji === diagnostics.emoji && metadata.text.unicode_statistics.full_width_characters === fullWidthCharacters
   const rawSourceEquality = sourceHash === metadata.text.sha256 && statsMatch
   const renderPrediction = diagnostics.lines.length === metadata.text.line_count && diagnostics.lines.every((line) => Array.isArray(line.characters))
   reports.push({
     fixture: metadata.fixture_id,
     profile: metadata.render_profile,
-    source: { sha256: sourceHash, metadataSha256: metadata.text.sha256, rawSourceEquality, stats: { lineCount: diagnostics.lineCount, codePointCount: diagnostics.codePointCount, graphemeCount: diagnostics.graphemeCount, utf16Length: diagnostics.utf16Length, ordinarySpaces: diagnostics.ordinarySpaces, nonBreakingSpaces: diagnostics.nonBreakingSpaces, ideographicSpaces: diagnostics.ideographicSpaces, emoji: diagnostics.emoji, fullWidthCharacters: diagnostics.lines.flatMap((line) => line.characters).filter((character) => character.widthClass === 'full').length }, lineDiagnostics: diagnostics.lines.map((line) => ({ line: line.line, graphemes: line.graphemes, estimatedWidth: line.estimatedWidth, overflow: line.overflow, warnings: line.warnings })) },
+    source: { sha256: sourceHash, metadataSha256: metadata.text.sha256, rawSourceEquality, stats: { lineCount: diagnostics.lineCount, codePointCount: diagnostics.codePointCount, graphemeCount: diagnostics.graphemeCount, utf16Length: diagnostics.utf16Length, ordinarySpaces: diagnostics.ordinarySpaces, nonBreakingSpaces: diagnostics.nonBreakingSpaces, ideographicSpaces: diagnostics.ideographicSpaces, emoji: diagnostics.emoji, fullWidthCharacters }, lineDiagnostics: diagnostics.lines.map((line) => ({ line: line.line, graphemes: line.graphemes, estimatedWidth: line.estimatedWidth, overflow: line.overflow, warnings: line.warnings })) },
     screenshots: screenshotReports,
-    approvedPayload: { sha256: sha256(Buffer.from(approvedPayload, 'utf8')), operationCount: repaired.operations.length },
-    checks: { unicodeAnalysis: statsMatch, payloadHash: Boolean(sha256(Buffer.from(approvedPayload, 'utf8'))), clipboardPayloadEquality: clipboardPayload === approvedPayload, renderPrediction, moderationPayloadEquality: approvedPayload === repaired.text, galleryPayloadEquality: approvedPayload === repaired.text, rawSourceNeverReplaced: source !== approvedPayload || repaired.operations.length === 0 },
+    approvedPayload: { sha256: sha256(Buffer.from(approvedPayload, 'utf8')), repairPreviewHash: sha256(Buffer.from(repaired.text, 'utf8')), operationCount: repaired.operations.length },
+    checks: { unicodeAnalysis: statsMatch, payloadHash: Boolean(sha256(Buffer.from(approvedPayload, 'utf8'))), clipboardPayloadEquality: clipboardPayload === source, renderPrediction, moderationPayloadEquality: approvedPayload === source, galleryPayloadEquality: approvedPayload === source, rawSourceNeverReplaced: source === approvedPayload },
   })
 }
 

@@ -23,3 +23,20 @@ The Sprint 9.2 reset failures had two separate causes: the visible â€œreset allâ
 ## Visual comparison
 
 Artwork-only mode removes chat chrome while using the same fixed-cell renderer. Chat simulation uses the selected device profile. Forge and reference viewports have keyboard-accessible zoom controls, wheel zoom, pointer pan, fit/100% reset, manual reference offsets, scale, rotation and opacity. Side-by-side, overlay, reference-only, Forge-only and clearly-labelled difference viewing modes are visual aids only; no OCR, automatic alignment, image matching or score is generated.
+
+## ART-003 measured calibration model
+
+Glyph calibration now includes `advanceCells`. The value is the deterministic logical advance assigned to the grapheme record before its glyph is painted. It may be fractional. It does not mutate, remove or replace the source grapheme.
+
+The compact chat candidate uses:
+
+- ordinary space: `0.90` cells;
+- ideographic space: `2.00` cells;
+- full-width glyph: `2.00` cells with `1.08` glyph scale and `0.95` horizontal paint scale;
+- emoji/pixel/hearts: `2.00` cells with `1.08` glyph scale;
+- general Unicode: `1.00` cell with `0.95` horizontal paint scale;
+- ordinary ASCII, box drawing and decorative symbols: `1.00` cell.
+
+Device calibration separates vertical bubble padding (`bubblePadding`) from horizontal bubble padding (`bubbleInlinePadding`). Existing browser-local profiles without the new fields are upgraded with immutable defaults. The canonical fixture is `calibrated` following owner visual acceptance. This records fit-for-purpose calibration and does not claim pixel-perfect emoji or host-font parity.
+
+The ART-003 correction also scopes the derived `--kingshot-*` variables to each grid. The previous root-level fallback resolved before the renderer's device variables were inherited, causing every profile to paint at the 10px fallback cell. The named `android-default` profile remains the compact-chat presentation used by Art Studio gallery, modal, submission and moderation; `iphone-default` remains the expanded game-UI comparison profile in the Calibration Lab. The harness does not silently promote either profile to an owner-approved default.

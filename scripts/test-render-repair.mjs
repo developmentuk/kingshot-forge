@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
-import { analyseText } from '../shared/domains/art-studio/rendering.ts'
-import { findRepairOccurrences, replaceAllOccurrences, replaceOccurrence, resetLine, shiftLine, trimLine } from '../shared/domains/render-engine/repair.ts'
+import { spawnSync } from 'node:child_process'
+
+if (!process.execArgv.includes('tsx')) {
+  const result = spawnSync(process.execPath, ['--import', 'tsx', ...process.argv.slice(1)], { stdio: 'inherit' })
+  process.exit(result.status ?? 1)
+}
+
+const { analyseText } = await import('../shared/domains/art-studio/rendering.ts')
+const { findRepairOccurrences, replaceAllOccurrences, replaceOccurrence, resetLine, shiftLine, trimLine } = await import('../shared/domains/render-engine/repair.ts')
 
 const source = ' A’B\nＣ  '
 const diagnostics = analyseText(source)
