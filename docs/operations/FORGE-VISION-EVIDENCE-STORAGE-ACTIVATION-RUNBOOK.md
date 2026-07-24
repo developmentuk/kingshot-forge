@@ -50,3 +50,5 @@ The exact retained incident manifest is `docs/operations/FORGE-VISION-EVIDENCE-I
 `npm run cleanup:forge-vision-evidence-incident -- --execute`
 
 Execution requires `FORGE_VISION_EVIDENCE_INCIDENT_MANIFEST_PATH`, `FORGE_VISION_EVIDENCE_INCIDENT_APPROVED_CLEANUP_SHA`, `FORGE_VISION_EVIDENCE_INCIDENT_PROJECT_REF`, `FORGE_VISION_EVIDENCE_INCIDENT_ACTOR_ID`, `FORGE_VISION_EVIDENCE_INCIDENT_APPROVED=true`, and provider expiry evidence. The approved cleanup SHA is compared to the current Git HEAD; the historical activation SHA is only retained in the manifest. No live cleanup was performed in D1A4.
+
+D1A5 additionally requires `FORGE_VISION_EVIDENCE_INCIDENT_MIGRATION_LEDGER_RESULT_PATH`, containing the separately captured exact ledger names `vision_evidence_storage`, `vision_evidence_storage_governance`, and `vision_evidence_adapter_support`. The gateway verifies the corresponding live schema and governance state; it does not query `schema_migrations` through PostgREST or treat migration filenames as ledger versions. Audit preflight tracks total and incident-specific counts independently.

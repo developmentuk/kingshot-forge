@@ -86,3 +86,5 @@ VISION-001D1B remains a halted synthetic activation. VISION-001D1A3 is repositor
 ## D1A4 follow-up
 
 The migrations remain applied and the activation remains halted. D1A4 completes the repository cleanup boundary only; it does not retry activation or mutate the live incident.
+
+D1A5 finalises the repository-only preflight closure: total and incident-specific audit invariants are distinct, original C3 audits remain retained, and migration activation uses actual operator-captured ledger names plus live schema evidence.

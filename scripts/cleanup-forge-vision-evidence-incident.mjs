@@ -10,6 +10,10 @@ const git = (...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 
 const manifestPath = process.env.FORGE_VISION_EVIDENCE_INCIDENT_MANIFEST_PATH
 if (!manifestPath) throw new Error('FORGE_VISION_EVIDENCE_INCIDENT_MANIFEST_PATH is required for execution.')
 const manifest = parseVisionIncidentManifest(JSON.parse(readFileSync(manifestPath, 'utf8')))
+const migrationLedgerPath = process.env.FORGE_VISION_EVIDENCE_INCIDENT_MIGRATION_LEDGER_RESULT_PATH
+if (!migrationLedgerPath) throw new Error('A separately captured read-only migration ledger result path is required for execution.')
+const migrationLedgerResult = JSON.parse(readFileSync(migrationLedgerPath, 'utf8'))
+if (!Array.isArray(migrationLedgerResult)) throw new Error('The captured migration ledger result must be an array of actual migration names.')
 const branch = git('branch', '--show-current'); const sha = git('rev-parse', 'HEAD'); const clean = git('status', '--porcelain') === ''; const sync = git('rev-list', '--left-right', '--count', `HEAD...origin/${branch}`) === '0\t0'
 const approvedCleanupSha = process.env.FORGE_VISION_EVIDENCE_INCIDENT_APPROVED_CLEANUP_SHA
 if (!approvedCleanupSha) throw new Error('An explicit approved cleanup execution SHA is required.')
@@ -19,6 +23,6 @@ const providerCredentialExpiresAt = process.env.FORGE_VISION_EVIDENCE_INCIDENT_P
 const providerCreatedAt = process.env.FORGE_VISION_EVIDENCE_INCIDENT_PROVIDER_CREATED_AT ?? manifest.providerCredentialCreatedAt
 const [{ createSupabaseVisionEvidenceIncidentGateway }, { createSupabaseVisionEvidenceProvider }] = await Promise.all([import('../server/vision/evidence/supabaseVisionEvidenceIncidentGateway.ts'), import('../server/vision/evidence/supabaseVisionEvidenceProvider.ts')])
 const provider = createSupabaseVisionEvidenceProvider()
-const gateway = createSupabaseVisionEvidenceIncidentGateway({ provider, manifest, actorId })
-const result = await runVisionIncidentCleanup({ execute: true, approval: process.env.FORGE_VISION_EVIDENCE_INCIDENT_APPROVED === 'true', manifest, projectRef, approvedCleanupSha, repositoryGate: { cwd: repo, branch, sha, clean, synchronized: sync }, providerCredentialExpiresAt, providerCreatedAt, gateway })
+const gateway = createSupabaseVisionEvidenceIncidentGateway({ provider, manifest, actorId, migrationLedgerResult })
+const result = await runVisionIncidentCleanup({ execute: true, approval: process.env.FORGE_VISION_EVIDENCE_INCIDENT_APPROVED === 'true', manifest, projectRef, approvedCleanupSha, repositoryGate: { cwd: repo, branch, sha, clean, synchronized: sync }, providerCredentialExpiresAt, providerCreatedAt, migrationLedgerResult, gateway })
 console.log(JSON.stringify({ mutationPerformed: result.mutationPerformed }, null, 2))

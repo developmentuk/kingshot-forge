@@ -7,13 +7,16 @@
   "bucket": "vision-evidence",
   "objectPath": "d245eb2e-b295-4c9b-bcef-cd134bfe981a/scan_source/cb9c46a3-8731-4379-9097-6d09bd735363.png",
   "expectedPreCleanupEvidenceCount": 0,
-  "expectedPreCleanupAuditCount": 7,
-  "expectedPostAbandonmentAuditCount": 8,
-  "expectedFinalAuditCount": 8,
-  "migrationNames": [
-    "20260723181223_vision_evidence_storage.sql",
-    "20260724140000_vision_evidence_storage_governance.sql",
-    "20260724153000_vision_evidence_adapter_support.sql"
+  "expectedPreCleanupTotalAuditCount": 7,
+  "expectedPostAbandonmentTotalAuditCount": 8,
+  "expectedFinalTotalAuditCount": 8,
+  "expectedPreCleanupIncidentAuditCount": 3,
+  "expectedPostAbandonmentIncidentAuditCount": 4,
+  "expectedFinalIncidentAuditCount": 4,
+  "migrationLedgerNames": [
+    "vision_evidence_storage",
+    "vision_evidence_storage_governance",
+    "vision_evidence_adapter_support"
   ],
   "historicalObjectOwnerUuid": "d245eb2e-b295-4c9b-bcef-cd134bfe981a",
   "providerCredentialCreatedAt": null,

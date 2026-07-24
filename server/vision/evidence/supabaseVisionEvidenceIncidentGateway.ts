@@ -1,18 +1,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseAdmin } from '../../../server/database/supabaseAdmin.js'
 import { VISION_EVIDENCE_BUCKET, type VisionEvidenceUploadProvider } from '../../../shared/platform/vision/evidenceStorageContracts.js'
-import { VISION_INCIDENT_MANIFEST, type IncidentCleanupGateway, type IncidentIntent, type IncidentState, type VisionIncidentManifest, VisionIncidentCleanupError } from '../evidenceIncidentCleanup.js'
+import { type IncidentCleanupGateway, type IncidentIntent, type IncidentState, type VisionIncidentManifest, VisionIncidentCleanupError } from '../evidenceIncidentCleanup.js'
 
 const INTENT_COLUMNS = 'id,owner_user_id,status,storage_bucket,storage_path'
-const MIGRATION_VERSIONS = VISION_INCIDENT_MANIFEST.migrationNames.map((name) => name.replace(/\.sql$/, ''))
 const GOVERNED_POLICY_NAMES = ['vision_evidence_reviewer_read', 'vision_evidence_upload_intents_read']
 const GOVERNED_CONSTRAINT_NAMES = ['vision_evidence_scan_owner_required', 'vision_evidence_storage_bucket_fixed', 'vision_evidence_deletion_reason_bounded', 'vision_evidence_byte_length_bounded']
 
-export interface SupabaseVisionEvidenceIncidentGatewayOptions { client?: SupabaseClient; provider: VisionEvidenceUploadProvider; manifest: VisionIncidentManifest; actorId: string }
+export interface SupabaseVisionEvidenceIncidentGatewayOptions { client?: SupabaseClient; provider: VisionEvidenceUploadProvider; manifest: VisionIncidentManifest; actorId: string; migrationLedgerResult: readonly string[] }
 
 export class SupabaseVisionEvidenceIncidentGateway implements IncidentCleanupGateway {
   readonly #client: SupabaseClient; readonly #provider: VisionEvidenceUploadProvider; readonly #manifest: VisionIncidentManifest; readonly #actorId: string
-  constructor(options: SupabaseVisionEvidenceIncidentGatewayOptions) { if (!options.actorId || !/^[0-9a-f-]{36}$/i.test(options.actorId)) throw new VisionIncidentCleanupError('A bounded authenticated cleanup actor ID is required.'); this.#client = options.client ?? getSupabaseAdmin(); this.#provider = options.provider; this.#manifest = options.manifest; this.#actorId = options.actorId }
+  constructor(options: SupabaseVisionEvidenceIncidentGatewayOptions) { if (!options.actorId || !/^[0-9a-f-]{36}$/i.test(options.actorId)) throw new VisionIncidentCleanupError('A bounded authenticated cleanup actor ID is required.'); if (JSON.stringify(options.migrationLedgerResult) !== JSON.stringify(options.manifest.migrationLedgerNames)) throw new VisionIncidentCleanupError('The captured migration ledger names do not match the exact manifest.'); this.#client = options.client ?? getSupabaseAdmin(); this.#provider = options.provider; this.#manifest = options.manifest; this.#actorId = options.actorId }
 
   async readState(): Promise<IncidentState> {
     const ids = [this.#manifest.createdIntentId, this.#manifest.abandonedIntentId]
@@ -20,16 +19,21 @@ export class SupabaseVisionEvidenceIncidentGateway implements IncidentCleanupGat
     if (intentsResult.error || !Array.isArray(intentsResult.data)) throw new Error('Exact Vision incident intent precheck failed.')
     const evidenceResult = await this.#client.from('vision_evidence_images').select('id', { count: 'exact', head: true })
     if (evidenceResult.error) throw new Error('Vision evidence row count precheck failed.')
-    const auditResult = await this.#client.from('vision_audit_events').select('id,event_type,entity_id,actor_id,payload').in('entity_id', ids)
-    if (auditResult.error || !Array.isArray(auditResult.data)) throw new Error('Exact Vision incident audit precheck failed.')
+    const totalAuditResult = await this.#client.from('vision_audit_events').select('id,event_type,entity_id,actor_id,payload')
+    const incidentAuditResult = await this.#client.from('vision_audit_events').select('id,event_type,entity_id,actor_id,payload').in('entity_id', ids)
+    if (totalAuditResult.error || incidentAuditResult.error || !Array.isArray(totalAuditResult.data) || !Array.isArray(incidentAuditResult.data)) throw new Error('Exact Vision audit precheck failed.')
     const bucket = await this.#client.storage.getBucket(this.#manifest.bucket)
     if (bucket.error || !bucket.data || bucket.data.id !== this.#manifest.bucket || bucket.data.name !== this.#manifest.bucket || bucket.data.public !== false) throw new Error('Private Vision evidence bucket verification failed.')
-    const migrations = await this.#client.from('schema_migrations').select('version').in('version', MIGRATION_VERSIONS)
-    if (migrations.error || !Array.isArray(migrations.data) || new Set(migrations.data.map((row) => row.version)).size !== MIGRATION_VERSIONS.length) throw new Error('Expected Vision migration ledger verification failed.')
+    const schema = await Promise.all([
+      this.#client.from('vision_evidence_upload_intents').select('id,owner_user_id,status,storage_bucket,storage_path').limit(0),
+      this.#client.from('vision_evidence_images').select('id,byte_length,verified_at,legal_hold').limit(0),
+    ])
+    if (schema.some((result) => result.error)) throw new Error('Exact Vision evidence schema verification failed.')
     const governance = await this.readGovernanceState()
     const intents: IncidentIntent[] = intentsResult.data.map((row) => ({ id: String(row.id), status: String(row.status), ownerUserId: String(row.owner_user_id), storageBucket: String(row.storage_bucket), storagePath: String(row.storage_path) }))
     const exactObject = await this.headObject(this.#manifest.bucket, this.#manifest.objectPath)
-    return { intents, evidenceCount: evidenceResult.count ?? 0, objectCount: exactObject ? 1 : 0, auditCount: auditResult.data.length, bucketActive: true, migrationsActive: true, ...governance }
+    const auditEvents = totalAuditResult.data.map((row) => ({ id: String(row.id), eventType: String(row.event_type), entityId: String(row.entity_id), actorId: row.actor_id ? String(row.actor_id) : null, payload: row.payload && typeof row.payload === 'object' ? row.payload as Record<string, unknown> : {} }))
+    return { intents, evidenceCount: evidenceResult.count ?? 0, objectCount: exactObject ? 1 : 0, totalAuditCount: auditEvents.length, incidentAuditCount: incidentAuditResult.data.length, retainedOriginalC3AuditCount: auditEvents.length - incidentAuditResult.data.length, auditEvents, bucketActive: true, migrationsActive: true, ...governance }
   }
 
   async headObject(bucket: string, path: string): Promise<unknown | null> { if (bucket !== this.#manifest.bucket || path !== this.#manifest.objectPath) throw new VisionIncidentCleanupError('Only the exact incident object may be inspected.'); return this.#provider.headObject({ bucket: VISION_EVIDENCE_BUCKET, path }) }
