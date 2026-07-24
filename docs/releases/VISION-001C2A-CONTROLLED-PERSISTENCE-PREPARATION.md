@@ -47,3 +47,19 @@ Successful verification preserves the original execution provenance and appends 
 VISION-001C is closed PASS for the implemented authenticated authoring boundary. Anonymous access was rejected; owner/admin permission checks, screen-type creation, Draft mapping-version creation, metadata update, Draft → Testing transition, server-authoritative audit creation, cross-provenance verification and exact-ID cleanup all passed. The synthetic screen and mapping records were removed, all Vision authoring and child tables returned to zero, exactly four append-only audit events remain, and the `vision-evidence` bucket remains absent.
 
 Persistence and the current authoring boundary are operationally accepted. Storage remains frozen; worker extraction, regions, field mappings, testing workflows and publication remain future governed stages. No real Kingshot mapping was created. The C3A → C3A1 → C3A2 → C3A3 → C3A4 → C3B → C3B1 → C3B2 → C3C relationship is preserved in the FRKS closeout record.
+
+## VISION-001D1 secure evidence storage governance preparation
+
+D1A reviewed the frozen private-bucket migration without applying it and prepared
+a provider-neutral server-only lifecycle boundary, upload-intent correction,
+retention policy, threat model, activation runbook and mocked failure-injection
+tests. The frozen migration remains unchanged and the `vision-evidence` bucket,
+objects, policies and evidence rows remain absent. No worker, OCR, real image,
+HTTP request, Supabase operation or migration application was performed.
+
+The prepared boundary verifies owner, purpose, consent, MIME, size, exact path,
+dimensions, SHA-256 and storage HEAD metadata before recording trusted evidence;
+it limits signed reads to five minutes, blocks duplicate active hashes and legal
+holds, deletes by exact evidence ID/path, and retains minimum audit metadata.
+Worker extraction, regions, field mappings, testing, publication, storage
+activation and any live object test are deferred to separately approved stages.

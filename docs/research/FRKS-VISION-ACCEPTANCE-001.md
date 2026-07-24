@@ -42,3 +42,17 @@ The disposable synthetic screen type and mapping version were removed. Final Vis
 This closeout preserves the sequence: C3A → C3A1 → C3A2 → C3A3 → C3A4 → C3B → C3B1 → C3B2 → C3C. C3B execute, verification and cleanup must never be rerun.
 
 Storage remains frozen. Worker extraction, regions, field mappings, testing workflows and publication remain deferred future governed stages. No VISION-001D work is started by this record.
+
+## VISION-001D1 governance preparation
+
+D1A records the secure evidence storage design as prepared, unapplied and inactive.
+The frozen storage migration remains unchanged; the prepared corrective migration
+adds upload-intent lifecycle state, verified-object provenance, legal hold,
+bounded deletion metadata and an active SHA-256 duplicate guard. The server-only
+provider boundary and mocked tests cover ownership, consent, exact paths, MIME,
+size, object verification, signed URL limits, abandonment, exact deletion,
+retention and audit isolation.
+
+No bucket, object, evidence row, worker job or live storage/API state was created
+or changed. The next stage requires separate owner approval and fresh activation
+evidence. D1A does not authorize D1D2 worker extraction.
