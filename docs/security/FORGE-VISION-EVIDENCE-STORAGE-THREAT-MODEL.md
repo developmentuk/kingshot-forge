@@ -30,3 +30,5 @@ Malformed digests, dimensions, excessive pixel counts, and malformed image metad
 Cleanup execution is gated by the current clean synchronized branch and an explicit approved cleanup SHA. Credential expiry must be at least five minutes in the past; provider creation fallback is exactly two hours, with no intent-expiry substitution. Exact object removal is containment-first and no SQL storage deletion, listing, prefixes, wildcard paths, or audit deletion is permitted.
 
 Audit and migration prechecks fail closed on count or evidence mismatch. Migration names come from a separately captured read-only operator ledger result and exact live schema checks, avoiding inaccessible system-schema PostgREST assumptions.
+
+Governance evidence is likewise captured outside the repository and compared structurally; policy, constraint, grant and RLS omissions fail closed before mutation.

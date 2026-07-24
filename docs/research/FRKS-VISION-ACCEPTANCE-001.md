@@ -82,3 +82,5 @@ The evidence storage migrations are provisioned, but the synthetic activation is
 The live synthetic incident remains unchanged and acceptance remains NO-GO. D1A4 repairs gateway wiring, structured retained evidence, Git and expiry gates, and the seven-to-eight audit transition. A new owner approval is required before any exact cleanup attempt.
 
 D1A5 repairs total versus incident-specific audit counts and migration-ledger verification. No live access or cleanup occurred.
+
+D1A6 repairs governance capture wiring; the exact cleanup remains pending the authorized fresh captures and one execution.

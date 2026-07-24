@@ -20,5 +20,33 @@
   ],
   "historicalObjectOwnerUuid": "d245eb2e-b295-4c9b-bcef-cd134bfe981a",
   "providerCredentialCreatedAt": null,
-  "providerCredentialExpiresAt": null
+  "providerCredentialExpiresAt": null,
+  "expectedGovernance": {
+    "bucket": {
+      "id": "vision-evidence",
+      "name": "vision-evidence",
+      "public": false,
+      "file_size_limit": 16777216,
+      "allowed_mime_types": ["image/png", "image/jpeg", "image/webp", "image/tiff"]
+    },
+    "policies": [
+      {"schema": "storage", "table": "objects", "name": "vision_evidence_reviewer_read", "command": "SELECT", "roles": ["authenticated"]},
+      {"schema": "public", "table": "vision_evidence_upload_intents", "name": "vision_evidence_upload_intents_read", "command": "SELECT", "roles": ["authenticated"]},
+      {"schema": "public", "table": "vision_evidence_images", "name": "vision_images_read", "command": "SELECT", "roles": ["authenticated"]}
+    ],
+    "constraints": [
+      {"schema": "public", "table": "vision_evidence_upload_intents", "name": "vision_evidence_scan_owner_required"},
+      {"schema": "public", "table": "vision_evidence_images", "name": "vision_evidence_storage_bucket_fixed"},
+      {"schema": "public", "table": "vision_evidence_images", "name": "vision_evidence_deletion_reason_bounded"},
+      {"schema": "public", "table": "vision_evidence_images", "name": "vision_evidence_byte_length_bounded"}
+    ],
+    "grants": [
+      {"schema": "public", "table": "vision_evidence_upload_intents", "grantee": "authenticated", "privilege": "SELECT"},
+      {"schema": "public", "table": "vision_evidence_images", "grantee": "authenticated", "privilege": "SELECT"}
+    ],
+    "rls": [
+      {"schema": "public", "table": "vision_evidence_upload_intents", "enabled": true, "forced": true},
+      {"schema": "public", "table": "vision_evidence_images", "enabled": true, "forced": true}
+    ]
+  }
 }

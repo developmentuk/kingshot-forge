@@ -19,7 +19,12 @@ export interface VisionIncidentManifest {
   historicalObjectOwnerUuid: string
   providerCredentialCreatedAt: string | null
   providerCredentialExpiresAt: string | null
+  expectedGovernance: GovernanceCapture
 }
+
+export interface GovernanceCapture { bucket: { id: string; name: string; public: boolean; file_size_limit: number; allowed_mime_types: readonly string[] }; policies: readonly { schema: string; table: string; name: string; command: string; roles: readonly string[] }[]; constraints: readonly { schema: string; table: string; name: string }[]; grants: readonly { schema: string; table: string; grantee: string; privilege: string }[]; rls: readonly { schema: string; table: string; enabled: boolean; forced: boolean }[] }
+
+const EXPECTED_GOVERNANCE: GovernanceCapture = { bucket: { id: 'vision-evidence', name: 'vision-evidence', public: false, file_size_limit: 16777216, allowed_mime_types: ['image/png', 'image/jpeg', 'image/webp', 'image/tiff'] }, policies: [{ schema: 'storage', table: 'objects', name: 'vision_evidence_reviewer_read', command: 'SELECT', roles: ['authenticated'] }, { schema: 'public', table: 'vision_evidence_upload_intents', name: 'vision_evidence_upload_intents_read', command: 'SELECT', roles: ['authenticated'] }, { schema: 'public', table: 'vision_evidence_images', name: 'vision_images_read', command: 'SELECT', roles: ['authenticated'] }], constraints: [{ schema: 'public', table: 'vision_evidence_upload_intents', name: 'vision_evidence_scan_owner_required' }, { schema: 'public', table: 'vision_evidence_images', name: 'vision_evidence_storage_bucket_fixed' }, { schema: 'public', table: 'vision_evidence_images', name: 'vision_evidence_deletion_reason_bounded' }, { schema: 'public', table: 'vision_evidence_images', name: 'vision_evidence_byte_length_bounded' }], grants: [{ schema: 'public', table: 'vision_evidence_upload_intents', grantee: 'authenticated', privilege: 'SELECT' }, { schema: 'public', table: 'vision_evidence_images', grantee: 'authenticated', privilege: 'SELECT' }], rls: [{ schema: 'public', table: 'vision_evidence_upload_intents', enabled: true, forced: true }, { schema: 'public', table: 'vision_evidence_images', enabled: true, forced: true }] }
 
 export const VISION_INCIDENT_MANIFEST: VisionIncidentManifest = {
   incidentKey: 'VISION-001D1B-HALTED-SYNTHETIC-ACTIVATION',
@@ -40,6 +45,7 @@ export const VISION_INCIDENT_MANIFEST: VisionIncidentManifest = {
   historicalObjectOwnerUuid: 'd245eb2e-b295-4c9b-bcef-cd134bfe981a',
   providerCredentialCreatedAt: null,
   providerCredentialExpiresAt: null,
+  expectedGovernance: EXPECTED_GOVERNANCE,
 }
 
 export class VisionIncidentCleanupError extends Error { constructor(message: string) { super(message); this.name = 'VisionIncidentCleanupError' } }
@@ -48,17 +54,25 @@ export interface IncidentAuditEvent { id: string; eventType: string; entityId: s
 export interface IncidentState { intents: IncidentIntent[]; evidenceCount: number; objectCount: number; totalAuditCount: number; incidentAuditCount: number; retainedOriginalC3AuditCount: number; auditEvents: IncidentAuditEvent[]; bucketActive: boolean; migrationsActive: boolean; policiesUnchanged: boolean; grantsUnchanged: boolean; rlsUnchanged: boolean; constraintsUnchanged: boolean }
 export interface IncidentCleanupGateway { readState(): Promise<IncidentState>; headObject(bucket: string, path: string): Promise<unknown | null>; objectExists?(bucket: string, path: string): Promise<boolean>; markAbandoned(intentId: string, reason: string): Promise<void>; deleteObject(bucket: string, path: string): Promise<void>; deleteIntent(intentId: string): Promise<void> }
 export interface RepositoryGate { cwd: string; branch: string; sha: string; clean: boolean; synchronized: boolean }
-export interface IncidentCleanupOptions { manifest?: VisionIncidentManifest; gateway?: IncidentCleanupGateway; execute?: boolean; approval?: boolean; projectRef?: string; approvedCleanupSha?: string; repositoryGate?: RepositoryGate; providerCredentialExpiresAt?: string | null; providerCreatedAt?: string | null; migrationLedgerResult?: readonly string[]; now?: Date; abandonmentReason?: string }
+export interface IncidentCleanupOptions { manifest?: VisionIncidentManifest; gateway?: IncidentCleanupGateway; execute?: boolean; approval?: boolean; projectRef?: string; approvedCleanupSha?: string; repositoryGate?: RepositoryGate; providerCredentialExpiresAt?: string | null; providerCreatedAt?: string | null; migrationLedgerResult?: readonly string[]; governanceResult?: GovernanceCapture; now?: Date; abandonmentReason?: string }
+
+function stable(value: unknown): string { return JSON.stringify(value) }
+export function parseGovernanceCapture(value: unknown, manifest: VisionIncidentManifest = VISION_INCIDENT_MANIFEST): GovernanceCapture {
+  if (!value || typeof value !== 'object' || stable(value) !== stable(manifest.expectedGovernance)) throw new VisionIncidentCleanupError('The captured governance result does not exactly match the expected private bucket, policy, constraint, grant and RLS evidence.')
+  const result = value as GovernanceCapture
+  if (typeof result.bucket.public !== 'boolean' || result.bucket.file_size_limit !== 16777216 || result.bucket.allowed_mime_types.length !== 4 || result.policies.length !== 3 || result.constraints.length !== 4 || result.grants.length !== 2 || result.rls.some((table) => !table.enabled || !table.forced)) throw new VisionIncidentCleanupError('Governance capture is malformed or incomplete.')
+  return result
+}
 
 export function parseVisionIncidentManifest(value: unknown): VisionIncidentManifest {
   if (!value || typeof value !== 'object') throw new VisionIncidentCleanupError('A structured incident manifest is required.')
   const manifest = value as Partial<VisionIncidentManifest>
   const exact = VISION_INCIDENT_MANIFEST
   const fields: (keyof VisionIncidentManifest)[] = ['incidentKey', 'activationSourceSha', 'projectRef', 'createdIntentId', 'abandonedIntentId', 'bucket', 'objectPath', 'historicalObjectOwnerUuid']
-  if (fields.some((field) => manifest[field] !== exact[field]) || manifest.expectedPreCleanupEvidenceCount !== 0 || manifest.expectedPreCleanupTotalAuditCount !== 7 || manifest.expectedPostAbandonmentTotalAuditCount !== 8 || manifest.expectedFinalTotalAuditCount !== 8 || manifest.expectedPreCleanupIncidentAuditCount !== 3 || manifest.expectedPostAbandonmentIncidentAuditCount !== 4 || manifest.expectedFinalIncidentAuditCount !== 4 || JSON.stringify(manifest.migrationLedgerNames) !== JSON.stringify(exact.migrationLedgerNames) || !isUuid(String(manifest.historicalObjectOwnerUuid))) throw new VisionIncidentCleanupError('Incident manifest fields do not match the exact retained checkpoint.')
+  if (fields.some((field) => manifest[field] !== exact[field]) || manifest.expectedPreCleanupEvidenceCount !== 0 || manifest.expectedPreCleanupTotalAuditCount !== 7 || manifest.expectedPostAbandonmentTotalAuditCount !== 8 || manifest.expectedFinalTotalAuditCount !== 8 || manifest.expectedPreCleanupIncidentAuditCount !== 3 || manifest.expectedPostAbandonmentIncidentAuditCount !== 4 || manifest.expectedFinalIncidentAuditCount !== 4 || JSON.stringify(manifest.migrationLedgerNames) !== JSON.stringify(exact.migrationLedgerNames) || stable(manifest.expectedGovernance) !== stable(exact.expectedGovernance) || !isUuid(String(manifest.historicalObjectOwnerUuid))) throw new VisionIncidentCleanupError('Incident manifest fields do not match the exact retained checkpoint.')
   if (manifest.providerCredentialCreatedAt !== null && manifest.providerCredentialCreatedAt !== undefined && !Number.isFinite(Date.parse(manifest.providerCredentialCreatedAt))) throw new VisionIncidentCleanupError('Incident manifest provider creation evidence is invalid.')
   if (manifest.providerCredentialExpiresAt !== null && manifest.providerCredentialExpiresAt !== undefined && !Number.isFinite(Date.parse(manifest.providerCredentialExpiresAt))) throw new VisionIncidentCleanupError('Incident manifest provider expiry evidence is invalid.')
-  return { ...exact, providerCredentialCreatedAt: manifest.providerCredentialCreatedAt ?? null, providerCredentialExpiresAt: manifest.providerCredentialExpiresAt ?? null }
+  return { ...exact, providerCredentialCreatedAt: manifest.providerCredentialCreatedAt ?? null, providerCredentialExpiresAt: manifest.providerCredentialExpiresAt ?? null, expectedGovernance: exact.expectedGovernance }
 }
 
 export function assertProviderCredentialExpired(now: Date, expiresAt: string | null, createdAt: string | null): void {
@@ -84,6 +98,7 @@ export async function runVisionIncidentCleanup(options: IncidentCleanupOptions):
   if (!options.approval || options.projectRef !== manifest.projectRef || !options.approvedCleanupSha || !options.repositoryGate) throw new VisionIncidentCleanupError('Explicit approval, exact project, cleanup SHA and repository gate are required.')
   assertRepositoryGate(options.repositoryGate, options.approvedCleanupSha)
   if (JSON.stringify(options.migrationLedgerResult) !== JSON.stringify(manifest.migrationLedgerNames)) throw new VisionIncidentCleanupError('A separately captured exact migration ledger result is required.')
+  parseGovernanceCapture(options.governanceResult, manifest)
   assertProviderCredentialExpired(options.now ?? new Date(), options.providerCredentialExpiresAt ?? manifest.providerCredentialExpiresAt, options.providerCreatedAt ?? manifest.providerCredentialCreatedAt)
   if (!options.gateway) throw new VisionIncidentCleanupError('An exact live cleanup gateway is required for execution.')
   const state = await options.gateway.readState(); assertPreState(state, manifest)

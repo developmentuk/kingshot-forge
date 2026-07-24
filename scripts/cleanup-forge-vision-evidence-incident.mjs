@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { parseVisionIncidentManifest, runVisionIncidentCleanup } from '../server/vision/evidenceIncidentCleanup.ts'
+import { parseGovernanceCapture, parseVisionIncidentManifest, runVisionIncidentCleanup } from '../server/vision/evidenceIncidentCleanup.ts'
 
 const execute = process.argv.includes('--execute')
 if (!execute) { console.log(JSON.stringify({ mode: 'plan', mutationPerformed: false, message: 'Pass --execute with all exact gates to construct the live gateway.' }, null, 2)); process.exit(0) }
@@ -14,6 +14,9 @@ const migrationLedgerPath = process.env.FORGE_VISION_EVIDENCE_INCIDENT_MIGRATION
 if (!migrationLedgerPath) throw new Error('A separately captured read-only migration ledger result path is required for execution.')
 const migrationLedgerResult = JSON.parse(readFileSync(migrationLedgerPath, 'utf8'))
 if (!Array.isArray(migrationLedgerResult)) throw new Error('The captured migration ledger result must be an array of actual migration names.')
+const governancePath = process.env.FORGE_VISION_EVIDENCE_INCIDENT_GOVERNANCE_RESULT_PATH
+if (!governancePath) throw new Error('A separately captured read-only governance result path is required for execution.')
+const governanceResult = parseGovernanceCapture(JSON.parse(readFileSync(governancePath, 'utf8')), manifest)
 const branch = git('branch', '--show-current'); const sha = git('rev-parse', 'HEAD'); const clean = git('status', '--porcelain') === ''; const sync = git('rev-list', '--left-right', '--count', `HEAD...origin/${branch}`) === '0\t0'
 const approvedCleanupSha = process.env.FORGE_VISION_EVIDENCE_INCIDENT_APPROVED_CLEANUP_SHA
 if (!approvedCleanupSha) throw new Error('An explicit approved cleanup execution SHA is required.')
@@ -23,6 +26,6 @@ const providerCredentialExpiresAt = process.env.FORGE_VISION_EVIDENCE_INCIDENT_P
 const providerCreatedAt = process.env.FORGE_VISION_EVIDENCE_INCIDENT_PROVIDER_CREATED_AT ?? manifest.providerCredentialCreatedAt
 const [{ createSupabaseVisionEvidenceIncidentGateway }, { createSupabaseVisionEvidenceProvider }] = await Promise.all([import('../server/vision/evidence/supabaseVisionEvidenceIncidentGateway.ts'), import('../server/vision/evidence/supabaseVisionEvidenceProvider.ts')])
 const provider = createSupabaseVisionEvidenceProvider()
-const gateway = createSupabaseVisionEvidenceIncidentGateway({ provider, manifest, actorId, migrationLedgerResult })
-const result = await runVisionIncidentCleanup({ execute: true, approval: process.env.FORGE_VISION_EVIDENCE_INCIDENT_APPROVED === 'true', manifest, projectRef, approvedCleanupSha, repositoryGate: { cwd: repo, branch, sha, clean, synchronized: sync }, providerCredentialExpiresAt, providerCreatedAt, migrationLedgerResult, gateway })
+const gateway = createSupabaseVisionEvidenceIncidentGateway({ provider, manifest, actorId, migrationLedgerResult, governanceResult })
+const result = await runVisionIncidentCleanup({ execute: true, approval: process.env.FORGE_VISION_EVIDENCE_INCIDENT_APPROVED === 'true', manifest, projectRef, approvedCleanupSha, repositoryGate: { cwd: repo, branch, sha, clean, synchronized: sync }, providerCredentialExpiresAt, providerCreatedAt, migrationLedgerResult, governanceResult, gateway })
 console.log(JSON.stringify({ mutationPerformed: result.mutationPerformed }, null, 2))
