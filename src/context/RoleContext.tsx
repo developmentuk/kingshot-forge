@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -103,6 +104,8 @@ export function RoleProvider({
   children,
 }: RoleProviderProps) {
   const { user, loading: authLoading } = useAuth()
+  const { pathname } = useLocation()
+  const isVisionAcceptanceRoute = pathname === '/admin/vision/account-linking-acceptance'
 
   const [role, setRole] =
     useState<ForgePlatformRole>('viewer')
@@ -170,12 +173,13 @@ export function RoleProvider({
   }, [authLoading, refreshRole])
 
   useEffect(() => {
+    if (isVisionAcceptanceRoute) return
     const refreshIfVisible = () => { if (document.visibilityState === 'visible') void refreshRole() }
     window.addEventListener('focus', refreshIfVisible)
     document.addEventListener('visibilitychange', refreshIfVisible)
     window.addEventListener('forge-capabilities-changed', refreshIfVisible)
     return () => { window.removeEventListener('focus', refreshIfVisible); document.removeEventListener('visibilitychange', refreshIfVisible); window.removeEventListener('forge-capabilities-changed', refreshIfVisible) }
-  }, [refreshRole])
+  }, [isVisionAcceptanceRoute, refreshRole])
 
   const hasPermission = useCallback(
     (permission: ForgePermission) =>
