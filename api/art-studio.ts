@@ -3,6 +3,7 @@ import { requireForgeActor, type ForgeActor } from '../server/auth/requireForgeA
 import { getSupabaseAdmin } from '../server/database/supabaseAdmin.js'
 import { validateTextArtwork, type TextArtworkValidationIssue } from '../shared/domains/art-studio/textValidation.js'
 import { analyseText, hashText, repairText, RENDER_PROFILES, sha256Text, type RepairOperation } from '../shared/domains/art-studio/rendering.js'
+import { inspectTextProvenance } from '../shared/domains/art-studio/textProvenance.js'
 
 const CATEGORIES = new Set(['Cats', 'Animals', 'Characters', 'Announcements', 'Battle', 'KvK', 'Alliance', 'Flags', 'Pixel Art', 'Nature', 'Funny', 'Gaming', 'Seasonal', 'Other'])
 const COMPATIBILITY = new Set(['untested', 'needs_testing', 'verified', 'known_issues'])
@@ -114,6 +115,8 @@ async function submit(request: VercelRequest, response: VercelResponse) {
   const profile = RENDER_PROFILES['kingshot-chat-bubble']
   const repaired = repairText(artworkText, profile)
   const diagnostics = analyseText(artworkText, profile)
+  const sourceSha256 = await sha256Text(artworkText)
+  const textProvenance = inspectTextProvenance(artworkText)
   const admin = getSupabaseAdmin()
   const { data: recent } = await admin.from('community_art_submissions').select('id').eq('user_id', currentActor.userId).gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
   if ((recent?.length ?? 0) >= 5) { fail(response, 429, 'You have reached the submission limit for this hour.'); return }
@@ -123,7 +126,7 @@ async function submit(request: VercelRequest, response: VercelResponse) {
     attributionName = typeof profile?.display_name === 'string' && profile.display_name.trim() ? profile.display_name : null
     if (!attributionName) { fail(response, 400, 'Complete a Forge display name before using profile attribution.'); return }
   }
-  const { data, error } = await admin.from('community_art_submissions').insert({ user_id: currentActor.userId, title, description, category, tags, artwork_text: artworkText, raw_source_text: artworkText, normalised_text: artworkText.replace(/\r\n?/g, '\n'), rendered_preview_payload: artworkText.replace(/\r\n?/g, '\n'), compatibility_profile: profile.id, repair_operations: repaired.operations, source_hash: await sha256Text(artworkText), attribution_type: attributionType, attribution_name: attributionName, ownership_confirmed: true, guidelines_confirmed: true, status: 'pending', compatibility_status: diagnostics.warnings.length ? 'needs_testing' : 'untested' }).select(columns).single()
+  const { data, error } = await admin.from('community_art_submissions').insert({ user_id: currentActor.userId, title, description, category, tags, artwork_text: artworkText, raw_source_text: artworkText, raw_source_sha256: sourceSha256, raw_source_byte_length: textProvenance.byteLength, normalised_text: artworkText.replace(/\r\n?/g, '\n'), rendered_preview_payload: artworkText.replace(/\r\n?/g, '\n'), compatibility_profile: profile.id, repair_operations: repaired.operations, normalisation_operations: [], source_hash: sourceSha256, browser_received_text: artworkText, browser_text_sha256: sourceSha256, detected_line_ending: textProvenance.detectedLineEnding, crlf_count: textProvenance.crlfCount, lf_count: textProvenance.lfCount, trailing_newline: textProvenance.trailingNewline, bom_present: textProvenance.bomPresent, ingestion_mode: 'text_paste', attribution_type: attributionType, attribution_name: attributionName, ownership_confirmed: true, guidelines_confirmed: true, status: 'pending', compatibility_status: diagnostics.warnings.length ? 'needs_testing' : 'untested' }).select(columns).single()
   if (error || !data) throw error ?? new Error('Unable to save submission.')
   response.status(201).json({ status: 'success', data: record(data as Record<string, unknown>) })
 }

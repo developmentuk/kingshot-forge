@@ -250,6 +250,7 @@ function SubmissionForm({ signedIn, onSignIn, onSubmitted }: { signedIn: boolean
   const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  useEffect(() => { if (error) { const errorElement = document.querySelector<HTMLElement>('.art-studio-submission-shell .error-state'); if (errorElement) { errorElement.tabIndex = -1; errorElement.focus(); errorElement.scrollIntoView({ block: 'nearest' }) } } }, [error])
   if (!signedIn) return <div className="art-studio-auth-card"><h2>Sign in to submit chat art</h2><p>Submissions are tied to your Forge identity so status and attribution remain clear.</p><button type="button" className="button button--primary" onClick={onSignIn}>Continue with Google</button></div>
   const issues = validateTextArtwork({ title, description, artwork: artworkText, tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean), attributionType, attributionName: attributionType === 'anonymous' ? null : attributionName })
   const diagnostics = analyseText(artworkText, RENDER_PROFILES['kingshot-chat-bubble'])
