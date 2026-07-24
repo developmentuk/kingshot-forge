@@ -1,6 +1,6 @@
 # ART-003 — Art Studio rendering fidelity recovery
 
-Status: implementation complete; owner visual acceptance pending
+Status: implementation complete; owner acceptance recorded
 
 Branch: `feature/art-studio-recovery`
 
@@ -61,13 +61,19 @@ The deterministic geometry evidence index is stored in `docs/evidence/art-003/RE
 
 ## Canonical fixture status
 
-`metadata.json` remains:
+`metadata.json` now records the owner-accepted state:
 
 ```text
-expected_status: calibration_required
+expected_status: calibrated
 ```
 
-The fixture must not be changed to calibrated or verified until Clark compares the exact Vercel preview against both Kingshot captures and accepts that the preview represents what a player sees after pasting the exact source.
+This status change follows the documented workflow: Clark compared the exact preview against both Kingshot captures and accepted the renderer as fit for purpose. It records calibration acceptance only; it does not claim pixel-perfect glyph or emoji parity.
+
+## Final owner acceptance
+
+Decision: **GO WITH RECORDED CALIBRATION DIFFERENCES**.
+
+Accepted non-blocking differences are emoji appearance, exact glyph styling, slight spacing or stroke-thickness variation, and the visual distinction between Kingshot chat/game contexts and Forge's acceptable simulation. The accepted evidence also confirms overall artwork shape, width, centring, padding, line height, ordinary and ideographic spacing, emoji spacing, containment, no unintended wrapping or clipping, shared-renderer consistency and exact clipboard/source fidelity.
 
 ## Known uncertainty
 

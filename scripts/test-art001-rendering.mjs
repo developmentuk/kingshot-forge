@@ -43,7 +43,7 @@ assert.equal(fixtureDiagnostics.ordinarySpaces, metadata.text.unicode_statistics
 assert.equal(fixtureDiagnostics.ideographicSpaces, metadata.text.unicode_statistics.ideographic_spaces)
 assert.equal(fixtureDiagnostics.emoji, metadata.text.unicode_statistics.emoji)
 assert.equal(fixtureDiagnostics.lines.flatMap((line) => line.characters).filter((character) => character.widthClass === 'full').length, metadata.text.unicode_statistics.full_width_characters)
-assert.equal(metadata.expected_status, 'calibration_required', 'fixture remains honestly uncalibrated pending visual acceptance')
+assert.equal(metadata.expected_status, 'calibrated', 'fixture status records owner-accepted calibration')
 
 const renderer = fs.readFileSync('src/components/art/KingshotArtRenderer.tsx', 'utf8')
 const clipboard = fs.readFileSync('shared/domains/art-studio/rendering.ts', 'utf8')

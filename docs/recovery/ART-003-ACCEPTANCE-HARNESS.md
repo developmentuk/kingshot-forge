@@ -27,8 +27,10 @@ route. The existing protected `/admin/community-art` and
    fallback use the production `copyApprovedPayload` contract and preserve the
    source string exactly.
 
-The fixture remains `calibration_required` until the owner accepts the visual
-evidence. Reference images and fixture metadata are held in component state
+The owner has accepted the visual evidence, so the canonical fixture metadata
+now records `calibrated`. This is an acceptance record, not a claim of
+pixel-perfect parity: emoji and host-font glyph styling may differ slightly
+from Kingshot. Reference images and fixture metadata are held in component state
 and object URLs only; no harness metadata is written to localStorage,
 Supabase, Vercel or another persistence layer.
 
@@ -47,4 +49,3 @@ Focused contracts run with:
 ```text
 npm run test:art-studio-acceptance
 ```
-

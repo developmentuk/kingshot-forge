@@ -3,7 +3,7 @@
   "title": "Wow I’m so cute...",
   "fixture_version": 1,
   "render_profile": "kingshot-chat",
-  "expected_status": "calibration_required",
+  "expected_status": "calibrated",
   "notes": "Canonical regression fixture for mixed-width Unicode, ideographic spaces, full-width punctuation, emoji, alignment, gallery rendering, and clipboard fidelity.",
   "text": {
     "filename": "wow-im-so-cute.txt",
