@@ -2,6 +2,12 @@
 
 The cleanup runner is a server-only controlled utility, not a browser API. It exists solely to remove the disposable VISION-001C3 fixture after a separately authorised acceptance session.
 
+Invoke cleanup only through the canonical command:
+
+`npm run cleanup:forge-vision-acceptance -- <arguments>`
+
+This command uses `node --import tsx` and dynamically imports the actual TypeScript admin module at `server/database/supabaseAdmin.ts`. Do not invoke the script through plain `node`; that runtime cannot resolve the TypeScript admin module. The existing verified checkpoint remains the cleanup authority, and its exact IDs and audit-retention requirements remain unchanged.
+
 ## Required identity and guards
 
 `scripts/cleanup-forge-vision-acceptance.mjs` requires `--execute-cleanup`, `FORGE_VISION_ACCEPTANCE_CLEANUP_APPROVED=YES`, the exact project reference, exact approved repository SHA, exact run ID, one exact screen-type UUID and exact comma-separated mapping-version UUIDs. The values must exactly match the retained run checkpoint and its `cleanupRequired` state. Wildcards, prefix-only targets and unknown IDs are refused before any database client is created.

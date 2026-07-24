@@ -56,6 +56,7 @@
     "test:forge-vision-authoring": "node --import tsx scripts/test-forge-vision-authoring.mjs",
     "test:forge-vision-authenticated-acceptance": "node scripts/test-forge-vision-authenticated-acceptance.mjs",
     "accept:forge-vision-authenticated": "node scripts/run-forge-vision-authenticated-acceptance.mjs",
+    "cleanup:forge-vision-acceptance": "node --import tsx scripts/cleanup-forge-vision-acceptance.mjs",
     "test:forge-vision-permission-transition": "node --import tsx scripts/test-forge-vision-permission-transition.mjs",
     "test:forge-vision-policy-correction": "node scripts/test-forge-vision-policy-correction.mjs",
     "test:forge-vision-activation-verifier": "node --import tsx scripts/test-forge-vision-activation-verifier.mjs",

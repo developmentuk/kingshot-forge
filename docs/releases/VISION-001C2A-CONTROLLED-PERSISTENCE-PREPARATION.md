@@ -28,10 +28,16 @@ The controlled C3B run created one synthetic screen type and one Testing mapping
 
 Verify mode now requires the exact retained checkpoint IDs, accepts only the single expected synthetic screen and exact version set, validates ownership, version number, Testing status and metadata, and preserves `cleanupRequired: true`. Execute-mode collision protection remains unchanged. Cleanup now uses explicit schema-aware `mapping_version_id` inspections for every child table, fails closed on errors or non-zero counts, deletes only exact IDs in version-then-screen order, and retains audit history. Mocked tests cover the repaired verify and cleanup paths, including failed checkpoints, composite-key inspection, deletion order, audit retention and fail-closed guards.
 
-The existing C3B fixture remains pending VISION-001C3B1 verify and cleanup; C3B verification and cleanup have not passed. Storage remains absent, general authoring remains frozen, and C3B execute mode must not be rerun. A future verify/cleanup run requires a new separately owner-approved session.
+The existing C3B fixture was pending VISION-001C3B1 verify and cleanup at this handover stage; later C3A4 verification passed exactly once, while cleanup remains pending. Storage remains absent, general authoring remains frozen, and C3B execute mode must never be rerun. A future cleanup run requires a separately owner-approved cleanup-only session.
 
 ## VISION-001C3A3 checkpoint provenance handover
 
 The repaired verifier now supports an explicit, fail-closed handover for a retained checkpoint whose original execution SHA or preview origin differs from the current verifier. `--checkpoint-approved-sha` and `--checkpoint-base-url` are both mandatory for cross-provenance verification, must match the stored checkpoint exactly, and never bypass current repository or deployment attestation. Same-provenance verification remains unchanged and uses `handoverUsed: false`.
+
+## VISION-001C3A4 cleanup runtime repair handover
+
+Cross-provenance verification passed exactly once after an authenticated HTTP 200 JSON precheck. The retained checkpoint is verified and preserves the exact fixture IDs plus both execution and verification provenance records. The first cleanup attempt stopped before database access because plain Node could not resolve `server/database/supabaseAdmin.js`; no deletion occurred. Cleanup remains pending a separately approved cleanup-only session, and verification must not be rerun.
+
+The canonical cleanup command is `npm run cleanup:forge-vision-acceptance -- <arguments>`, which uses `node --import tsx` and dynamically loads the actual `server/database/supabaseAdmin.ts` module. Operators must not use the former plain-Node command. Exact-ID cleanup, seven zero child counts, four retained audit events, absent storage, and checkpoint authority remain unchanged. C3B execute mode must never be rerun.
 
 Successful verification preserves the original execution provenance and appends separate verification provenance containing the current verifier SHA/origin, attested deployment SHA, verification timestamp and handover metadata. Exact fixture IDs, cleanupRequired and mutationPerformed remain unchanged. Cleanup accepts and preserves both provenance records while retaining append-only audit events and exact-ID-only deletion semantics. No live verify, cleanup, HTTP request, Supabase/database activity, checkpoint modification or fixture change occurred in C3A3. The existing C3B fixture remains pending VISION-001C3B1; C3B execute mode must never be rerun.

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { ACCEPTANCE, actionSequence, assertDeploymentBaseUrl, assertRepositoryState, fixtureFor, redact, writeCheckpoint } from './forge-vision-acceptance-controls.mjs'
@@ -12,6 +13,18 @@ const screenTypeId = '11111111-1111-4111-8111-111111111111'
 const mappingVersionId = '22222222-2222-4222-8222-222222222222'
 const runId = 'c3a2-test-0001'
 const fixture = fixtureFor(runId)
+
+const runtimeSmoke = execFileSync(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', `
+  globalThis.fetch = () => { throw new Error('runtime smoke test must not access the network') }
+  const cleanup = await import('./scripts/cleanup-forge-vision-acceptance.mjs')
+  const admin = await import('./server/database/supabaseAdmin.ts')
+  if (typeof cleanup.cleanupAcceptance !== 'function') throw new Error('cleanupAcceptance export missing')
+  if (typeof admin.getSupabaseAdmin !== 'function') throw new Error('getSupabaseAdmin export missing')
+`], { cwd: process.cwd(), encoding: 'utf8' })
+assert.equal(runtimeSmoke, '')
+const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
+assert.equal(packageJson.scripts['cleanup:forge-vision-acceptance'], 'node --import tsx scripts/cleanup-forge-vision-acceptance.mjs')
+assert.doesNotMatch(readFileSync('scripts/cleanup-forge-vision-acceptance.mjs', 'utf8'), /server\/database\/supabaseAdmin\.js/)
 
 function environmentFor(prefix = 'vision-acceptance-test-') {
   return { FORGE_VISION_ACCEPTANCE_APPROVED: 'YES', FORGE_VISION_ACCEPTANCE_STORAGE_EXCLUDED: 'YES', FORGE_VISION_ACCEPTANCE_ACCESS_TOKEN: 'test-token', VERCEL_AUTOMATION_BYPASS_SECRET: 'test-bypass', FORGE_VISION_ACCEPTANCE_EVIDENCE_DIR: mkdtempSync(join(tmpdir(), prefix)) }

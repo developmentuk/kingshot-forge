@@ -17,7 +17,7 @@ export async function cleanupAcceptance({ args = process.argv.slice(2), environm
   if (checkpoint.runId !== runId || checkpoint.created?.screenTypeId !== screenTypeId || (checkpoint.created?.mappingVersionIds ?? []).join(',') !== mappingVersionIds.join(',')) throw new Error('Cleanup IDs must exactly match the retained acceptance checkpoint.')
   if (!checkpoint.cleanupRequired) throw new Error('Cleanup checkpoint does not require a fixture cleanup.')
   const repository = repositoryGate({ approvedSha: value('--approved-sha'), cwd })
-  const admin = adminFactory ? await adminFactory() : (await import('../server/database/supabaseAdmin.js')).getSupabaseAdmin()
+  const admin = adminFactory ? await adminFactory() : (await import('../server/database/supabaseAdmin.ts')).getSupabaseAdmin()
   const screen = await admin.from('vision_screen_types').select('id,screen_key,game_key,label,description').eq('id', screenTypeId).maybeSingle()
   if (screen.error || !screen.data || screen.data.game_key !== ACCEPTANCE.gameKey || !screen.data.screen_key.startsWith(ACCEPTANCE.screenKeyPrefix) || !screen.data.screen_key.includes(runId)) throw new Error('Cleanup target is not the exact synthetic acceptance screen type.')
   const versions = await admin.from('vision_mapping_versions').select('id,status,screen_type_id,change_note').in('id', mappingVersionIds)
