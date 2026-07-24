@@ -1,5 +1,12 @@
 import assert from 'node:assert/strict'
-import { createArtifact, inspectPipeline, measureText } from '../src/render-engine/core/index.ts'
+import { spawnSync } from 'node:child_process'
+
+if (!process.execArgv.includes('tsx')) {
+  const result = spawnSync(process.execPath, ['--import', 'tsx', ...process.argv.slice(1)], { stdio: 'inherit' })
+  process.exit(result.status ?? 1)
+}
+
+const { createArtifact, inspectPipeline, measureText } = await import('../src/render-engine/core/index.ts')
 const raw = 'A\r\nB\t😀'
 const artifact = await createArtifact('raw-bytes', raw)
 assert.equal(artifact.text, raw)

@@ -23,3 +23,17 @@ The Sprint 9.2 reset failures had two separate causes: the visible â€œreset allâ
 ## Visual comparison
 
 Artwork-only mode removes chat chrome while using the same fixed-cell renderer. Chat simulation uses the selected device profile. Forge and reference viewports have keyboard-accessible zoom controls, wheel zoom, pointer pan, fit/100% reset, manual reference offsets, scale, rotation and opacity. Side-by-side, overlay, reference-only, Forge-only and clearly-labelled difference viewing modes are visual aids only; no OCR, automatic alignment, image matching or score is generated.
+
+## ART-003 measured calibration model
+
+Glyph calibration now includes `advanceCells`. The value is the deterministic logical advance assigned to the grapheme record before its glyph is painted. It may be fractional. It does not mutate, remove or replace the source grapheme.
+
+The compact chat candidate uses:
+
+- ordinary space: `0.60` cells;
+- ideographic space: `2.00` cells;
+- full-width glyph: `2.00` cells;
+- emoji/pixel/hearts: `2.00` cells;
+- ordinary ASCII, box drawing, general Unicode and decorative symbols: `1.00` cell.
+
+Device calibration separates vertical bubble padding (`bubblePadding`) from horizontal bubble padding (`bubbleInlinePadding`). Existing browser-local profiles without the new fields are upgraded with immutable defaults. The canonical fixture remains `calibration_required` until owner visual acceptance.

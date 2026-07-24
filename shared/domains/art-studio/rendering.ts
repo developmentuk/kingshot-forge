@@ -33,7 +33,11 @@ export type LineDiagnostic = { line: number; source: string; graphemes: number; 
 export type TextDiagnostics = { source: string; lineCount: number; codePointCount: number; graphemeCount: number; utf16Length: number; ordinarySpaces: number; nonBreakingSpaces: number; ideographicSpaces: number; tabs: number; combiningMarks: number; emoji: number; unsupportedCharacters: number; invisibleCharacters: number; longestLine: number; maximumOverflow: number; score: number; lines: LineDiagnostic[]; warnings: string[] }
 
 const EMOJI = /\p{Extended_Pictographic}/u
-const INVISIBLE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/u
+function isInvisibleControl(value: string): boolean {
+  const point = value.codePointAt(0)
+  if (point === undefined) return false
+  return point <= 0x08 || point === 0x0b || point === 0x0c || (point >= 0x0e && point <= 0x1f) || point === 0x7f || point === 0x00ad || (point >= 0x200b && point <= 0x200f) || (point >= 0x202a && point <= 0x202e) || (point >= 0x2060 && point <= 0x2064) || (point >= 0x2066 && point <= 0x206f) || point === 0xfeff
+}
 const FULL = /[\u1100-\u115F\u2329\u232A\u2E80-\u303E\u3040-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE10-\uFE19\uFE30-\uFE6F\uFF00-\uFF60\uFFE0-\uFFE6]/u
 const AMBIGUOUS = /[\u00A1\u00A4\u00A7\u00A8\u00AA\u00AD\u00AE\u00B0\u00B1\u00B2\u00B3\u00B4\u00B6\u00B7\u00B8\u00B9\u00BA\u00BC-\u00BE\u00C6\u00D0\u00D7\u00D8\u00DE\u00DF\u00E0\u00E6\u00E8\u00F0\u00F7\u00F8\u00FE]/u
 const PUNCTUATION_REPLACEMENTS: Record<string, string> = { '，': ',', '！': '!', '？': '?', '：': ':', '；': ';', '（': '(', '）': ')', '【': '[', '】': ']', '“': '"', '”': '"', '‘': "'", '’': "'" }
@@ -44,7 +48,7 @@ function block(value: string) { const point = value.codePointAt(0)!; if (point <
 function diagnosticsFor(glyph: string, profile: RenderProfile): CharacterDiagnostic {
   const point = glyph.codePointAt(0)!
   const combining = /\p{Mark}/u.test(glyph)
-  const control = INVISIBLE.test(glyph)
+  const control = isInvisibleControl(glyph)
   const emoji = EMOJI.test(glyph)
   const widthClass = control ? 'control' : combining ? 'combining' : glyph === '\u200B' ? 'zero' : FULL.test(glyph) || glyph === '\u3000' ? 'full' : AMBIGUOUS.test(glyph) ? 'ambiguous' : 'half'
   const browserWidth = widthClass === 'full' ? 2 : widthClass === 'combining' || widthClass === 'zero' ? 0 : emoji ? 2 : 1
@@ -95,4 +99,31 @@ export async function sha256Text(value: string): Promise<string> {
   const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes)
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
-export function copyApprovedPayload(value: string): Promise<void> { if (typeof navigator === 'undefined' || !navigator.clipboard) return Promise.reject(new Error('Clipboard is unavailable.')); return navigator.clipboard.writeText(value) }
+export async function copyApprovedPayload(value: string): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value)
+      return
+    } catch {
+      // Continue to the deterministic DOM fallback below. The source value is
+      // never normalised, repaired, trimmed or reconstructed.
+    }
+  }
+  if (typeof document === 'undefined') throw new Error('Clipboard is unavailable.')
+  const textarea = document.createElement('textarea')
+  textarea.value = value
+  textarea.setAttribute('readonly', '')
+  textarea.setAttribute('aria-hidden', 'true')
+  textarea.style.position = 'fixed'
+  textarea.style.inset = '0 auto auto -9999px'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.focus({ preventScroll: true })
+  textarea.select()
+  textarea.setSelectionRange(0, value.length)
+  try {
+    if (!document.execCommand('copy')) throw new Error('Clipboard copy was rejected.')
+  } finally {
+    textarea.remove()
+  }
+}

@@ -110,3 +110,11 @@ Sprint 9.3 adds browser-local named calibration profiles under the versioned `fo
 The preview supports artwork-only and chat-simulation views, view-only zoom/pan, optional cell/grid guides and focus mode. These controls never alter the logical grid or copied artwork text.
 
 The proposed Forge Screenshot Intelligence Engine is future work only. Screenshot classification, OCR, artwork extraction, automatic alignment, comparison scoring and confidence-reviewed imports are not implemented in Release 0.7.0 Sprint 9.2.
+
+## ART-003 calibrated logical advance
+
+ART-003 retains one immutable source grapheme record per grapheme but no longer assumes that every family paints with the same visual advance. Each family receives a deterministic, configuration-driven `advanceCells` value. Ordinary spaces may use a fractional advance; ideographic spaces, full-width glyphs and emoji may use wider advances. The cumulative column remains deterministic and no browser kerning is allowed to reposition neighbouring records.
+
+The compact chat profile is measured from `fixtures/community-art/wow-im-so-cute/kingshot-reference-chat.png`: 12.5-pixel base cell width, 32-pixel cell height, 22-pixel font, 426-pixel bubble, 14-pixel vertical padding and 36-pixel horizontal padding. These are empirical calibration values, not claims about Kingshot's internal implementation.
+
+Gallery, full preview, submission, moderation and Calibration Lab Kingshot views all consume the same device-profile variables. Studio mode and clipboard output continue to use the exact source string.

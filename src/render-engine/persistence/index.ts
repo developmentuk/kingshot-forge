@@ -1,11 +1,12 @@
+import { DEFAULT_CALIBRATION } from '../configuration'
 import { DEVICE_PROFILES } from '../device-profiles'
 import type { CalibrationConfiguration, DeviceProfileOverrides, DeviceProfileId, GlyphCalibration, GlyphFamily, SavedCalibrationProfile } from '../types'
 
 export const CALIBRATION_STORAGE_KEY = 'forge.renderEngine.calibrationProfiles.v1'
 
-const FAMILIES: GlyphFamily[] = ['space', 'ascii', 'box-drawing', 'unicode', 'emoji', 'pixel-circles', 'hearts', 'decorative-symbols']
+const FAMILIES: GlyphFamily[] = ['space', 'ideographic-space', 'ascii', 'box-drawing', 'full-width', 'unicode', 'emoji', 'pixel-circles', 'hearts', 'decorative-symbols']
 const DEVICE_IDS: DeviceProfileId[] = ['android-default', 'iphone-default', 'tablet', 'desktop-preview']
-const CALIBRATION_FIELDS: Array<keyof GlyphCalibration> = ['glyphScale', 'horizontalScale', 'verticalScale', 'baselineOffset', 'fontFamily', 'fontWeight']
+const CALIBRATION_FIELDS: Array<keyof GlyphCalibration> = ['advanceCells', 'glyphScale', 'horizontalScale', 'verticalScale', 'baselineOffset', 'fontFamily', 'fontWeight']
 
 export function cloneCalibration(source: CalibrationConfiguration): CalibrationConfiguration {
   return Object.fromEntries(FAMILIES.map((family) => [family, { ...source[family] }])) as CalibrationConfiguration
@@ -21,7 +22,7 @@ function validCalibration(value: unknown): value is CalibrationConfiguration {
     const item = (value as Record<string, unknown>)[family]
     if (!item || typeof item !== 'object') return false
     const record = item as Record<string, unknown>
-    return isFiniteNumber(record.glyphScale, .1, 4) && isFiniteNumber(record.horizontalScale, .1, 4) && isFiniteNumber(record.verticalScale, .1, 4) && isFiniteNumber(record.baselineOffset, -100, 100) && typeof record.fontFamily === 'string' && record.fontFamily.length <= 240 && isFiniteNumber(record.fontWeight, 100, 900) && CALIBRATION_FIELDS.every((field) => field in record)
+    return isFiniteNumber(record.advanceCells, .25, 4) && isFiniteNumber(record.glyphScale, .1, 4) && isFiniteNumber(record.horizontalScale, .1, 4) && isFiniteNumber(record.verticalScale, .1, 4) && isFiniteNumber(record.baselineOffset, -100, 100) && typeof record.fontFamily === 'string' && record.fontFamily.length <= 240 && isFiniteNumber(record.fontWeight, 100, 900) && CALIBRATION_FIELDS.every((field) => field in record)
   })
 }
 
@@ -31,15 +32,40 @@ function validDeviceOverrides(value: unknown): value is DeviceProfileOverrides {
   return Object.entries(value as Record<string, unknown>).every(([id, override]) => {
     if (!DEVICE_IDS.includes(id as DeviceProfileId) || !override || typeof override !== 'object') return false
     const base = DEVICE_PROFILES[id as DeviceProfileId]
-    const limits: Record<string, [number, number]> = { cellWidth: [1, 100], cellHeight: [1, 100], gridFontSize: [1, 100], lineHeight: [.5, 3], emojiScale: [.1, 4], chatBubbleWidth: [100, 2000], bubblePadding: [0, 100], avatarSize: [1, 200] }
+    const limits: Record<string, [number, number]> = { cellWidth: [1, 100], cellHeight: [1, 100], gridFontSize: [1, 100], lineHeight: [.5, 3], emojiScale: [.1, 4], chatBubbleWidth: [100, 2000], bubblePadding: [0, 100], bubbleInlinePadding: [0, 100], avatarSize: [1, 200] }
     return Object.entries(override as Record<string, unknown>).every(([field, item]) => field in base && field in limits && isFiniteNumber(item, ...limits[field]))
   })
 }
 
-export function isSavedCalibrationProfile(value: unknown): value is SavedCalibrationProfile {
-  if (!value || typeof value !== 'object') return false
+function upgradeCalibration(value: unknown): CalibrationConfiguration | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const source = value as Record<string, unknown>
+  const hasKnownFamily = FAMILIES.some((family) => {
+    const legacyFamily = family === 'ideographic-space' ? 'space' : family === 'full-width' ? 'unicode' : family
+    const item = source[family] ?? source[legacyFamily]
+    return Boolean(item && typeof item === 'object')
+  })
+  if (!hasKnownFamily) return undefined
+  const upgraded = Object.fromEntries(FAMILIES.map((family) => {
+    const legacyFamily = family === 'ideographic-space' ? 'space' : family === 'full-width' ? 'unicode' : family
+    const item = source[family] ?? source[legacyFamily]
+    if (!item || typeof item !== 'object') return [family, { ...DEFAULT_CALIBRATION[family] }]
+    const record = item as Partial<GlyphCalibration>
+    return [family, { ...DEFAULT_CALIBRATION[family], ...record, advanceCells: typeof record.advanceCells === 'number' ? record.advanceCells : DEFAULT_CALIBRATION[family].advanceCells }]
+  })) as CalibrationConfiguration
+  return validCalibration(upgraded) ? upgraded : undefined
+}
+
+export function upgradeSavedCalibrationProfile(value: unknown): SavedCalibrationProfile | undefined {
+  if (!value || typeof value !== 'object') return undefined
   const profile = value as Partial<SavedCalibrationProfile>
-  return profile.schemaVersion === 1 && typeof profile.id === 'string' && profile.id.length > 0 && typeof profile.name === 'string' && profile.name.trim().length > 0 && typeof profile.createdAt === 'string' && typeof profile.updatedAt === 'string' && DEVICE_IDS.includes(profile.baseDeviceProfile as DeviceProfileId) && validCalibration(profile.calibration) && validDeviceOverrides(profile.deviceOverrides)
+  const calibration = upgradeCalibration(profile.calibration)
+  if (profile.schemaVersion !== 1 || typeof profile.id !== 'string' || profile.id.length === 0 || typeof profile.name !== 'string' || profile.name.trim().length === 0 || typeof profile.createdAt !== 'string' || typeof profile.updatedAt !== 'string' || !DEVICE_IDS.includes(profile.baseDeviceProfile as DeviceProfileId) || !calibration || !validDeviceOverrides(profile.deviceOverrides)) return undefined
+  return { schemaVersion: 1, id: profile.id, name: profile.name, createdAt: profile.createdAt, updatedAt: profile.updatedAt, baseDeviceProfile: profile.baseDeviceProfile as DeviceProfileId, calibration, deviceOverrides: structuredClone(profile.deviceOverrides ?? {}), benchmarkId: typeof profile.benchmarkId === 'string' ? profile.benchmarkId : undefined }
+}
+
+export function isSavedCalibrationProfile(value: unknown): value is SavedCalibrationProfile {
+  return Boolean(upgradeSavedCalibrationProfile(value))
 }
 
 export function parseCalibrationProfiles(value: string | null): SavedCalibrationProfile[] {
@@ -47,7 +73,7 @@ export function parseCalibrationProfiles(value: string | null): SavedCalibration
   try {
     const parsed: unknown = JSON.parse(value)
     if (!Array.isArray(parsed)) return []
-    return parsed.filter(isSavedCalibrationProfile)
+    return parsed.map(upgradeSavedCalibrationProfile).filter((profile): profile is SavedCalibrationProfile => Boolean(profile))
   } catch {
     return []
   }

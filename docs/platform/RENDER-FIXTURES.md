@@ -22,3 +22,9 @@ Safe repairs are previews. Approval must create/use the approved payload version
 The committed `wow-im-so-cute` fixture is the statistics authority: 276 code points, 278 UTF-16 units, 386 UTF-8 bytes, 10 lines and 9 CRLF sequences. Its SHA-256 is `c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79`.
 
 Fixture comparison is local and deterministic. Live database rows are not assumed to be this fixture; their raw artifact hashes and byte lengths were independently verified after the ART-002B migration.
+
+## ART-003 source-byte protection and evidence
+
+The `wow-im-so-cute` source is intentionally CRLF and is protected by a path-specific `.gitattributes` rule. Tests read the raw bytes and require 386 UTF-8 bytes, nine CRLF sequences and the certified SHA-256. Text editors and checkout settings must not silently convert this fixture to LF.
+
+`docs/evidence/art-003/README.md` records the deterministic geometry-evidence contract. Before/after and responsive harness captures are retained with the Draft PR/validation artifacts; they do not replace owner comparison of the deployed React surfaces. No similarity percentage is generated.

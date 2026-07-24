@@ -624,3 +624,7 @@ discoverability and no document-level horizontal overflow at 390/768/1280/1440.
 Console diagnostics were empty. Personal Progression save/reload/history and
 owner/admin acceptance remain unverified because the available session was not
 authenticated for those routes; no write was attempted.
+
+## ART-003 Art Studio rendering fidelity
+
+ART-003 keeps Community Art ownership, approval and copy boundaries unchanged while correcting the shared Render Engine's visual calibration. Source graphemes remain immutable and ordered; a configuration-driven glyph-family advance controls deterministic visual placement, including fractional ordinary-space advance and explicit wide advances for ideographic spaces, full-width glyphs and emoji. Device profiles separate horizontal and vertical bubble padding. Art Studio gallery, full preview, submission, moderation and Calibration Lab Kingshot views consume the same profile-driven renderer. The canonical `wow-im-so-cute` fixture remains `calibration_required` pending owner comparison of the exact preview; no database or production write is part of the recovery.

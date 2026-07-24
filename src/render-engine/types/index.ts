@@ -2,8 +2,10 @@ export type ArtworkClass = 'pixel' | 'ascii' | 'banner' | 'mixed'
 
 export type GlyphFamily =
   | 'space'
+  | 'ideographic-space'
   | 'ascii'
   | 'box-drawing'
+  | 'full-width'
   | 'unicode'
   | 'emoji'
   | 'pixel-circles'
@@ -13,6 +15,7 @@ export type GlyphFamily =
 export type DeviceProfileId = 'android-default' | 'iphone-default' | 'tablet' | 'desktop-preview'
 
 export type GlyphCalibration = {
+  advanceCells: number
   glyphScale: number
   horizontalScale: number
   verticalScale: number
@@ -33,6 +36,7 @@ export type DeviceProfile = {
   emojiScale: number
   chatBubbleWidth: number
   bubblePadding: number
+  bubbleInlinePadding: number
   avatarSize: number
 }
 
@@ -52,6 +56,7 @@ export type SavedCalibrationProfile = {
 
 export type GridCell = {
   glyph: string
+  span: number
   family: GlyphFamily
   row: number
   column: number
