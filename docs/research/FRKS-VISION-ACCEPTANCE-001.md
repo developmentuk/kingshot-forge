@@ -98,3 +98,12 @@ mutation, exact owner cancellation for completed account-linking evidence,
 and a browser response that excludes raw OCR text. Preview Tesseract runtime
 health, authenticated synthetic acceptance and real-screen calibration remain
 separate owner gates; no production promotion is claimed.
+## VISION-LINK-001C runtime acceptance evidence
+
+The checked-in synthetic acceptance PNG is
+`fixtures/vision/account-linking/synthetic-profile.png`. Manifest SHA-256:
+`c1293cf0d08e9aa41cdc10f0bf484d1f1805d376b96b043cc22fd570c3f29071`.
+It contains only synthetic values: Player ID `987654321`, name `EMBER FOX`
+and kingdom `42`. The real-runtime test loads the PNG and asserts the actual
+Tesseract.js candidate rather than treating parser-only text as runtime proof.
+The fixture is not evidence of real-screen Kingshot accuracy.

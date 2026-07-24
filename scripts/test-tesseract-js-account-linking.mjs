@@ -1,23 +1,42 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { createSyntheticAccountProfilePng, SYNTHETIC_ACCOUNT_PROFILE } from './synthetic-account-profile-fixture.mjs'
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { extractAccountLinkCandidates } from '../server/player-identity/accountLinkingOcrService.ts'
-import { parseAccountLinkCandidates } from '../shared/domains/player-identity/accountLinkingOcr.ts'
 import { TesseractJsAccountLinkOcrAdapter } from '../server/player-identity/tesseractJsAccountLinkOcrAdapter.ts'
 import { toVisionWorkerFailure, VisionRuntimeError } from '../server/vision/runtime/errors.ts'
 
+const fixturePath = fileURLToPath(new URL('../fixtures/vision/account-linking/synthetic-profile.png', import.meta.url))
+const manifestPath = fileURLToPath(new URL('../fixtures/vision/account-linking/synthetic-profile.manifest.json', import.meta.url))
+const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+const bytes = new Uint8Array(await readFile(fixturePath))
+const sha256 = createHash('sha256').update(bytes).digest('hex')
+assert.equal(sha256, manifest.sha256)
+
 globalThis.fetch = () => { throw new Error('Bundled OCR tests must not access the network.') }
-const bytes = createSyntheticAccountProfilePng(); const sha256 = createHash('sha256').update(bytes).digest('hex')
-const result = await extractAccountLinkCandidates({ evidenceId: '99999999-9999-4999-8999-999999999999', bytes, sha256, mimeType: 'image/png', widthPx: SYNTHETIC_ACCOUNT_PROFILE.widthPx, heightPx: SYNTHETIC_ACCOUNT_PROFILE.heightPx })
+const started = performance.now()
+const result = await extractAccountLinkCandidates({
+  evidenceId: '99999999-9999-4999-8999-999999999999',
+  bytes,
+  sha256,
+  mimeType: manifest.mimeType,
+  widthPx: manifest.widthPx,
+  heightPx: manifest.heightPx,
+})
+const durationMs = Math.round(performance.now() - started)
 assert.equal(result.provenance.pluginKey, 'ocr.tesseract.js.wasm')
 assert.equal(result.provenance.pluginVersion, '1.0.0')
+assert.equal(result.provenance.engineVersion, '7.0.0')
 assert.ok(result.rawText)
-const parsed = parseAccountLinkCandidates('PLAYER ID: 987654321\nNAME: EMBER FOX\nKINGDOM: 42', '99999999-9999-4999-8999-999999999999', 0.95)
-assert.equal(parsed.find((candidate) => candidate.field === 'playerId')?.value, SYNTHETIC_ACCOUNT_PROFILE.playerId)
-assert.equal(parsed.find((candidate) => candidate.field === 'displayName')?.value, SYNTHETIC_ACCOUNT_PROFILE.name)
-assert.equal(parsed.find((candidate) => candidate.field === 'kingdom')?.value, SYNTHETIC_ACCOUNT_PROFILE.kingdom)
+const actualPlayerId = result.candidates.find((candidate) => candidate.field === 'playerId')?.value
+assert.equal(actualPlayerId, manifest.expected.playerId)
+const actualName = result.candidates.find((candidate) => candidate.field === 'displayName')?.value ?? null
+const actualKingdom = result.candidates.find((candidate) => candidate.field === 'kingdom')?.value ?? null
+if (actualName !== null) assert.equal(actualName, manifest.expected.name)
+if (actualKingdom !== null) assert.equal(actualKingdom, manifest.expected.kingdom)
 const { rawText: _rawText, ...safeProjection } = result
 assert.ok(!('rawText' in safeProjection))
+assert.ok(!JSON.stringify(safeProjection).includes('PLAYER ID'))
 
 let terminated = 0
 const mockAdapter = new TesseractJsAccountLinkOcrAdapter({ timeoutMs: 10, workerFactory: { async create() { return { async setParameters() {}, async recognize() { await new Promise(() => {}) }, async terminate() { terminated += 1 } } } } })
@@ -29,4 +48,4 @@ const cause = new Error('private')
 const errorWithCause = new VisionRuntimeError('extraction_failed', 'extraction', 'safe', { cause })
 assert.equal(errorWithCause.cause, cause)
 assert.equal(Object.prototype.propertyIsEnumerable.call(errorWithCause, 'cause'), false)
-console.log('PASS bundled tesseract.js runtime: synthetic candidates, no network, timeout termination and safe failure projection')
+console.log(JSON.stringify({ status: 'PASS', runtime: 'tesseract.js', durationMs, actualPlayerId, actualName, actualKingdom, noNetwork: true, timeoutTermination: true }))

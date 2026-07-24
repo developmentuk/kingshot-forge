@@ -40,3 +40,17 @@ service. Import and focused runtime tests prove no network access, bounded
 failure projection and timeout termination. The local runtime smoke is
 passing; exact synthetic fixture values still require real-screen calibration
 and the separately authorised authenticated preview acceptance.
+
+## VISION-LINK-001C synthetic runtime acceptance
+
+The acceptance fixture is now a checked-in deterministic PNG at
+`fixtures/vision/account-linking/synthetic-profile.png`, rendered with
+ordinary Arial sans-serif text on a high-contrast light background. Its
+SHA-256 is
+`c1293cf0d08e9aa41cdc10f0bf484d1f1805d376b96b043cc22fd570c3f29071` and its
+manifest explicitly records that it is synthetic-only and not evidence of
+real-screen Kingshot accuracy. The real Tesseract.js integration test loads
+that PNG and asserts the actual OCR candidate `987654321`; local recognition
+also returned `EMBER FOX` and `42` in 524 ms. Parser-only assertions remain
+separate. Authenticated preview acceptance and exact cancellation remain
+owner-scoped gates for the new preview.

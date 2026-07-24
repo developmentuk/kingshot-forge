@@ -46,3 +46,14 @@ The Vercel preview reached READY, but authenticated Tesseract runtime health
 acceptance remains pending until the preview function can prove executable,
 language data, timeout and temporary-file support. No production promotion
 or live synthetic acceptance was performed in this corrective code pass.
+## VISION-LINK-001C runtime acceptance fixture
+
+The real-runtime acceptance fixture is the deterministic checked-in PNG at
+`fixtures/vision/account-linking/synthetic-profile.png`, with expected values
+and SHA-256 recorded in its adjacent manifest. It uses ordinary high-contrast
+sans-serif text and is explicitly not a real-screen accuracy fixture. The
+bundled Tesseract.js integration test loads the PNG rather than feeding
+hard-coded parser text, prohibits network fetches, and asserts the actual OCR
+Player ID candidate `987654321`. Name `EMBER FOX` and kingdom `42` are
+recorded when recognised. The preview handoff remains limited to one
+owner-scoped synthetic acceptance followed by exact cancellation.
