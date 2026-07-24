@@ -16,7 +16,7 @@ const calibration = (overrides: Partial<GlyphCalibration> = {}): GlyphCalibratio
 })
 
 export const DEFAULT_CALIBRATION: CalibrationConfiguration = {
-  space: calibration({ advanceCells: .9, fontWeight: 400 }),
+  space: calibration({ advanceCells: .72, fontWeight: 400 }),
   'ideographic-space': calibration({ advanceCells: 2, fontFamily: GAME_FULL_WIDTH_STACK, fontWeight: 400 }),
   ascii: calibration({ horizontalScale: .98, verticalScale: .98 }),
   'box-drawing': calibration({ horizontalScale: .9, verticalScale: .98 }),
@@ -25,6 +25,7 @@ export const DEFAULT_CALIBRATION: CalibrationConfiguration = {
   emoji: calibration({ advanceCells: 2, glyphScale: 1.08, verticalScale: 1.02, fontFamily: EMOJI_STACK, fontWeight: 400 }),
   'pixel-circles': calibration({ advanceCells: 2, glyphScale: 1.04, horizontalScale: .96, fontFamily: EMOJI_STACK, fontWeight: 400 }),
   hearts: calibration({ advanceCells: 2, glyphScale: 1.03, fontFamily: EMOJI_STACK, fontWeight: 400 }),
+  'line-art': calibration({ horizontalScale: .95, verticalScale: .95, fontFamily: GAME_FULL_WIDTH_STACK, fontWeight: 400 }),
   'decorative-symbols': calibration({ glyphScale: 1.02, horizontalScale: .92 }),
 }
 

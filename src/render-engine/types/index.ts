@@ -10,6 +10,7 @@ export type GlyphFamily =
   | 'emoji'
   | 'pixel-circles'
   | 'hearts'
+  | 'line-art'
   | 'decorative-symbols'
 
 export type DeviceProfileId = 'android-default' | 'iphone-default' | 'tablet' | 'desktop-preview'

@@ -19,7 +19,7 @@ try {
   assert.equal(migrated.length, 1)
   assert.equal(migrated[0].calibration['ideographic-space'].advanceCells, 2)
   assert.equal(migrated[0].calibration['full-width'].advanceCells, 2)
-  assert.equal(engine.DEFAULT_CALIBRATION.space.advanceCells, .9)
+  assert.equal(engine.DEFAULT_CALIBRATION.space.advanceCells, .72)
   assert.equal(engine.isCalibrationConfiguration({ ...engine.DEFAULT_CALIBRATION, space: { ...engine.DEFAULT_CALIBRATION.space, advanceCells: .65 } }), true)
   const clone = engine.cloneCalibration(engine.DEFAULT_CALIBRATION)
   clone.ascii.glyphScale = 1.25

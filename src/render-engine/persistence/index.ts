@@ -4,7 +4,7 @@ import type { CalibrationConfiguration, DeviceProfileOverrides, DeviceProfileId,
 
 export const CALIBRATION_STORAGE_KEY = 'forge.renderEngine.calibrationProfiles.v1'
 
-const FAMILIES: GlyphFamily[] = ['space', 'ideographic-space', 'ascii', 'box-drawing', 'full-width', 'unicode', 'emoji', 'pixel-circles', 'hearts', 'decorative-symbols']
+const FAMILIES: GlyphFamily[] = ['space', 'ideographic-space', 'ascii', 'box-drawing', 'full-width', 'unicode', 'emoji', 'pixel-circles', 'hearts', 'line-art', 'decorative-symbols']
 const DEVICE_IDS: DeviceProfileId[] = ['android-default', 'iphone-default', 'tablet', 'desktop-preview']
 const CALIBRATION_FIELDS: Array<keyof GlyphCalibration> = ['advanceCells', 'glyphScale', 'horizontalScale', 'verticalScale', 'baselineOffset', 'fontFamily', 'fontWeight']
 

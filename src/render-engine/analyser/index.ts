@@ -8,10 +8,35 @@ const HEART = /^[♥❤💕💖💗💓💞💘💝💟♡]$/u
 const DECORATIVE = /^[★☆✦✧✩✪✫✬✭✮✯✰◆◇◈❖❈❉❊❋✿❀]$/u
 const EMOJI = /^\p{Extended_Pictographic}$/u
 const FULL_WIDTH = /^[\u1100-\u115F\u2329\u232A\u2E80-\u303E\u3040-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE10-\uFE19\uFE30-\uFE6F\uFF00-\uFF60\uFFE0-\uFFE6]$/u
+const LINE_ART = /^[_＿]$/u
+const STRUCTURAL_ASCII = /^[\\/|()[\]{}<>^]$/u
+
+export const PROSE_SPACE_ADVANCE = .72
+export const ARTWORK_SPACE_ADVANCE = .55
+export const ARTWORK_LEADING_SPACE_ADVANCE = .20
+
+export function isArtworkLine(glyphs: string[]): boolean {
+  const structural = glyphs.filter((glyph) => {
+    const family = classifyGlyph(glyph)
+    return family === 'ideographic-space' || family === 'full-width' || family === 'box-drawing' || family === 'line-art' || STRUCTURAL_ASCII.test(glyph)
+  }).length
+  const letters = glyphs.filter((glyph) => /\p{Letter}/u.test(glyph)).length
+  return structural >= 2 && structural >= letters
+}
+
+export function resolveGlyphAdvance(glyph: string, glyphs: string[], index: number, calibration: CalibrationConfiguration): number {
+  const family = classifyGlyph(glyph)
+  if (family === 'line-art') return glyph === '＿' ? 2 : 1
+  if (family !== 'space') return calibration[family].advanceCells
+  if (!isArtworkLine(glyphs)) return PROSE_SPACE_ADVANCE
+  const firstContent = glyphs.findIndex((item) => !/^\s$/u.test(item) && item !== '\u3000')
+  return index < firstContent ? ARTWORK_LEADING_SPACE_ADVANCE : ARTWORK_SPACE_ADVANCE
+}
 
 export function classifyGlyph(glyph: string): GlyphFamily {
   if (glyph === '\u3000') return 'ideographic-space'
   if (/^\s$/u.test(glyph)) return 'space'
+  if (LINE_ART.test(glyph)) return 'line-art'
   if (EMOJI.test(glyph)) {
     if (HEART.test(glyph)) return 'hearts'
     if (PIXEL_CIRCLE.test(glyph)) return 'pixel-circles'
@@ -47,6 +72,7 @@ export function countGlyphFamilies(glyphs: string[]): Record<GlyphFamily, number
     emoji: 0,
     'pixel-circles': 0,
     hearts: 0,
+    'line-art': 0,
     'decorative-symbols': 0,
   } satisfies Record<GlyphFamily, number>
   glyphs.forEach((glyph) => { counts[classifyGlyph(glyph)] += 1 })
@@ -59,7 +85,10 @@ export function analyseArtworkDetailed(artwork: string, calibration: Calibration
   const glyphs = segmentGraphemes(normalized)
   const familyCounts = countGlyphFamilies(glyphs)
   const artworkClass = classifyArtwork(artwork)
-  const widestLine = Math.max(...lines.map((line) => segmentGraphemes(line).reduce((width, glyph) => width + calibration[classifyGlyph(glyph)].advanceCells, 0)), 0)
+  const widestLine = Math.max(...lines.map((line) => {
+    const lineGlyphs = segmentGraphemes(line)
+    return lineGlyphs.reduce((width, glyph, index) => width + resolveGlyphAdvance(glyph, lineGlyphs, index, calibration), 0)
+  }), 0)
   const warnings: string[] = []
   if (widestLine > 50) warnings.push('Wide lines may scroll on smaller phones.')
   if (artworkClass === 'mixed') warnings.push('Mixed glyphs share a fixed cell grid; baseline and colour can vary by device.')
@@ -83,4 +112,4 @@ export function analyseArtworkDetailed(artwork: string, calibration: Calibration
   }
 }
 
-export { BOX_DRAWING, DECORATIVE, EMOJI, FULL_WIDTH, HEART, PIXEL_CIRCLE }
+export { BOX_DRAWING, DECORATIVE, EMOJI, FULL_WIDTH, HEART, LINE_ART, PIXEL_CIRCLE }
