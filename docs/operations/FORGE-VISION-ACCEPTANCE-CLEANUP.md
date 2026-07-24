@@ -1,12 +1,12 @@
 # Forge Vision acceptance cleanup controls
 
-The cleanup runner is a server-only controlled utility, not a browser API. It exists solely to remove the disposable VISION-001C3 fixture after a separately authorised acceptance session.
+The cleanup runner is a server-only controlled utility, not a browser API. The disposable VISION-001C3 fixture cleanup completed successfully under exact-ID owner approval.
 
 Invoke cleanup only through the canonical command:
 
 `npm run cleanup:forge-vision-acceptance -- <arguments>`
 
-This command uses `node --import tsx` and dynamically imports the actual TypeScript admin module at `server/database/supabaseAdmin.ts`. Do not invoke the script through plain `node`; that runtime cannot resolve the TypeScript admin module. The existing verified checkpoint remains the cleanup authority, and its exact IDs and audit-retention requirements remain unchanged.
+This command uses `node --import tsx` and dynamically imports the actual TypeScript admin module at `server/database/supabaseAdmin.ts`. Do not invoke the script through plain `node`; that runtime cannot resolve the TypeScript admin module. The retained checkpoint is now the cleaned authority: `status: cleaned`, `cleanupRequired: false`, and `deleted: true`, with both provenance records and exact historical IDs preserved.
 
 ## Required identity and guards
 
@@ -16,10 +16,10 @@ The target screen must use `acceptance-vision-<run-id>` and `forge_acceptance`. 
 
 ## Cleanup order and retention
 
-The expected fixture has no children, so cleanup deletes only the exact mapping version IDs and then the exact screen type. Child inspection is schema-aware: `vision_mapping_reference_images` has a composite primary key and no `id` column, so every inspected table declares its real `mapping_version_id` filter/select column. The runner uses exact-count/head queries, fails closed on query errors, and blocks on any non-zero count. Database immutability and append-only triggers are never weakened.
+The completed cleanup deleted only the exact mapping version ID first and then the exact screen type ID. The pre-cleanup fixture had no children. Child inspection is schema-aware: `vision_mapping_reference_images` has a composite primary key and no `id` column, so every inspected table declares its real `mapping_version_id` filter/select column. The runner uses exact-count/head queries, fails closed on query errors, and blocks on any non-zero count. Database immutability and append-only triggers were never weakened.
 
-Vision audit events are append-only and remain retained. Authoring writes one safe audit event after each fixture mutation. Cleanup reads and reports retained audit IDs/count, rejects credential-like audit payloads, and never deletes audit history.
+Vision audit events are append-only and remain retained: exactly four fixture events remain. Authoring wrote one safe audit event after each fixture mutation. Cleanup read and reported the retained audit IDs/count, rejected credential-like audit payloads, and never deleted audit history.
 
 ## Failure and evidence
 
-The runner creates a redacted cleanup plan only after all guards pass, verifies the exact records are gone afterwards, and atomically updates the same restricted checkpoint. If verification used a repaired-verifier provenance handover, cleanup preserves both the original execution provenance and separate verification provenance; cleanup does not require or overwrite either record. Provenance handover does not broaden exact-ID deletion authority. Audit events are retained and never deleted, and storage remains excluded. Current fixture cleanup is exact-ID only and requires a new separately approved session. On failure, do not retry blindly or use manual SQL: preserve the redacted report and seek that owner decision. Real mappings, player screenshots and storage objects are prohibited from this fixture.
+The runner created a redacted cleanup plan only after all guards passed, verified both exact records were gone afterwards, and atomically updated the same restricted checkpoint. Cleanup preserved the original execution provenance and separate verification provenance. Provenance handover did not broaden exact-ID deletion authority. Audit events remain retained and storage remains excluded. No wildcard or manual SQL cleanup occurred. Real mappings, player screenshots and storage objects were prohibited from this fixture.
