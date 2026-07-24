@@ -99,16 +99,7 @@ export async function sha256Text(value: string): Promise<string> {
   const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes)
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
-export async function copyApprovedPayload(value: string): Promise<void> {
-  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(value)
-      return
-    } catch {
-      // Continue to the deterministic DOM fallback below. The source value is
-      // never normalised, repaired, trimmed or reconstructed.
-    }
-  }
+export async function copyApprovedPayloadFallback(value: string): Promise<void> {
   if (typeof document === 'undefined') throw new Error('Clipboard is unavailable.')
   const textarea = document.createElement('textarea')
   textarea.value = value
@@ -126,4 +117,16 @@ export async function copyApprovedPayload(value: string): Promise<void> {
   } finally {
     textarea.remove()
   }
+}
+export async function copyApprovedPayload(value: string): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value)
+      return
+    } catch {
+      // Continue to the deterministic DOM fallback below. The source value is
+      // never normalised, repaired, trimmed or reconstructed.
+    }
+  }
+  return copyApprovedPayloadFallback(value)
 }

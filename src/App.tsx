@@ -13,6 +13,7 @@ import "./styles/heroCollectionPolish.css";
 import "./styles/forgeUxPolish.css";
 import "./styles/kingshotSimulator.css";
 import "./features/admin/renderEngineCalibration.css";
+import "./features/art-studio/artStudioAcceptance.css";
 
 import HomePage from "./pages/HomePage";
 import NameStudioPage from "./pages/NameStudioPage";
@@ -76,6 +77,11 @@ import ContributorApplicationPage from "./pages/ContributorApplicationPage";
 import MyContributorApplicationPage from "./pages/MyContributorApplicationPage";
 import ContributorApplicationsPage from "./features/operations/ContributorApplicationsPage";
 import ContributorApplicationDetailPage from "./features/operations/ContributorApplicationDetailPage";
+import ArtStudioAcceptancePage from "./features/art-studio/ArtStudioAcceptancePage";
+
+const developmentAcceptanceRoute = import.meta.env.DEV
+  ? <Route path="art-studio/acceptance" element={<ArtStudioAcceptancePage />} />
+  : null;
 
 function App() {
   return (
@@ -84,6 +90,7 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="name-studio" element={<NameStudioPage />} />
         <Route path="art-studio" element={<ArtStudioPage />} />
+        {developmentAcceptanceRoute}
         <Route path="chat-studio" element={<ChatStudioPage />} />
         <Route path="characters" element={<CharacterLibraryPage />} />
         <Route path="compatibility" element={<CompatibilityPage />} />
