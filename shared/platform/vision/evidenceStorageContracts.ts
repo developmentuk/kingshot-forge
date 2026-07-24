@@ -115,6 +115,8 @@ export interface VisionEvidenceUploadProvider {
   headObject(input: { bucket: typeof VISION_EVIDENCE_BUCKET; path: string }): Promise<VisionStoredObjectMetadata | null>
   createSignedReadUrl(input: { bucket: typeof VISION_EVIDENCE_BUCKET; path: string; expiresAt: string }): Promise<VisionEvidenceReadUrl>
   deleteObject(input: { bucket: typeof VISION_EVIDENCE_BUCKET; path: string }): Promise<void>
+  /** Server-only read used by bounded, authenticated processing adapters. */
+  readObject?(input: { bucket: typeof VISION_EVIDENCE_BUCKET; path: string }): Promise<Uint8Array>
 }
 
 export interface VisionEvidenceRepository {

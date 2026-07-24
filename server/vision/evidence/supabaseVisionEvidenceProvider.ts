@@ -65,6 +65,13 @@ export class SupabaseVisionEvidenceProvider implements VisionEvidenceUploadProvi
     if (error) throw new Error(`Supabase evidence deletion failed: ${error.message}`)
     if (!Array.isArray(data) || data.length !== 1) throw new Error('Supabase did not confirm deletion of the exact Vision evidence object.')
   }
+
+  async readObject(input: { bucket: typeof VISION_EVIDENCE_BUCKET; path: string }): Promise<Uint8Array> {
+    assertBucketAndPath(input.bucket, input.path)
+    const { data, error } = await this.#client.storage.from(VISION_EVIDENCE_BUCKET).download(input.path, {}, { cache: 'no-store' })
+    if (error) throw new Error(`Supabase evidence download failed: ${error.message}`)
+    return boundedBytes(data as StorageFile)
+  }
 }
 
 function assertBucketAndPath(bucket: string, path: string): void {

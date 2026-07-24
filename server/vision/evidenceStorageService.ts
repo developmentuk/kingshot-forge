@@ -155,6 +155,20 @@ export class VisionEvidenceStorageService {
     return evidence
   }
 
+  async readEvidenceBytes(actor: VisionEvidenceActor, evidenceId: string): Promise<{ metadata: VisionEvidenceMetadata; bytes: Uint8Array }> {
+    const metadata = await this.getEvidenceMetadata(actor, evidenceId)
+    if (metadata.deletedAt || metadata.deletionRequestedAt) throw new VisionEvidenceStorageError('not_available', 'Deleted or pending-deletion Vision evidence is not readable.')
+    if (!this.options.provider.readObject) throw new VisionEvidenceStorageError('processing_unavailable', 'This Vision evidence provider does not support server-side processing.')
+    try {
+      const bytes = await this.options.provider.readObject({ bucket: VISION_EVIDENCE_BUCKET, path: metadata.path })
+      if (bytes.byteLength !== metadata.bytes) throw new VisionEvidenceStorageError('object_unverified', 'Vision evidence bytes no longer match verified metadata.')
+      return { metadata, bytes }
+    } catch (error) {
+      if (error instanceof VisionEvidenceStorageError) throw error
+      throw new VisionEvidenceStorageError('object_unavailable', 'Vision evidence could not be read for processing.')
+    }
+  }
+
   async createShortLivedReadUrl(actor: VisionEvidenceActor, evidenceId: string, requestedSeconds = 300): Promise<VisionEvidenceReadUrl> {
     const evidence = await this.getEvidenceMetadata(actor, evidenceId)
     if (evidence.deletedAt || evidence.deletionRequestedAt) throw new VisionEvidenceStorageError('not_available', 'Deleted or pending-deletion Vision evidence is not readable.')

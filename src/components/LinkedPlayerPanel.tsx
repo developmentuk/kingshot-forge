@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { getPlayer } from '../services/kingshotApi'
 import type { KingshotPlayer } from '../types/player'
 import type { PlayerAccount } from '../types/playerAccount'
+import ScreenshotLinkingPanel from './ScreenshotLinkingPanel'
 
 function getVerificationLabel(
   status: PlayerAccount['verification_status'],
@@ -411,6 +412,7 @@ function LinkedPlayerPanel() {
 
       {!linkedAccount && (
         <>
+          <ScreenshotLinkingPanel onCandidate={(candidate) => setPlayerId(candidate)} />
           <form
             className="linked-player-search"
             onSubmit={handleLookup}
