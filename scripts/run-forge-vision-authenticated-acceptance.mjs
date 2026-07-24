@@ -18,6 +18,28 @@ function exactIds(value, label) {
   if (!ids.length || ids.some((id) => !/^[0-9a-f-]{36}$/i.test(id)) || new Set(ids).size !== ids.length) throw new Error(`Verification requires exact ${label}.`)
   return ids
 }
+function assertHandoverMode(mode, checkpointApprovedSha, checkpointBaseUrl) {
+  const hasSha = checkpointApprovedSha !== undefined
+  const hasUrl = checkpointBaseUrl !== undefined
+  if (mode !== '--verify' && (hasSha || hasUrl)) throw new Error('Checkpoint provenance handover flags are valid only with --verify.')
+  if (mode === '--verify' && hasSha !== hasUrl) throw new Error('Verify provenance handover requires both --checkpoint-approved-sha and --checkpoint-base-url.')
+}
+function provenanceGuards(checkpoint, { approvedSha, baseUrl, checkpointApprovedSha, checkpointBaseUrl }) {
+  const checkpointOrigin = checkpoint.baseUrlOrigin
+  const sameProvenance = checkpoint.approvedSha === approvedSha && checkpointOrigin === baseUrl.origin
+  if (!sameProvenance && (checkpointApprovedSha === undefined || checkpointBaseUrl === undefined)) throw new Error('Cross-provenance verification requires explicit checkpoint provenance handover flags.')
+  if (checkpointApprovedSha !== undefined && !/^[0-9a-f]{40}$/i.test(checkpointApprovedSha)) throw new Error('Checkpoint approved SHA must be an exact 40-character SHA.')
+  if (checkpointApprovedSha !== undefined && checkpoint.approvedSha !== checkpointApprovedSha) throw new Error('Checkpoint approved SHA does not match the retained checkpoint.')
+  if (checkpointBaseUrl !== undefined) {
+    const handoverUrl = assertDeploymentBaseUrl(checkpointBaseUrl)
+    if (checkpointOrigin !== handoverUrl.origin) throw new Error('Checkpoint base URL origin does not match the retained checkpoint.')
+  }
+  return { sameProvenance, handoverUsed: !sameProvenance, checkpointApprovedSha: checkpointApprovedSha ?? checkpoint.approvedSha, checkpointBaseUrlOrigin: checkpointBaseUrl ? new URL(checkpointBaseUrl).origin : checkpointOrigin }
+}
+function executionProvenance(checkpoint) {
+  const original = checkpoint.executionProvenance ?? {}
+  return { ...original, approvedSha: original.approvedSha ?? checkpoint.approvedSha, baseUrlOrigin: original.baseUrlOrigin ?? checkpoint.baseUrlOrigin, ...(original.correlationId || !checkpoint.correlationId ? {} : { correlationId: checkpoint.correlationId }), ...(original.timestamp || !checkpoint.timestamp ? {} : { timestamp: checkpoint.timestamp }) }
+}
 function assertFixtureState(data, checkpoint, fixture, screenTypeId, mappingVersionIds) {
   const screens = data.screenTypes ?? []
   const matchingScreens = screens.filter((item) => item.screen_key === fixture.screenKey)
@@ -35,6 +57,8 @@ export async function runAcceptance({ args = process.argv.slice(2), environment 
   const { flags, value } = parseArgs(args)
   if (flags.has('--cleanup')) throw new Error('Cleanup is a separate command: use scripts/cleanup-forge-vision-acceptance.mjs --execute-cleanup.')
   const mode = assertSingleMode(flags, ['--plan', '--execute', '--verify'])
+  const checkpointApprovedShaArg = value('--checkpoint-approved-sha'); const checkpointBaseUrlArg = value('--checkpoint-base-url')
+  assertHandoverMode(mode, checkpointApprovedShaArg, checkpointBaseUrlArg)
   const runId = value('--run-id') ?? newRunId(); const fixture = fixtureFor(runId); const approvedSha = value('--approved-sha')
   const plan = { mode, runId, projectRef: value('--project-ref') ?? ACCEPTANCE.projectRef, approvedSha: approvedSha ?? null, baseUrlOrigin: value('--base-url') ? new URL(value('--base-url')).origin : null, fixture, sequence: actionSequence(fixture), storageExcluded: true, mutationPerformed: false }
   if (mode === '--plan') return { ...plan, externalRequestMade: false, databaseConnectionMade: false, note: 'Plan only. No HTTP, database, storage, or cleanup action was attempted.' }
@@ -43,10 +67,11 @@ export async function runAcceptance({ args = process.argv.slice(2), environment 
   let checkpoint = mode === '--verify'
     ? readCheckpoint(runId, environment).checkpoint
     : { ...plan, repository, correlationId, checkpointPath: null, status: 'planned', cleanupRequired: false, created: { screenTypeId: null, mappingVersionIds: [] }, mutationPerformed: false, timestamp: new Date().toISOString() }
-  if (mode === '--verify' && (checkpoint.approvedSha !== approvedSha || checkpoint.baseUrlOrigin !== baseUrl.origin || checkpoint.runId !== runId)) throw new Error('Verification checkpoint does not match the exact approved SHA, base URL, and run ID.')
+  const provenance = mode === '--verify' ? provenanceGuards(checkpoint, { approvedSha, baseUrl, checkpointApprovedSha: checkpointApprovedShaArg, checkpointBaseUrl: checkpointBaseUrlArg }) : null
   const verifyScreenTypeId = mode === '--verify' ? value('--screen-type-id') : null
   const verifyMappingVersionIds = mode === '--verify' ? exactIds(value('--mapping-version-ids'), 'comma-separated mapping-version IDs') : []
-  if (mode === '--verify' && (!/^[0-9a-f-]{36}$/i.test(verifyScreenTypeId ?? '') || verifyScreenTypeId !== checkpoint.created?.screenTypeId || verifyMappingVersionIds.join(',') !== (checkpoint.created?.mappingVersionIds ?? []).join(','))) throw new Error('Verification IDs must exactly match the retained acceptance checkpoint.')
+  if (mode === '--verify' && checkpoint.deleted === true) throw new Error('Verification refuses a checkpoint already marked deleted.')
+  if (mode === '--verify' && (checkpoint.runId !== runId || !/^[0-9a-f-]{36}$/i.test(verifyScreenTypeId ?? '') || verifyScreenTypeId !== checkpoint.created?.screenTypeId || verifyMappingVersionIds.join(',') !== (checkpoint.created?.mappingVersionIds ?? []).join(','))) throw new Error('Verification IDs must exactly match the retained acceptance checkpoint.')
   checkpoint.checkpointPath = writeCheckpoint(checkpoint, environment)
   const save = (patch) => { checkpoint = { ...checkpoint, ...patch, timestamp: new Date().toISOString() }; checkpoint.checkpointPath = writeCheckpoint(checkpoint, environment); return checkpoint }
   const safeRequest = async (step, body) => {
@@ -64,7 +89,7 @@ export async function runAcceptance({ args = process.argv.slice(2), environment 
     if (meta.deploymentSha !== approvedSha) throw new Error('Acceptance deployment SHA attestation does not match --approved-sha.')
     if (mode === '--verify') {
       assertFixtureState(list.data, checkpoint, fixture, verifyScreenTypeId, verifyMappingVersionIds)
-      return { ...save({ status: 'verified', cleanupRequired: true, created: { screenTypeId: verifyScreenTypeId, mappingVersionIds: verifyMappingVersionIds }, mutationPerformed: checkpoint.mutationPerformed, deleted: undefined, verification: { deploymentSha: meta.deploymentSha, actor: meta.actor } }), externalRequestMade: true }
+      return { ...save({ status: 'verified', cleanupRequired: true, created: { screenTypeId: verifyScreenTypeId, mappingVersionIds: verifyMappingVersionIds }, mutationPerformed: checkpoint.mutationPerformed, deleted: checkpoint.deleted, executionProvenance: executionProvenance(checkpoint), verificationProvenance: { approvedSha, baseUrlOrigin: baseUrl.origin, deploymentSha: meta.deploymentSha, verifiedAt: new Date().toISOString(), handoverUsed: provenance.handoverUsed, checkpointApprovedSha: provenance.checkpointApprovedSha, checkpointBaseUrlOrigin: provenance.checkpointBaseUrlOrigin }, verification: { deploymentSha: meta.deploymentSha, actor: meta.actor } }), externalRequestMade: true }
     }
     assertExecuteCollision(list.data, fixture)
     const screen = await safeRequest(plan.sequence[1], fixture); const screenTypeId = screen.data?.id
