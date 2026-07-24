@@ -9,6 +9,11 @@
 }
 
 .kingshot-cell-grid {
+  --kingshot-cell-width: var(--forge-cell-width, 10px);
+  --kingshot-cell-height: var(--forge-cell-height, 32px);
+  --kingshot-grid-font-size: var(--forge-grid-font-size, 22px);
+  --kingshot-grid-line-height: var(--forge-grid-line-height, 1);
+  --kingshot-emoji-scale: var(--forge-emoji-scale, 1.05);
   display: grid;
   width: max-content;
   min-width: 0;

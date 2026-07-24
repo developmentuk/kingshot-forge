@@ -30,10 +30,13 @@ Glyph calibration now includes `advanceCells`. The value is the deterministic lo
 
 The compact chat candidate uses:
 
-- ordinary space: `0.60` cells;
+- ordinary space: `0.90` cells;
 - ideographic space: `2.00` cells;
-- full-width glyph: `2.00` cells;
-- emoji/pixel/hearts: `2.00` cells;
-- ordinary ASCII, box drawing, general Unicode and decorative symbols: `1.00` cell.
+- full-width glyph: `2.00` cells with `1.08` glyph scale and `0.95` horizontal paint scale;
+- emoji/pixel/hearts: `2.00` cells with `1.08` glyph scale;
+- general Unicode: `1.00` cell with `0.95` horizontal paint scale;
+- ordinary ASCII, box drawing and decorative symbols: `1.00` cell.
 
 Device calibration separates vertical bubble padding (`bubblePadding`) from horizontal bubble padding (`bubbleInlinePadding`). Existing browser-local profiles without the new fields are upgraded with immutable defaults. The canonical fixture remains `calibration_required` until owner visual acceptance.
+
+The ART-003 correction also scopes the derived `--kingshot-*` variables to each grid. The previous root-level fallback resolved before the renderer's device variables were inherited, causing every profile to paint at the 10px fallback cell. The named `android-default` profile remains the compact-chat presentation used by Art Studio gallery, modal, submission and moderation; `iphone-default` remains the expanded game-UI comparison profile in the Calibration Lab. The harness does not silently promote either profile to an owner-approved default.
