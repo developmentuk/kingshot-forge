@@ -4,7 +4,7 @@ import { VisionEvidenceStorageError } from '../server/vision/evidenceStorageServ
 import { createSupabaseVisionEvidenceStorageService } from '../server/vision/evidence/supabaseVisionEvidenceRuntime.js'
 import { isUuid, isVisionEvidenceMimeType, type VisionEvidenceActor, type VisionEvidencePurpose } from '../shared/platform/vision/evidenceStorageContracts.js'
 
-const ACTIONS = new Set(['create-upload-intent', 'complete-upload', 'abandon-upload', 'cancel-evidence', 'get-evidence-metadata', 'create-read-url', 'request-deletion', 'execute-retention-deletion'])
+const ACTIONS = new Set(['create-upload-intent', 'complete-upload', 'abandon-upload', 'cancel-evidence', 'get-evidence-metadata', 'get-acceptance-recovery', 'create-read-url', 'request-deletion', 'execute-retention-deletion'])
 const PURPOSES = new Set(['mapping_reference', 'test_case', 'scan_source', 'evidence_crop'])
 
 export function mapVisionEvidenceErrorStatus(error: VisionEvidenceStorageError): number {
@@ -29,7 +29,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
 }
 
 async function dispatch(service: ReturnType<typeof createSupabaseVisionEvidenceStorageService>, actor: VisionEvidenceActor, action: string, body: Record<string, unknown>): Promise<unknown> {
-  const allowed: Record<string, string[]> = { 'create-upload-intent': ['action', 'ownerUserId', 'purpose', 'uploadPurpose', 'mimeType', 'expectedBytes', 'consentRecordedAt', 'retentionUntil'], 'complete-upload': ['action', 'intentId', 'bytes', 'mimeType', 'sha256', 'widthPx', 'heightPx'], 'abandon-upload': ['action', 'intentId', 'reason'], 'cancel-evidence': ['action', 'evidenceId', 'reason'], 'get-evidence-metadata': ['action', 'evidenceId'], 'create-read-url': ['action', 'evidenceId', 'seconds'], 'request-deletion': ['action', 'evidenceId', 'reason'], 'execute-retention-deletion': ['action', 'evidenceId'] }
+  const allowed: Record<string, string[]> = { 'create-upload-intent': ['action', 'ownerUserId', 'purpose', 'uploadPurpose', 'mimeType', 'expectedBytes', 'consentRecordedAt', 'retentionUntil'], 'complete-upload': ['action', 'intentId', 'bytes', 'mimeType', 'sha256', 'widthPx', 'heightPx'], 'abandon-upload': ['action', 'intentId', 'reason'], 'cancel-evidence': ['action', 'evidenceId', 'reason'], 'get-evidence-metadata': ['action', 'evidenceId'], 'get-acceptance-recovery': ['action'], 'create-read-url': ['action', 'evidenceId', 'seconds'], 'request-deletion': ['action', 'evidenceId', 'reason'], 'execute-retention-deletion': ['action', 'evidenceId'] }
   for (const key of Object.keys(body)) if (!allowed[action]?.includes(key)) throw new VisionEvidenceStorageError('invalid_request', 'Vision evidence request contains an unsupported field.')
   switch (action) {
     case 'create-upload-intent': return service.createUploadIntent(actor, { ownerUserId: requiredUuid(body.ownerUserId), purpose: requiredPurpose(body.purpose), uploadPurpose: requiredString(body.uploadPurpose, 240), mimeType: requiredMime(body.mimeType), expectedBytes: requiredInteger(body.expectedBytes), consentRecordedAt: optionalTimestamp(body.consentRecordedAt), retentionUntil: optionalTimestamp(body.retentionUntil) })
@@ -37,6 +37,7 @@ async function dispatch(service: ReturnType<typeof createSupabaseVisionEvidenceS
     case 'abandon-upload': return service.abandonUpload(actor, requiredUuid(body.intentId), requiredString(body.reason, 240)).then(() => null)
     case 'cancel-evidence': return service.cancelOwnerScanEvidence(actor, requiredUuid(body.evidenceId), requiredString(body.reason, 240)).then(() => null)
     case 'get-evidence-metadata': return service.getEvidenceMetadata(actor, requiredUuid(body.evidenceId))
+    case 'get-acceptance-recovery': return service.getAcceptanceRecovery(actor)
     case 'create-read-url': return service.createShortLivedReadUrl(actor, requiredUuid(body.evidenceId), body.seconds === undefined ? 300 : requiredInteger(body.seconds))
     case 'request-deletion': return service.requestEvidenceDeletion(actor, requiredUuid(body.evidenceId), requiredString(body.reason, 240)).then(() => null)
     case 'execute-retention-deletion': return service.executeRetentionDeletion(actor, requiredUuid(body.evidenceId)).then(() => null)

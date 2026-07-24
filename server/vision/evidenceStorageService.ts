@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto'
 import {
   VISION_EVIDENCE_BUCKET,
+  VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID,
+  VISION_ACCEPTANCE_RECOVERY_INTENT_ID,
+  VISION_ACCEPTANCE_RECOVERY_PATH,
+  VISION_ACCEPTANCE_RECOVERY_SHA256,
+  VISION_ACCEPTANCE_RECOVERY_UPLOAD_PURPOSE,
   VISION_EVIDENCE_INTENT_SECONDS,
   VISION_EVIDENCE_MAX_BYTES,
   VISION_EVIDENCE_RETENTION_POLICIES,
@@ -166,6 +171,14 @@ export class VisionEvidenceStorageService {
     const evidence = await this.options.repository.getEvidence(evidenceId)
     if (!evidence || !canManage(actor, evidence.ownerUserId)) throw new VisionEvidenceStorageError('not_found', 'Vision evidence is unavailable to this actor.')
     return evidence
+  }
+
+  async getAcceptanceRecovery(actor: VisionEvidenceActor): Promise<{ available: true }> {
+    activeActor(actor)
+    if (!actor.permissions.includes('vision.scan.create')) throw new VisionEvidenceStorageError('forbidden', 'Vision acceptance recovery is not available to this actor.')
+    const evidence = await this.options.repository.getEvidence(VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID)
+    if (!evidence || evidence.ownerUserId !== actor.userId || evidence.uploadIntentId !== VISION_ACCEPTANCE_RECOVERY_INTENT_ID || evidence.purpose !== 'scan_source' || evidence.uploadPurpose !== VISION_ACCEPTANCE_RECOVERY_UPLOAD_PURPOSE || evidence.bucket !== VISION_EVIDENCE_BUCKET || evidence.path !== VISION_ACCEPTANCE_RECOVERY_PATH || evidence.sha256 !== VISION_ACCEPTANCE_RECOVERY_SHA256 || evidence.deletedAt || evidence.legalHold) throw new VisionEvidenceStorageError('not_found', 'No recoverable synthetic acceptance evidence is available.')
+    return { available: true }
   }
 
   async readEvidenceBytes(actor: VisionEvidenceActor, evidenceId: string): Promise<{ metadata: VisionEvidenceMetadata; bytes: Uint8Array }> {

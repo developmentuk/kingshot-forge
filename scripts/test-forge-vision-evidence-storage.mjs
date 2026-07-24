@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { VisionEvidenceStorageError, VisionEvidenceStorageService } from '../server/vision/evidenceStorageService.ts'
 import { VisionImageMetadataError } from '../shared/platform/vision/imageMetadata.ts'
+import { VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID, VISION_ACCEPTANCE_RECOVERY_INTENT_ID, VISION_ACCEPTANCE_RECOVERY_PATH, VISION_ACCEPTANCE_RECOVERY_SHA256, VISION_ACCEPTANCE_RECOVERY_UPLOAD_PURPOSE } from '../shared/platform/vision/evidenceStorageContracts.ts'
 
 globalThis.fetch = () => { throw new Error('Evidence storage tests must not access the network.') }
 
@@ -101,6 +102,12 @@ assert.equal(cancelMocks.evidence.get(cancelEvidence.id).deletedAt, now.toISOStr
 await cancelService.cancelOwnerScanEvidence(owner, cancelEvidence.id, 'repeat cancellation'); assert.equal(cancelMocks.calls.deleted.length, 1); assert.equal(cancelMocks.audits.filter(event => event.eventType === 'vision.evidence.owner_cancelled').length, 1)
 const unrelated = { ...cancelEvidence, id: '88888888-8888-4888-8888-888888888888', path: `${ownerId}/mapping_reference/88888888-8888-4888-8888-888888888888.png`, purpose: 'mapping_reference', deletedAt: null }; cancelMocks.evidence.set(unrelated.id, unrelated); cancelMocks.objects.set(`vision-evidence/${unrelated.path}`, { bucket: 'vision-evidence', path: unrelated.path, ...image })
 await expectCode(() => cancelService.cancelOwnerScanEvidence(owner, unrelated.id, 'must not cancel unrelated evidence'), 'forbidden'); assert.equal(cancelMocks.objects.size, 1)
+
+const recoveryMocks = createMocks(); const recoveryService = serviceWith(recoveryMocks); const recoveryOwner = actor('d245eb2e-b295-4c9b-bcef-cd134bfe981a', ['vision.scan.create'])
+recoveryMocks.evidence.set(VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID, { id: VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID, uploadIntentId: VISION_ACCEPTANCE_RECOVERY_INTENT_ID, ownerUserId: recoveryOwner.userId, purpose: 'scan_source', bucket: 'vision-evidence', path: VISION_ACCEPTANCE_RECOVERY_PATH, bytes: image.bytes, mimeType: 'image/png', sha256: VISION_ACCEPTANCE_RECOVERY_SHA256, widthPx: image.widthPx, heightPx: image.heightPx, uploadPurpose: VISION_ACCEPTANCE_RECOVERY_UPLOAD_PURPOSE, consentRecordedAt: now.toISOString(), retentionUntil: new Date(now.getTime() + 86400000).toISOString(), deletionRequestedAt: null, deletedAt: null, legalHold: false, verifiedAt: now.toISOString() })
+assert.deepEqual(await recoveryService.getAcceptanceRecovery(recoveryOwner), { available: true })
+for (const field of ['uploadIntentId', 'path', 'sha256', 'uploadPurpose']) { const original = recoveryMocks.evidence.get(VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID)[field]; recoveryMocks.evidence.get(VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID)[field] = 'mismatch'; await expectCode(() => recoveryService.getAcceptanceRecovery(recoveryOwner), 'not_found'); recoveryMocks.evidence.get(VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID)[field] = original }
+await expectCode(() => recoveryService.getAcceptanceRecovery(owner), 'forbidden')
 
 await service.requestEvidenceDeletion(owner, completed.id, 'owner requested deletion'); assert.ok(mocks.evidence.get(completed.id).deletionRequestedAt)
 await expectCode(() => service.executeRetentionDeletion(owner, completed.id), 'forbidden')

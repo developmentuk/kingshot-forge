@@ -4,6 +4,12 @@ export const VISION_EVIDENCE_MAX_PIXELS = 40_000_000
 export const VISION_EVIDENCE_INTENT_SECONDS = 15 * 60
 export const VISION_EVIDENCE_PROVIDER_UPLOAD_SECONDS = 2 * 60 * 60
 export const VISION_EVIDENCE_SIGNED_URL_MAX_SECONDS = 300
+export const VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID = 'eec7d237-8ad3-4fe6-87ae-1cd1fa2fd1f9'
+export const VISION_ACCEPTANCE_RECOVERY_INTENT_ID = '7dc2ee48-d685-4883-8e2b-174bbf853f43'
+export const VISION_ACCEPTANCE_RECOVERY_PATH = 'd245eb2e-b295-4c9b-bcef-cd134bfe981a/scan_source/7dc2ee48-d685-4883-8e2b-174bbf853f43.png'
+export const VISION_ACCEPTANCE_RECOVERY_SHA256 = 'c1293cf0d08e9aa41cdc10f0bf484d1f1805d376b96b043cc22fd570c3f29071'
+export const VISION_ACCEPTANCE_RECOVERY_UPLOAD_PURPOSE = 'Preview-only OCR acceptance review'
+export const VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY = 'forge.vision.acceptance.active-evidence-id'
 
 export const VISION_EVIDENCE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/tiff'] as const
 export type VisionEvidenceMimeType = (typeof VISION_EVIDENCE_MIME_TYPES)[number]
