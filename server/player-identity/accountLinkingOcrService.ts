@@ -1,5 +1,6 @@
 import type { AccountLinkOcrResult } from '../../shared/domains/player-identity/accountLinkingOcr.js'
 import { TesseractCliExtractor } from '../vision/extractors/tesseractCliExtractor.js'
+import { TesseractJsAccountLinkOcrAdapter } from './tesseractJsAccountLinkOcrAdapter.js'
 import type { VisionExtractionRequest } from '../../shared/platform/vision/contracts.js'
 import { parseAccountLinkCandidates } from '../../shared/domains/player-identity/accountLinkingOcr.js'
 
@@ -24,7 +25,7 @@ export async function extractAccountLinkCandidates(input: {
   heightPx: number
   adapter?: AccountLinkOcrAdapter
 }): Promise<AccountLinkOcrResult> {
-  const adapter = input.adapter ?? new TesseractAccountLinkOcrAdapter()
+  const adapter = input.adapter ?? new TesseractJsAccountLinkOcrAdapter()
   const extracted = await adapter.extract({
     runId: `account-link-${input.evidenceId}`,
     mappingVersionId: 'account-linking-ocr-mvp',

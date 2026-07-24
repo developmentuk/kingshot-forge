@@ -16,7 +16,10 @@ export class VisionRuntimeError extends Error {
     message: string,
     options: { retryable?: boolean; safeDetail?: string | null; cause?: unknown } = {},
   ) {
-    super(message, { cause: options.cause })
+    super(message)
+    if (options.cause !== undefined) {
+      Object.defineProperty(this, 'cause', { configurable: true, enumerable: false, value: options.cause, writable: false })
+    }
     this.name = 'VisionRuntimeError'
     this.code = code
     this.stage = stage

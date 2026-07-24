@@ -29,3 +29,14 @@ No prefix, wildcard or `storage.objects` SQL deletion is permitted. Raw OCR
 text is not part of the browser response. Preview runtime Tesseract health,
 real-screen calibration and authenticated synthetic acceptance remain open
 owner gates.
+## VISION-LINK-001B bundled OCR runtime
+
+The default server adapter is the pinned `tesseract.js@7.0.0` WebAssembly
+runtime with `@tesseract.js-data/eng@1.0.0`. Worker, core and language assets
+are bundled locally through `vercel.json`; the function is bounded to 60
+seconds, disables the CDN/cache path and always terminates the worker. The
+CLI adapter remains available but is not selected by the account-linking
+service. Import and focused runtime tests prove no network access, bounded
+failure projection and timeout termination. The local runtime smoke is
+passing; exact synthetic fixture values still require real-screen calibration
+and the separately authorised authenticated preview acceptance.

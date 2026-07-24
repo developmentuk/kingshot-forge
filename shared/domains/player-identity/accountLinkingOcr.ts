@@ -27,8 +27,8 @@ export interface AccountLinkOcrResult {
 export function parseAccountLinkCandidates(rawText: string, evidenceId: string, confidence: number): AccountLinkOcrCandidate[] {
   const boundedConfidence = Math.max(0, Math.min(1, confidence))
   const candidates: AccountLinkOcrCandidate[] = []
-  const playerId = rawText.match(/(?:player\s*id|id)\s*[:#-]?\s*(\d{1,20})/i)?.[1]
-  const kingdom = rawText.match(/kingdom\s*[:#-]?\s*(\d{1,4})/i)?.[1]
+  const playerId = rawText.match(/(?:player\s*id|id)\s*[:#-]?\s*((?:\d\s*){1,20})/i)?.[1]?.replace(/\s+/g, '')
+  const kingdom = rawText.match(/kingdom\s*[:#-]?\s*((?:\d\s*){1,4})/i)?.[1]?.replace(/\s+/g, '')
   const name = rawText.match(/name\s*[:#-]?\s*([A-Za-z][A-Za-z0-9 _-]{1,39}?)(?=\s+kingdom\b|$)/i)?.[1]?.trim()
   if (playerId) candidates.push({ field: 'playerId', rawValue: playerId, value: playerId, mappingVersion: 'account-linking-ocr-mvp', confidence: boundedConfidence, source: 'ocr', evidenceId, warnings: boundedConfidence < 0.7 ? ['Check this value carefully.'] : [] })
   if (name) candidates.push({ field: 'displayName', rawValue: name, value: name, mappingVersion: 'account-linking-ocr-mvp', confidence: boundedConfidence * 0.9, source: 'ocr', evidenceId, warnings: [] })
