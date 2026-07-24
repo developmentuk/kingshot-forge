@@ -4,6 +4,11 @@ import { visionAuthoring, VisionPermissionError, VisionPersistenceUnavailableErr
 
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
   if (!['GET', 'POST'].includes(request.method ?? '')) { response.setHeader('Allow', 'GET, POST'); response.status(405).json({ status: 'error', message: 'Method not allowed.' }); return }
-  try { const actor = await requireForgeActor(request); const action = request.method === 'GET' ? 'list' : String(request.body?.action ?? ''); const data = await visionAuthoring(actor, action, (request.body ?? {}) as Record<string, unknown>); response.status(200).json({ status: 'success', data }) }
+  try {
+    const actor = await requireForgeActor(request)
+    const action = request.method === 'GET' ? 'list' : String(request.body?.action ?? '')
+    const data = await visionAuthoring(actor, action, (request.body ?? {}) as Record<string, unknown>)
+    response.status(200).json({ status: 'success', data, meta: { deploymentSha: process.env.VERCEL_GIT_COMMIT_SHA ?? null, actor: { accountStatus: actor.accountStatus, roles: actor.roles, permissionKeys: actor.permissionKeys.filter((permission) => permission.startsWith('vision.')) } } })
+  }
   catch (error) { const status = error instanceof ForgeAuthenticationError ? 401 : error instanceof VisionPermissionError ? 403 : error instanceof VisionPersistenceUnavailableError ? 503 : 500; response.status(status).json({ status: 'error', message: error instanceof Error ? error.message : 'Vision Studio is unavailable.' }) }
 }

@@ -1,6 +1,6 @@
 # Forge Vision Persistence Activation Runbook
 
-Status: persistence and policy correction applied; storage unapplied; authenticated acceptance pending
+Status: persistence and policy correction applied; storage unapplied; authenticated acceptance pending (C3A1 execution boundary hardened)
 Programme: VISION-001C2A  
 Application order: `20260722193000_vision_001a_contracts_and_persistence.sql` and corrective migration `20260723120000_vision_screen_types_read_policy_fix.sql` applied; storage migration `20260723181223_vision_evidence_storage.sql` remains deferred
 Project: `hrvdhjscwitqpwjhnjkm`  
@@ -200,7 +200,7 @@ database restore or compensating migration with explicit evidence handling.
 
 ## 10. Handover evidence and go/no-go
 
-Capture commit SHA, project ref, operator identity, timestamps, migration
+Capture commit SHA, exact READY immutable Vercel preview URL and its attested Git SHA, project ref, operator identity, timestamps, migration
 history, verifier JSON, table/type/function/trigger/index/policy/grant output,
 advisor findings, negative browser results, authenticated acceptance results,
 storage bucket configuration and preview URL.

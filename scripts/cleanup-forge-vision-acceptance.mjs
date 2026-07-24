@@ -1,4 +1,4 @@
-import { ACCEPTANCE, assertRepositoryGate, parseArgs, redact, writeEvidence } from './forge-vision-acceptance-controls.mjs'
+import { ACCEPTANCE, assertRepositoryGate, parseArgs, readCheckpoint, redact, writeCheckpoint } from './forge-vision-acceptance-controls.mjs'
 import { pathToFileURL } from 'node:url'
 
 function ids(value) { const result = (value ?? '').split(',').filter(Boolean); if (!result.length || result.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) throw new Error('Cleanup requires exact comma-separated UUID mapping-version IDs.'); return result }
@@ -12,6 +12,10 @@ export async function cleanupAcceptance({ args = process.argv.slice(2), environm
   const runId = value('--run-id'); if (!runId) throw new Error('Cleanup requires an exact --run-id.')
   const screenTypeId = value('--screen-type-id'); if (!/^[0-9a-f-]{36}$/i.test(screenTypeId ?? '')) throw new Error('Cleanup requires an exact screen-type UUID.')
   const mappingVersionIds = ids(value('--mapping-version-ids'))
+  const retained = readCheckpoint(runId, environment)
+  const checkpoint = retained.checkpoint
+  if (checkpoint.runId !== runId || checkpoint.created?.screenTypeId !== screenTypeId || (checkpoint.created?.mappingVersionIds ?? []).join(',') !== mappingVersionIds.join(',')) throw new Error('Cleanup IDs must exactly match the retained acceptance checkpoint.')
+  if (!checkpoint.cleanupRequired) throw new Error('Cleanup checkpoint does not require a fixture cleanup.')
   const repository = assertRepositoryGate({ approvedSha: value('--approved-sha'), cwd })
   const admin = adminFactory ? await adminFactory() : (await import('../server/database/supabaseAdmin.js')).getSupabaseAdmin()
   const screen = await admin.from('vision_screen_types').select('id,screen_key,game_key,label,description').eq('id', screenTypeId).maybeSingle()
@@ -22,7 +26,9 @@ export async function cleanupAcceptance({ args = process.argv.slice(2), environm
   const childCounts = {}
   for (const table of childTables) { const column = table === 'vision_test_results' || table === 'vision_scan_runs' || table === 'vision_extraction_evidence' ? 'mapping_version_id' : 'mapping_version_id'; const result = await admin.from(table).select('id', { count: 'exact', head: true }).in(column, mappingVersionIds); if (result.error) throw new Error(`Cleanup child inspection failed for ${table}.`); childCounts[table] = result.count ?? 0 }
   if (Object.values(childCounts).some((count) => count !== 0)) throw new Error('Cleanup refuses fixture records with unexpected child records.')
-  const plan = { runId, projectRef: ACCEPTANCE.projectRef, repository, screenTypeId, mappingVersionIds, childCounts, auditRetention: 'Vision audit events are append-only and are never deleted by this cleanup runner.' }
+  const audits = await admin.from('vision_audit_events').select('id,entity_id,payload').in('entity_id', [screenTypeId, ...mappingVersionIds])
+  if (audits.error || (audits.data ?? []).some((audit) => /bearer\s+|token|secret|cookie|password|authorization|x-vercel-protection-bypass|x-vercel-set-bypass-cookie/i.test(JSON.stringify(audit.payload)))) throw new Error('Cleanup refuses retained audit payloads that may contain credentials.')
+  const plan = { runId, projectRef: ACCEPTANCE.projectRef, repository, screenTypeId, mappingVersionIds, childCounts, retainedAuditEventIds: (audits.data ?? []).map((audit) => audit.id), retainedAuditCount: (audits.data ?? []).length, auditRetention: 'Vision audit events are append-only and are never deleted by this cleanup runner.' }
   console.log(JSON.stringify({ status: 'cleanup-plan', plan: redact(plan) }, null, 2))
   const versionDelete = await admin.from('vision_mapping_versions').delete().in('id', mappingVersionIds)
   if (versionDelete.error) throw new Error('Cleanup failed deleting the exact disposable mapping versions.')
@@ -30,8 +36,8 @@ export async function cleanupAcceptance({ args = process.argv.slice(2), environm
   if (screenDelete.error) throw new Error('Cleanup failed deleting the exact disposable screen type.')
   const [screenCheck, versionCheck] = await Promise.all([admin.from('vision_screen_types').select('id', { count: 'exact', head: true }).eq('id', screenTypeId), admin.from('vision_mapping_versions').select('id', { count: 'exact', head: true }).in('id', mappingVersionIds)])
   if (screenCheck.count || versionCheck.count) throw new Error('Cleanup verification failed; fixture records still exist.')
-  const evidence = { ...plan, deleted: true, timestamp: new Date().toISOString() }
-  return { ...redact(evidence), evidencePath: writeEvidence('cleanup', evidence, environment) }
+  const evidence = { ...checkpoint, ...plan, status: 'cleaned', cleanupRequired: false, deleted: true, timestamp: new Date().toISOString() }
+  return { ...redact(evidence), evidencePath: writeCheckpoint(evidence, environment) }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) cleanupAcceptance().then((result) => console.log(JSON.stringify(result, null, 2))).catch((error) => { console.error(JSON.stringify({ status: 'error', message: error instanceof Error ? error.message : 'Cleanup failed.' })); process.exitCode = 1 })

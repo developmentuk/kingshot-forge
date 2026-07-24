@@ -10,6 +10,20 @@ function requirePermission(actor: ForgeActor, permission: string) { if (actor.ac
 function unavailable(error: unknown): never { const message = error instanceof Error ? error.message : ''; if (/schema cache|relation .*vision_|could not find the table|does not exist/i.test(message)) throw new VisionPersistenceUnavailableError(); throw error }
 function clean<T>(result: { data: T | null; error: { message: string } | null }): T { if (result.error) unavailable(new Error(result.error.message)); if (result.data === null) throw new Error('Vision persistence returned no data.'); return result.data }
 
+type AcceptanceAuditContext = { acceptanceRunId?: string; correlationId?: string }
+export function acceptanceAuditContext(body: Record<string, unknown>): AcceptanceAuditContext {
+  const acceptanceRunId = body.acceptanceRunId === undefined ? undefined : String(body.acceptanceRunId)
+  const correlationId = body.correlationId === undefined ? undefined : String(body.correlationId)
+  if (acceptanceRunId !== undefined && !/^[a-z0-9][a-z0-9-]{7,63}$/i.test(acceptanceRunId)) throw new Error('Acceptance run ID is invalid.')
+  if (correlationId !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(correlationId)) throw new Error('Acceptance correlation ID is invalid.')
+  return { acceptanceRunId, correlationId }
+}
+export function buildVisionAuditPayload(actor: ForgeActor, context: AcceptanceAuditContext) { return { actorId: actor.userId, accountStatus: actor.accountStatus, roles: actor.roles, acceptanceRunId: context.acceptanceRunId ?? null, correlationId: context.correlationId ?? null } }
+async function writeVisionAudit(actor: ForgeActor, eventType: string, entityType: string, entityId: string, context: AcceptanceAuditContext) {
+  const result = await getSupabaseAdmin().from('vision_audit_events').insert({ actor_id: actor.userId, event_type: eventType, entity_type: entityType, entity_id: entityId, payload: buildVisionAuditPayload(actor, context) })
+  if (result.error) unavailable(new Error(result.error.message))
+}
+
 export function createVisionAuthoringRepository(): VisionAuthoringRepository {
   const db = getSupabaseAdmin()
   return {
@@ -28,10 +42,11 @@ export async function visionAuthoring(actor: ForgeActor, action: string, body: R
   const repo = createVisionAuthoringRepository()
   if (action === 'list') { requirePermission(actor, 'vision.admin.read'); return { screenTypes: await repo.listScreenTypes(), versions: await repo.listVersions(), fields: await repo.listFields(), extractors: await repo.listExtractors() } }
   requirePermission(actor, 'vision.admin.edit')
-  if (action === 'create-screen-type') return repo.createScreenType({ screenKey: String(body.screenKey ?? ''), label: String(body.label ?? ''), description: String(body.description ?? ''), gameKey: String(body.gameKey ?? 'forge'), actorId: actor.userId })
-  if (action === 'create-version') return repo.createVersion({ screenTypeId: String(body.screenTypeId), layoutFamily: String(body.layoutFamily ?? 'unclassified'), gameVersion: body.gameVersion ? String(body.gameVersion) : undefined, changeNote: body.changeNote ? String(body.changeNote) : undefined, actorId: actor.userId })
+  const context = acceptanceAuditContext(body)
+  if (action === 'create-screen-type') { const result = await repo.createScreenType({ screenKey: String(body.screenKey ?? ''), label: String(body.label ?? ''), description: String(body.description ?? ''), gameKey: String(body.gameKey ?? 'forge'), actorId: actor.userId }); await writeVisionAudit(actor, 'vision.screen_type.created', 'vision_screen_type', result.id, context); return result }
+  if (action === 'create-version') { const result = await repo.createVersion({ screenTypeId: String(body.screenTypeId), layoutFamily: String(body.layoutFamily ?? 'unclassified'), gameVersion: body.gameVersion ? String(body.gameVersion) : undefined, changeNote: body.changeNote ? String(body.changeNote) : undefined, actorId: actor.userId }); await writeVisionAudit(actor, 'vision.mapping.draft_created', 'vision_mapping_version', result.id, context); return result }
   if (action === 'create-successor') return repo.createVersion({ screenTypeId: String(body.screenTypeId), layoutFamily: String(body.layoutFamily ?? 'unclassified'), gameVersion: body.gameVersion ? String(body.gameVersion) : undefined, changeNote: body.changeNote ? String(body.changeNote) : undefined, predecessorVersionId: String(body.predecessorVersionId), actorId: actor.userId })
-  if (action === 'update-metadata') return repo.updateMetadata({ versionId: String(body.versionId), gameVersion: body.gameVersion ? String(body.gameVersion) : undefined, layoutFamily: body.layoutFamily ? String(body.layoutFamily) : undefined, changeNote: body.changeNote ? String(body.changeNote) : undefined, actorId: actor.userId })
-  if (action === 'submit-testing') { requirePermission(actor, 'vision.admin.test'); return repo.submitForTesting(String(body.versionId), actor.userId) }
+  if (action === 'update-metadata') { const result = await repo.updateMetadata({ versionId: String(body.versionId), gameVersion: body.gameVersion ? String(body.gameVersion) : undefined, layoutFamily: body.layoutFamily ? String(body.layoutFamily) : undefined, changeNote: body.changeNote ? String(body.changeNote) : undefined, actorId: actor.userId }); await writeVisionAudit(actor, 'vision.mapping.metadata_updated', 'vision_mapping_version', result.id, context); return result }
+  if (action === 'submit-testing') { requirePermission(actor, 'vision.admin.test'); const result = await repo.submitForTesting(String(body.versionId), actor.userId); await writeVisionAudit(actor, 'vision.mapping.submitted_testing', 'vision_mapping_version', result.id, context); return result }
   throw new Error('Unknown Vision authoring action.')
 }
