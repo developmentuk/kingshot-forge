@@ -84,3 +84,7 @@ The live synthetic incident remains unchanged and acceptance remains NO-GO. D1A4
 D1A5 repairs total versus incident-specific audit counts and migration-ledger verification. No live access or cleanup occurred.
 
 D1A6 repairs governance capture wiring; the exact cleanup remains pending the authorized fresh captures and one execution.
+
+## Final incident closure
+
+The separately approved exact synthetic evidence cleanup completed once at `2026-07-24T17:37:18.700791Z` on `125c40a4f9d5c894c13a9bcd2f0a25bf726eca25`. The object, both upload intents, all evidence rows and all Storage objects are absent. Eight total Vision audit events remain, four incident-specific, and the original four VISION-001C audit events are unchanged. The private bucket and applied migrations remain active with governance controls intact. No activation, OCR or worker execution occurred.

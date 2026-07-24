@@ -54,3 +54,7 @@ Execution requires `FORGE_VISION_EVIDENCE_INCIDENT_MANIFEST_PATH`, `FORGE_VISION
 D1A5 additionally requires `FORGE_VISION_EVIDENCE_INCIDENT_MIGRATION_LEDGER_RESULT_PATH`, containing the separately captured exact ledger names `vision_evidence_storage`, `vision_evidence_storage_governance`, and `vision_evidence_adapter_support`. The gateway verifies the corresponding live schema and governance state; it does not query `schema_migrations` through PostgREST or treat migration filenames as ledger versions. Audit preflight tracks total and incident-specific counts independently.
 
 D1A6 additionally requires `FORGE_VISION_EVIDENCE_INCIDENT_GOVERNANCE_RESULT_PATH`, a separately captured structured read-only JSON result. It is compared field-for-field with the manifest and must include the private bucket configuration, exact required policy and constraint names, restricted grants, and enabled/forced RLS flags. Boolean-only captures are rejected.
+
+## Closure result
+
+The one authorized cleanup ran once at `2026-07-24T17:37:18.700791Z` on cleanup SHA `125c40a4f9d5c894c13a9bcd2f0a25bf726eca25`. Exact object count, Storage object count, intent count and evidence count are all zero. Audit totals are 8 overall and 4 incident-specific, including one bounded `vision.evidence.upload_abandoned` event; the four original C3 events remain. The bucket, migrations and governance controls remain retained. Do not rerun cleanup or activation without fresh owner approval.
