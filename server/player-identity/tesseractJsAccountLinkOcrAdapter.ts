@@ -4,10 +4,10 @@ import { createWorker, PSM, type Worker } from 'tesseract.js'
 import type { VisionExtractionRequest } from '../../shared/platform/vision/contracts.js'
 import { VisionRuntimeError } from '../vision/runtime/errors.js'
 import type { AccountLinkOcrAdapter } from './accountLinkingOcrService.js'
-import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, KINGSHOT_PROFILE_V4_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
-import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
+import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, KINGSHOT_PROFILE_V4_MAPPING_VERSION, KINGSHOT_PROFILE_V5_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
+import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
 import type { AccountLinkOcrDisposition, AccountLinkOcrMappingVersion, AccountLinkOcrRegionObservation } from '../../shared/domains/player-identity/accountLinkingOcr.js'
-import { consensusPlayerId, consensusComponentDigits, type ComponentNumericObservation, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
+import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, type ComponentNumericObservation, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
 
 const require = createRequire(import.meta.url)
 const RUNTIME_TIMEOUT_MS = 45_000
@@ -27,7 +27,7 @@ function bundledPaths(): { workerPath: string; langPath: string } {
 }
 
 type DiagnosticRegion = { field: KingshotProfileField; attempted: boolean; recognized: boolean; confidence: number; warnings: readonly string[] }
-type FieldDiagnostic = { field: KingshotProfileField; disposition: AccountLinkOcrDisposition; confidence: number; agreement: 'agree' | 'disagree' | 'not_applicable'; warnings: readonly string[] }
+type FieldDiagnostic = { field: KingshotProfileField; disposition: AccountLinkOcrDisposition; confidence: number; agreement: 'agree' | 'agree_with_missing_pass' | 'disagree' | 'not_applicable'; warnings: readonly string[] }
 
 export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
   readonly #workerFactory: TesseractJsWorkerFactory
@@ -45,6 +45,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     try {
       const paths = bundledPaths()
       worker = await this.#workerFactory.create({ workerPath: paths.workerPath, langPath: paths.langPath, cacheMethod: 'none', gzip: true, workerBlobURL: false, logger: () => {} })
+      if (request.mappingVersionId === KINGSHOT_PROFILE_V5_MAPPING_VERSION) return await this.#extractV4(worker, request, true)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V4_MAPPING_VERSION) return await this.#extractV4(worker, request)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V3_MAPPING_VERSION) return await this.#extractV3(worker, request)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V2_MAPPING_VERSION) return await this.#extractV2(worker, request)
@@ -151,7 +152,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     return { ...this.#output('', consensus.confidence, observations, diagnostics, fields, KINGSHOT_PROFILE_V3_MAPPING_VERSION), diagnostics: { mappingVersion: KINGSHOT_PROFILE_V3_MAPPING_VERSION, regions: diagnostics, fields, passes } }
   }
 
-  async #extractV4(worker: Worker, request: VisionExtractionRequest) {
+  async #extractV4(worker: Worker, request: VisionExtractionRequest, labelledKingdomLine = false) {
     const region = (key: string) => KINGSHOT_PROFILE_V4_REGIONS.find((item) => item.key === key)!
     const panel = await this.#recognizePrepared(worker, request, region('profilePanel'), 'greyscale', PSM.SPARSE_TEXT, null)
     const passes: Array<{ field: KingshotProfileField; passType: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'; variant: 'greyscale' | 'threshold'; attempted: boolean; confidence: number; labelContext: boolean; warnings: string[] }> = []
@@ -198,14 +199,35 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
       diagnostics.push({ field, attempted: true, recognized: Boolean(consensus.value), confidence: consensus.confidence, warnings: consensus.warnings })
       fields.push({ field, disposition: consensus.disposition, confidence: consensus.confidence, agreement: consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement, warnings: consensus.warnings })
     }
-    await readNumericComponent('kingdom', 'kingdomLabel', 'kingdomDigits', (value) => Number(value) >= 1 && Number(value) <= 9999)
+    if (labelledKingdomLine) {
+      const lineRegion = KINGSHOT_PROFILE_V5_REGIONS.find((item) => item.key === 'kingdomLine')!
+      const lineReads = [
+        await this.#recognizePrepared(worker, request, lineRegion, 'greyscale', PSM.SINGLE_LINE, lineRegion.characterWhitelist),
+        await this.#recognizePrepared(worker, request, lineRegion, 'threshold', PSM.SINGLE_LINE, lineRegion.characterWhitelist),
+      ].map((item, index) => ({ value: extractNumber(cleanRawText(item.text), 'kingdom'), confidence: item.confidence, variant: index === 0 ? 'greyscale' as const : 'threshold' as const }))
+      const valid = lineReads.filter((item) => item.value && item.confidence > 0 && Number(item.value) >= 1 && Number(item.value) <= 9999)
+      const labelContext = lineReads.some((item) => item.value !== undefined) || /kingdom/i.test(cleanRawText(panel.text))
+      let value: string | undefined
+      const lineConsensus = consensusKingdomLine(valid, labelContext)
+      value = lineConsensus.value
+      const disposition = lineConsensus.disposition
+      const agreement = lineConsensus.agreement === 'insufficient' ? 'not_applicable' : lineConsensus.agreement
+      const confidence = lineConsensus.confidence
+      const warnings = [...lineConsensus.warnings]
+      observations.push({ field: 'kingdom', rawText: '', confidence, warnings, acceptedValue: value, disposition, agreement, passType: 'labelled_line', variant: valid.sort((a, b) => b.confidence - a.confidence)[0]?.variant ?? 'greyscale', labelContext })
+      diagnostics.push({ field: 'kingdom', attempted: true, recognized: Boolean(value), confidence, warnings })
+      fields.push({ field: 'kingdom', disposition, confidence, agreement, warnings })
+      passes.push({ field: 'kingdom', passType: 'labelled_line', variant: 'greyscale', attempted: true, confidence: lineReads[0].confidence, labelContext, warnings: lineReads[0].confidence === 0 ? ['zero_confidence_numeric'] : [] }, { field: 'kingdom', passType: 'labelled_line', variant: 'threshold', attempted: true, confidence: lineReads[1].confidence, labelContext, warnings: lineReads[1].confidence === 0 ? ['zero_confidence_numeric'] : [] })
+    } else {
+      await readNumericComponent('kingdom', 'kingdomLabel', 'kingdomDigits', (value) => Number(value) >= 1 && Number(value) <= 9999)
+    }
 
     const readSupporting = async (field: 'allianceTag' | 'displayName', key: string) => {
       const values = [await read(field, region(key), 'greyscale', PSM.SINGLE_LINE, 'label_component', region(key).characterWhitelist), await read(field, region(key), 'threshold', PSM.SINGLE_LINE, 'label_component', region(key).characterWhitelist)].filter((item) => item.text)
       const selected = values.sort((a, b) => b.confidence - a.confidence)[0]
       const value = selected ? normalizeName(selected.text) : undefined
       const review = Boolean(value) && (selected!.confidence < 0.65 || value!.length < 4 || (field === 'displayName' && !/\s/u.test(value!)))
-      const disposition = value ? review ? 'review_required' as const : 'recognised' as const : 'could_not_read' as const
+      const disposition = value ? 'review_required' as const : 'could_not_read' as const
       const warnings = value && review ? ['partial_or_normalised_name', 'supporting_information_review_only'] : value ? [] : ['name_not_read']
       observations.push({ field, rawText: '', confidence: selected?.confidence ?? 0, warnings, acceptedValue: value, disposition, agreement: 'not_applicable', passType: 'label_component', variant: selected ? 'greyscale' : 'threshold', labelContext: false })
       diagnostics.push({ field, attempted: true, recognized: Boolean(value), confidence: selected?.confidence ?? 0, warnings })
@@ -213,7 +235,8 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     }
     await readSupporting('allianceTag', 'allianceTag')
     await readSupporting('displayName', 'displayName')
-    return { ...this.#output('', Math.max(idConsensus.confidence, ...fields.map((item) => item.confidence)), observations, diagnostics, fields, KINGSHOT_PROFILE_V4_MAPPING_VERSION), diagnostics: { mappingVersion: KINGSHOT_PROFILE_V4_MAPPING_VERSION, regions: diagnostics, fields, passes } }
+    const mappingVersion = labelledKingdomLine ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : KINGSHOT_PROFILE_V4_MAPPING_VERSION
+    return { ...this.#output('', Math.max(idConsensus.confidence, ...fields.map((item) => item.confidence)), observations, diagnostics, fields, mappingVersion), diagnostics: { mappingVersion, regions: diagnostics, fields, passes } }
   }
 
   async #recognizePrepared(worker: Worker, request: VisionExtractionRequest, region: KingshotProfileRegion, variant: 'greyscale' | 'threshold', psm: string, whitelist: string | null) {

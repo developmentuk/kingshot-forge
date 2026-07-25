@@ -1,7 +1,7 @@
 export type KingshotProfileField = 'displayName' | 'playerId' | 'kingdom' | 'allianceTag'
 export type KingshotProfileRegionKey = KingshotProfileField | 'profilePanel'
   | 'playerIdNumeric' | 'avatar' | 'clipboardIcon' | 'playerIdLabel' | 'playerIdDigits'
-  | 'townCenterLabel' | 'townCenterBadge' | 'kingdomLabel' | 'kingdomDigits'
+  | 'townCenterLabel' | 'townCenterBadge' | 'kingdomLabel' | 'kingdomDigits' | 'kingdomLine'
 export type KingshotProfileObservation = 'panel' | 'line' | 'numeric' | 'component' | 'exclusion' | 'layout'
 export type KingshotProfileComponentRole = 'ocr' | 'layout' | 'exclusion'
 export type KingshotProfileRegionConfig = {
@@ -52,4 +52,9 @@ export const KINGSHOT_PROFILE_V4_REGIONS: readonly KingshotProfileRegionConfig[]
   { key: 'townCenterBadge', label: 'Town Centre badge', x: 0.70, y: 0.51, width: 0.08, height: 0.18, psm: 'single_word', characterWhitelist: '0123456789', observation: 'layout', componentRole: 'layout' },
   { key: 'kingdomLabel', field: 'kingdom', label: 'Kingdom label', x: 0.30, y: 0.76, width: 0.18, height: 0.16, psm: 'single_word', characterWhitelist: null, observation: 'component', componentRole: 'ocr' },
   { key: 'kingdomDigits', field: 'kingdom', label: 'Kingdom digits', x: 0.50, y: 0.76, width: 0.14, height: 0.16, psm: 'single_word', characterWhitelist: '0123456789', observation: 'numeric', componentRole: 'ocr' },
+]
+
+export const KINGSHOT_PROFILE_V5_REGIONS: readonly KingshotProfileRegionConfig[] = [
+  ...KINGSHOT_PROFILE_V4_REGIONS,
+  { key: 'kingdomLine', field: 'kingdom', label: 'Kingdom labelled line', x: 0.27, y: 0.70, width: 0.48, height: 0.20, psm: 'single_line', characterWhitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#: ', observation: 'line', componentRole: 'ocr' },
 ]

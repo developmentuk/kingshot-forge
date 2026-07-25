@@ -12,7 +12,7 @@ export interface PlayerIdObservation {
 export interface PlayerIdConsensus {
   readonly value?: string
   readonly disposition: 'recognised' | 'could_not_read' | 'conflicting_reads'
-  readonly agreement: 'agree' | 'disagree' | 'insufficient'
+  readonly agreement: 'agree' | 'agree_with_missing_pass' | 'disagree' | 'insufficient'
   readonly confidence: number
   readonly warnings: readonly string[]
 }
@@ -64,4 +64,16 @@ export function consensusComponentDigits(observations: readonly ComponentNumeric
   }
   if (groups.size > 1) return { disposition: 'conflicting_reads', agreement: 'disagree', confidence: Math.max(...valid.map((item) => item.confidence), 0), warnings: ['conflicting_digit_strings'] }
   return { disposition: 'could_not_read', agreement: 'insufficient', confidence: Math.max(...valid.map((item) => item.confidence), 0), warnings: ['insufficient_component_numeric_agreement'] }
+}
+
+export type KingdomLineRead = { readonly value?: string; readonly confidence: number }
+
+export function consensusKingdomLine(reads: readonly KingdomLineRead[], labelContext: boolean): PlayerIdConsensus {
+  const valid = reads.filter((item) => item.value && item.confidence > 0 && Number(item.value) >= 1 && Number(item.value) <= 9999)
+  const confidence = Math.max(...reads.map((item) => item.confidence), 0)
+  if (!labelContext) return { disposition: 'could_not_read', agreement: 'insufficient', confidence, warnings: ['kingdom_label_context_required'] }
+  if (valid.length === 2 && valid[0].value === valid[1].value) return { value: valid[0].value, disposition: 'recognised', agreement: 'agree', confidence: Math.max(...valid.map((item) => item.confidence)), warnings: [] }
+  if (labelContext && valid.length === 1 && valid[0].confidence >= 0.75) return { value: valid[0].value, disposition: 'recognised', agreement: 'agree_with_missing_pass', confidence: valid[0].confidence, warnings: ['one_kingdom_pass_failed'] }
+  if (valid.length === 2 && valid[0].value !== valid[1].value) return { disposition: 'conflicting_reads', agreement: 'disagree', confidence, warnings: ['conflicting_digit_strings'] }
+  return { disposition: 'could_not_read', agreement: 'insufficient', confidence, warnings: labelContext ? [] : ['kingdom_label_context_required'] }
 }

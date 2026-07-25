@@ -128,3 +128,14 @@ configured digits crop and requires context, two agreeing observations, one
 strong `.55` observation and one supporting `.35` observation. Synthetic PNG
 and JPEG fixtures contain fake values only; no live evidence or database
 mutation is recorded.
+
+## VISION-LINK-006 Kingdom regression repair
+
+V4 Player ID extraction is frozen after exact agreement across its label and
+four digit observations. The short Kingdom component crops regressed into
+conflicting reads, so V5 retains the complete v4 Player ID/layout mapping but
+uses the proven labelled `kingdomLine` geometry for the mandatory Kingdom field.
+Two labelled SINGLE_LINE passes agree on the synthetic `Kingdom # 42` fixture;
+missing-pass, conflicting-value, absent-context, Town Centre separation and
+short-token non-override cases are covered. Name and alliance diagnostics are
+always `review_required`; fixtures contain no real screenshot or account value.

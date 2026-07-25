@@ -1,5 +1,5 @@
 export type AccountLinkOcrField = 'playerId' | 'displayName' | 'kingdom' | 'allianceTag'
-export type AccountLinkOcrMappingVersion = 'account-linking-ocr-mvp' | 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4'
+export type AccountLinkOcrMappingVersion = 'account-linking-ocr-mvp' | 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4' | 'account-linking-kingshot-profile-v5'
 export type AccountLinkOcrDisposition = 'recognised' | 'review_required' | 'could_not_read' | 'conflicting_reads'
 
 export interface AccountLinkOcrRegionObservation {
@@ -9,7 +9,7 @@ export interface AccountLinkOcrRegionObservation {
   readonly warnings: readonly string[]
   readonly acceptedValue?: string
   readonly disposition?: AccountLinkOcrDisposition
-  readonly agreement?: 'agree' | 'disagree' | 'not_applicable'
+  readonly agreement?: 'agree' | 'agree_with_missing_pass' | 'disagree' | 'not_applicable'
   readonly passType?: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'
   readonly variant?: 'greyscale' | 'threshold'
   readonly labelContext?: boolean
@@ -34,7 +34,7 @@ export interface AccountLinkOcrResult {
   readonly diagnostics?: {
     readonly mappingVersion: AccountLinkOcrMappingVersion
     readonly regions: readonly { field: AccountLinkOcrField; attempted: boolean; recognized: boolean; confidence: number; warnings: readonly string[] }[]
-    readonly fields?: readonly { field: AccountLinkOcrField; disposition: AccountLinkOcrDisposition; confidence: number; agreement: 'agree' | 'disagree' | 'not_applicable'; warnings: readonly string[] }[]
+    readonly fields?: readonly { field: AccountLinkOcrField; disposition: AccountLinkOcrDisposition; confidence: number; agreement: 'agree' | 'agree_with_missing_pass' | 'disagree' | 'not_applicable'; warnings: readonly string[] }[]
     readonly passes?: readonly { field: AccountLinkOcrField; passType: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'; variant: 'greyscale' | 'threshold'; attempted: boolean; confidence: number; labelContext: boolean; warnings: readonly string[] }[]
   }
   readonly provenance: {
@@ -68,7 +68,7 @@ export function parseAccountLinkCandidates(rawText: string, evidenceId: string, 
   const bounded = boundedConfidence(confidence)
   const candidates: AccountLinkOcrCandidate[] = []
   const regionFor = (field: AccountLinkOcrField) => options.regions?.find((region) => region.field === field)
-  const v2 = mappingVersion === 'account-linking-kingshot-profile-v2' || mappingVersion === 'account-linking-kingshot-profile-v3' || mappingVersion === 'account-linking-kingshot-profile-v4'
+  const v2 = mappingVersion === 'account-linking-kingshot-profile-v2' || mappingVersion === 'account-linking-kingshot-profile-v3' || mappingVersion === 'account-linking-kingshot-profile-v4' || mappingVersion === 'account-linking-kingshot-profile-v5'
 
   const idRegion = regionFor('playerId')
   const idText = idRegion?.rawText && /\d/.test(idRegion.rawText) ? idRegion.rawText : rawText

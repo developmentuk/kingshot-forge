@@ -23,11 +23,11 @@ export async function extractAccountLinkCandidates(input: {
   mimeType: VisionExtractionRequest['image']['mimeType']
   widthPx: number
   heightPx: number
-  mappingVersion?: 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4'
+  mappingVersion?: 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4' | 'account-linking-kingshot-profile-v5'
   adapter?: AccountLinkOcrAdapter
 }): Promise<AccountLinkOcrResult> {
   const adapter = input.adapter ?? new TesseractJsAccountLinkOcrAdapter()
-  const mappingVersion = input.mappingVersion ?? 'account-linking-kingshot-profile-v4'
+  const mappingVersion = input.mappingVersion ?? 'account-linking-kingshot-profile-v5'
   const extracted = await adapter.extract({
     runId: `account-link-${input.evidenceId}`,
     mappingVersionId: mappingVersion,

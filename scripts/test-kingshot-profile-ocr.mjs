@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { extractAccountLinkCandidates } from '../server/player-identity/accountLinkingOcrService.ts'
 import { mapProfileRegion, prepareProfileRegion, profileRegionBindings } from '../server/player-identity/kingshotProfileOcr.ts'
-import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
-import { consensusPlayerId, consensusComponentDigits } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
+import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
+import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
 import { parseAccountLinkCandidates } from '../shared/domains/player-identity/accountLinkingOcr.ts'
 
 const base = new URL('../fixtures/vision/account-linking/', import.meta.url)
@@ -60,6 +60,10 @@ assert.ok(idDigits.x < 0.39 && idDigits.x + idDigits.width < clipboard.x)
 assert.ok(idLabel.x + idLabel.width <= idDigits.x)
 assert.equal(idDigits.componentRole, 'ocr'); assert.equal(clipboard.componentRole, 'exclusion')
 assert.ok(kingdomDigits.y > v4('townCenterBadge').y + v4('townCenterBadge').height)
+const v5Line = KINGSHOT_PROFILE_V5_REGIONS.find((region) => region.key === 'kingdomLine')
+assert.ok(v5Line); assert.deepEqual(profileRegionBindings('v5').at(-1)?.regionKey, 'kingdomLine')
+assert.equal(v5Line.x, .27); assert.equal(v5Line.y, .70); assert.equal(v5Line.width, .48); assert.equal(v5Line.height, .20)
+assert.ok(v5Line.y >= .70 && v5Line.y > v4('townCenterBadge').y + v4('townCenterBadge').height)
 
 assert.ok((await readFile(new URL('kingshot-profile-v4-low-res.jpg', base))).length > 0)
 for (const [file, mimeType, width, height] of [['kingshot-profile-v4-large.png', 'image/png', 1600, 900]]) {
@@ -75,6 +79,21 @@ for (const [file, mimeType, width, height] of [['kingshot-profile-v4-large.png',
   assert.equal(result.diagnostics?.passes?.filter((pass) => pass.field === 'playerId').length, 6)
   assert.equal(result.diagnostics?.mappingVersion, 'account-linking-kingshot-profile-v4')
 }
+
+const v5Bytes = new Uint8Array(await readFile(new URL('kingshot-profile-v5-large.png', base)))
+const v5Sha = createHash('sha256').update(v5Bytes).digest('hex')
+const v5Result = await extractAccountLinkCandidates({ evidenceId: '99999999-9999-4999-8999-999999999999', bytes: v5Bytes, sha256: v5Sha, mimeType: 'image/png', widthPx: 1600, heightPx: 900, mappingVersion: 'account-linking-kingshot-profile-v5' })
+assert.equal(v5Result.candidates.find((item) => item.field === 'playerId')?.value, '111111111111')
+assert.equal(v5Result.candidates.find((item) => item.field === 'kingdom')?.value, '42')
+assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'kingdom')?.disposition, 'recognised')
+assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'kingdom')?.agreement, 'agree')
+assert.equal(v5Result.diagnostics?.passes?.filter((pass) => pass.field === 'kingdom').length, 2)
+assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'displayName')?.disposition, 'review_required')
+assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'allianceTag')?.disposition, 'review_required')
+assert.equal(consensusKingdomLine([{ value: '42', confidence: .9 }, { value: '42', confidence: .8 }], true).value, '42')
+assert.equal(consensusKingdomLine([{ value: '42', confidence: .8 }, { confidence: 0 }], true).agreement, 'agree_with_missing_pass')
+assert.equal(consensusKingdomLine([{ value: '42', confidence: .9 }, { value: '43', confidence: .9 }], true).disposition, 'conflicting_reads')
+assert.equal(consensusKingdomLine([{ value: '42', confidence: .9 }, { value: '42', confidence: .9 }], false).disposition, 'could_not_read')
 
 assert.equal(consensusComponentDigits([
   { passType: 'single_word', variant: 'greyscale', digits: '111111111111', confidence: .8 },

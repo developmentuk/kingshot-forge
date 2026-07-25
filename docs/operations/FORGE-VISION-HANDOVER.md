@@ -84,3 +84,14 @@ by the broad line-agreement model. V4 separates label, digit, icon-exclusion
 and supporting regions. Player ID uses label context plus four bounded digit
 passes with strong `.55` and supporting `.35` thresholds. Synthetic fixtures
 use fake repeated digits only; no real screenshot or account value is committed.
+
+## VISION-LINK-006 final Kingdom regression repair
+
+VISION-LINK-005 achieved exact Player ID extraction: both label-context passes
+and all four digit passes agreed. Its Kingdom component short-token passes
+could still conflict, despite the prior labelled-line strategy already having
+worked. V5 freezes the v4 Player ID components and restores a separate
+`kingdomLine` at `.27,.70,.48,.20`, with greyscale and threshold SINGLE_LINE
+observations and explicit labelled parsing. Name and alliance remain
+`review_required` supporting fields. Fixtures use fake values only; no real
+screenshot or account value is committed.
