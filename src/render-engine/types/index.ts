@@ -23,6 +23,23 @@ export type GlyphCalibration = {
   baselineOffset: number
   fontFamily: string
   fontWeight: number
+  /** Paint-only correction in logical cells; never changes advanceCells. */
+  glyphTranslateXCells?: number
+  /** Paint-only multiplier applied after the family horizontal scale. */
+  glyphScaleX?: number
+}
+
+export type DirectionalGlyphCalibrationId =
+  | 'ascii-forward-slash'
+  | 'ascii-backslash'
+  | 'full-width-forward-slash'
+  | 'full-width-backslash'
+  | 'vertical-bar'
+  | 'line-art'
+
+export type GlyphPaintCalibration = {
+  glyphTranslateXCells: number
+  glyphScaleX: number
 }
 
 export type CalibrationConfiguration = Record<GlyphFamily, GlyphCalibration>

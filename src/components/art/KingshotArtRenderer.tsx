@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { analyseArtworkDetailed, buildFixedCellGrid, DEFAULT_CALIBRATION, DEVICE_PROFILES, deviceProfileStyle, parseArtwork } from '../../render-engine'
+import { analyseArtworkDetailed, buildFixedCellGrid, DEFAULT_CALIBRATION, DEVICE_PROFILES, deviceProfileStyle, getDirectionalGlyphCalibration, parseArtwork } from '../../render-engine'
 import type { ArtworkClass, ArtworkSourceContext, CalibrationConfiguration, DeviceProfile, DeviceProfileId, GlyphFamily } from '../../render-engine'
 import { calculateResponsiveLayout } from './fitToContainer'
 
@@ -52,8 +52,10 @@ function KingshotGrid({ artwork, lines, classes, labelledBy, calibration, style,
     {grid.map((row) => <div className="kingshot-cell-grid__row" key={row.row} aria-hidden="true">
       {row.cells.length === 0 ? <span className="kingshot-cell-grid__cell kingshot-cell-grid__cell--space"><span className="kingshot-cell-grid__glyph">&nbsp;</span></span> : row.cells.map((cell) => {
         const paint = calibration[cell.family]
-        const horizontalScale = paint.horizontalScale
-        return <span className={`kingshot-cell-grid__cell kingshot-cell-grid__cell--${cell.family}`} data-grid-column={cell.column} data-grid-row={cell.row} data-grid-span={cell.span} data-source-graphemes={cell.sourceGlyphs.length} key={`${row.row}-${cell.column}`} style={{ '--forge-cell-span': cell.span } as CSSProperties}><span className="kingshot-cell-grid__glyph" style={{ '--forge-glyph-scale': paint.glyphScale, '--forge-glyph-scale-x': horizontalScale, '--forge-glyph-scale-y': paint.verticalScale, '--forge-baseline-offset': `${paint.baselineOffset}px`, '--forge-glyph-family': paint.fontFamily, '--forge-glyph-weight': paint.fontWeight } as CSSProperties}>{cell.glyph === ' ' ? '\u00a0' : cell.glyph}</span></span>
+        const directionalPaint = getDirectionalGlyphCalibration(cell.glyph, cell.family)
+        const horizontalScale = (paint.horizontalScale ?? 1) * (paint.glyphScaleX ?? 1) * directionalPaint.glyphScaleX
+        const translateX = (paint.glyphTranslateXCells ?? 0) + directionalPaint.glyphTranslateXCells
+        return <span className={`kingshot-cell-grid__cell kingshot-cell-grid__cell--${cell.family}`} data-grid-column={cell.column} data-grid-row={cell.row} data-grid-span={cell.span} data-source-graphemes={cell.sourceGlyphs.length} key={`${row.row}-${cell.column}`} style={{ '--forge-cell-span': cell.span } as CSSProperties}><span className="kingshot-cell-grid__glyph" style={{ '--forge-glyph-scale': paint.glyphScale, '--forge-glyph-scale-x': horizontalScale, '--forge-glyph-scale-y': paint.verticalScale, '--forge-glyph-translate-x-cells': translateX, '--forge-baseline-offset': `${paint.baselineOffset}px`, '--forge-glyph-family': paint.fontFamily, '--forge-glyph-weight': paint.fontWeight } as CSSProperties}>{cell.glyph === ' ' ? '\u00a0' : cell.glyph}</span></span>
       })}
     </div>)}
   </div>

@@ -1,4 +1,4 @@
-import type { CalibrationConfiguration, GlyphCalibration, GlyphFamily } from '../types'
+import type { CalibrationConfiguration, DirectionalGlyphCalibrationId, GlyphCalibration, GlyphFamily, GlyphPaintCalibration } from '../types'
 
 const GAME_TEXT_STACK = 'Arial, Arimo, "Noto Sans", "Segoe UI", sans-serif'
 const GAME_FULL_WIDTH_STACK = 'Arial, "Noto Sans CJK SC", "Microsoft YaHei", "Segoe UI", sans-serif'
@@ -12,6 +12,8 @@ const calibration = (overrides: Partial<GlyphCalibration> = {}): GlyphCalibratio
   baselineOffset: 0,
   fontFamily: GAME_TEXT_STACK,
   fontWeight: 600,
+  glyphTranslateXCells: 0,
+  glyphScaleX: 1,
   ...overrides,
 })
 
@@ -27,6 +29,28 @@ export const DEFAULT_CALIBRATION: CalibrationConfiguration = {
   hearts: calibration({ advanceCells: 2, glyphScale: 1.03, fontFamily: EMOJI_STACK, fontWeight: 400 }),
   'line-art': calibration({ horizontalScale: .95, verticalScale: .95, fontFamily: GAME_FULL_WIDTH_STACK, fontWeight: 400 }),
   'decorative-symbols': calibration({ glyphScale: 1.02, horizontalScale: .92 }),
+}
+
+// These values calibrate visible ink inside already-correct logical cells.
+// The slash families need a little more horizontal ink than their font's
+// centred advance provides; the source columns and cell spans remain intact.
+export const DIRECTIONAL_GLYPH_PAINT: Record<DirectionalGlyphCalibrationId, GlyphPaintCalibration> = {
+  'ascii-forward-slash': { glyphTranslateXCells: -0.12, glyphScaleX: 1.08 },
+  'ascii-backslash': { glyphTranslateXCells: 0.12, glyphScaleX: 1.08 },
+  'full-width-forward-slash': { glyphTranslateXCells: -0.12, glyphScaleX: 1.06 },
+  'full-width-backslash': { glyphTranslateXCells: 0.12, glyphScaleX: 1.06 },
+  'vertical-bar': { glyphTranslateXCells: 0, glyphScaleX: 1 },
+  'line-art': { glyphTranslateXCells: 0, glyphScaleX: 1 },
+}
+
+export function getDirectionalGlyphCalibration(glyph: string, family: GlyphFamily): GlyphPaintCalibration {
+  if (glyph === '/' && family === 'ascii') return DIRECTIONAL_GLYPH_PAINT['ascii-forward-slash']
+  if (glyph === '\\' && family === 'ascii') return DIRECTIONAL_GLYPH_PAINT['ascii-backslash']
+  if (glyph === '／' && family === 'full-width') return DIRECTIONAL_GLYPH_PAINT['full-width-forward-slash']
+  if (glyph === '＼' && family === 'full-width') return DIRECTIONAL_GLYPH_PAINT['full-width-backslash']
+  if (glyph === '|' && family === 'ascii') return DIRECTIONAL_GLYPH_PAINT['vertical-bar']
+  if ((glyph === '_' || glyph === '＿') && family === 'line-art') return DIRECTIONAL_GLYPH_PAINT['line-art']
+  return { glyphTranslateXCells: 0, glyphScaleX: 1 }
 }
 
 export function mergeCalibration(base: CalibrationConfiguration, overrides: Partial<Record<GlyphFamily, Partial<GlyphCalibration>>>): CalibrationConfiguration {

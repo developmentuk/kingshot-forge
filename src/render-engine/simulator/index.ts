@@ -21,6 +21,7 @@ export function calibrationStyle(family: GlyphFamily, calibration: CalibrationCo
     ...deviceProfileStyle(device),
     '--forge-glyph-scale': value.glyphScale,
     '--forge-glyph-scale-x': value.horizontalScale,
+    '--forge-glyph-translate-x-cells': value.glyphTranslateXCells ?? 0,
     '--forge-glyph-scale-y': value.verticalScale,
     '--forge-baseline-offset': `${value.baselineOffset}px`,
     '--forge-glyph-family': value.fontFamily,
