@@ -1,4 +1,4 @@
-import type { AccountLinkOcrRegionObservation, AccountLinkOcrResult } from '../../shared/domains/player-identity/accountLinkingOcr.js'
+import type { AccountLinkOcrMappingVersion, AccountLinkOcrRegionObservation, AccountLinkOcrResult } from '../../shared/domains/player-identity/accountLinkingOcr.js'
 import { TesseractCliExtractor } from '../vision/extractors/tesseractCliExtractor.js'
 import { TesseractJsAccountLinkOcrAdapter } from './tesseractJsAccountLinkOcrAdapter.js'
 import type { VisionExtractionRequest } from '../../shared/platform/vision/contracts.js'
@@ -23,11 +23,11 @@ export async function extractAccountLinkCandidates(input: {
   mimeType: VisionExtractionRequest['image']['mimeType']
   widthPx: number
   heightPx: number
-  mappingVersion?: 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4' | 'account-linking-kingshot-profile-v5'
+  mappingVersion?: Exclude<AccountLinkOcrMappingVersion, 'account-linking-ocr-mvp'>
   adapter?: AccountLinkOcrAdapter
 }): Promise<AccountLinkOcrResult> {
   const adapter = input.adapter ?? new TesseractJsAccountLinkOcrAdapter()
-  const mappingVersion = input.mappingVersion ?? 'account-linking-kingshot-profile-v5'
+  const mappingVersion = input.mappingVersion ?? 'account-linking-kingshot-profile-v6'
   const extracted = await adapter.extract({
     runId: `account-link-${input.evidenceId}`,
     mappingVersionId: mappingVersion,

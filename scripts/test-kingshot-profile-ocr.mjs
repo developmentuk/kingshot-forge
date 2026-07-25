@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { extractAccountLinkCandidates } from '../server/player-identity/accountLinkingOcrService.ts'
 import { mapProfileRegion, prepareProfileRegion, profileRegionBindings } from '../server/player-identity/kingshotProfileOcr.ts'
-import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
+import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
 import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
 import { parseAccountLinkCandidates } from '../shared/domains/player-identity/accountLinkingOcr.ts'
 
@@ -90,6 +90,8 @@ assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'kingdo
 assert.equal(v5Result.diagnostics?.passes?.filter((pass) => pass.field === 'kingdom').length, 2)
 assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'displayName')?.disposition, 'review_required')
 assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'allianceTag')?.disposition, 'review_required')
+assert.equal(KINGSHOT_PROFILE_V6_REGIONS.find((region) => region.key === 'townCenterBadge')?.componentRole, 'ocr')
+assert.equal(KINGSHOT_PROFILE_V6_REGIONS.find((region) => region.key === 'townCenterLabel')?.componentRole, 'ocr')
 assert.equal(consensusKingdomLine([{ value: '42', confidence: .9 }, { value: '42', confidence: .8 }], true).value, '42')
 assert.equal(consensusKingdomLine([{ value: '42', confidence: .8 }, { confidence: 0 }], true).agreement, 'agree_with_missing_pass')
 assert.equal(consensusKingdomLine([{ value: '42', confidence: .9 }, { value: '43', confidence: .9 }], true).disposition, 'conflicting_reads')

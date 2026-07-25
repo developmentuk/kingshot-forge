@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import type { AccountLinkOcrResult } from '../../shared/domains/player-identity/accountLinkingOcr'
+import type { AccountLinkOcrField, AccountLinkOcrResult, AccountLinkOcrReview } from '../../shared/domains/player-identity/accountLinkingOcr'
 
 type EvidenceResponse = { status?: string; data?: { intent: { id: string; storagePath: string }; upload: { bucket: string; path: string; token: string } }; message?: string }
 
@@ -18,7 +18,7 @@ async function dimensions(file: File): Promise<{ widthPx: number; heightPx: numb
   return result
 }
 
-export default function ScreenshotLinkingPanel({ onCandidate }: { onCandidate: (playerId: string) => void }) {
+export default function ScreenshotLinkingPanel({ onCandidate, onReview }: { onCandidate: (playerId: string) => void; onReview?: (review: AccountLinkOcrReview | null) => void }) {
   const { user, session } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
   const [working, setWorking] = useState(false)
@@ -28,7 +28,7 @@ export default function ScreenshotLinkingPanel({ onCandidate }: { onCandidate: (
   const [intentId, setIntentId] = useState<string | null>(null)
   const [completedEvidenceId, setCompletedEvidenceId] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [editedPlayerId, setEditedPlayerId] = useState('')
+  const [review, setReview] = useState<AccountLinkOcrReview | null>(null)
 
   async function callEvidence(body: Record<string, unknown>): Promise<EvidenceResponse> {
     if (!session?.access_token) throw new Error('Sign in is required to use screenshot linking.')
@@ -77,7 +77,11 @@ export default function ScreenshotLinkingPanel({ onCandidate }: { onCandidate: (
       const payload = await response.json().catch(() => null) as { status?: string; data?: AccountLinkOcrResult; message?: string } | null
       if (!response.ok || payload?.status !== 'success' || !payload.data) throw new Error(payload?.message ?? 'OCR could not read this screenshot.')
       const safePlayerId = payload.data.candidates.find((candidate) => candidate.field === 'playerId')?.value ?? ''
-      setResult(payload.data); setEditedPlayerId(safePlayerId)
+      const data = payload.data
+      setResult(data)
+      const valueFor = (field: AccountLinkOcrField) => data.candidates.find((candidate) => candidate.field === field)?.value ?? ''
+      const initialReview: AccountLinkOcrReview = { playerId: valueFor('playerId'), displayName: valueFor('displayName'), kingdom: valueFor('kingdom'), allianceTag: valueFor('allianceTag'), townCenterLevel: valueFor('townCenterLevel'), evidenceId, confidence: data.engineConfidence ?? 0, source: 'Screenshot OCR', userConfirmed: { playerId: false, displayName: false, kingdom: false, allianceTag: false, townCenterLevel: false } }
+      setReview(initialReview); onReview?.(initialReview)
       if (/^\d{1,20}$/.test(safePlayerId)) onCandidate(safePlayerId)
       setMessage('Review the suggested Player ID carefully. OCR is supporting evidence, not proof of ownership.')
     } catch (caught) {
@@ -93,19 +97,18 @@ export default function ScreenshotLinkingPanel({ onCandidate }: { onCandidate: (
     try {
       if (completedEvidenceId) await cancelEvidence(completedEvidenceId)
       else if (intentId) await abandon(intentId)
-      setIntentId(null); setCompletedEvidenceId(null); setResult(null); onCandidate(''); setMessage('Screenshot review cancelled. No link was changed.')
+      setIntentId(null); setCompletedEvidenceId(null); setResult(null); setReview(null); onReview?.(null); onCandidate(''); setMessage('Screenshot review cancelled. No link was changed.')
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'The screenshot could not be cancelled safely.') }
-    setEditedPlayerId('')
     if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
   }
 
   return <section className="linked-player-screenshot" aria-labelledby="screenshot-linking-title">
     <div><p className="eyebrow">Optional assisted linking</p><h3 id="screenshot-linking-title">Use a profile screenshot</h3><p>Upload one screenshot through the private evidence service. Forge extracts suggestions for review; it never treats OCR as ownership proof.</p></div>
     <input ref={inputRef} hidden type="file" accept="image/png,image/jpeg,image/webp,image/tiff" onChange={(event) => void handleFile(event)} />
-    <div className="linked-player-screenshot__actions"><button type="button" className="button button--secondary" disabled={working || !user} onClick={() => inputRef.current?.click()}>{working ? 'Reading screenshot…' : 'Choose screenshot'}</button>{result && <button type="button" className="button button--secondary" onClick={() => void cancel}>Cancel review</button>}</div>
+    <div className="linked-player-screenshot__actions"><button type="button" className="button button--secondary" disabled={working || !user} onClick={() => inputRef.current?.click()}>{working ? 'Reading screenshot…' : 'Choose screenshot'}</button>{result && <button type="button" className="button button--secondary" onClick={() => void cancel()}>Cancel review</button>}</div>
     {previewUrl && <img className="linked-player-screenshot__preview" src={previewUrl} alt="Selected Kingshot profile screenshot preview" />}
     {message && <p className="linked-player-message linked-player-message--success">{message}</p>}
     {error && <p className="linked-player-message linked-player-message--error" role="alert">{error}</p>}
-    {result && <div className="linked-player-screenshot__result"><strong>OCR suggestions</strong>{result.candidates.length === 0 ? <p>No safe candidate was found. Use the manual Player ID form below.</p> : result.candidates.map((candidate) => <div key={`${candidate.field}-${candidate.value}`} className="linked-player-screenshot__candidate"><label htmlFor={`ocr-${candidate.field}`}>{candidate.field === 'playerId' ? 'Player ID' : candidate.field === 'displayName' ? 'Name' : 'Kingdom'}</label><input id={`ocr-${candidate.field}`} value={candidate.field === 'playerId' ? editedPlayerId : candidate.value} onChange={(event) => { if (candidate.field === 'playerId') { setEditedPlayerId(event.target.value); onCandidate(event.target.value) } }} readOnly={candidate.field !== 'playerId'} /><small>{candidate.confidence >= 0.85 ? 'High confidence' : candidate.confidence >= 0.6 ? 'Check this value' : 'Could not read'} · {candidate.source} · {candidate.mappingVersion}{candidate.warnings.length ? ` · ${candidate.warnings.join(' ')}` : ''}</small></div>)}</div>}
+    {result && review && <div className="linked-player-screenshot__result"><strong>OCR review form</strong><p>Source: {review.source}. OCR does not verify ownership. Corrected fields are marked user-confirmed.</p>{(['playerId', 'displayName', 'kingdom', 'allianceTag', 'townCenterLevel'] as const).map((field) => { const labels = { playerId: 'Player ID', displayName: 'Name', kingdom: 'Kingdom', allianceTag: 'Alliance', townCenterLevel: 'Town Centre level' }; const candidate = result.candidates.find((item) => item.field === field); return <div key={field} className="linked-player-screenshot__candidate"><label htmlFor={`ocr-${field}`}>{labels[field]}</label><input id={`ocr-${field}`} value={review[field]} onChange={(event) => { const next = { ...review, [field]: event.target.value, userConfirmed: { ...review.userConfirmed, [field]: true } }; setReview(next); onReview?.(next); if (field === 'playerId') onCandidate(event.target.value) }} /><small>{candidate ? `${candidate.confidence >= 0.85 ? 'High confidence' : candidate.confidence >= 0.6 ? 'Check this value' : 'Could not read'} · ${candidate.source} · ${candidate.mappingVersion}` : 'Could not read'}{review.userConfirmed[field] ? ' · user-confirmed' : ''}{candidate?.warnings.length ? ` · ${candidate.warnings.join(' ')}` : ''}</small></div> })}</div>}
   </section>
 }

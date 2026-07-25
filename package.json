@@ -29,7 +29,7 @@
     "test:verification-centre": "node scripts/test-verification-centre.mjs",
     "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
     "validate:player-identity": "node scripts/validate-player-identity.mjs",
-    "test:player-identity": "node scripts/test-player-identity.mjs && node scripts/test-player-identity-vertical-slice.mjs && node scripts/test-player-verification-boundary.mjs && node scripts/test-player-link-service.mjs && node --import tsx scripts/test-player-linking-ocr.mjs && node scripts/test-player-linking-ui.mjs",
+    "test:player-identity": "node scripts/test-player-identity.mjs && node scripts/test-player-identity-vertical-slice.mjs && node scripts/test-player-verification-boundary.mjs && node scripts/test-player-link-service.mjs && node --import tsx scripts/test-player-linking-ocr.mjs && node scripts/test-player-linking-ui.mjs && node --import tsx scripts/test-vision-link-007.mjs",
     "test:forge-vision-tesseract-js": "node --import tsx scripts/test-tesseract-js-account-linking.mjs",
     "test:forge-vision-kingshot-profile": "node --import tsx scripts/test-kingshot-profile-ocr.mjs",
     "test:forge-vision-account-linking-page": "node scripts/test-vision-account-linking-acceptance-page.mjs",

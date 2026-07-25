@@ -95,3 +95,8 @@ worked. V5 freezes the v4 Player ID components and restores a separate
 observations and explicit labelled parsing. Name and alliance remain
 `review_required` supporting fields. Fixtures use fake values only; no real
 screenshot or account value is committed.
+## VISION-LINK-007 — OCR fallback profile hydration
+
+V6 is an additive `account-linking-kingshot-profile-v6` mapping. V1 through V5 remain frozen. It retains the measured component geometry, adds Town Centre label and badge consensus (1–30, label context required), and normalises only V6 alliance tags to exactly three inner graphemes. The owner surface displays Player ID, name, Kingdom, alliance and Town Centre level; name, alliance and Town Centre remain review-only.
+
+The screenshot-linking route is isolated from account-context refreshes and never saves on OCR completion. A successful Kingshot API lookup remains authoritative. Only an explicit owner action after lookup failure may call `/api/player/ocr-fallback`; that path records `linked`/`none`, never `verified`, carries bounded evidence provenance and correction flags, and cancels the exact scan evidence after the save. No avatar or alliance membership is persisted by this fallback.

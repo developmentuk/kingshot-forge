@@ -57,3 +57,6 @@ hard-coded parser text, prohibits network fetches, and asserts the actual OCR
 Player ID candidate `987654321`. Name `EMBER FOX` and kingdom `42` are
 recorded when recognised. The preview handoff remains limited to one
 owner-scoped synthetic acceptance followed by exact cancellation.
+## VISION-LINK-007 integration notes
+
+Player Domain integration consumes the existing `town_center_level` field and existing `linked`/`none` verification semantics. The fallback does not add a verification-method enum, alter canonical Kingshot lookup authority, persist avatars, or write alliance membership. The evidence ID and bounded correction map are retained in the governed audit payload before exact screenshot evidence cancellation.

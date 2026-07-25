@@ -1,7 +1,7 @@
 import type { KingshotPlayer } from '../../src/types/player.js'
 import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
 
-const ACCOUNT_FIELDS = 'id,user_id,player_id,player_name,kingdom_id,player_level,level_rendered,level_rendered_detailed,level_image,profile_photo,verification_status,verification_method,verified_by,verified_at,last_refreshed_at,is_primary,is_public,created_at,updated_at'
+const ACCOUNT_FIELDS = 'id,user_id,player_id,player_name,kingdom_id,player_level,town_center_level,level_rendered,level_rendered_detailed,level_image,profile_photo,verification_status,verification_method,verified_by,verified_at,last_refreshed_at,is_primary,is_public,created_at,updated_at'
 
 type LookupRecord = Readonly<Record<string, unknown>>
 
@@ -101,6 +101,7 @@ function safeAccount(value: unknown) {
     player_name: row.player_name,
     kingdom_id: row.kingdom_id,
     player_level: row.player_level,
+    town_center_level: row.town_center_level,
     level_rendered: row.level_rendered,
     level_rendered_detailed: row.level_rendered_detailed,
     level_image: row.level_image,

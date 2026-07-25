@@ -1,0 +1,16 @@
+{
+  "fixture": "synthetic-kingshot-component-map-v4",
+  "mappingVersion": "account-linking-kingshot-profile-v6",
+  "mimeType": "image/png",
+  "widthPx": 1600,
+  "heightPx": 900,
+  "sha256": "8f1a87c16e7a7051792efaad4efc23a0c964b178c85258cb5a45fa6f1efbcfdc",
+  "realAccountData": false,
+  "expected": {
+    "allianceTag": "[NXS]",
+    "name": "EMBER FOX",
+    "playerId": "111111111111",
+    "kingdom": "42",
+    "townCenterLevel": "6"
+  }
+}

@@ -1,5 +1,5 @@
 export type PlayerIdPassType = 'labelled_line' | 'numeric_only'
-export type PlayerIdPreprocessVariant = 'greyscale' | 'threshold'
+export type PlayerIdPreprocessVariant = 'greyscale' | 'threshold' | 'inverted'
 
 export interface PlayerIdObservation {
   readonly passType: PlayerIdPassType

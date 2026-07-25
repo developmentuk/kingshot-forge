@@ -139,3 +139,6 @@ Two labelled SINGLE_LINE passes agree on the synthetic `Kingdom # 42` fixture;
 missing-pass, conflicting-value, absent-context, Town Centre separation and
 short-token non-override cases are covered. Name and alliance diagnostics are
 always `review_required`; fixtures contain no real screenshot or account value.
+## VISION-LINK-007 acceptance note
+
+The five-field OCR contract is `playerId`, `displayName`, `kingdom`, `allianceTag` and `townCenterLevel`. Town Centre is a progression value and must not be confused with the API-owned `player_level`. OCR suggestions are review inputs only; corrections are separately marked `user-confirmed`. API success wins, and the explicit API-unavailable fallback remains unverified with exact evidence cancellation and append-only audit retention.

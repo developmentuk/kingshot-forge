@@ -1,4 +1,4 @@
-export type KingshotProfileField = 'displayName' | 'playerId' | 'kingdom' | 'allianceTag'
+export type KingshotProfileField = 'displayName' | 'playerId' | 'kingdom' | 'allianceTag' | 'townCenterLevel'
 export type KingshotProfileRegionKey = KingshotProfileField | 'profilePanel'
   | 'playerIdNumeric' | 'avatar' | 'clipboardIcon' | 'playerIdLabel' | 'playerIdDigits'
   | 'townCenterLabel' | 'townCenterBadge' | 'kingdomLabel' | 'kingdomDigits' | 'kingdomLine'
@@ -58,3 +58,9 @@ export const KINGSHOT_PROFILE_V5_REGIONS: readonly KingshotProfileRegionConfig[]
   ...KINGSHOT_PROFILE_V4_REGIONS,
   { key: 'kingdomLine', field: 'kingdom', label: 'Kingdom labelled line', x: 0.27, y: 0.70, width: 0.48, height: 0.20, psm: 'single_line', characterWhitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#: ', observation: 'line', componentRole: 'ocr' },
 ]
+
+export const KINGSHOT_PROFILE_V6_REGIONS: readonly KingshotProfileRegionConfig[] = KINGSHOT_PROFILE_V5_REGIONS.map((region) => region.key === 'townCenterLabel'
+  ? { ...region, x: 0.30, y: 0.50, width: 0.42, height: 0.24, observation: 'component' as const, componentRole: 'ocr' as const }
+  : region.key === 'townCenterBadge'
+    ? { ...region, x: 0.67, y: 0.47, width: 0.16, height: 0.25, observation: 'numeric' as const, componentRole: 'ocr' as const }
+    : region)

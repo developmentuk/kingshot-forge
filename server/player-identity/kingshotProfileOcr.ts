@@ -1,21 +1,22 @@
 import sharp from 'sharp'
 import type { VisionPixelBox, VisionRegionBinding } from '../../shared/platform/vision/contracts.js'
-import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, type KingshotProfileRegionConfig } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
+import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS, type KingshotProfileRegionConfig } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
 
 export const KINGSHOT_PROFILE_V1_MAPPING_VERSION = 'account-linking-kingshot-profile-v1' as const
 export const KINGSHOT_PROFILE_V2_MAPPING_VERSION = 'account-linking-kingshot-profile-v2' as const
 export const KINGSHOT_PROFILE_V3_MAPPING_VERSION = 'account-linking-kingshot-profile-v3' as const
 export const KINGSHOT_PROFILE_V4_MAPPING_VERSION = 'account-linking-kingshot-profile-v4' as const
 export const KINGSHOT_PROFILE_V5_MAPPING_VERSION = 'account-linking-kingshot-profile-v5' as const
+export const KINGSHOT_PROFILE_V6_MAPPING_VERSION = 'account-linking-kingshot-profile-v6' as const
 export const KINGSHOT_PROFILE_V2_MAPPING_ID = 'account-linking-kingshot-profile-v2'
 export const KINGSHOT_PROFILE_MAX_PIXELS = 8_000_000
 export const KINGSHOT_PROFILE_MAX_DIMENSION = 4_000
 
 export type KingshotProfileRegion = KingshotProfileRegionConfig
 
-export function profileRegionBindings(version: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' = 'v2'): VisionRegionBinding[] {
-  const regions = version === 'v1' ? KINGSHOT_PROFILE_V1_REGIONS : version === 'v3' ? KINGSHOT_PROFILE_V3_REGIONS : version === 'v4' ? KINGSHOT_PROFILE_V4_REGIONS : version === 'v5' ? KINGSHOT_PROFILE_V5_REGIONS : KINGSHOT_PROFILE_V2_REGIONS
-  const mappingId = version === 'v1' ? 'account-linking-kingshot-profile-v1' : version === 'v3' ? KINGSHOT_PROFILE_V3_MAPPING_VERSION : version === 'v4' ? KINGSHOT_PROFILE_V4_MAPPING_VERSION : version === 'v5' ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : KINGSHOT_PROFILE_V2_MAPPING_ID
+export function profileRegionBindings(version: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' = 'v2'): VisionRegionBinding[] {
+  const regions = version === 'v1' ? KINGSHOT_PROFILE_V1_REGIONS : version === 'v3' ? KINGSHOT_PROFILE_V3_REGIONS : version === 'v4' ? KINGSHOT_PROFILE_V4_REGIONS : version === 'v5' ? KINGSHOT_PROFILE_V5_REGIONS : version === 'v6' ? KINGSHOT_PROFILE_V6_REGIONS : KINGSHOT_PROFILE_V2_REGIONS
+  const mappingId = version === 'v1' ? 'account-linking-kingshot-profile-v1' : version === 'v3' ? KINGSHOT_PROFILE_V3_MAPPING_VERSION : version === 'v4' ? KINGSHOT_PROFILE_V4_MAPPING_VERSION : version === 'v5' ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : version === 'v6' ? KINGSHOT_PROFILE_V6_MAPPING_VERSION : KINGSHOT_PROFILE_V2_MAPPING_ID
   return regions.map((region, index) => ({ id: `${mappingId}-${region.key}`, regionKey: region.key, label: region.label, role: region.componentRole === 'exclusion' ? 'comparison' : 'source', anchorRules: { layout: 'kingshot-profile-card', psm: region.psm, characterWhitelist: region.characterWhitelist, observation: region.observation, componentRole: region.componentRole ?? 'ocr' }, sortOrder: index, x: region.x, y: region.y, width: region.width, height: region.height }))
 }
 
@@ -30,12 +31,12 @@ export interface PreparedProfileRegion {
   readonly widthPx: number
   readonly heightPx: number
   readonly sourceRectangle: VisionPixelBox
-  readonly variant: 'greyscale' | 'threshold'
+  readonly variant: 'greyscale' | 'threshold' | 'inverted'
   readonly scale: number
   readonly warningCodes: readonly string[]
 }
 
-export async function prepareProfileRegion(input: { bytes: Uint8Array; mimeType: string; widthPx: number; heightPx: number; region: KingshotProfileRegion; variant?: 'greyscale' | 'threshold' }): Promise<PreparedProfileRegion> {
+export async function prepareProfileRegion(input: { bytes: Uint8Array; mimeType: string; widthPx: number; heightPx: number; region: KingshotProfileRegion; variant?: 'greyscale' | 'threshold' | 'inverted' }): Promise<PreparedProfileRegion> {
   const sourceRectangle = mapProfileRegion(input.region, input.widthPx, input.heightPx)
   const padding = 12
   const scale = 3
@@ -45,6 +46,7 @@ export async function prepareProfileRegion(input: { bytes: Uint8Array; mimeType:
   const variant = input.variant ?? 'greyscale'
   let pipeline = sharp(Buffer.from(input.bytes), { failOn: 'error' }).extract(sourceRectangle).extend({ top: padding, bottom: padding, left: padding, right: padding, background: { r: 255, g: 255, b: 255, alpha: 1 } }).resize({ width: outputWidth, height: outputHeight, fit: 'fill', kernel: 'lanczos3' }).grayscale().linear(1.12, -12)
   if (variant === 'threshold') pipeline = pipeline.threshold(168)
+  if (variant === 'inverted') pipeline = pipeline.negate()
   const { data, info } = await pipeline.png({ compressionLevel: 6 }).toBuffer({ resolveWithObject: true })
-  return { bytes: new Uint8Array(data), widthPx: info.width, heightPx: info.height, sourceRectangle, variant, scale, warningCodes: variant === 'threshold' ? ['threshold_variant'] : ['bounded_3x_upscale', 'greyscale_contrast'] }
+  return { bytes: new Uint8Array(data), widthPx: info.width, heightPx: info.height, sourceRectangle, variant, scale, warningCodes: variant === 'threshold' ? ['threshold_variant'] : variant === 'inverted' ? ['inverted_high_contrast_variant'] : ['bounded_3x_upscale', 'greyscale_contrast'] }
 }

@@ -41,7 +41,7 @@ assert.match(page, /Cancel the current acceptance evidence before choosing anoth
 assert.match(page, /vision-acceptance__preview-wrap/)
 assert.match(page, /vision-acceptance__overlay/)
 assert.match(page, /aria-label="OCR region overlay"/)
-assert.match(page, /KINGSHOT_PROFILE_V5_REGIONS/)
+assert.match(page, /KINGSHOT_PROFILE_V6_REGIONS/)
 assert.match(page, /Show OCR regions/)
 assert.match(page, /Hide OCR regions/)
 assert.match(page, /aria-pressed={showRegions}/)

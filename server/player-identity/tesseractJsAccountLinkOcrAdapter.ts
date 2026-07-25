@@ -4,8 +4,8 @@ import { createWorker, PSM, type Worker } from 'tesseract.js'
 import type { VisionExtractionRequest } from '../../shared/platform/vision/contracts.js'
 import { VisionRuntimeError } from '../vision/runtime/errors.js'
 import type { AccountLinkOcrAdapter } from './accountLinkingOcrService.js'
-import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, KINGSHOT_PROFILE_V4_MAPPING_VERSION, KINGSHOT_PROFILE_V5_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
-import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
+import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, KINGSHOT_PROFILE_V4_MAPPING_VERSION, KINGSHOT_PROFILE_V5_MAPPING_VERSION, KINGSHOT_PROFILE_V6_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
+import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
 import type { AccountLinkOcrDisposition, AccountLinkOcrMappingVersion, AccountLinkOcrRegionObservation } from '../../shared/domains/player-identity/accountLinkingOcr.js'
 import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, type ComponentNumericObservation, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
 
@@ -45,6 +45,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     try {
       const paths = bundledPaths()
       worker = await this.#workerFactory.create({ workerPath: paths.workerPath, langPath: paths.langPath, cacheMethod: 'none', gzip: true, workerBlobURL: false, logger: () => {} })
+      if (request.mappingVersionId === KINGSHOT_PROFILE_V6_MAPPING_VERSION) return await this.#extractV4(worker, request, true, true)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V5_MAPPING_VERSION) return await this.#extractV4(worker, request, true)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V4_MAPPING_VERSION) return await this.#extractV4(worker, request)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V3_MAPPING_VERSION) return await this.#extractV3(worker, request)
@@ -152,11 +153,11 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     return { ...this.#output('', consensus.confidence, observations, diagnostics, fields, KINGSHOT_PROFILE_V3_MAPPING_VERSION), diagnostics: { mappingVersion: KINGSHOT_PROFILE_V3_MAPPING_VERSION, regions: diagnostics, fields, passes } }
   }
 
-  async #extractV4(worker: Worker, request: VisionExtractionRequest, labelledKingdomLine = false) {
-    const region = (key: string) => KINGSHOT_PROFILE_V4_REGIONS.find((item) => item.key === key)!
+  async #extractV4(worker: Worker, request: VisionExtractionRequest, labelledKingdomLine = false, townCenter = false) {
+    const region = (key: string) => (townCenter ? KINGSHOT_PROFILE_V6_REGIONS : KINGSHOT_PROFILE_V4_REGIONS).find((item) => item.key === key)!
     const panel = await this.#recognizePrepared(worker, request, region('profilePanel'), 'greyscale', PSM.SPARSE_TEXT, null)
-    const passes: Array<{ field: KingshotProfileField; passType: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'; variant: 'greyscale' | 'threshold'; attempted: boolean; confidence: number; labelContext: boolean; warnings: string[] }> = []
-    const read = async (field: KingshotProfileField, item: KingshotProfileRegion, variant: 'greyscale' | 'threshold', psm: string, passType: 'label_component' | 'digits_single_word' | 'digits_single_line', whitelist: string | null) => {
+    const passes: Array<{ field: KingshotProfileField; passType: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'; variant: 'greyscale' | 'threshold' | 'inverted'; attempted: boolean; confidence: number; labelContext: boolean; warnings: string[] }> = []
+    const read = async (field: KingshotProfileField, item: KingshotProfileRegion, variant: 'greyscale' | 'threshold' | 'inverted', psm: string, passType: 'label_component' | 'digits_single_word' | 'digits_single_line', whitelist: string | null) => {
       const result = await this.#recognizePrepared(worker, request, item, variant, psm, whitelist)
       const text = cleanRawText(result.text)
       const labelContext = field === 'playerId' ? /(?:[i1]d)/i.test(text) : field === 'kingdom' ? /kingdom/i.test(text) : false
@@ -172,7 +173,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     ]
     const idContext = idLabel.some((item) => item.labelContext) || /(?:[i1]d)/i.test(cleanRawText(panel.text))
     const componentPass = (index: number): ComponentNumericObservation['passType'] => index % 2 ? 'single_line' : 'single_word'
-    const componentVariant = (index: number): ComponentNumericObservation['variant'] => index > 1 ? 'threshold' : 'greyscale'
+    const componentVariant = (index: number): ComponentNumericObservation['variant'] => index > 3 ? 'inverted' : index > 1 ? 'threshold' : 'greyscale'
     const idConsensus = consensusComponentDigits(idDigits.map((item, index) => ({ passType: componentPass(index), variant: componentVariant(index), digits: extractDigits(item.text, 20), confidence: item.confidence })), idContext)
     const observations: AccountLinkOcrRegionObservation[] = [{ field: 'playerId', rawText: '', confidence: idConsensus.confidence, warnings: idConsensus.warnings, acceptedValue: idConsensus.value, disposition: idConsensus.disposition, agreement: idConsensus.agreement === 'insufficient' ? 'not_applicable' : idConsensus.agreement, passType: 'label_component', variant: 'greyscale', labelContext: idContext }]
     const diagnostics: DiagnosticRegion[] = [{ field: 'playerId', attempted: true, recognized: Boolean(idConsensus.value), confidence: idConsensus.confidence, warnings: idConsensus.warnings }]
@@ -235,11 +236,36 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     }
     await readSupporting('allianceTag', 'allianceTag')
     await readSupporting('displayName', 'displayName')
-    const mappingVersion = labelledKingdomLine ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : KINGSHOT_PROFILE_V4_MAPPING_VERSION
+    if (townCenter) {
+      const labelRegion = region('townCenterLabel')
+      const badgeRegion = region('townCenterBadge')
+      const labelReads = [
+        await read('townCenterLevel', labelRegion, 'greyscale', PSM.SINGLE_LINE, 'label_component', labelRegion.characterWhitelist),
+        await read('townCenterLevel', labelRegion, 'threshold', PSM.SINGLE_LINE, 'label_component', labelRegion.characterWhitelist),
+      ]
+      const badgeReads = [
+        await read('townCenterLevel', badgeRegion, 'greyscale', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
+        await read('townCenterLevel', badgeRegion, 'greyscale', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+        await read('townCenterLevel', badgeRegion, 'threshold', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
+        await read('townCenterLevel', badgeRegion, 'threshold', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+        await read('townCenterLevel', badgeRegion, 'inverted', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
+        await read('townCenterLevel', badgeRegion, 'inverted', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+      ]
+      const labelContext = labelReads.some((item) => /town\s*(?:centre|center)/i.test(item.text)) || /town\s*(?:centre|center)/i.test(cleanRawText(panel.text))
+      const numeric = badgeReads.map((item, index) => ({ passType: componentPass(index), variant: componentVariant(index), digits: extractDigits(item.text, 2), confidence: item.confidence }))
+      const consensus = consensusComponentDigits(numeric, labelContext, (value) => Number(value) >= 1 && Number(value) <= 30)
+      const warnings = labelContext ? consensus.warnings : [...consensus.warnings, 'town_center_label_context_required']
+      const disposition = consensus.disposition
+      const agreement = consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement
+      observations.push({ field: 'townCenterLevel', rawText: '', confidence: consensus.confidence, warnings, acceptedValue: consensus.value, disposition, agreement, passType: 'label_component', variant: 'greyscale', labelContext })
+      diagnostics.push({ field: 'townCenterLevel', attempted: true, recognized: Boolean(consensus.value), confidence: consensus.confidence, warnings })
+      fields.push({ field: 'townCenterLevel', disposition, confidence: consensus.confidence, agreement, warnings })
+    }
+    const mappingVersion = townCenter ? KINGSHOT_PROFILE_V6_MAPPING_VERSION : labelledKingdomLine ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : KINGSHOT_PROFILE_V4_MAPPING_VERSION
     return { ...this.#output('', Math.max(idConsensus.confidence, ...fields.map((item) => item.confidence)), observations, diagnostics, fields, mappingVersion), diagnostics: { mappingVersion, regions: diagnostics, fields, passes } }
   }
 
-  async #recognizePrepared(worker: Worker, request: VisionExtractionRequest, region: KingshotProfileRegion, variant: 'greyscale' | 'threshold', psm: string, whitelist: string | null) {
+  async #recognizePrepared(worker: Worker, request: VisionExtractionRequest, region: KingshotProfileRegion, variant: 'greyscale' | 'threshold' | 'inverted', psm: string, whitelist: string | null) {
     const prepared = await prepareProfileRegion({ bytes: request.image.bytes, mimeType: request.image.mimeType, widthPx: request.image.widthPx, heightPx: request.image.heightPx, region, variant })
     const result = await this.#recognize(worker, Buffer.from(prepared.bytes), { left: 0, top: 0, width: prepared.widthPx, height: prepared.heightPx }, psm, whitelist, prepared.scale)
     return { ...result, prepared }
