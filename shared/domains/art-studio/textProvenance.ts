@@ -1,4 +1,4 @@
-import { sha256Text } from './rendering'
+import { sha256Text } from './rendering.js'
 
 export type TextPasteProvenance = {
   sha256: string
