@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { createTextPasteProvenance } from '../shared/domains/art-studio/textProvenance.ts'
-import { analyseArtworkDetailed, suggestKingshotClipboardMode } from '../src/render-engine/analyser/index.ts'
+import { analyseArtworkDetailed, suggestKingshotClipboardMode, ARTWORK_SPACE_ADVANCE } from '../src/render-engine/analyser/index.ts'
 import { buildFixedCellGrid } from '../src/render-engine/grid/index.ts'
 import { calculateResponsiveLayout, calculateResponsiveScale } from '../src/components/art/fitToContainer.ts'
 
@@ -17,6 +17,33 @@ assert.equal(source.endsWith('\n'), false)
 const provenance = await createTextPasteProvenance(source)
 const authored = analyseArtworkDetailed(source, undefined, 'authored')
 const clipboard = analyseArtworkDetailed(source, undefined, 'kingshot-clipboard')
+const canonicalPath = new URL('../fixtures/community-art/wow-im-so-cute/wow-im-so-cute.txt', import.meta.url)
+const canonicalSource = await readFile(canonicalPath, 'utf8')
+assert.equal(new TextEncoder().encode(canonicalSource).byteLength, 386)
+assert.equal(Array.from(canonicalSource).length, 276)
+assert.equal(canonicalSource.split('\n').length, 10)
+const canonicalRows = buildFixedCellGrid(canonicalSource.replaceAll('\r', '').split('\n'), undefined, 'authored')
+const clipboardRows = buildFixedCellGrid(source.split('\n'), undefined, 'kingshot-clipboard')
+const occupied = (row) => row.cells.filter((cell) => cell.glyph.trim() !== '').map((cell) => ({ glyph: cell.glyph, column: cell.column, span: cell.span }))
+const bounds = (row) => {
+  const cells = occupied(row)
+  return { left: cells[0]?.column ?? 0, right: cells.at(-1) ? cells.at(-1).column + cells.at(-1).span : 0, width: cells.at(-1) ? cells.at(-1).column + cells.at(-1).span - cells[0].column : 0 }
+}
+let maxAlignmentDelta = 0
+for (let row = 0; row < canonicalRows.length; row += 1) {
+  const expectedRow = occupied(canonicalRows[row])
+  const actualRow = occupied(clipboardRows[row])
+  assert.deepEqual(actualRow.map((cell) => cell.glyph), expectedRow.map((cell) => cell.glyph), `row ${row + 1} keeps the same occupied grapheme sequence`)
+  for (let index = 0; index < expectedRow.length; index += 1) {
+    maxAlignmentDelta = Math.max(maxAlignmentDelta, Math.abs(actualRow[index].column - expectedRow[index].column), Math.abs(actualRow[index].span - expectedRow[index].span))
+  }
+  const expectedBounds = bounds(canonicalRows[row])
+  const actualBounds = bounds(clipboardRows[row])
+  maxAlignmentDelta = Math.max(maxAlignmentDelta, Math.abs(actualBounds.left - expectedBounds.left), Math.abs(actualBounds.right - expectedBounds.right), Math.abs(actualBounds.width - expectedBounds.width))
+}
+assert.ok(maxAlignmentDelta <= 0.001, `paired canonical/clipboard occupied bounds stay aligned (max delta ${maxAlignmentDelta})`)
+assert.equal(clipboardRows.flatMap((row) => row.cells.flatMap((cell) => cell.sourceGlyphs)).join(''), source.replaceAll('\n', ''), 'clipboard visual tokens retain exact source graphemes')
+assert.equal(clipboardRows.flatMap((row) => row.cells).filter((cell) => cell.sourceGlyphs.length > 1).every((cell) => cell.span === ARTWORK_SPACE_ADVANCE), true, 'clipboard logical gaps use 0.55 cells')
 assert.equal(provenance.byteLength, new TextEncoder().encode(source).byteLength)
 assert.equal(provenance.sha256.length, 64)
 assert.ok(clipboard.widestLine < authored.widestLine, 'clipboard mode narrows expanded internal artwork spaces')

@@ -57,6 +57,7 @@ export type SavedCalibrationProfile = {
 
 export type GridCell = {
   glyph: string
+  sourceGlyphs: string[]
   span: number
   family: GlyphFamily
   row: number

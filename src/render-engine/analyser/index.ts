@@ -15,10 +15,11 @@ export const PROSE_SPACE_ADVANCE = .72
 export const ARTWORK_SPACE_ADVANCE = .55
 export const ARTWORK_LEADING_SPACE_ADVANCE = .20
 export type ArtworkSourceContext = 'authored' | 'kingshot-clipboard'
-export type ArtworkSpacingProfile = { prose: number; artwork: number; leading: number }
+export type InternalSpaceMode = 'literal' | 'logical-run'
+export type ArtworkSpacingProfile = { prose: number; artwork: number; leading: number; internalSpaceMode: InternalSpaceMode; internalLogicalGapCells: number }
 export const ARTWORK_SPACING_PROFILES: Record<ArtworkSourceContext, ArtworkSpacingProfile> = {
-  authored: { prose: PROSE_SPACE_ADVANCE, artwork: ARTWORK_SPACE_ADVANCE, leading: ARTWORK_LEADING_SPACE_ADVANCE },
-  'kingshot-clipboard': { prose: PROSE_SPACE_ADVANCE, artwork: .34, leading: ARTWORK_LEADING_SPACE_ADVANCE },
+  authored: { prose: PROSE_SPACE_ADVANCE, artwork: ARTWORK_SPACE_ADVANCE, leading: ARTWORK_LEADING_SPACE_ADVANCE, internalSpaceMode: 'literal', internalLogicalGapCells: ARTWORK_SPACE_ADVANCE },
+  'kingshot-clipboard': { prose: PROSE_SPACE_ADVANCE, artwork: .34, leading: ARTWORK_LEADING_SPACE_ADVANCE, internalSpaceMode: 'logical-run', internalLogicalGapCells: ARTWORK_SPACE_ADVANCE },
 }
 
 export function suggestKingshotClipboardMode(artwork: string): boolean {
@@ -43,8 +44,23 @@ export function resolveGlyphAdvance(glyph: string, glyphs: string[], index: numb
   if (family !== 'space') return calibration[family].advanceCells
   const spacing = ARTWORK_SPACING_PROFILES[sourceContext]
   if (!isArtworkLine(glyphs)) return spacing.prose
-  const firstContent = glyphs.findIndex((item) => !/^\s$/u.test(item) && item !== '\u3000')
-  return index < firstContent ? spacing.leading : spacing.artwork
+  const firstContent = glyphs.findIndex((item) => item !== ' ')
+  if (index < firstContent) return spacing.leading
+  const runEnd = glyphs.slice(index).findIndex((item) => item !== ' ')
+  const isInternalRun = runEnd >= 0 && index >= firstContent && glyph === ' '
+  if (spacing.internalSpaceMode === 'logical-run' && isInternalRun) {
+    const runStart = index === 0 || glyphs[index - 1] !== ' '
+    return runStart ? spacing.internalLogicalGapCells : 0
+  }
+  return spacing.artwork
+}
+
+export function isLogicalInternalSpaceRun(glyphs: string[], index: number, sourceContext: ArtworkSourceContext): boolean {
+  if (sourceContext !== 'kingshot-clipboard' || glyphs[index] !== ' ' || !isArtworkLine(glyphs)) return false
+  const firstContent = glyphs.findIndex((item) => item !== ' ')
+  if (index < firstContent) return false
+  const nextContent = glyphs.slice(index).findIndex((item) => item !== ' ')
+  return nextContent >= 0
 }
 
 export function classifyGlyph(glyph: string): GlyphFamily {
