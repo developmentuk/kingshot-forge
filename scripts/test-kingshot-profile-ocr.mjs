@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { extractAccountLinkCandidates } from '../server/player-identity/accountLinkingOcrService.ts'
 import { mapProfileRegion, prepareProfileRegion, profileRegionBindings } from '../server/player-identity/kingshotProfileOcr.ts'
-import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
-import { consensusPlayerId } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
+import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
+import { consensusPlayerId, consensusComponentDigits } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
 import { parseAccountLinkCandidates } from '../shared/domains/player-identity/accountLinkingOcr.ts'
 
 const base = new URL('../fixtures/vision/account-linking/', import.meta.url)
@@ -50,6 +50,40 @@ assert.equal(v3Line.x + v3Line.width, 0.70)
 assert.ok(Math.abs(v3Numeric.x + v3Numeric.width - 0.66) < 0.0001)
 assert.ok(v3Numeric.x > v3Line.x && v3Numeric.x + v3Numeric.width < 0.72)
 assert.deepEqual(v3Bindings.map((region) => [region.regionKey, region.x, region.y, region.width, region.height]), KINGSHOT_PROFILE_V3_REGIONS.map((region) => [region.key, region.x, region.y, region.width, region.height]))
+
+const v4Bindings = profileRegionBindings('v4')
+assert.deepEqual(v4Bindings.map((item) => [item.regionKey, item.x, item.y, item.width, item.height]), KINGSHOT_PROFILE_V4_REGIONS.map((item) => [item.key, item.x, item.y, item.width, item.height]))
+const v4 = (key) => KINGSHOT_PROFILE_V4_REGIONS.find((item) => item.key === key)
+const idDigits = v4('playerIdDigits'); const idLabel = v4('playerIdLabel'); const clipboard = v4('clipboardIcon'); const kingdomDigits = v4('kingdomDigits')
+assert.ok(idDigits && idLabel && clipboard && kingdomDigits)
+assert.ok(idDigits.x < 0.39 && idDigits.x + idDigits.width < clipboard.x)
+assert.ok(idLabel.x + idLabel.width <= idDigits.x)
+assert.equal(idDigits.componentRole, 'ocr'); assert.equal(clipboard.componentRole, 'exclusion')
+assert.ok(kingdomDigits.y > v4('townCenterBadge').y + v4('townCenterBadge').height)
+
+assert.ok((await readFile(new URL('kingshot-profile-v4-low-res.jpg', base))).length > 0)
+for (const [file, mimeType, width, height] of [['kingshot-profile-v4-large.png', 'image/png', 1600, 900]]) {
+  const bytes = new Uint8Array(await readFile(new URL(file, base)))
+  const manifest = JSON.parse(await readFile(new URL(file.replace(/\.(png|jpg)$/, '.manifest.json'), base), 'utf8'))
+  const sha256 = createHash('sha256').update(bytes).digest('hex')
+  assert.equal(sha256, manifest.sha256); assert.equal(manifest.realAccountData, false)
+  const result = await extractAccountLinkCandidates({ evidenceId: '88888888-8888-4888-8888-888888888888', bytes, sha256, mimeType, widthPx: width, heightPx: height, mappingVersion: 'account-linking-kingshot-profile-v4' })
+  assert.equal(result.candidates.find((item) => item.field === 'playerId')?.value, manifest.expected.playerId)
+  assert.equal(result.candidates.find((item) => item.field === 'kingdom')?.value, manifest.expected.kingdom)
+  assert.equal(result.candidates.find((item) => item.field === 'displayName')?.value, manifest.expected.name)
+  assert.equal(result.candidates.find((item) => item.field === 'allianceTag')?.value, manifest.expected.allianceTag)
+  assert.equal(result.diagnostics?.passes?.filter((pass) => pass.field === 'playerId').length, 6)
+  assert.equal(result.diagnostics?.mappingVersion, 'account-linking-kingshot-profile-v4')
+}
+
+assert.equal(consensusComponentDigits([
+  { passType: 'single_word', variant: 'greyscale', digits: '111111111111', confidence: .8 },
+  { passType: 'single_line', variant: 'greyscale', digits: '111111111111', confidence: .57 },
+  { passType: 'single_word', variant: 'threshold', digits: '111111111111', confidence: .45 },
+  { passType: 'single_line', variant: 'threshold', confidence: 0 },
+], true).value, '111111111111')
+assert.equal(consensusComponentDigits([{ passType: 'single_word', variant: 'greyscale', digits: '111111111111', confidence: .9 }, { passType: 'single_line', variant: 'greyscale', digits: '111111111111', confidence: .8 }], false).disposition, 'could_not_read')
+assert.equal(consensusComponentDigits([{ passType: 'single_word', variant: 'greyscale', digits: '111111111111', confidence: .9 }, { passType: 'single_line', variant: 'greyscale', digits: '222222222222', confidence: .8 }], true).disposition, 'conflicting_reads')
 
 for (const [file, mimeType, width, height] of [['kingshot-profile-v2-large.png', 'image/png', 1600, 900], ['kingshot-profile-v2-low-res.jpg', 'image/jpeg', 800, 450]]) {
   const bytes = new Uint8Array(await readFile(new URL(file, base)))

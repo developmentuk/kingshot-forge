@@ -117,3 +117,14 @@ with configured line and icon-excluding numeric geometry, four bounded OCR
 observations, executed greyscale and threshold preprocessing, deterministic
 label-context consensus, and safe browser diagnostics. Synthetic and adversarial
 tests use fake values only; no real screenshot or account data is committed.
+
+## VISION-LINK-005 component-based extraction
+
+The owner-supplied map demonstrated that the previous line-oriented model was
+the wrong abstraction. V4 separately maps the avatar, alliance tag, display
+name, ID label, ID digits, clipboard exclusion, Town Centre components and
+Kingdom label/digits while retaining v1-v3. Player ID can only come from the
+configured digits crop and requires context, two agreeing observations, one
+strong `.55` observation and one supporting `.35` observation. Synthetic PNG
+and JPEG fixtures contain fake values only; no live evidence or database
+mutation is recorded.

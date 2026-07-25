@@ -204,6 +204,9 @@
 .vision-acceptance__overlay-region--profilePanel { border: 1px dashed rgba(168, 85, 247, .65); background: transparent; }
 .vision-acceptance__overlay-region--profilePanel span { left: .2rem; }
 .vision-acceptance__overlay-region--playerIdNumeric { border-color: #fb923c; background: rgba(251, 146, 60, .025); }
+.vision-acceptance__overlay-region--playerIdDigits, .vision-acceptance__overlay-region--kingdomDigits { border-color: #fb923c; background: rgba(251, 146, 60, .025); }
+.vision-acceptance__overlay-region--clipboardIcon { border: 2px dashed #e879f9; background: rgba(232, 121, 249, .12); }
+.vision-acceptance__overlay-region--avatar, .vision-acceptance__overlay-region--townCenterBadge, .vision-acceptance__overlay-region--townCenterLabel { border-color: #64748b; }
 .vision-acceptance__toggle { margin-top: 1rem; }
 .vision-acceptance__overlay-region--displayName { border-color: #22c55e; }
 .vision-acceptance__overlay-region--playerId { border-color: #f59e0b; }

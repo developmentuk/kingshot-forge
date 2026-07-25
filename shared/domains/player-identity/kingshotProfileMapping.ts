@@ -1,7 +1,9 @@
-export type KingshotProfileField = 'displayName' | 'playerId' | 'kingdom'
+export type KingshotProfileField = 'displayName' | 'playerId' | 'kingdom' | 'allianceTag'
 export type KingshotProfileRegionKey = KingshotProfileField | 'profilePanel'
-  | 'playerIdNumeric'
-export type KingshotProfileObservation = 'panel' | 'line' | 'numeric'
+  | 'playerIdNumeric' | 'avatar' | 'clipboardIcon' | 'playerIdLabel' | 'playerIdDigits'
+  | 'townCenterLabel' | 'townCenterBadge' | 'kingdomLabel' | 'kingdomDigits'
+export type KingshotProfileObservation = 'panel' | 'line' | 'numeric' | 'component' | 'exclusion' | 'layout'
+export type KingshotProfileComponentRole = 'ocr' | 'layout' | 'exclusion'
 export type KingshotProfileRegionConfig = {
   readonly key: KingshotProfileRegionKey
   readonly field?: KingshotProfileField
@@ -13,6 +15,7 @@ export type KingshotProfileRegionConfig = {
   readonly psm: 'single_line' | 'single_word' | 'sparse_text'
   readonly characterWhitelist: string | null
   readonly observation: KingshotProfileObservation
+  readonly componentRole?: KingshotProfileComponentRole
 }
 
 export const KINGSHOT_PROFILE_V1_REGIONS: readonly KingshotProfileRegionConfig[] = [
@@ -35,4 +38,18 @@ export const KINGSHOT_PROFILE_V3_REGIONS: readonly KingshotProfileRegionConfig[]
   { key: 'playerId', field: 'playerId', label: 'Player ID line', x: 0.27, y: 0.34, width: 0.43, height: 0.20, psm: 'single_line', characterWhitelist: '0123456789 IDid:', observation: 'line' },
   { key: 'playerIdNumeric', field: 'playerId', label: 'Player ID digits', x: 0.36, y: 0.34, width: 0.30, height: 0.20, psm: 'single_line', characterWhitelist: null, observation: 'numeric' },
   { key: 'kingdom', field: 'kingdom', label: 'Kingdom', x: 0.27, y: 0.70, width: 0.48, height: 0.20, psm: 'single_line', characterWhitelist: '0123456789 Kingdomkingdom#:', observation: 'line' },
+]
+
+export const KINGSHOT_PROFILE_V4_REGIONS: readonly KingshotProfileRegionConfig[] = [
+  { key: 'profilePanel', label: 'Profile panel', x: 0.29, y: 0.10, width: 0.67, height: 0.84, psm: 'sparse_text', characterWhitelist: null, observation: 'panel', componentRole: 'layout' },
+  { key: 'avatar', label: 'Avatar layout region', x: 0.03, y: 0.05, width: 0.26, height: 0.89, psm: 'sparse_text', characterWhitelist: null, observation: 'layout', componentRole: 'layout' },
+  { key: 'allianceTag', field: 'allianceTag', label: 'Alliance tag', x: 0.30, y: 0.12, width: 0.09, height: 0.22, psm: 'single_line', characterWhitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]()_-', observation: 'component', componentRole: 'ocr' },
+  { key: 'displayName', field: 'displayName', label: 'Display name', x: 0.39, y: 0.12, width: 0.56, height: 0.22, psm: 'single_line', characterWhitelist: null, observation: 'component', componentRole: 'ocr' },
+  { key: 'playerIdLabel', field: 'playerId', label: 'Player ID label', x: 0.30, y: 0.37, width: 0.05, height: 0.18, psm: 'single_word', characterWhitelist: 'IDid1:', observation: 'component', componentRole: 'ocr' },
+  { key: 'playerIdDigits', field: 'playerId', label: 'Player ID digits', x: 0.35, y: 0.37, width: 0.19, height: 0.18, psm: 'single_word', characterWhitelist: '0123456789', observation: 'numeric', componentRole: 'ocr' },
+  { key: 'clipboardIcon', label: 'Clipboard exclusion', x: 0.55, y: 0.36, width: 0.07, height: 0.20, psm: 'single_word', characterWhitelist: null, observation: 'exclusion', componentRole: 'exclusion' },
+  { key: 'townCenterLabel', label: 'Town Centre label', x: 0.30, y: 0.53, width: 0.30, height: 0.20, psm: 'single_line', characterWhitelist: null, observation: 'layout', componentRole: 'layout' },
+  { key: 'townCenterBadge', label: 'Town Centre badge', x: 0.70, y: 0.51, width: 0.08, height: 0.18, psm: 'single_word', characterWhitelist: '0123456789', observation: 'layout', componentRole: 'layout' },
+  { key: 'kingdomLabel', field: 'kingdom', label: 'Kingdom label', x: 0.30, y: 0.76, width: 0.18, height: 0.16, psm: 'single_word', characterWhitelist: null, observation: 'component', componentRole: 'ocr' },
+  { key: 'kingdomDigits', field: 'kingdom', label: 'Kingdom digits', x: 0.50, y: 0.76, width: 0.14, height: 0.16, psm: 'single_word', characterWhitelist: '0123456789', observation: 'numeric', componentRole: 'ocr' },
 ]

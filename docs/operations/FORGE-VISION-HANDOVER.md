@@ -76,3 +76,11 @@ owner retest remains a separate NO-GO-until-deployed-checks gate.
 The pinned Tesseract.js 7.0.0 fixture comparison selected `SINGLE_LINE` for the
 numeric crop: `SINGLE_WORD` was less reliable on the bounded low-resolution
 fixture. Numeric OCR is spatially isolated and post-parsed as digits only.
+
+## VISION-LINK-005 component mapping
+
+VISION-LINK-004 remained NO-GO because promising numeric confidence was blocked
+by the broad line-agreement model. V4 separates label, digit, icon-exclusion
+and supporting regions. Player ID uses label context plus four bounded digit
+passes with strong `.55` and supporting `.35` thresholds. Synthetic fixtures
+use fake repeated digits only; no real screenshot or account value is committed.

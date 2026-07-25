@@ -4,10 +4,10 @@ import { createWorker, PSM, type Worker } from 'tesseract.js'
 import type { VisionExtractionRequest } from '../../shared/platform/vision/contracts.js'
 import { VisionRuntimeError } from '../vision/runtime/errors.js'
 import type { AccountLinkOcrAdapter } from './accountLinkingOcrService.js'
-import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
-import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
+import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, KINGSHOT_PROFILE_V4_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
+import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
 import type { AccountLinkOcrDisposition, AccountLinkOcrMappingVersion, AccountLinkOcrRegionObservation } from '../../shared/domains/player-identity/accountLinkingOcr.js'
-import { consensusPlayerId, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
+import { consensusPlayerId, consensusComponentDigits, type ComponentNumericObservation, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
 
 const require = createRequire(import.meta.url)
 const RUNTIME_TIMEOUT_MS = 45_000
@@ -45,6 +45,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     try {
       const paths = bundledPaths()
       worker = await this.#workerFactory.create({ workerPath: paths.workerPath, langPath: paths.langPath, cacheMethod: 'none', gzip: true, workerBlobURL: false, logger: () => {} })
+      if (request.mappingVersionId === KINGSHOT_PROFILE_V4_MAPPING_VERSION) return await this.#extractV4(worker, request)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V3_MAPPING_VERSION) return await this.#extractV3(worker, request)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V2_MAPPING_VERSION) return await this.#extractV2(worker, request)
       return await this.#extractV1(worker, request)
@@ -148,6 +149,71 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
       passes.push({ field, passType: 'labelled_line', variant: 'greyscale', attempted: true, confidence: line.confidence, labelContext: selected.labelContext, warnings: [] }, { field, passType: 'labelled_line', variant: 'threshold', attempted: true, confidence: threshold.confidence, labelContext: selected.labelContext, warnings: [] })
     }
     return { ...this.#output('', consensus.confidence, observations, diagnostics, fields, KINGSHOT_PROFILE_V3_MAPPING_VERSION), diagnostics: { mappingVersion: KINGSHOT_PROFILE_V3_MAPPING_VERSION, regions: diagnostics, fields, passes } }
+  }
+
+  async #extractV4(worker: Worker, request: VisionExtractionRequest) {
+    const region = (key: string) => KINGSHOT_PROFILE_V4_REGIONS.find((item) => item.key === key)!
+    const panel = await this.#recognizePrepared(worker, request, region('profilePanel'), 'greyscale', PSM.SPARSE_TEXT, null)
+    const passes: Array<{ field: KingshotProfileField; passType: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'; variant: 'greyscale' | 'threshold'; attempted: boolean; confidence: number; labelContext: boolean; warnings: string[] }> = []
+    const read = async (field: KingshotProfileField, item: KingshotProfileRegion, variant: 'greyscale' | 'threshold', psm: string, passType: 'label_component' | 'digits_single_word' | 'digits_single_line', whitelist: string | null) => {
+      const result = await this.#recognizePrepared(worker, request, item, variant, psm, whitelist)
+      const text = cleanRawText(result.text)
+      const labelContext = field === 'playerId' ? /(?:[i1]d)/i.test(text) : field === 'kingdom' ? /kingdom/i.test(text) : false
+      passes.push({ field, passType, variant, attempted: true, confidence: result.confidence, labelContext, warnings: result.confidence === 0 ? ['zero_confidence_numeric'] : [] })
+      return { text, confidence: result.confidence, labelContext }
+    }
+    const idLabel = [await read('playerId', region('playerIdLabel'), 'greyscale', PSM.SINGLE_WORD, 'label_component', region('playerIdLabel').characterWhitelist), await read('playerId', region('playerIdLabel'), 'threshold', PSM.SINGLE_WORD, 'label_component', region('playerIdLabel').characterWhitelist)]
+    const idDigits = [
+      await read('playerId', region('playerIdDigits'), 'greyscale', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
+      await read('playerId', region('playerIdDigits'), 'greyscale', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+      await read('playerId', region('playerIdDigits'), 'threshold', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
+      await read('playerId', region('playerIdDigits'), 'threshold', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+    ]
+    const idContext = idLabel.some((item) => item.labelContext) || /(?:[i1]d)/i.test(cleanRawText(panel.text))
+    const componentPass = (index: number): ComponentNumericObservation['passType'] => index % 2 ? 'single_line' : 'single_word'
+    const componentVariant = (index: number): ComponentNumericObservation['variant'] => index > 1 ? 'threshold' : 'greyscale'
+    const idConsensus = consensusComponentDigits(idDigits.map((item, index) => ({ passType: componentPass(index), variant: componentVariant(index), digits: extractDigits(item.text, 20), confidence: item.confidence })), idContext)
+    const observations: AccountLinkOcrRegionObservation[] = [{ field: 'playerId', rawText: '', confidence: idConsensus.confidence, warnings: idConsensus.warnings, acceptedValue: idConsensus.value, disposition: idConsensus.disposition, agreement: idConsensus.agreement === 'insufficient' ? 'not_applicable' : idConsensus.agreement, passType: 'label_component', variant: 'greyscale', labelContext: idContext }]
+    const diagnostics: DiagnosticRegion[] = [{ field: 'playerId', attempted: true, recognized: Boolean(idConsensus.value), confidence: idConsensus.confidence, warnings: idConsensus.warnings }]
+    const fields: FieldDiagnostic[] = [{ field: 'playerId', disposition: idConsensus.disposition, confidence: idConsensus.confidence, agreement: idConsensus.agreement === 'insufficient' ? 'not_applicable' : idConsensus.agreement, warnings: idConsensus.warnings }]
+
+    const readNumericComponent = async (field: 'kingdom', labelKey: string, digitsKey: string, validator: (value: string) => boolean) => {
+      const label = [await read(field, region(labelKey), 'greyscale', PSM.SINGLE_WORD, 'label_component', region(labelKey).characterWhitelist), await read(field, region(labelKey), 'threshold', PSM.SINGLE_WORD, 'label_component', region(labelKey).characterWhitelist)]
+      const numeric = [
+        await read(field, region(digitsKey), 'greyscale', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
+        await read(field, region(digitsKey), 'greyscale', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+        await read(field, region(digitsKey), 'threshold', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
+        await read(field, region(digitsKey), 'threshold', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+      ]
+      const context = label.some((item) => /kingdom/i.test(item.text)) || /kingdom/i.test(cleanRawText(panel.text))
+      const numericObservations = numeric.map((item, index) => ({ passType: componentPass(index), variant: componentVariant(index), digits: extractDigits(item.text, 4), confidence: item.confidence }))
+      let consensus = consensusComponentDigits(numericObservations, context, validator)
+      if (field === 'kingdom' && consensus.disposition === 'conflicting_reads' && context) {
+        const groups = new Map<string, typeof numericObservations>()
+        for (const item of numericObservations.filter((candidate) => candidate.digits)) groups.set(item.digits!, [...(groups.get(item.digits!) ?? []), item])
+        const ranked = [...groups.entries()].sort((a, b) => b[1].length - a[1].length || Math.max(...b[1].map((item) => item.confidence)) - Math.max(...a[1].map((item) => item.confidence)))
+        if (ranked[0]?.[1].length >= 2 && ranked[0][1].length > (ranked[1]?.[1].length ?? 0)) consensus = { value: ranked[0][0], disposition: 'recognised', agreement: 'agree', confidence: Math.max(...ranked[0][1].map((item) => item.confidence)), warnings: ['kingdom_component_majority_used'] }
+      }
+      observations.push({ field, rawText: '', confidence: consensus.confidence, warnings: consensus.warnings, acceptedValue: consensus.value, disposition: consensus.disposition, agreement: consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement, passType: 'label_component', variant: 'greyscale', labelContext: context })
+      diagnostics.push({ field, attempted: true, recognized: Boolean(consensus.value), confidence: consensus.confidence, warnings: consensus.warnings })
+      fields.push({ field, disposition: consensus.disposition, confidence: consensus.confidence, agreement: consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement, warnings: consensus.warnings })
+    }
+    await readNumericComponent('kingdom', 'kingdomLabel', 'kingdomDigits', (value) => Number(value) >= 1 && Number(value) <= 9999)
+
+    const readSupporting = async (field: 'allianceTag' | 'displayName', key: string) => {
+      const values = [await read(field, region(key), 'greyscale', PSM.SINGLE_LINE, 'label_component', region(key).characterWhitelist), await read(field, region(key), 'threshold', PSM.SINGLE_LINE, 'label_component', region(key).characterWhitelist)].filter((item) => item.text)
+      const selected = values.sort((a, b) => b.confidence - a.confidence)[0]
+      const value = selected ? normalizeName(selected.text) : undefined
+      const review = Boolean(value) && (selected!.confidence < 0.65 || value!.length < 4 || (field === 'displayName' && !/\s/u.test(value!)))
+      const disposition = value ? review ? 'review_required' as const : 'recognised' as const : 'could_not_read' as const
+      const warnings = value && review ? ['partial_or_normalised_name', 'supporting_information_review_only'] : value ? [] : ['name_not_read']
+      observations.push({ field, rawText: '', confidence: selected?.confidence ?? 0, warnings, acceptedValue: value, disposition, agreement: 'not_applicable', passType: 'label_component', variant: selected ? 'greyscale' : 'threshold', labelContext: false })
+      diagnostics.push({ field, attempted: true, recognized: Boolean(value), confidence: selected?.confidence ?? 0, warnings })
+      fields.push({ field, disposition, confidence: selected?.confidence ?? 0, agreement: 'not_applicable', warnings })
+    }
+    await readSupporting('allianceTag', 'allianceTag')
+    await readSupporting('displayName', 'displayName')
+    return { ...this.#output('', Math.max(idConsensus.confidence, ...fields.map((item) => item.confidence)), observations, diagnostics, fields, KINGSHOT_PROFILE_V4_MAPPING_VERSION), diagnostics: { mappingVersion: KINGSHOT_PROFILE_V4_MAPPING_VERSION, regions: diagnostics, fields, passes } }
   }
 
   async #recognizePrepared(worker: Worker, request: VisionExtractionRequest, region: KingshotProfileRegion, variant: 'greyscale' | 'threshold', psm: string, whitelist: string | null) {
