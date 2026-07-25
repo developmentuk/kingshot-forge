@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ChangeEvent } from 'react'
-import KingshotArtRenderer from '../../components/art/KingshotArtRenderer'
+import BaseKingshotArtRenderer, { type KingshotArtRendererProps } from '../../components/art/KingshotArtRenderer'
 import { analyseText, copyApprovedPayload, copyApprovedPayloadFallback, sha256Text } from '../../../shared/domains/art-studio/rendering'
 
 const CANONICAL_HASH = 'c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79'
 const CANONICAL_FILENAME = 'wow-im-so-cute.txt'
 type Reference = { name: string; url: string }
 type LoadedFixture = { filename: string; source: string; bytes: number; hash: string; lineEndings: string; diagnostics: ReturnType<typeof analyseText> }
+
+function KingshotArtRenderer(props: KingshotArtRendererProps) {
+  return <BaseKingshotArtRenderer {...props} sourceContext="kingshot-clipboard" />
+}
 
 function lineEndingFormat(bytes: Uint8Array) {
   let crlf = 0
