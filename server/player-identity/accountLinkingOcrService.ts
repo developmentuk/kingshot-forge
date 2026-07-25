@@ -23,17 +23,19 @@ export async function extractAccountLinkCandidates(input: {
   mimeType: VisionExtractionRequest['image']['mimeType']
   widthPx: number
   heightPx: number
+  mappingVersion?: 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2'
   adapter?: AccountLinkOcrAdapter
 }): Promise<AccountLinkOcrResult> {
   const adapter = input.adapter ?? new TesseractJsAccountLinkOcrAdapter()
+  const mappingVersion = input.mappingVersion ?? 'account-linking-kingshot-profile-v2'
   const extracted = await adapter.extract({
     runId: `account-link-${input.evidenceId}`,
-    mappingVersionId: 'account-linking-kingshot-profile-v1',
-    mappingId: 'account-linking-kingshot-profile',
+    mappingVersionId: mappingVersion,
+    mappingId: mappingVersion === 'account-linking-kingshot-profile-v1' ? 'account-linking-kingshot-profile' : 'account-linking-kingshot-profile-v2',
     fieldKey: 'player-identity',
     image: { evidenceId: input.evidenceId, bytes: input.bytes, sha256: input.sha256, mimeType: input.mimeType, widthPx: input.widthPx, heightPx: input.heightPx },
     region: null,
-    configuration: { language: 'eng', pageSegmentationMode: 7, ocrEngineMode: 1, preserveInterwordSpaces: true, characterWhitelist: null, timeoutMs: 30_000, mappingVersion: 'account-linking-kingshot-profile-v1' },
+    configuration: { language: 'eng', pageSegmentationMode: 7, ocrEngineMode: 1, preserveInterwordSpaces: true, characterWhitelist: null, timeoutMs: 30_000, mappingVersion },
   })
-  return { evidenceId: input.evidenceId, rawText: extracted.rawText, candidates: parseAccountLinkCandidates(extracted.rawText, input.evidenceId, extracted.engineConfidence, { mappingVersion: 'account-linking-kingshot-profile-v1', regions: extracted.regionObservations }), diagnostics: extracted.diagnostics, provenance: { pluginKey: extracted.provenance.pluginKey, pluginVersion: extracted.provenance.pluginVersion, engineName: extracted.provenance.engineName, engineVersion: extracted.provenance.engineVersion, executedAt: extracted.provenance.executedAt } }
+  return { evidenceId: input.evidenceId, rawText: extracted.rawText, candidates: parseAccountLinkCandidates(extracted.rawText, input.evidenceId, extracted.engineConfidence, { mappingVersion, regions: extracted.regionObservations }), diagnostics: extracted.diagnostics, provenance: { pluginKey: extracted.provenance.pluginKey, pluginVersion: extracted.provenance.pluginVersion, engineName: extracted.provenance.engineName, engineVersion: extracted.provenance.engineVersion, executedAt: extracted.provenance.executedAt } }
 }

@@ -1,63 +1,46 @@
-import type { VisionNormalisedBox, VisionPixelBox, VisionRegionBinding } from '../../shared/platform/vision/contracts.js'
+import sharp from 'sharp'
+import type { VisionPixelBox, VisionRegionBinding } from '../../shared/platform/vision/contracts.js'
+import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, type KingshotProfileRegionConfig } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
 
-export const KINGSOT_PROFILE_MAPPING_VERSION = 'account-linking-kingshot-profile-v1' as const
-export const KINGSOT_PROFILE_MAPPING_ID = 'account-linking-kingshot-profile'
+export const KINGSHOT_PROFILE_V1_MAPPING_VERSION = 'account-linking-kingshot-profile-v1' as const
+export const KINGSHOT_PROFILE_V2_MAPPING_VERSION = 'account-linking-kingshot-profile-v2' as const
+export const KINGSHOT_PROFILE_V2_MAPPING_ID = 'account-linking-kingshot-profile-v2'
+export const KINGSHOT_PROFILE_MAX_PIXELS = 8_000_000
+export const KINGSHOT_PROFILE_MAX_DIMENSION = 4_000
 
-export type KingshotProfileField = 'displayName' | 'playerId' | 'kingdom'
+export type KingshotProfileRegion = KingshotProfileRegionConfig
 
-export interface KingshotProfileRegion extends VisionNormalisedBox {
-  readonly field: KingshotProfileField
-  readonly psm: 'single_line'
-  readonly characterWhitelist: string | null
-}
-
-export const KINGSOT_PROFILE_REGIONS: readonly KingshotProfileRegion[] = [
-  { field: 'displayName', x: 0.34, y: 0.18, width: 0.62, height: 0.16, psm: 'single_line', characterWhitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 []_-#' },
-  { field: 'playerId', x: 0.34, y: 0.35, width: 0.62, height: 0.14, psm: 'single_line', characterWhitelist: '0123456789 IDid:' },
-  { field: 'kingdom', x: 0.34, y: 0.62, width: 0.62, height: 0.16, psm: 'single_line', characterWhitelist: '0123456789 Kingdomkingdom#:' },
-]
-
-export function profileRegionBindings(): VisionRegionBinding[] {
-  return KINGSOT_PROFILE_REGIONS.map((region, index) => ({
-    id: `${KINGSOT_PROFILE_MAPPING_ID}-${region.field}`,
-    regionKey: region.field,
-    label: region.field === 'displayName' ? 'Unlabelled display name' : region.field === 'playerId' ? 'Player ID' : 'Kingdom',
-    role: 'source',
-    anchorRules: { layout: 'kingshot-profile-card', psm: region.psm, characterWhitelist: region.characterWhitelist },
-    sortOrder: index,
-    x: region.x,
-    y: region.y,
-    width: region.width,
-    height: region.height,
-  }))
+export function profileRegionBindings(version: 'v1' | 'v2' = 'v2'): VisionRegionBinding[] {
+  const regions = version === 'v1' ? KINGSHOT_PROFILE_V1_REGIONS : KINGSHOT_PROFILE_V2_REGIONS
+  return regions.map((region, index) => ({ id: `${KINGSHOT_PROFILE_V2_MAPPING_ID}-${region.key}`, regionKey: region.key, label: region.label, role: 'source', anchorRules: { layout: 'kingshot-profile-card', psm: region.psm, characterWhitelist: region.characterWhitelist }, sortOrder: index, x: region.x, y: region.y, width: region.width, height: region.height }))
 }
 
 export function mapProfileRegion(region: KingshotProfileRegion, widthPx: number, heightPx: number): VisionPixelBox {
   for (const value of [region.x, region.y, region.width, region.height]) if (!Number.isFinite(value)) throw new Error('Profile OCR region must be finite.')
-  if (region.x < 0 || region.y < 0 || region.width <= 0 || region.height <= 0 || region.x + region.width > 1 || region.y + region.height > 1) throw new Error(`Profile OCR region ${region.field} is outside the image.`)
-  return {
-    left: Math.max(0, Math.floor(region.x * widthPx)),
-    top: Math.max(0, Math.floor(region.y * heightPx)),
-    width: Math.max(1, Math.min(widthPx, Math.ceil(region.width * widthPx))),
-    height: Math.max(1, Math.min(heightPx, Math.ceil(region.height * heightPx))),
-  }
+  if (region.x < 0 || region.y < 0 || region.width <= 0 || region.height <= 0 || region.x + region.width > 1 || region.y + region.height > 1) throw new Error(`Profile OCR region ${region.key} is outside the image.`)
+  return { left: Math.max(0, Math.floor(region.x * widthPx)), top: Math.max(0, Math.floor(region.y * heightPx)), width: Math.max(1, Math.min(widthPx, Math.ceil(region.width * widthPx))), height: Math.max(1, Math.min(heightPx, Math.ceil(region.height * heightPx))) }
 }
 
 export interface PreparedProfileRegion {
-  readonly rectangle: VisionPixelBox
   readonly bytes: Uint8Array
   readonly widthPx: number
   readonly heightPx: number
+  readonly sourceRectangle: VisionPixelBox
+  readonly variant: 'greyscale' | 'threshold'
   readonly scale: number
   readonly warningCodes: readonly string[]
 }
 
-/**
- * The runtime keeps image bytes in memory only. Tesseract receives a bounded
- * rectangle and a DPI hint rather than a persisted crop or raw OCR artifact.
- */
-export function prepareProfileRegion(bytes: Uint8Array, widthPx: number, heightPx: number, region: KingshotProfileRegion): PreparedProfileRegion {
-  const rectangle = mapProfileRegion(region, widthPx, heightPx)
-  const scale = Math.min(2, Math.max(1, Math.floor(1200 / Math.max(rectangle.width, 1))))
-  return { rectangle, bytes, widthPx, heightPx, scale, warningCodes: scale > 1 ? ['bounded_upscale_hint'] : [] }
+export async function prepareProfileRegion(input: { bytes: Uint8Array; mimeType: string; widthPx: number; heightPx: number; region: KingshotProfileRegion; variant?: 'greyscale' | 'threshold' }): Promise<PreparedProfileRegion> {
+  const sourceRectangle = mapProfileRegion(input.region, input.widthPx, input.heightPx)
+  const padding = 12
+  const scale = 3
+  const outputWidth = Math.min(KINGSHOT_PROFILE_MAX_DIMENSION, (sourceRectangle.width + padding * 2) * scale)
+  const outputHeight = Math.min(KINGSHOT_PROFILE_MAX_DIMENSION, (sourceRectangle.height + padding * 2) * scale)
+  if (outputWidth * outputHeight > KINGSHOT_PROFILE_MAX_PIXELS) throw new Error('Profile OCR preprocessing exceeded its bounded pixel budget.')
+  const variant = input.variant ?? 'greyscale'
+  let pipeline = sharp(Buffer.from(input.bytes), { failOn: 'error' }).extract(sourceRectangle).extend({ top: padding, bottom: padding, left: padding, right: padding, background: { r: 255, g: 255, b: 255, alpha: 1 } }).resize({ width: outputWidth, height: outputHeight, fit: 'fill', kernel: 'lanczos3' }).grayscale().linear(1.12, -12)
+  if (variant === 'threshold') pipeline = pipeline.threshold(168)
+  const { data, info } = await pipeline.png({ compressionLevel: 6 }).toBuffer({ resolveWithObject: true })
+  return { bytes: new Uint8Array(data), widthPx: info.width, heightPx: info.height, sourceRectangle, variant, scale, warningCodes: variant === 'threshold' ? ['threshold_variant'] : ['bounded_3x_upscale', 'greyscale_contrast'] }
 }

@@ -22,6 +22,7 @@ const result = await extractAccountLinkCandidates({
   mimeType: manifest.mimeType,
   widthPx: manifest.widthPx,
   heightPx: manifest.heightPx,
+  mappingVersion: 'account-linking-kingshot-profile-v1',
 })
 const durationMs = Math.round(performance.now() - started)
 assert.equal(result.provenance.pluginKey, 'ocr.tesseract.js.wasm')

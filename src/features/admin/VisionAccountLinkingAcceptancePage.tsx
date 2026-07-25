@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import type { AccountLinkOcrResult } from '../../../shared/domains/player-identity/accountLinkingOcr'
+import { KINGSHOT_PROFILE_V2_REGIONS } from '../../../shared/domains/player-identity/kingshotProfileMapping'
 import { VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY, VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID } from '../../../shared/platform/vision/evidenceStorageContracts'
 
 const ACCEPTANCE_ENABLED = import.meta.env.VITE_ENABLE_VISION_LINK_ACCEPTANCE === 'true'
@@ -157,7 +158,7 @@ export function VisionAccountLinkingAcceptancePage() {
       <div className="vision-acceptance__file-control"><label className="button button--primary" htmlFor="vision-acceptance-file">{busy ? 'Processing…' : 'Choose screenshot'}</label><input ref={inputRef} id="vision-acceptance-file" className="vision-acceptance__file-input" type="file" accept={MIME_TYPES.join(',')} disabled={busy} onChange={handleFileSelection} /></div>
       {recoveryAvailable && <section className="vision-acceptance__recovery" aria-labelledby="vision-acceptance-recovery-title"><h2 id="vision-acceptance-recovery-title">Recover unfinished synthetic acceptance</h2><p>A previously completed synthetic acceptance is awaiting owner cancellation.</p><button className="button button--secondary" type="button" disabled={recoveryDeleting} onClick={() => void cancelRecovery()}>{recoveryDeleting ? 'Deleting evidence…' : 'Delete unfinished synthetic evidence'}</button></section>}
       {selectedFile && <p className="vision-acceptance__selected" role="status">Selected: {selectedFile.name} · {selectedFile.type || 'unknown MIME'} · {selectedFile.size.toLocaleString()} bytes</p>}
-      {previewUrl && <img className="vision-acceptance__preview" src={previewUrl} alt="Selected screenshot preview" />}
+      {previewUrl && <div className="vision-acceptance__preview-wrap"><img className="vision-acceptance__preview" src={previewUrl} alt="Selected screenshot preview" /><div className="vision-acceptance__overlay" aria-label="OCR region overlay">{KINGSHOT_PROFILE_V2_REGIONS.map((region) => <div key={region.key} className={`vision-acceptance__overlay-region vision-acceptance__overlay-region--${region.key}`} style={{ left: `${region.x * 100}%`, top: `${region.y * 100}%`, width: `${region.width * 100}%`, height: `${region.height * 100}%` }}><span>{region.label}</span></div>)}</div></div>}
       {message && <p className="vision-acceptance__success" role="status">{message}</p>}
       {error && <p className="vision-acceptance__error" role="alert">{error}</p>}
       {state === 'cancelled' && <p className="vision-acceptance__success" role="status">Final confirmation: exact screenshot evidence was removed.</p>}
