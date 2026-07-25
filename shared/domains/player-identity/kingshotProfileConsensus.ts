@@ -77,3 +77,25 @@ export function consensusKingdomLine(reads: readonly KingdomLineRead[], labelCon
   if (valid.length === 2 && valid[0].value !== valid[1].value) return { disposition: 'conflicting_reads', agreement: 'disagree', confidence, warnings: ['conflicting_digit_strings'] }
   return { disposition: 'could_not_read', agreement: 'insufficient', confidence, warnings: labelContext ? [] : ['kingdom_label_context_required'] }
 }
+
+export type TownCenterBadgeObservation = { readonly source: 'tight' | 'context'; readonly value?: string; readonly confidence: number }
+
+export function consensusTownCenterBadge(tight: readonly TownCenterBadgeObservation[], context: readonly TownCenterBadgeObservation[], labelContext: boolean): PlayerIdConsensus {
+  const validTight = tight.filter((item) => item.value && Number(item.value) >= 1 && Number(item.value) <= 30 && item.confidence > 0)
+  const validContext = context.filter((item) => item.value && Number(item.value) >= 1 && Number(item.value) <= 30 && item.confidence > 0)
+  const confidence = Math.max(...[...validTight, ...validContext].map((item) => item.confidence), 0)
+  if (!labelContext) return { disposition: 'could_not_read', agreement: 'insufficient', confidence, warnings: ['town_center_label_context_required'] }
+  const groups = new Map<string, TownCenterBadgeObservation[]>()
+  for (const item of validTight) groups.set(item.value!, [...(groups.get(item.value!) ?? []), item])
+  const strongValues = new Set(validTight.filter((item) => item.confidence >= COMPONENT_NUMERIC_STRONG_CONFIDENCE).map((item) => item.value))
+  if (strongValues.size > 1) return { disposition: 'conflicting_reads', agreement: 'disagree', confidence, warnings: ['conflicting_town_center_levels'] }
+  const supported = [...groups.entries()].filter(([, items]) => items.length >= 2 && items.some((item) => item.confidence >= COMPONENT_NUMERIC_STRONG_CONFIDENCE))
+  if (supported.length === 0) return { disposition: 'could_not_read', agreement: 'insufficient', confidence, warnings: ['insufficient_tight_badge_agreement'] }
+  const ranked = supported.sort((a, b) => b[1].length - a[1].length || Math.max(...b[1].map((item) => item.confidence)) - Math.max(...a[1].map((item) => item.confidence)))
+  const [value, observations] = ranked[0]
+  const strongest = Math.max(...observations.map((item) => item.confidence))
+  const conflict = [...groups.entries()].some(([candidate, items]) => candidate !== value && Math.max(...items.map((item) => item.confidence)) >= strongest - 0.05)
+  if (conflict) return { disposition: 'conflicting_reads', agreement: 'disagree', confidence, warnings: ['conflicting_town_center_levels'] }
+  const contextSupport = validContext.some((item) => item.value === value)
+  return { value, disposition: 'recognised', agreement: validTight.length < tight.length ? 'agree_with_missing_pass' : 'agree', confidence: strongest, warnings: contextSupport ? [] : ['tight_badge_only_consensus'] }
+}

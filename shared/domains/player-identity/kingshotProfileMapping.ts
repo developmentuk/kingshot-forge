@@ -1,7 +1,7 @@
 export type KingshotProfileField = 'displayName' | 'playerId' | 'kingdom' | 'allianceTag' | 'townCenterLevel'
 export type KingshotProfileRegionKey = KingshotProfileField | 'profilePanel'
   | 'playerIdNumeric' | 'avatar' | 'clipboardIcon' | 'playerIdLabel' | 'playerIdDigits'
-  | 'townCenterLabel' | 'townCenterBadge' | 'kingdomLabel' | 'kingdomDigits' | 'kingdomLine'
+  | 'townCenterLabel' | 'townCenterBadge' | 'townCenterBadgeTight' | 'townCenterBadgeContext' | 'kingdomLabel' | 'kingdomDigits' | 'kingdomLine'
 export type KingshotProfileObservation = 'panel' | 'line' | 'numeric' | 'component' | 'exclusion' | 'layout'
 export type KingshotProfileComponentRole = 'ocr' | 'layout' | 'exclusion'
 export type KingshotProfileRegionConfig = {
@@ -64,3 +64,8 @@ export const KINGSHOT_PROFILE_V6_REGIONS: readonly KingshotProfileRegionConfig[]
   : region.key === 'townCenterBadge'
     ? { ...region, x: 0.67, y: 0.47, width: 0.16, height: 0.25, observation: 'numeric' as const, componentRole: 'ocr' as const }
     : region)
+
+export const KINGSHOT_PROFILE_V7_REGIONS: readonly KingshotProfileRegionConfig[] = KINGSHOT_PROFILE_V6_REGIONS.filter((region) => region.key !== 'townCenterBadge').concat([
+  { key: 'townCenterBadgeTight', field: 'townCenterLevel', label: 'Town Centre badge tight', x: 0.59, y: 0.43, width: 0.13, height: 0.31, psm: 'single_word', characterWhitelist: '0123456789', observation: 'numeric', componentRole: 'ocr' },
+  { key: 'townCenterBadgeContext', field: 'townCenterLevel', label: 'Town Centre badge context', x: 0.56, y: 0.40, width: 0.19, height: 0.36, psm: 'single_line', characterWhitelist: '0123456789', observation: 'numeric', componentRole: 'ocr' },
+])

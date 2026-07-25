@@ -27,7 +27,7 @@ export async function extractAccountLinkCandidates(input: {
   adapter?: AccountLinkOcrAdapter
 }): Promise<AccountLinkOcrResult> {
   const adapter = input.adapter ?? new TesseractJsAccountLinkOcrAdapter()
-  const mappingVersion = input.mappingVersion ?? 'account-linking-kingshot-profile-v6'
+  const mappingVersion = input.mappingVersion ?? 'account-linking-kingshot-profile-v7'
   const extracted = await adapter.extract({
     runId: `account-link-${input.evidenceId}`,
     mappingVersionId: mappingVersion,

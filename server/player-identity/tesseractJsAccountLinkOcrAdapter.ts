@@ -4,10 +4,10 @@ import { createWorker, PSM, type Worker } from 'tesseract.js'
 import type { VisionExtractionRequest } from '../../shared/platform/vision/contracts.js'
 import { VisionRuntimeError } from '../vision/runtime/errors.js'
 import type { AccountLinkOcrAdapter } from './accountLinkingOcrService.js'
-import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, KINGSHOT_PROFILE_V4_MAPPING_VERSION, KINGSHOT_PROFILE_V5_MAPPING_VERSION, KINGSHOT_PROFILE_V6_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
-import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
+import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, KINGSHOT_PROFILE_V4_MAPPING_VERSION, KINGSHOT_PROFILE_V5_MAPPING_VERSION, KINGSHOT_PROFILE_V6_MAPPING_VERSION, KINGSHOT_PROFILE_V7_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
+import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS, KINGSHOT_PROFILE_V7_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
 import type { AccountLinkOcrDisposition, AccountLinkOcrMappingVersion, AccountLinkOcrRegionObservation } from '../../shared/domains/player-identity/accountLinkingOcr.js'
-import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, type ComponentNumericObservation, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
+import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, consensusTownCenterBadge, type ComponentNumericObservation, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
 
 const require = createRequire(import.meta.url)
 const RUNTIME_TIMEOUT_MS = 45_000
@@ -45,7 +45,8 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     try {
       const paths = bundledPaths()
       worker = await this.#workerFactory.create({ workerPath: paths.workerPath, langPath: paths.langPath, cacheMethod: 'none', gzip: true, workerBlobURL: false, logger: () => {} })
-      if (request.mappingVersionId === KINGSHOT_PROFILE_V6_MAPPING_VERSION) return await this.#extractV4(worker, request, true, true)
+      if (request.mappingVersionId === KINGSHOT_PROFILE_V7_MAPPING_VERSION) return await this.#extractV4(worker, request, true, true, 'v7')
+      if (request.mappingVersionId === KINGSHOT_PROFILE_V6_MAPPING_VERSION) return await this.#extractV4(worker, request, true, true, 'v6')
       if (request.mappingVersionId === KINGSHOT_PROFILE_V5_MAPPING_VERSION) return await this.#extractV4(worker, request, true)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V4_MAPPING_VERSION) return await this.#extractV4(worker, request)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V3_MAPPING_VERSION) return await this.#extractV3(worker, request)
@@ -153,12 +154,12 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     return { ...this.#output('', consensus.confidence, observations, diagnostics, fields, KINGSHOT_PROFILE_V3_MAPPING_VERSION), diagnostics: { mappingVersion: KINGSHOT_PROFILE_V3_MAPPING_VERSION, regions: diagnostics, fields, passes } }
   }
 
-  async #extractV4(worker: Worker, request: VisionExtractionRequest, labelledKingdomLine = false, townCenter = false) {
-    const region = (key: string) => (townCenter ? KINGSHOT_PROFILE_V6_REGIONS : KINGSHOT_PROFILE_V4_REGIONS).find((item) => item.key === key)!
+  async #extractV4(worker: Worker, request: VisionExtractionRequest, labelledKingdomLine = false, townCenter = false, townCalibration: 'v6' | 'v7' = 'v6') {
+    const region = (key: string) => (townCenter ? townCalibration === 'v7' ? KINGSHOT_PROFILE_V7_REGIONS : KINGSHOT_PROFILE_V6_REGIONS : KINGSHOT_PROFILE_V4_REGIONS).find((item) => item.key === key)!
     const panel = await this.#recognizePrepared(worker, request, region('profilePanel'), 'greyscale', PSM.SPARSE_TEXT, null)
     const passes: Array<{ field: KingshotProfileField; passType: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'; variant: 'greyscale' | 'threshold' | 'inverted'; attempted: boolean; confidence: number; labelContext: boolean; warnings: string[] }> = []
-    const read = async (field: KingshotProfileField, item: KingshotProfileRegion, variant: 'greyscale' | 'threshold' | 'inverted', psm: string, passType: 'label_component' | 'digits_single_word' | 'digits_single_line', whitelist: string | null) => {
-      const result = await this.#recognizePrepared(worker, request, item, variant, psm, whitelist)
+    const read = async (field: KingshotProfileField, item: KingshotProfileRegion, variant: 'greyscale' | 'threshold' | 'inverted', psm: string, passType: 'label_component' | 'digits_single_word' | 'digits_single_line', whitelist: string | null, thresholdValue = 168, focus?: { x: number; y: number; width: number; height: number }) => {
+      const result = await this.#recognizePrepared(worker, request, item, variant, psm, whitelist, thresholdValue, focus)
       const text = cleanRawText(result.text)
       const labelContext = field === 'playerId' ? /(?:[i1]d)/i.test(text) : field === 'kingdom' ? /kingdom/i.test(text) : false
       passes.push({ field, passType, variant, attempted: true, confidence: result.confidence, labelContext, warnings: result.confidence === 0 ? ['zero_confidence_numeric'] : [] })
@@ -238,22 +239,30 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     await readSupporting('displayName', 'displayName')
     if (townCenter) {
       const labelRegion = region('townCenterLabel')
-      const badgeRegion = region('townCenterBadge')
+      const tightRegion = region(townCalibration === 'v7' ? 'townCenterBadgeTight' : 'townCenterBadge')
+      const contextRegion = townCalibration === 'v7' ? region('townCenterBadgeContext') : null
       const labelReads = [
         await read('townCenterLevel', labelRegion, 'greyscale', PSM.SINGLE_LINE, 'label_component', labelRegion.characterWhitelist),
         await read('townCenterLevel', labelRegion, 'threshold', PSM.SINGLE_LINE, 'label_component', labelRegion.characterWhitelist),
       ]
       const badgeReads = [
-        await read('townCenterLevel', badgeRegion, 'greyscale', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
-        await read('townCenterLevel', badgeRegion, 'greyscale', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
-        await read('townCenterLevel', badgeRegion, 'threshold', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
-        await read('townCenterLevel', badgeRegion, 'threshold', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
-        await read('townCenterLevel', badgeRegion, 'inverted', PSM.SINGLE_WORD, 'digits_single_word', '0123456789'),
-        await read('townCenterLevel', badgeRegion, 'inverted', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+        await read('townCenterLevel', tightRegion, 'greyscale', PSM.SINGLE_WORD, 'digits_single_word', '0123456789', 168, { x: .30, y: .35, width: .40, height: .50 }),
+        await read('townCenterLevel', tightRegion, 'greyscale', PSM.SINGLE_LINE, 'digits_single_line', '0123456789', 168, { x: .30, y: .35, width: .40, height: .50 }),
+        await read('townCenterLevel', tightRegion, 'threshold', PSM.SINGLE_WORD, 'digits_single_word', '0123456789', 220, { x: .30, y: .35, width: .40, height: .50 }),
+        await read('townCenterLevel', tightRegion, 'threshold', PSM.SINGLE_LINE, 'digits_single_line', '0123456789', 220, { x: .30, y: .35, width: .40, height: .50 }),
+        await read('townCenterLevel', tightRegion, 'inverted', PSM.SINGLE_WORD, 'digits_single_word', '0123456789', 168, { x: .30, y: .35, width: .40, height: .50 }),
+        await read('townCenterLevel', tightRegion, 'inverted', PSM.SINGLE_LINE, 'digits_single_line', '0123456789', 168, { x: .30, y: .35, width: .40, height: .50 }),
       ]
+      const contextReads = contextRegion ? [
+        await read('townCenterLevel', contextRegion, 'threshold', PSM.SINGLE_WORD, 'digits_single_word', '0123456789', 220),
+        await read('townCenterLevel', contextRegion, 'inverted', PSM.SINGLE_LINE, 'digits_single_line', '0123456789'),
+      ] : []
       const labelContext = labelReads.some((item) => /town\s*(?:centre|center)/i.test(item.text)) || /town\s*(?:centre|center)/i.test(cleanRawText(panel.text))
-      const numeric = badgeReads.map((item, index) => ({ passType: componentPass(index), variant: componentVariant(index), digits: extractDigits(item.text, 2), confidence: item.confidence }))
-      const consensus = consensusComponentDigits(numeric, labelContext, (value) => Number(value) >= 1 && Number(value) <= 30)
+      const numeric = badgeReads.map((item) => ({ source: 'tight' as const, value: extractDigits(item.text, 2), confidence: item.confidence }))
+      const supporting = contextReads.map((item) => ({ source: 'context' as const, value: extractDigits(item.text, 2), confidence: item.confidence }))
+      const consensus = townCalibration === 'v7'
+        ? consensusTownCenterBadge(numeric, supporting, labelContext)
+        : consensusComponentDigits(badgeReads.map((item, index) => ({ passType: componentPass(index), variant: componentVariant(index), digits: extractDigits(item.text, 2), confidence: item.confidence })), labelContext, (value) => Number(value) >= 1 && Number(value) <= 30)
       const warnings = labelContext ? consensus.warnings : [...consensus.warnings, 'town_center_label_context_required']
       const disposition = consensus.disposition
       const agreement = consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement
@@ -261,12 +270,12 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
       diagnostics.push({ field: 'townCenterLevel', attempted: true, recognized: Boolean(consensus.value), confidence: consensus.confidence, warnings })
       fields.push({ field: 'townCenterLevel', disposition, confidence: consensus.confidence, agreement, warnings })
     }
-    const mappingVersion = townCenter ? KINGSHOT_PROFILE_V6_MAPPING_VERSION : labelledKingdomLine ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : KINGSHOT_PROFILE_V4_MAPPING_VERSION
+    const mappingVersion = townCenter ? townCalibration === 'v7' ? KINGSHOT_PROFILE_V7_MAPPING_VERSION : KINGSHOT_PROFILE_V6_MAPPING_VERSION : labelledKingdomLine ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : KINGSHOT_PROFILE_V4_MAPPING_VERSION
     return { ...this.#output('', Math.max(idConsensus.confidence, ...fields.map((item) => item.confidence)), observations, diagnostics, fields, mappingVersion), diagnostics: { mappingVersion, regions: diagnostics, fields, passes } }
   }
 
-  async #recognizePrepared(worker: Worker, request: VisionExtractionRequest, region: KingshotProfileRegion, variant: 'greyscale' | 'threshold' | 'inverted', psm: string, whitelist: string | null) {
-    const prepared = await prepareProfileRegion({ bytes: request.image.bytes, mimeType: request.image.mimeType, widthPx: request.image.widthPx, heightPx: request.image.heightPx, region, variant })
+  async #recognizePrepared(worker: Worker, request: VisionExtractionRequest, region: KingshotProfileRegion, variant: 'greyscale' | 'threshold' | 'inverted', psm: string, whitelist: string | null, thresholdValue = 168, focus?: { x: number; y: number; width: number; height: number }) {
+    const prepared = await prepareProfileRegion({ bytes: request.image.bytes, mimeType: request.image.mimeType, widthPx: request.image.widthPx, heightPx: request.image.heightPx, region, variant, thresholdValue, focus })
     const result = await this.#recognize(worker, Buffer.from(prepared.bytes), { left: 0, top: 0, width: prepared.widthPx, height: prepared.heightPx }, psm, whitelist, prepared.scale)
     return { ...result, prepared }
   }

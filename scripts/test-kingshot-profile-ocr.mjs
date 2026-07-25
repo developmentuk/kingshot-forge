@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { extractAccountLinkCandidates } from '../server/player-identity/accountLinkingOcrService.ts'
 import { mapProfileRegion, prepareProfileRegion, profileRegionBindings } from '../server/player-identity/kingshotProfileOcr.ts'
-import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
-import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
+import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS, KINGSHOT_PROFILE_V7_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
+import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, consensusTownCenterBadge } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
 import { parseAccountLinkCandidates } from '../shared/domains/player-identity/accountLinkingOcr.ts'
 
 const base = new URL('../fixtures/vision/account-linking/', import.meta.url)
@@ -92,6 +92,31 @@ assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'displa
 assert.equal(v5Result.diagnostics?.fields?.find((item) => item.field === 'allianceTag')?.disposition, 'review_required')
 assert.equal(KINGSHOT_PROFILE_V6_REGIONS.find((region) => region.key === 'townCenterBadge')?.componentRole, 'ocr')
 assert.equal(KINGSHOT_PROFILE_V6_REGIONS.find((region) => region.key === 'townCenterLabel')?.componentRole, 'ocr')
+const v7Tight = KINGSHOT_PROFILE_V7_REGIONS.find((region) => region.key === 'townCenterBadgeTight')
+const v7Context = KINGSHOT_PROFILE_V7_REGIONS.find((region) => region.key === 'townCenterBadgeContext')
+assert.deepEqual([v7Tight?.x, v7Tight?.y, v7Tight?.width, v7Tight?.height], [.59, .43, .13, .31])
+assert.deepEqual([v7Context?.x, v7Context?.y, v7Context?.width, v7Context?.height], [.56, .40, .19, .36])
+assert.equal(v7Tight?.componentRole, 'ocr'); assert.equal(v7Context?.componentRole, 'ocr')
+assert.ok(v7Tight.x + v7Tight.width <= .72 && v7Tight.y + v7Tight.height <= .74)
+assert.ok(v7Context.x + v7Context.width <= .75 && v7Context.y + v7Context.height <= .76)
+assert.ok(v7Tight.x > KINGSHOT_PROFILE_V4_REGIONS.find((region) => region.key === 'playerIdDigits').x + .19)
+assert.ok(v7Context.x > KINGSHOT_PROFILE_V4_REGIONS.find((region) => region.key === 'playerIdDigits').x + .19)
+assert.ok(v7Context.y + v7Context.height <= KINGSHOT_PROFILE_V4_REGIONS.find((region) => region.key === 'kingdomDigits').y)
+assert.deepEqual(profileRegionBindings('v7').filter((item) => ['townCenterBadgeTight', 'townCenterBadgeContext'].includes(item.regionKey)).map((item) => item.regionKey), ['townCenterBadgeTight', 'townCenterBadgeContext'])
+const v7Bytes = new Uint8Array(await readFile(new URL('kingshot-profile-v7-two-digit.png', base)))
+const v7Sha = createHash('sha256').update(v7Bytes).digest('hex')
+const v7Result = await extractAccountLinkCandidates({ evidenceId: '88888888-8888-4888-8888-888888888888', bytes: v7Bytes, sha256: v7Sha, mimeType: 'image/png', widthPx: 1600, heightPx: 900, mappingVersion: 'account-linking-kingshot-profile-v7' })
+assert.equal(v7Result.candidates.find((item) => item.field === 'townCenterLevel')?.value, '20')
+assert.equal(v7Result.diagnostics?.passes?.filter((pass) => pass.field === 'townCenterLevel' && pass.passType !== 'label_component').length, 8)
+assert.equal(v7Result.candidates.find((item) => item.field === 'playerId')?.value, '111111111111')
+assert.equal(v7Result.candidates.find((item) => item.field === 'kingdom')?.value, '42')
+assert.equal(consensusTownCenterBadge([{ source: 'tight', value: '6', confidence: .9 }, { source: 'tight', value: '6', confidence: .8 }, { source: 'tight', value: undefined, confidence: 0 }], [{ source: 'context', value: '6', confidence: .7 }], true).value, '6')
+assert.equal(consensusTownCenterBadge([{ source: 'tight', value: '6', confidence: .9 }, { source: 'tight', value: '6', confidence: .8 }], [{ source: 'context', value: '7', confidence: .95 }], true).value, '6')
+assert.equal(consensusTownCenterBadge([], [{ source: 'context', value: '6', confidence: .95 }], true).disposition, 'could_not_read')
+assert.equal(consensusTownCenterBadge([{ source: 'tight', value: '6', confidence: .9 }, { source: 'tight', value: '7', confidence: .9 }], [], true).disposition, 'conflicting_reads')
+for (const level of ['1', '6', '10', '20', '30']) assert.equal(consensusTownCenterBadge([{ source: 'tight', value: level, confidence: .9 }, { source: 'tight', value: level, confidence: .8 }], [], true).value, level)
+for (const level of ['0', '31']) assert.equal(consensusTownCenterBadge([{ source: 'tight', value: level, confidence: .9 }, { source: 'tight', value: level, confidence: .8 }], [], true).disposition, 'could_not_read')
+assert.equal(consensusTownCenterBadge([{ source: 'tight', value: '6', confidence: .9 }, { source: 'tight', value: '6', confidence: .8 }], [], false).disposition, 'could_not_read')
 assert.equal(consensusKingdomLine([{ value: '42', confidence: .9 }, { value: '42', confidence: .8 }], true).value, '42')
 assert.equal(consensusKingdomLine([{ value: '42', confidence: .8 }, { confidence: 0 }], true).agreement, 'agree_with_missing_pass')
 assert.equal(consensusKingdomLine([{ value: '42', confidence: .9 }, { value: '43', confidence: .9 }], true).disposition, 'conflicting_reads')

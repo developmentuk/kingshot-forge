@@ -1,5 +1,5 @@
 export type AccountLinkOcrField = 'playerId' | 'displayName' | 'kingdom' | 'allianceTag' | 'townCenterLevel'
-export type AccountLinkOcrMappingVersion = 'account-linking-ocr-mvp' | 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4' | 'account-linking-kingshot-profile-v5' | 'account-linking-kingshot-profile-v6'
+export type AccountLinkOcrMappingVersion = 'account-linking-ocr-mvp' | 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4' | 'account-linking-kingshot-profile-v5' | 'account-linking-kingshot-profile-v6' | 'account-linking-kingshot-profile-v7'
 export type AccountLinkOcrDisposition = 'recognised' | 'review_required' | 'could_not_read' | 'conflicting_reads'
 
 export interface AccountLinkOcrRegionObservation {
@@ -108,7 +108,7 @@ export function parseAccountLinkCandidates(rawText: string, evidenceId: string, 
 
   const allianceRegion = regionFor('allianceTag')
   const allianceRaw = allianceRegion?.acceptedValue ?? normalizeName(allianceRegion?.rawText ?? '')
-  const alliance = mappingVersion === 'account-linking-kingshot-profile-v6' ? normalizeAllianceTag(allianceRaw).value : allianceRaw
+  const alliance = mappingVersion === 'account-linking-kingshot-profile-v6' || mappingVersion === 'account-linking-kingshot-profile-v7' ? normalizeAllianceTag(allianceRaw).value : allianceRaw
   if (alliance) candidates.push(candidate('allianceTag', alliance, allianceRaw, evidenceId, (allianceRegion?.confidence ?? bounded) * 0.8, mappingVersion, [...(allianceRegion?.warnings ?? []), 'supporting_information_review_only']))
 
   const kingdomRegion = regionFor('kingdom')

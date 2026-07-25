@@ -142,3 +142,6 @@ always `review_required`; fixtures contain no real screenshot or account value.
 ## VISION-LINK-007 acceptance note
 
 The five-field OCR contract is `playerId`, `displayName`, `kingdom`, `allianceTag` and `townCenterLevel`. Town Centre is a progression value and must not be confused with the API-owned `player_level`. OCR suggestions are review inputs only; corrections are separately marked `user-confirmed`. API success wins, and the explicit API-unavailable fallback remains unverified with exact evidence cancellation and append-only audit retention.
+## VISION-LINK-008 calibration record
+
+The V6 Town Centre failure was geometric, not a Player ID, Kingdom, alliance or review-form regression: its badge crop was positioned mainly right of the visible badge. V7 adds measured tight/context badge regions, retains label context, and uses exact Town Centre progression semantics. Synthetic fixtures cover one- and two-digit values, compressed/blurred and contrast variants, nearby Kingdom digits, and the deliberately misaligned V6 crop. No real screenshot, avatar or account value is stored.

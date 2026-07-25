@@ -1,10 +1,10 @@
 {
   "fixture": "synthetic-kingshot-component-map-v4",
-  "mappingVersion": "account-linking-kingshot-profile-v6",
+  "mappingVersion": "account-linking-kingshot-profile-v7",
   "mimeType": "image/png",
   "widthPx": 1600,
   "heightPx": 900,
-  "sha256": "98fddb2165b7cf62b30ad710eb7b6c4b37f7c7f7b027bcf615166e0fb7cd81d4",
+  "sha256": "785a09b66d2e303854f0590fbad52ff87b1ce7daae84ebd317dca1f192fe9863",
   "realAccountData": false,
   "expected": {
     "allianceTag": "[NXS]",
