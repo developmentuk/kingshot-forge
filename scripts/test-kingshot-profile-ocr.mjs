@@ -61,6 +61,9 @@ for (const [file, mimeType, width, height] of [['kingshot-profile-v2-large.png',
   assert.equal(result.diagnostics?.mappingVersion, 'account-linking-kingshot-profile-v3')
   assert.equal(result.diagnostics?.passes?.filter((pass) => pass.field === 'playerId').length, 4)
   assert.ok(result.diagnostics?.passes?.some((pass) => pass.variant === 'threshold'))
+  const grayPrepared = await prepareProfileRegion({ bytes, mimeType, widthPx: width, heightPx: height, region: v3Line, variant: 'greyscale' })
+  const thresholdPrepared = await prepareProfileRegion({ bytes, mimeType, widthPx: width, heightPx: height, region: v3Line, variant: 'threshold' })
+  assert.notDeepEqual(Buffer.from(grayPrepared.bytes), Buffer.from(thresholdPrepared.bytes))
 }
 
 assert.equal(consensusPlayerId([
