@@ -145,3 +145,7 @@ The five-field OCR contract is `playerId`, `displayName`, `kingdom`, `allianceTa
 ## VISION-LINK-008 calibration record
 
 The V6 Town Centre failure was geometric, not a Player ID, Kingdom, alliance or review-form regression: its badge crop was positioned mainly right of the visible badge. V7 adds measured tight/context badge regions, retains label context, and uses exact Town Centre progression semantics. Synthetic fixtures cover one- and two-digit values, compressed/blurred and contrast variants, nearby Kingdom digits, and the deliberately misaligned V6 crop. No real screenshot, avatar or account value is stored.
+
+## VISION-LINK-009 glyph recovery record
+
+V7 corrected the badge location and proved two-digit runtime extraction, while one-digit runtime levels remained unreadable. V8 isolates the central glyph at `(0.635, 0.52, 0.055, 0.14)`, removes gold/background decoration through bounded masks, records connected-component metrics, and uses SINGLE_CHAR for one-digit evidence. Bundled Tesseract.js runtime fixtures recognise 1, 6, 8, 9, 10, 20 and 30. Manual Town Centre entry remains an honest user-confirmed fallback and does not verify an account. No real screenshot or account value is committed.

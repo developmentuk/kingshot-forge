@@ -210,12 +210,16 @@
 .vision-acceptance__overlay-region--townCenterLabel { border-color: #64748b; }
 .vision-acceptance__overlay-region--townCenterBadgeTight { border: 3px solid #16a34a; background: rgba(22, 163, 74, .04); }
 .vision-acceptance__overlay-region--townCenterBadgeContext { border: 3px dashed #2563eb; background: rgba(37, 99, 235, .035); }
+.vision-acceptance__overlay-region--townCenterGlyph { border: 3px solid #dc2626; background: rgba(220, 38, 38, .08); }
 .vision-acceptance__legend { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .5rem; font-size: .8rem; color: #334155; }
 .vision-acceptance__legend span { display: inline-flex; align-items: center; gap: .3rem; }
 .vision-acceptance__legend-swatch { width: .75rem; height: .75rem; display: inline-block; border: 2px solid; }
 .vision-acceptance__legend-swatch--label { border-color: #64748b; }
 .vision-acceptance__legend-swatch--tight { border-color: #16a34a; }
 .vision-acceptance__legend-swatch--context { border-color: #2563eb; border-style: dashed; }
+.vision-acceptance__legend-swatch--glyph { border-color: #dc2626; }
+.vision-acceptance__glyph-zoom { position: relative; width: min(18rem, 100%); height: 12rem; margin-top: 1rem; border: 2px solid #dc2626; border-radius: .75rem; background-color: #fff; background-repeat: no-repeat; overflow: hidden; }
+.vision-acceptance__glyph-zoom span { position: absolute; left: .5rem; bottom: .5rem; padding: .2rem .35rem; color: #fff; background: rgba(15, 23, 42, .82); font-size: .78rem; }
 .vision-acceptance__toggle { margin-top: 1rem; }
 .vision-acceptance__overlay-region--displayName { border-color: #22c55e; }
 .vision-acceptance__overlay-region--playerId { border-color: #f59e0b; }

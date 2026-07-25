@@ -1,5 +1,5 @@
 export type AccountLinkOcrField = 'playerId' | 'displayName' | 'kingdom' | 'allianceTag' | 'townCenterLevel'
-export type AccountLinkOcrMappingVersion = 'account-linking-ocr-mvp' | 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4' | 'account-linking-kingshot-profile-v5' | 'account-linking-kingshot-profile-v6' | 'account-linking-kingshot-profile-v7'
+export type AccountLinkOcrMappingVersion = 'account-linking-ocr-mvp' | 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3' | 'account-linking-kingshot-profile-v4' | 'account-linking-kingshot-profile-v5' | 'account-linking-kingshot-profile-v6' | 'account-linking-kingshot-profile-v7' | 'account-linking-kingshot-profile-v8'
 export type AccountLinkOcrDisposition = 'recognised' | 'review_required' | 'could_not_read' | 'conflicting_reads'
 
 export interface AccountLinkOcrRegionObservation {
@@ -10,7 +10,7 @@ export interface AccountLinkOcrRegionObservation {
   readonly acceptedValue?: string
   readonly disposition?: AccountLinkOcrDisposition
   readonly agreement?: 'agree' | 'agree_with_missing_pass' | 'disagree' | 'not_applicable'
-  readonly passType?: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'
+  readonly passType?: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line' | 'glyph_single_char'
   readonly variant?: 'greyscale' | 'threshold' | 'inverted'
   readonly labelContext?: boolean
 }
@@ -36,7 +36,7 @@ export interface AccountLinkOcrResult {
     readonly mappingVersion: AccountLinkOcrMappingVersion
     readonly regions: readonly { field: AccountLinkOcrField; attempted: boolean; recognized: boolean; confidence: number; warnings: readonly string[] }[]
     readonly fields?: readonly { field: AccountLinkOcrField; disposition: AccountLinkOcrDisposition; confidence: number; agreement: 'agree' | 'agree_with_missing_pass' | 'disagree' | 'not_applicable'; warnings: readonly string[] }[]
-    readonly passes?: readonly { field: AccountLinkOcrField; passType: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line'; variant: 'greyscale' | 'threshold' | 'inverted'; attempted: boolean; confidence: number; labelContext: boolean; warnings: readonly string[] }[]
+    readonly passes?: readonly { field: AccountLinkOcrField; passType: 'labelled_line' | 'numeric_only' | 'panel' | 'label_component' | 'digits_single_word' | 'digits_single_line' | 'glyph_single_char'; variant: 'greyscale' | 'threshold' | 'inverted'; attempted: boolean; confidence: number; labelContext: boolean; warnings: readonly string[] }[]
   }
   readonly provenance: {
     readonly pluginKey: string

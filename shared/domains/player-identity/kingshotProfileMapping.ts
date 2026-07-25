@@ -1,7 +1,7 @@
 export type KingshotProfileField = 'displayName' | 'playerId' | 'kingdom' | 'allianceTag' | 'townCenterLevel'
 export type KingshotProfileRegionKey = KingshotProfileField | 'profilePanel'
   | 'playerIdNumeric' | 'avatar' | 'clipboardIcon' | 'playerIdLabel' | 'playerIdDigits'
-  | 'townCenterLabel' | 'townCenterBadge' | 'townCenterBadgeTight' | 'townCenterBadgeContext' | 'kingdomLabel' | 'kingdomDigits' | 'kingdomLine'
+  | 'townCenterLabel' | 'townCenterBadge' | 'townCenterBadgeTight' | 'townCenterBadgeContext' | 'townCenterGlyph' | 'kingdomLabel' | 'kingdomDigits' | 'kingdomLine'
 export type KingshotProfileObservation = 'panel' | 'line' | 'numeric' | 'component' | 'exclusion' | 'layout'
 export type KingshotProfileComponentRole = 'ocr' | 'layout' | 'exclusion'
 export type KingshotProfileRegionConfig = {
@@ -12,7 +12,7 @@ export type KingshotProfileRegionConfig = {
   readonly y: number
   readonly width: number
   readonly height: number
-  readonly psm: 'single_line' | 'single_word' | 'sparse_text'
+  readonly psm: 'single_char' | 'single_line' | 'single_word' | 'sparse_text'
   readonly characterWhitelist: string | null
   readonly observation: KingshotProfileObservation
   readonly componentRole?: KingshotProfileComponentRole
@@ -68,4 +68,8 @@ export const KINGSHOT_PROFILE_V6_REGIONS: readonly KingshotProfileRegionConfig[]
 export const KINGSHOT_PROFILE_V7_REGIONS: readonly KingshotProfileRegionConfig[] = KINGSHOT_PROFILE_V6_REGIONS.filter((region) => region.key !== 'townCenterBadge').concat([
   { key: 'townCenterBadgeTight', field: 'townCenterLevel', label: 'Town Centre badge tight', x: 0.59, y: 0.43, width: 0.13, height: 0.31, psm: 'single_word', characterWhitelist: '0123456789', observation: 'numeric', componentRole: 'ocr' },
   { key: 'townCenterBadgeContext', field: 'townCenterLevel', label: 'Town Centre badge context', x: 0.56, y: 0.40, width: 0.19, height: 0.36, psm: 'single_line', characterWhitelist: '0123456789', observation: 'numeric', componentRole: 'ocr' },
+])
+
+export const KINGSHOT_PROFILE_V8_REGIONS: readonly KingshotProfileRegionConfig[] = KINGSHOT_PROFILE_V7_REGIONS.concat([
+  { key: 'townCenterGlyph', field: 'townCenterLevel', label: 'Town Centre glyph', x: 0.635, y: 0.52, width: 0.055, height: 0.14, psm: 'single_char', characterWhitelist: '0123456789', observation: 'numeric', componentRole: 'ocr' },
 ])

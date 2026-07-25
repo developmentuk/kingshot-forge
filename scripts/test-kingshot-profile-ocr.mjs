@@ -3,8 +3,9 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { extractAccountLinkCandidates } from '../server/player-identity/accountLinkingOcrService.ts'
 import { mapProfileRegion, prepareProfileRegion, profileRegionBindings } from '../server/player-identity/kingshotProfileOcr.ts'
-import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS, KINGSHOT_PROFILE_V7_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
-import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, consensusTownCenterBadge } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
+import { prepareTownCenterGlyph } from '../server/player-identity/townCenterGlyphOcr.ts'
+import { KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS, KINGSHOT_PROFILE_V7_REGIONS, KINGSHOT_PROFILE_V8_REGIONS } from '../shared/domains/player-identity/kingshotProfileMapping.ts'
+import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, consensusTownCenterBadge, consensusTownCenterGlyph } from '../shared/domains/player-identity/kingshotProfileConsensus.ts'
 import { parseAccountLinkCandidates } from '../shared/domains/player-identity/accountLinkingOcr.ts'
 
 const base = new URL('../fixtures/vision/account-linking/', import.meta.url)
@@ -110,6 +111,21 @@ assert.equal(v7Result.candidates.find((item) => item.field === 'townCenterLevel'
 assert.equal(v7Result.diagnostics?.passes?.filter((pass) => pass.field === 'townCenterLevel' && pass.passType !== 'label_component').length, 8)
 assert.equal(v7Result.candidates.find((item) => item.field === 'playerId')?.value, '111111111111')
 assert.equal(v7Result.candidates.find((item) => item.field === 'kingdom')?.value, '42')
+for (const fixture of [['level-1.png', '1'], ['level-6.png', '6'], ['level-8.png', '8'], ['level-9.png', '9'], ['level-10.jpg', '10'], ['level-20.png', '20'], ['level-30.png', '30']]) {
+  const bytes = new Uint8Array(await readFile(new URL(`kingshot-profile-v8-${fixture[0]}`, base)))
+  const result = await extractAccountLinkCandidates({ evidenceId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', bytes, sha256: createHash('sha256').update(bytes).digest('hex'), mimeType: fixture[0].endsWith('.jpg') ? 'image/jpeg' : 'image/png', widthPx: 1600, heightPx: 900, mappingVersion: 'account-linking-kingshot-profile-v8' })
+  const town = result.candidates.find((item) => item.field === 'townCenterLevel')
+  assert.equal(town?.value, fixture[1], fixture[0])
+  assert.ok(result.diagnostics?.passes?.filter((pass) => pass.passType === 'glyph_single_char' && pass.confidence > 0).length >= 2, fixture[0])
+}
+const glyphRegion = KINGSHOT_PROFILE_V8_REGIONS.find((item) => item.key === 'townCenterGlyph')
+assert.deepEqual([glyphRegion?.x, glyphRegion?.y, glyphRegion?.width, glyphRegion?.height], [.635, .52, .055, .14])
+assert.equal(profileRegionBindings('v8').find((item) => item.regionKey === 'townCenterGlyph')?.role, 'source')
+const glyphPrepared = await prepareTownCenterGlyph({ bytes: new Uint8Array(await readFile(new URL('kingshot-profile-v8-level-6.png', base))), region: glyphRegion, widthPx: 1600, heightPx: 900, mask: 'luminance', scale: 256, kernel: 'lanczos3' })
+assert.ok(glyphPrepared.components.length >= 1); assert.equal(glyphPrepared.chosenPsm, 'single_char'); assert.ok(glyphPrepared.warningCodes.some((item) => item.includes('glyph_luminance_mask')))
+assert.equal(consensusTownCenterGlyph([{ source: 'glyph', value: '6', confidence: .9, psm: 'single_char' }, { source: 'glyph', value: '6', confidence: .8, psm: 'single_char' }], [], [], true).value, '6')
+assert.equal(consensusTownCenterGlyph([{ source: 'glyph', value: '6', confidence: .9, psm: 'single_char' }, { source: 'glyph', value: '8', confidence: .9, psm: 'single_char' }], [], [], true).disposition, 'conflicting_reads')
+assert.equal(consensusTownCenterGlyph([{ source: 'glyph', value: '6', confidence: .9, psm: 'single_word' }, { source: 'glyph', value: '6', confidence: .8, psm: 'single_word' }], [], [], true).disposition, 'could_not_read')
 assert.equal(consensusTownCenterBadge([{ source: 'tight', value: '6', confidence: .9 }, { source: 'tight', value: '6', confidence: .8 }, { source: 'tight', value: undefined, confidence: 0 }], [{ source: 'context', value: '6', confidence: .7 }], true).value, '6')
 assert.equal(consensusTownCenterBadge([{ source: 'tight', value: '6', confidence: .9 }, { source: 'tight', value: '6', confidence: .8 }], [{ source: 'context', value: '7', confidence: .95 }], true).value, '6')
 assert.equal(consensusTownCenterBadge([], [{ source: 'context', value: '6', confidence: .95 }], true).disposition, 'could_not_read')

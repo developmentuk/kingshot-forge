@@ -103,3 +103,7 @@ The screenshot-linking route is isolated from account-context refreshes and neve
 ## VISION-LINK-008 — final Town Centre badge calibration
 
 VISION-LINK-007 passed exact Player ID, Kingdom and three-character alliance normalisation; display name remained populated, editable and review-only. Owner testing found Town Centre `could_not_read` because the V6 badge box missed the measured badge. V7 preserves V1–V6 and uses shared measured regions: tight `(0.59, 0.43, 0.13, 0.31)` and context `(0.56, 0.40, 0.19, 0.36)`. The tight crop runs six bounded pixel-preprocessing passes and the context crop runs two supporting passes. Consensus requires label context, two agreeing tight observations, one strong observation, a 1–30 value and no strong conflict. No real screenshot or account value is committed.
+
+## VISION-LINK-009 — single-digit Town Centre glyph recovery
+
+V8 preserves V1–V7 and adds the measured central glyph region `(0.635, 0.52, 0.055, 0.14)`. It uses bounded in-memory luminance, outline-assisted and adaptive masks, 192/256/384 scale choices, nearest/Lanczos interpolation, and connected-component metrics to select SINGLE_CHAR for one central glyph or SINGLE_WORD for multiple components. Real bundled Tesseract.js runtime fixtures recognise levels 1, 6, 8, 9, 10, 20 and 30. The owner review surface retains manual 1–30 Town Centre correction as user-confirmed and never verified automatically. No real screenshot or account value is committed.
