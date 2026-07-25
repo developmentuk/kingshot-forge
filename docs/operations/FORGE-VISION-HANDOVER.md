@@ -107,3 +107,7 @@ VISION-LINK-007 passed exact Player ID, Kingdom and three-character alliance nor
 ## VISION-LINK-009 — single-digit Town Centre glyph recovery
 
 V8 preserves V1–V7 and adds the measured central glyph region `(0.635, 0.52, 0.055, 0.14)`. It uses bounded in-memory luminance, outline-assisted and adaptive masks, 192/256/384 scale choices, nearest/Lanczos interpolation, and connected-component metrics to select SINGLE_CHAR for one central glyph or SINGLE_WORD for multiple components. Real bundled Tesseract.js runtime fixtures recognise levels 1, 6, 8, 9, 10, 20 and 30. The owner review surface retains manual 1–30 Town Centre correction as user-confirmed and never verified automatically. No real screenshot or account value is committed.
+
+## VISION-LINK-009A — owner evidence recovery
+
+The owner acceptance route now validates a persisted evidence ID, clears stale session state, and falls back to a bounded authenticated owner query. Recovery is restricted to active, non-held `scan_source` evidence with the exact preview-only OCR upload purpose; the safe response contains only evidence ID, upload time, MIME, byte length and active status. One record is restored automatically, while multiple records require an exact owner-selected cancellation. Local preview clearing never implies server deletion, and duplicate uploads surface the existing owner recovery control. No automatic cleanup or live owner recovery was performed during implementation.

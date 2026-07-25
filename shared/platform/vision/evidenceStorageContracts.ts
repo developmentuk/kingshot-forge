@@ -78,6 +78,14 @@ export interface VisionEvidenceMetadata extends VisionStoredObjectMetadata {
   verifiedAt: string
 }
 
+export interface VisionActiveAcceptanceEvidence {
+  readonly evidenceId: string
+  readonly uploadedAt: string
+  readonly mimeType: VisionEvidenceMimeType
+  readonly byteLength: number
+  readonly status: 'active'
+}
+
 export interface CreateVisionEvidenceIntentInput {
   ownerUserId: string
   purpose: VisionEvidencePurpose
@@ -133,6 +141,7 @@ export interface VisionEvidenceRepository {
   findActiveBySha256(sha256: string): Promise<VisionEvidenceMetadata | null>
   createVerifiedEvidence(metadata: VisionEvidenceMetadata): Promise<void>
   getEvidence(id: string): Promise<VisionEvidenceMetadata | null>
+  listActiveAcceptanceEvidenceForOwner(ownerUserId: string, limit: number): Promise<readonly VisionActiveAcceptanceEvidence[]>
   requestDeletion(id: string, requestedAt: string, reason: string): Promise<void>
   markDeleted(id: string, deletedAt: string): Promise<void>
   recordAudit(input: { eventType: string; entityId: string; actorId: string | null; payload: Record<string, unknown> }): Promise<void>

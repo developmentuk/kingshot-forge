@@ -3,12 +3,14 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import type { AccountLinkOcrResult } from '../../../shared/domains/player-identity/accountLinkingOcr'
 import { KINGSHOT_PROFILE_V8_REGIONS } from '../../../shared/domains/player-identity/kingshotProfileMapping'
-import { VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY, VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID } from '../../../shared/platform/vision/evidenceStorageContracts'
+import { VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY } from '../../../shared/platform/vision/evidenceStorageContracts'
 
 const ACCEPTANCE_ENABLED = import.meta.env.VITE_ENABLE_VISION_LINK_ACCEPTANCE === 'true'
 const MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/tiff']
 type ProcessingState = 'idle' | 'selected' | 'preparing' | 'uploading' | 'verifying' | 'recognising' | 'complete' | 'cancelling' | 'cancelled' | 'error'
-type EvidenceResponse = { status?: string; data?: Record<string, unknown>; message?: string }
+type EvidenceResponse = { status?: string; code?: string; data?: Record<string, unknown>; message?: string }
+type RecoveryEvidence = { evidenceId: string; uploadedAt: string; mimeType: string; byteLength: number; status: 'active' }
+class EvidenceClientError extends Error { readonly code?: string; constructor(message: string, code?: string) { super(message); this.name = 'EvidenceClientError'; this.code = code } }
 
 async function digest(file: File): Promise<string> {
   const bytes = await file.arrayBuffer()
@@ -36,7 +38,7 @@ export function VisionAccountLinkingAcceptancePage() {
   const [evidenceId, setEvidenceId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [recoveryAvailable, setRecoveryAvailable] = useState(false)
+  const [recoveryEvidence, setRecoveryEvidence] = useState<RecoveryEvidence[]>([])
   const [recoveryDeleting, setRecoveryDeleting] = useState(false)
   const [showRegions, setShowRegions] = useState(true)
   const authToken = session?.access_token
@@ -48,25 +50,40 @@ export function VisionAccountLinkingAcceptancePage() {
     if (!authToken) throw new Error('Sign in is required to use OCR acceptance.')
     const response = await fetch('/api/vision-evidence', { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     const payload = await response.json().catch(() => null) as EvidenceResponse | null
-    if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'The secure evidence service is unavailable.')
+    if (!response.ok || payload?.status !== 'success') throw new EvidenceClientError(payload?.message ?? 'The secure evidence service is unavailable.', payload?.code)
     return payload
   }, [authToken])
 
-  useEffect(() => {
-    if (!ACCEPTANCE_ENABLED || !ownerId || !authToken) return
+  const recoverActiveEvidence = useCallback(async () => {
+    if (!ownerId || !authToken) return
     const persistedEvidenceId = window.sessionStorage.getItem(VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY)
     if (persistedEvidenceId) {
-      activeEvidenceIdRef.current = persistedEvidenceId
-      setEvidenceId(persistedEvidenceId)
-      setState('complete')
-      setMessage('A completed acceptance review is ready to cancel.')
+      try {
+        const metadata = await callEvidence({ action: 'get-evidence-metadata', evidenceId: persistedEvidenceId })
+        const item = metadata.data
+        if (item?.deletedAt === null && item.purpose === 'scan_source' && item.uploadPurpose === 'Preview-only OCR acceptance review' && item.legalHold === false) {
+          activeEvidenceIdRef.current = persistedEvidenceId; setEvidenceId(persistedEvidenceId); setState('complete'); setMessage('An unfinished OCR review is ready to delete.'); return
+        }
+      } catch { /* stale session identifier; bounded server recovery follows */ }
+      window.sessionStorage.removeItem(VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY)
+      activeEvidenceIdRef.current = null; setEvidenceId(null)
     }
-    let active = true
-    void callEvidence({ action: 'get-acceptance-recovery' }).then((payload) => {
-      if (active && payload.data?.available === true) setRecoveryAvailable(true)
-    }).catch(() => { if (active) setRecoveryAvailable(false) })
-    return () => { active = false }
+    try {
+      const payload = await callEvidence({ action: 'get-active-acceptance-evidence' })
+      const items = Array.isArray(payload.data?.evidence) ? payload.data.evidence as RecoveryEvidence[] : []
+      setRecoveryEvidence(items)
+      if (items.length === 1) {
+        activeEvidenceIdRef.current = items[0].evidenceId; setEvidenceId(items[0].evidenceId); window.sessionStorage.setItem(VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY, items[0].evidenceId); setState('complete'); setMessage('An unfinished OCR review is ready to delete.')
+      }
+    } catch { setRecoveryEvidence([]) }
   }, [authToken, callEvidence, ownerId])
+
+  useEffect(() => {
+    if (!ACCEPTANCE_ENABLED || !ownerId || !authToken) return
+    let active = true
+    void recoverActiveEvidence().catch(() => { if (active) setRecoveryEvidence([]) })
+    return () => { active = false }
+  }, [authToken, ownerId, recoverActiveEvidence])
 
   const cancelExact = useCallback(async (id: string): Promise<void> => {
     await callEvidence({ action: 'cancel-evidence', evidenceId: id, reason: 'OCR acceptance review cancelled by the owner.' })
@@ -105,9 +122,12 @@ export function VisionAccountLinkingAcceptancePage() {
         if (completedEvidence) await cancelExact(completedEvidence)
         else if (createdIntent) await callEvidence({ action: 'abandon-upload', intentId: createdIntent, reason: 'OCR acceptance review could not complete.' })
       } catch { containment = ' Evidence containment also failed; stop and contact Forge support before retrying.' }
+      if (caught instanceof EvidenceClientError && caught.code === 'duplicate_evidence') {
+        try { await recoverActiveEvidence(); setMessage('This screenshot is already awaiting deletion.') } catch { /* recovery remains bounded and owner-scoped */ }
+      }
       setState('error'); setError(primary + containment)
     }
-  }, [authToken, callEvidence, cancelExact, ownerId])
+  }, [authToken, callEvidence, cancelExact, ownerId, recoverActiveEvidence])
 
   useEffect(() => {
     if (selectedFile && state === 'selected') void processSelectedFile(selectedFile)
@@ -136,20 +156,28 @@ export function VisionAccountLinkingAcceptancePage() {
       if (activeEvidenceId) await cancelExact(activeEvidenceId)
       else if (activeIntentId) await callEvidence({ action: 'abandon-upload', intentId: activeIntentId, reason: 'OCR acceptance review cancelled before verification.' })
       activeEvidenceIdRef.current = null; activeIntentIdRef.current = null; window.sessionStorage.removeItem(VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY)
-      setEvidenceId(null); setIntentId(null); setSelectedFile(null); setResult(null); setState('cancelled'); setMessage('The exact screenshot evidence was removed. Your linked account was not changed.')
+      setEvidenceId(null); setIntentId(null); setRecoveryEvidence([]); setSelectedFile(null); setResult(null); setState('cancelled'); setMessage('The exact screenshot evidence was removed. Your linked account was not changed.')
       if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
       if (inputRef.current) inputRef.current.value = ''
     } catch (caught) { setState('error'); setError(caught instanceof Error ? caught.message : 'The exact evidence could not be cancelled.') }
   }
 
-  async function cancelRecovery() {
+  async function cancelRecoveredEvidence(id: string) {
     if (recoveryDeleting) return
     setRecoveryDeleting(true); setError('')
     try {
-      await callEvidence({ action: 'cancel-evidence', evidenceId: VISION_ACCEPTANCE_RECOVERY_EVIDENCE_ID, reason: 'Owner cancelled unfinished synthetic OCR acceptance evidence.' })
-      setRecoveryAvailable(false); setMessage('The unfinished synthetic acceptance evidence was deleted and its audit history was retained.')
+      await cancelExact(id)
+      setRecoveryEvidence((current) => current.filter((item) => item.evidenceId !== id))
+      if (activeEvidenceIdRef.current === id) { activeEvidenceIdRef.current = null; setEvidenceId(null); window.sessionStorage.removeItem(VISION_ACCEPTANCE_ACTIVE_EVIDENCE_SESSION_KEY) }
+      setMessage('The exact unfinished OCR review was deleted and its audit history was retained.')
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'The unfinished synthetic evidence could not be deleted.') }
     finally { setRecoveryDeleting(false) }
+  }
+
+  function clearLocalPreview() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setSelectedFile(null); setPreviewUrl(null); setResult(null); setMessage(activeEvidenceIdRef.current ? 'Local preview cleared. The unfinished OCR review is still ready to delete.' : '')
+    if (inputRef.current) inputRef.current.value = ''
   }
 
   const busy = ['preparing', 'uploading', 'verifying', 'recognising', 'cancelling'].includes(state)
@@ -157,8 +185,8 @@ export function VisionAccountLinkingAcceptancePage() {
     <section className="vision-acceptance__hero"><p className="eyebrow">Preview-only owner acceptance</p><h1 id="vision-acceptance-title">OCR acceptance test</h1><p>This will not change your linked account. Upload one synthetic or real profile image to inspect OCR candidates, then cancel the review to remove the exact evidence.</p></section>
     <section className="vision-acceptance__panel">
       <div className="vision-acceptance__file-control"><label className="button button--primary" htmlFor="vision-acceptance-file">{busy ? 'Processing…' : 'Choose screenshot'}</label><input ref={inputRef} id="vision-acceptance-file" className="vision-acceptance__file-input" type="file" accept={MIME_TYPES.join(',')} disabled={busy} onChange={handleFileSelection} /></div>
-      {recoveryAvailable && <section className="vision-acceptance__recovery" aria-labelledby="vision-acceptance-recovery-title"><h2 id="vision-acceptance-recovery-title">Recover unfinished synthetic acceptance</h2><p>A previously completed synthetic acceptance is awaiting owner cancellation.</p><button className="button button--secondary" type="button" disabled={recoveryDeleting} onClick={() => void cancelRecovery()}>{recoveryDeleting ? 'Deleting evidence…' : 'Delete unfinished synthetic evidence'}</button></section>}
-      {selectedFile && <p className="vision-acceptance__selected" role="status">Selected: {selectedFile.name} · {selectedFile.type || 'unknown MIME'} · {selectedFile.size.toLocaleString()} bytes</p>}
+      {recoveryEvidence.length > 0 && <section className="vision-acceptance__recovery" aria-labelledby="vision-acceptance-recovery-title"><h2 id="vision-acceptance-recovery-title">Unfinished OCR review</h2><p>{recoveryEvidence.length === 1 && activeEvidenceIdRef.current ? 'An unfinished OCR review is ready to delete.' : 'Multiple unfinished OCR reviews were found. Choose one exact review to cancel.'}</p>{recoveryEvidence.map((item) => <div className="vision-acceptance__recovery-item" key={item.evidenceId}><span>{new Date(item.uploadedAt).toLocaleString('en-GB')} · {item.mimeType} · {item.byteLength.toLocaleString()} bytes</span><button className="button button--secondary" type="button" disabled={recoveryDeleting} onClick={() => void cancelRecoveredEvidence(item.evidenceId)}>{recoveryDeleting ? 'Deleting evidence…' : 'Cancel and delete evidence'}</button></div>)}</section>}
+      {selectedFile && <><p className="vision-acceptance__selected" role="status">Selected: {selectedFile.name} · {selectedFile.type || 'unknown MIME'} · {selectedFile.size.toLocaleString()} bytes</p><button className="button button--secondary" type="button" disabled={busy} onClick={clearLocalPreview}>Clear local preview</button></>}
       {previewUrl && <><button className="button button--secondary vision-acceptance__toggle" type="button" aria-pressed={showRegions} onClick={() => setShowRegions((visible) => !visible)}>{showRegions ? 'Hide OCR regions' : 'Show OCR regions'}</button><div className="vision-acceptance__preview-wrap"><img className="vision-acceptance__preview" src={previewUrl} alt="Selected screenshot preview" />{showRegions && <><div className="vision-acceptance__overlay" aria-label="OCR region overlay">{KINGSHOT_PROFILE_V8_REGIONS.map((region, index) => <div key={region.key} className={`vision-acceptance__overlay-region vision-acceptance__overlay-region--${region.key} ${region.componentRole === 'exclusion' ? 'vision-acceptance__overlay-region--exclusion' : ''}`} style={{ left: `${region.x * 100}%`, top: `${region.y * 100}%`, width: `${region.width * 100}%`, height: `${region.height * 100}%` }}>{['townCenterLabel', 'townCenterBadgeTight', 'townCenterBadgeContext', 'townCenterGlyph'].includes(region.key) ? null : <span>{index + 1}. {region.label}</span>}</div>)}</div><div className="vision-acceptance__legend" aria-label="Town Centre OCR region legend"><span><i className="vision-acceptance__legend-swatch vision-acceptance__legend-swatch--label" />Town Centre label</span><span><i className="vision-acceptance__legend-swatch vision-acceptance__legend-swatch--tight" />Badge tight</span><span><i className="vision-acceptance__legend-swatch vision-acceptance__legend-swatch--context" />Badge context</span><span><i className="vision-acceptance__legend-swatch vision-acceptance__legend-swatch--glyph" />Badge glyph</span></div></>}</div><div className="vision-acceptance__glyph-zoom" aria-label="Town Centre glyph local zoom" style={{ backgroundImage: `url(${previewUrl})`, backgroundPosition: '65% 58%', backgroundSize: '520% auto' }}><span>Local Town Centre glyph zoom</span></div></>}
       {message && <p className="vision-acceptance__success" role="status">{message}</p>}
       {error && <p className="vision-acceptance__error" role="alert">{error}</p>}

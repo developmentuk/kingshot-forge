@@ -2,6 +2,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseAdmin } from '../../database/supabaseAdmin.js'
 import {
   VISION_EVIDENCE_BUCKET,
+  VISION_ACCEPTANCE_RECOVERY_UPLOAD_PURPOSE,
+  type VisionActiveAcceptanceEvidence,
   type VisionEvidenceMetadata,
   type VisionEvidencePurpose,
   type VisionEvidenceRepository,
@@ -11,6 +13,7 @@ import { isUuid, isVisionEvidenceMimeType, isVisionEvidencePath, assertVisionEvi
 
 const EVIDENCE_COLUMNS = 'id,upload_intent_id,owner_user_id,purpose,storage_bucket,storage_path,byte_length,sha256,width_px,height_px,mime_type,upload_purpose,consent_recorded_at,retention_until,deletion_requested_at,deleted_at,legal_hold,verified_at'
 const INTENT_COLUMNS = 'id,owner_user_id,purpose,upload_purpose,storage_bucket,storage_path,expected_mime_type,expected_bytes,consent_recorded_at,expires_at,status'
+const ACTIVE_ACCEPTANCE_COLUMNS = 'id,verified_at,mime_type,byte_length'
 
 type UploadIntentRow = Record<string, unknown>
 type EvidenceRow = Record<string, unknown>
@@ -57,6 +60,14 @@ export class SupabaseVisionEvidenceRepository implements VisionEvidenceRepositor
     return data === null ? null : mapEvidence(data as EvidenceRow)
   }
 
+  async listActiveAcceptanceEvidenceForOwner(ownerUserId: string, limit: number): Promise<readonly VisionActiveAcceptanceEvidence[]> {
+    assertId(ownerUserId)
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 5) throw new Error('Vision acceptance evidence query limit is invalid.')
+    const { data, error } = await this.#client.from('vision_evidence_images').select(ACTIVE_ACCEPTANCE_COLUMNS).eq('owner_user_id', ownerUserId).eq('purpose', 'scan_source').eq('upload_purpose', VISION_ACCEPTANCE_RECOVERY_UPLOAD_PURPOSE).is('deleted_at', null).eq('legal_hold', false).order('verified_at', { ascending: false }).limit(limit)
+    if (error) throw new Error(`Unable to list active Vision acceptance evidence: ${error.message}`)
+    return (data ?? []).map((row) => mapActiveAcceptanceEvidence(row as Record<string, unknown>))
+  }
+
   async findActiveBySha256(sha256: string): Promise<VisionEvidenceMetadata | null> {
     assertVisionEvidenceHash(sha256)
     const { data, error } = await this.#client.from('vision_evidence_images').select(EVIDENCE_COLUMNS).eq('sha256', sha256).is('deleted_at', null).maybeSingle()
@@ -97,6 +108,11 @@ function mapEvidence(row: EvidenceRow): VisionEvidenceMetadata {
   assertVisionEvidenceHash(evidence.sha256); assertVisionEvidenceDimensions(evidence.widthPx, evidence.heightPx)
   if (!isTimestamp(evidence.retentionUntil) || !isTimestamp(evidence.verifiedAt) || (evidence.deletionRequestedAt && !isTimestamp(evidence.deletionRequestedAt)) || (evidence.deletedAt && !isTimestamp(evidence.deletedAt))) throw new Error('Supabase returned malformed Vision evidence timestamps.')
   return { ...evidence, mimeType: evidence.mimeType as VisionEvidenceMetadata['mimeType'] }
+}
+function mapActiveAcceptanceEvidence(row: Record<string, unknown>): VisionActiveAcceptanceEvidence {
+  const evidenceId = text(row.id); const uploadedAt = text(row.verified_at); const mimeType = String(row.mime_type); const byteLength = typeof row.byte_length === 'number' ? row.byte_length : NaN
+  if (!isUuid(evidenceId) || !isTimestamp(uploadedAt) || !isVisionEvidenceMimeType(mimeType) || !Number.isSafeInteger(byteLength) || byteLength < 1 || byteLength > 16777216) throw new Error('Supabase returned malformed active Vision acceptance evidence.')
+  return { evidenceId, uploadedAt, mimeType: mimeType as VisionActiveAcceptanceEvidence['mimeType'], byteLength, status: 'active' }
 }
 function text(value: unknown): string { if (typeof value !== 'string' || !value) throw new Error('Supabase returned a malformed Vision evidence field.'); return value }
 function nullableText(value: unknown): string | null { if (value === null || value === undefined) return null; return text(value) }

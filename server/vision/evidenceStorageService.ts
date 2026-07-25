@@ -13,6 +13,7 @@ import {
   type CompleteVisionEvidenceInput,
   type CreateVisionEvidenceIntentInput,
   type VisionEvidenceActor,
+  type VisionActiveAcceptanceEvidence,
   type VisionEvidenceMetadata,
   type VisionEvidencePurpose,
   type VisionEvidenceReadUrl,
@@ -171,6 +172,14 @@ export class VisionEvidenceStorageService {
     const evidence = await this.options.repository.getEvidence(evidenceId)
     if (!evidence || !canManage(actor, evidence.ownerUserId)) throw new VisionEvidenceStorageError('not_found', 'Vision evidence is unavailable to this actor.')
     return evidence
+  }
+
+  async getActiveAcceptanceEvidence(actor: VisionEvidenceActor, limit = 5): Promise<{ available: boolean; evidence: readonly VisionActiveAcceptanceEvidence[] }> {
+    activeActor(actor)
+    if (!actor.permissions.includes('vision.scan.create')) throw new VisionEvidenceStorageError('forbidden', 'Vision acceptance recovery is not available to this actor.')
+    const boundedLimit = Math.min(5, Math.max(1, Math.trunc(limit)))
+    const evidence = await this.options.repository.listActiveAcceptanceEvidenceForOwner(actor.userId!, boundedLimit)
+    return { available: evidence.length > 0, evidence }
   }
 
   async getAcceptanceRecovery(actor: VisionEvidenceActor): Promise<{ available: true }> {

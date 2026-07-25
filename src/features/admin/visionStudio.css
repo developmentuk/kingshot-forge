@@ -195,6 +195,7 @@
 .vision-acceptance__selected { margin: 1rem 0 0; color: var(--text-muted, #94a3b8); overflow-wrap: anywhere; }
 .vision-acceptance__recovery { display: grid; gap: .75rem; margin: 1rem 0; padding: 1rem; border: 1px solid rgba(148, 163, 184, .24); border-radius: .75rem; background: rgba(148, 163, 184, .08); }
 .vision-acceptance__recovery h2, .vision-acceptance__recovery p { margin: 0; }
+.vision-acceptance__recovery-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem; border-radius: .6rem; background: rgba(15, 23, 42, .32); }
 .vision-acceptance__preview { display: block; max-width: 100%; max-height: 26rem; margin-top: 1rem; border-radius: .75rem; object-fit: contain; background: white; }
 .vision-acceptance__preview-wrap { position: relative; width: fit-content; max-width: 100%; margin-top: 1rem; overflow: hidden; border-radius: .75rem; background: white; }
 .vision-acceptance__preview-wrap .vision-acceptance__preview { margin-top: 0; }
