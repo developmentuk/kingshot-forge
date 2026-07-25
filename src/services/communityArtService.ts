@@ -53,13 +53,21 @@ async function api<T>(action: string, init?: RequestInit): Promise<T> {
   } catch {
     throw new Error('We couldn’t submit your artwork. Your draft is still here — please try again.')
   }
-  let payload: { status: string; data?: T; message?: string }
+  let payload: { status: string; data?: T; message?: string; code?: string; limit?: number; windowSeconds?: number; retryAfterSeconds?: number }
   try {
     payload = await response.json() as { status: string; data?: T; message?: string }
   } catch {
     throw new Error('We couldn’t submit your artwork. Your draft is still here — please try again.')
   }
-  if (!response.ok || payload.status !== 'success') throw new Error(payload.message ?? 'Art Studio request failed.')
+  if (!response.ok || payload.status !== 'success') {
+    const error = new Error(payload.message ?? 'Art Studio request failed.') as Error & { code?: string; limit?: number; windowSeconds?: number; retryAfterSeconds?: number; status?: number }
+    error.code = payload.code
+    error.limit = payload.limit
+    error.windowSeconds = payload.windowSeconds
+    error.retryAfterSeconds = payload.retryAfterSeconds ?? (Number(response.headers.get('Retry-After') ?? 0) || undefined)
+    error.status = response.status
+    throw error
+  }
   return payload.data as T
 }
 

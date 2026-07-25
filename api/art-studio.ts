@@ -4,13 +4,14 @@ import { getSupabaseAdmin } from '../server/database/supabaseAdmin.js'
 import { validateTextArtwork, type TextArtworkValidationIssue } from '../shared/domains/art-studio/textValidation.js'
 import { analyseText, hashText, repairText, RENDER_PROFILES, sha256Text, type RepairOperation } from '../shared/domains/art-studio/rendering.js'
 import { inspectTextProvenance } from '../shared/domains/art-studio/textProvenance.js'
+import { calculateSubmissionRetryAfterSeconds, COMMUNITY_ART_SUBMISSION_LIMIT, COMMUNITY_ART_SUBMISSION_WINDOW_SECONDS } from '../shared/domains/art-studio/submissionRateLimit.js'
 
 const CATEGORIES = new Set(['Cats', 'Animals', 'Characters', 'Announcements', 'Battle', 'KvK', 'Alliance', 'Flags', 'Pixel Art', 'Nature', 'Funny', 'Gaming', 'Seasonal', 'Other'])
 const COMPATIBILITY = new Set(['untested', 'needs_testing', 'verified', 'known_issues'])
 const REACTION_TYPES = new Set(['like', 'heart', 'smile', 'wow'])
 const SOURCE_CONTEXTS = new Set(['authored', 'kingshot-clipboard'])
 
-function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
+function fail(response: VercelResponse, status: number, message: string, details: Record<string, unknown> = {}) { response.status(status).json({ status: 'error', message, ...details }) }
 function body(request: VercelRequest): Record<string, unknown> { return (request.body && typeof request.body === 'object' ? request.body : {}) as Record<string, unknown> }
 function sizeClass(lines: number): 'compact' | 'standard' | 'large' { return lines <= 3 ? 'compact' : lines <= 8 ? 'standard' : 'large' }
 function emptyReactionCounts() { return { like: 0, heart: 0, smile: 0, wow: 0 } }
@@ -122,8 +123,16 @@ async function submit(request: VercelRequest, response: VercelResponse) {
   const sourceSha256 = await sha256Text(artworkText)
   const textProvenance = inspectTextProvenance(artworkText)
   const admin = getSupabaseAdmin()
-  const { data: recent } = await admin.from('community_art_submissions').select('id').eq('user_id', currentActor.userId).gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
-  if ((recent?.length ?? 0) >= 5) { fail(response, 429, 'You have reached the submission limit for this hour.'); return }
+  const windowSeconds = COMMUNITY_ART_SUBMISSION_WINDOW_SECONDS
+  const limit = COMMUNITY_ART_SUBMISSION_LIMIT
+  const windowStart = new Date(Date.now() - windowSeconds * 1000).toISOString()
+  const { data: recent } = await admin.from('community_art_submissions').select('id,created_at').eq('user_id', currentActor.userId).gte('created_at', windowStart).order('created_at', { ascending: true }).limit(limit)
+  if ((recent?.length ?? 0) >= limit) {
+    const retryAfterSeconds = calculateSubmissionRetryAfterSeconds(String(recent?.[0]?.created_at ?? ''), Date.now(), windowSeconds)
+    response.setHeader('Retry-After', String(retryAfterSeconds))
+    fail(response, 429, 'Submission limit reached. You can submit up to five artworks per hour. Your draft has been preserved. Please try again later.', { code: 'submission_rate_limit', limit, windowSeconds, retryAfterSeconds })
+    return
+  }
   let attributionName = submittedAttribution
   if (attributionType === 'profile') {
     const { data: profile } = await admin.from('profiles').select('display_name').eq('id', currentActor.userId).maybeSingle()
