@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { analyseArtworkDetailed, buildFixedCellGrid, DEFAULT_CALIBRATION, DEVICE_PROFILES, deviceProfileStyle, parseArtwork } from '../../render-engine'
 import type { ArtworkClass, ArtworkSourceContext, CalibrationConfiguration, DeviceProfile, DeviceProfileId, GlyphFamily } from '../../render-engine'
-import { calculateResponsiveScale } from './fitToContainer'
+import { calculateResponsiveLayout } from './fitToContainer'
 
 export type ArtworkRenderMode = 'kingshot' | 'studio'
 export type ArtworkRenderProfile = ArtworkClass
@@ -15,7 +15,7 @@ const COMPACT_SCALE = .56
 function ResponsiveFit({ children, enabled }: { children: ReactNode; enabled: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const [fit, setFit] = useState({ scale: 1, width: 0, height: 0 })
+  const [fit, setFit] = useState({ availableWidth: 0, naturalWidth: 0, naturalHeight: 0, scale: 1, scaledWidth: 0, scaledHeight: 0, offsetLeft: 0 })
 
   useLayoutEffect(() => {
     if (!enabled) return
@@ -23,11 +23,11 @@ function ResponsiveFit({ children, enabled }: { children: ReactNode; enabled: bo
       const container = containerRef.current
       const content = contentRef.current
       if (!container || !content) return
-      const width = Math.max(content.scrollWidth, content.offsetWidth)
-      const height = Math.max(content.scrollHeight, content.offsetHeight)
+      const naturalWidth = Math.max(content.scrollWidth, content.offsetWidth)
+      const naturalHeight = Math.max(content.scrollHeight, content.offsetHeight)
       const availableWidth = container.clientWidth
-      const scale = calculateResponsiveScale(availableWidth, width)
-      setFit((current) => current.scale === scale && current.width === width && current.height === height ? current : { scale, width, height })
+      const next = calculateResponsiveLayout(availableWidth, naturalWidth, naturalHeight)
+      setFit((current) => current.availableWidth === next.availableWidth && current.naturalWidth === next.naturalWidth && current.naturalHeight === next.naturalHeight && current.scale === next.scale ? current : next)
     }
     measure()
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : null
@@ -38,8 +38,12 @@ function ResponsiveFit({ children, enabled }: { children: ReactNode; enabled: bo
   }, [enabled])
 
   if (!enabled) return <>{children}</>
-  const scaledHeight = fit.height > 0 ? fit.height * fit.scale : undefined
-  return <div ref={containerRef} className="forge-render-engine__fit" style={{ height: scaledHeight }} data-fit-scale={fit.scale}><div ref={contentRef} className="forge-render-engine__fit-content" style={{ width: fit.width || 'max-content', height: fit.height || undefined, transform: `scale(${fit.scale})` }}>{children}</div></div>
+  const hasMeasurement = fit.naturalWidth > 0 && fit.naturalHeight > 0
+  return <div ref={containerRef} className="forge-render-engine__fit" style={{ height: hasMeasurement ? fit.scaledHeight : undefined }} data-fit-available-width={fit.availableWidth || undefined} data-fit-natural-width={fit.naturalWidth || undefined} data-fit-scaled-width={fit.scaledWidth || undefined} data-fit-scale={fit.scale}>
+    <div className="forge-render-engine__fit-stage" style={{ width: hasMeasurement ? fit.scaledWidth : '100%', height: hasMeasurement ? fit.scaledHeight : undefined }}>
+      <div ref={contentRef} className="forge-render-engine__fit-content" style={{ width: fit.naturalWidth || 'max-content', height: fit.naturalHeight || undefined, transform: `scale(${fit.scale})` }}>{children}</div>
+    </div>
+  </div>
 }
 
 function KingshotGrid({ artwork, lines, classes, labelledBy, calibration, style, sourceContext }: { artwork: string; lines: string[]; classes: string; labelledBy?: string; calibration: CalibrationConfiguration; style: CSSProperties; sourceContext: ArtworkSourceContext }) {
@@ -77,7 +81,7 @@ export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = fals
 
   if (compact || !labelledBy) return <div className={`forge-render-engine forge-render-engine--${presentationClass} forge-render-engine--embedded${compact ? ' forge-render-engine--compact' : ''}${fitToContainer ? ' forge-render-engine--fit' : ''}`} aria-label={`${profileData.label} Kingshot preview`}><ResponsiveFit enabled={fitToContainer}>{frame}</ResponsiveFit></div>
 
-  return <section className={`forge-render-engine forge-render-engine--${presentationClass}`} aria-label="Forge artwork analysis">
+  return <section className={`forge-render-engine forge-render-engine--${presentationClass}${fitToContainer ? ' forge-render-engine--fit' : ''}`} aria-label="Forge artwork analysis">
     {!deviceProfile && <div className="forge-render-engine__device-controls" role="group" aria-label="Preview device">{(['phone', 'tablet', 'desktop'] as ArtworkDevicePreset[]).map((preset) => <button key={preset} type="button" className={device === preset ? 'forge-render-engine__device forge-render-engine__device--active' : 'forge-render-engine__device'} aria-pressed={device === preset} onClick={() => setDevice(preset)}>{preset[0].toUpperCase() + preset.slice(1)}</button>)}</div>}
     <ResponsiveFit enabled={fitToContainer}>{frame}</ResponsiveFit>
     <div className="forge-render-engine__analysis"><div><span>Artwork type</span><strong>{analysis.artworkClass.toUpperCase()}</strong></div><div><span>Graphemes</span><strong>{analysis.graphemeCount}</strong></div><div><span>Renderer</span><strong>{analysis.rendererLabel}</strong></div><div><span>Device</span><strong>{profileData.label}</strong></div><div><span>Source</span><strong>{sourceContext === 'kingshot-clipboard' ? 'Kingshot clipboard' : 'Authored'}</strong></div><div><span>Dimensions</span><strong>{analysis.widestLine} × {analysis.lineCount}</strong></div></div>

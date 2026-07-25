@@ -101,7 +101,10 @@
 
 .art-studio-submission-preview .forge-render-engine__fit,
 .community-art-moderation-preview .forge-render-engine__fit {
-  overflow: visible;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .art-studio-submission-preview .forge-render-engine {
