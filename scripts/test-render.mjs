@@ -8,7 +8,7 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex')
 const pngSize = (buffer) => ({ width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) })
 const equal = (left, right) => JSON.stringify(left) === JSON.stringify(right)
 
-const entries = (await readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
+const entries = (await readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory() && entry.name !== 'adaptive-clipboard').map((entry) => entry.name)
 if (!entries.length) throw new Error('No canonical render fixtures found.')
 
 const reports = []

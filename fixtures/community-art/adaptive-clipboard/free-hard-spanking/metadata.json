@@ -1,0 +1,34 @@
+{
+  "fixtureId": "art-005-free-hard-spanking",
+  "database": {
+    "recordId": "7d4dd5d5-af9a-4975-894a-af683ec5662d",
+    "status": "pending",
+    "title": "Free hard spanking"
+  },
+  "source": {
+    "filename": "source.txt.base64",
+    "encoding": "base64-encoded UTF-8",
+    "sha256": "ceb4e2b817146c1714b02edcfba0bb6dcbc9b93fc72fd3b88c08522d63315ae4",
+    "utf8ByteLength": 226,
+    "codePointCount": 196,
+    "graphemeCount": 196,
+    "utf16CodeUnitCount": 204,
+    "lineCount": 8,
+    "ordinarySpaceCount": 132,
+    "ideographicSpaceCount": 2,
+    "emojiCount": 9,
+    "sourceEqualsArtworkText": true
+  },
+  "sourceContext": "kingshot-clipboard",
+  "compatibilityProfile": "kingshot-clipboard",
+  "evidence": {
+    "referenceScreenshot": null,
+    "referenceScreenshotSha256": null,
+    "status": "database-source-recovered; screenshot-unavailable-in-worktree"
+  },
+  "calibration": {
+    "status": "baseline-pending",
+    "currentProduction": "origin/main at 0c26cdb",
+    "candidate": null
+  }
+}

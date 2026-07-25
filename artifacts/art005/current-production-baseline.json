@@ -1,0 +1,407 @@
+{
+  "generatedAt": "2026-07-25T20:35:30.450Z",
+  "status": "logical baseline; screenshot measurements unavailable",
+  "fixtures": [
+    {
+      "fixtureId": "art-005-ah-ah-oops",
+      "title": "AH AH oops",
+      "recordId": "5e496c7d-294d-4a2e-b20a-6ae780b1fef4",
+      "sourceContext": "kingshot-clipboard",
+      "sourceSha256": "3eb998a5526650229360f453bab2506f7ee3a54f1f28b4645431451c7bc923c6",
+      "byteLength": 199,
+      "lineContexts": [
+        "prose",
+        "hybrid-text-art",
+        "dense-structural",
+        "dense-structural",
+        "trailing-emoji",
+        "mixed-emoji-ascii",
+        "mixed-emoji-ascii",
+        "mixed-emoji-ascii",
+        "dense-structural"
+      ],
+      "candidate": {
+        "renderer": "ART-005 adaptive clipboard calibration",
+        "widths": [
+          6.16,
+          7.6,
+          9.3,
+          11,
+          15.56,
+          15.08,
+          19,
+          16.78,
+          12.26
+        ]
+      },
+      "measurements": {
+        "status": "reference-screenshot-unavailable-in-worktree",
+        "visibleInk": null,
+        "leftRightDeltas": null,
+        "structuralAnchors": null,
+        "captionBounds": null,
+        "emojiAnchors": null
+      },
+      "responsive": {
+        "status": "requires browser evidence",
+        "mobileContainment": null
+      },
+      "baseline": {
+        "renderer": "origin/main at 0c26cdb",
+        "widths": [
+          6.16,
+          7.6,
+          7.3,
+          8,
+          11.63,
+          10.23,
+          13,
+          11.9,
+          11.26
+        ]
+      }
+    },
+    {
+      "fixtureId": "art-005-alliance-coffee-time",
+      "title": "Alliance Coffee Time",
+      "recordId": "8ad59659-531a-412c-86e1-5006de55c864",
+      "sourceContext": "kingshot-clipboard",
+      "sourceSha256": "c4b0c423a3501da0e77b26b08a40b4af41937dd433cc3e0f6efd6d98bbf6a6d5",
+      "byteLength": 227,
+      "lineContexts": [
+        "prose",
+        "dense-structural",
+        "dense-structural",
+        "sparse-structural",
+        "sparse-structural",
+        "sparse-structural",
+        "dense-structural"
+      ],
+      "candidate": {
+        "renderer": "ART-005 adaptive clipboard calibration",
+        "widths": [
+          6.72,
+          10.3,
+          10.3,
+          11,
+          11.3,
+          11.3,
+          9.3
+        ]
+      },
+      "measurements": {
+        "status": "reference-screenshot-unavailable-in-worktree",
+        "visibleInk": null,
+        "leftRightDeltas": null,
+        "structuralAnchors": null,
+        "captionBounds": null,
+        "emojiAnchors": null
+      },
+      "responsive": {
+        "status": "requires browser evidence",
+        "mobileContainment": null
+      },
+      "baseline": {
+        "renderer": "origin/main at 0c26cdb",
+        "widths": [
+          7,
+          11,
+          11,
+          11,
+          12,
+          12,
+          10
+        ]
+      }
+    },
+    {
+      "fixtureId": "art-005-dont-ask-me",
+      "title": "Dont ask me",
+      "recordId": "3dbd4af9-61f3-4b6f-8456-a6d04e180504",
+      "sourceContext": "kingshot-clipboard",
+      "sourceSha256": "7cfbe9fcb122a6412a25b6d665f5924c242b03a2dac898149c87ef7c569a5fa7",
+      "byteLength": 252,
+      "lineContexts": [
+        "sparse-structural",
+        "hybrid-text-art",
+        "hybrid-text-art",
+        "hybrid-text-art",
+        "hybrid-text-art",
+        "hybrid-text-art",
+        "prose",
+        "prose",
+        "caption"
+      ],
+      "candidate": {
+        "renderer": "ART-005 adaptive clipboard calibration",
+        "widths": [
+          18.78,
+          21.45,
+          20.75,
+          24.41,
+          21.53,
+          18.3,
+          0,
+          0,
+          21.6
+        ]
+      },
+      "measurements": {
+        "status": "reference-screenshot-unavailable-in-worktree",
+        "visibleInk": null,
+        "leftRightDeltas": null,
+        "structuralAnchors": null,
+        "captionBounds": null,
+        "emojiAnchors": null
+      },
+      "responsive": {
+        "status": "requires browser evidence",
+        "mobileContainment": null
+      },
+      "baseline": {
+        "renderer": "origin/main at 0c26cdb",
+        "widths": [
+          16.78,
+          20.45,
+          19.15,
+          23.41,
+          16.53,
+          18.3,
+          0,
+          0,
+          21.6
+        ]
+      }
+    },
+    {
+      "fixtureId": "art-005-free-hard-spanking",
+      "title": "Free hard spanking",
+      "recordId": "7d4dd5d5-af9a-4975-894a-af683ec5662d",
+      "sourceContext": "kingshot-clipboard",
+      "sourceSha256": "ceb4e2b817146c1714b02edcfba0bb6dcbc9b93fc72fd3b88c08522d63315ae4",
+      "byteLength": 226,
+      "lineContexts": [
+        "trailing-emoji",
+        "dense-structural",
+        "dense-structural",
+        "mixed-emoji-ascii",
+        "leading-structural",
+        "dense-structural",
+        "dense-structural",
+        "prose"
+      ],
+      "candidate": {
+        "renderer": "ART-005 adaptive clipboard calibration",
+        "widths": [
+          14.1,
+          11.48,
+          7.69,
+          12.08,
+          23.95,
+          10.88,
+          10.4,
+          21.44
+        ]
+      },
+      "measurements": {
+        "status": "reference-screenshot-unavailable-in-worktree",
+        "visibleInk": null,
+        "leftRightDeltas": null,
+        "structuralAnchors": null,
+        "captionBounds": null,
+        "emojiAnchors": null
+      },
+      "responsive": {
+        "status": "requires browser evidence",
+        "mobileContainment": null
+      },
+      "baseline": {
+        "renderer": "origin/main at 0c26cdb",
+        "widths": [
+          10.48,
+          6.08,
+          3.79,
+          8.42,
+          18.1,
+          6.08,
+          5.45,
+          19.44
+        ]
+      }
+    },
+    {
+      "fixtureId": "art-005-i-have-come-to",
+      "title": "I have come to",
+      "recordId": "3c490bb3-31d1-481a-a4c8-a45ad6bd7562",
+      "sourceContext": "kingshot-clipboard",
+      "sourceSha256": "3bea8beb8d0a1345306552abe1f3e395ff0aeb84595d1c8a0897c66f159d8985",
+      "byteLength": 387,
+      "lineContexts": [
+        "horizontal-structural-run",
+        "caption",
+        "caption",
+        "hybrid-text-art",
+        "caption",
+        "prose",
+        "hybrid-text-art",
+        "prose",
+        "hybrid-text-art"
+      ],
+      "candidate": {
+        "renderer": "ART-005 adaptive clipboard calibration",
+        "widths": [
+          11,
+          34.64,
+          35.64,
+          21.14,
+          38.88,
+          23.52,
+          18.09,
+          27.16,
+          20.29
+        ]
+      },
+      "measurements": {
+        "status": "reference-screenshot-unavailable-in-worktree",
+        "visibleInk": null,
+        "leftRightDeltas": null,
+        "structuralAnchors": null,
+        "captionBounds": null,
+        "emojiAnchors": null
+      },
+      "responsive": {
+        "status": "requires browser evidence",
+        "mobileContainment": null
+      },
+      "baseline": {
+        "renderer": "origin/main at 0c26cdb",
+        "widths": [
+          11,
+          34.64,
+          35.64,
+          17.99,
+          38.88,
+          20.52,
+          15.39,
+          27.16,
+          17.59
+        ]
+      }
+    },
+    {
+      "fixtureId": "art-005-where-is-all-the-good-text-art",
+      "title": "Where is all the good text art",
+      "recordId": "3a57a724-afdd-4193-9eef-f7dd9d9cf381",
+      "sourceContext": "kingshot-clipboard",
+      "sourceSha256": "cfacdd29930f5a94438291406e56360c7139253c74aadb294f27bb77c042bff6",
+      "byteLength": 245,
+      "lineContexts": [
+        "dense-structural",
+        "caption",
+        "caption",
+        "dense-structural",
+        "hybrid-text-art",
+        "hybrid-text-art",
+        "dense-structural"
+      ],
+      "candidate": {
+        "renderer": "ART-005 adaptive clipboard calibration",
+        "widths": [
+          23,
+          25.6,
+          26.88,
+          25.6,
+          24,
+          22.3,
+          18
+        ]
+      },
+      "measurements": {
+        "status": "reference-screenshot-unavailable-in-worktree",
+        "visibleInk": null,
+        "leftRightDeltas": null,
+        "structuralAnchors": null,
+        "captionBounds": null,
+        "emojiAnchors": null
+      },
+      "responsive": {
+        "status": "requires browser evidence",
+        "mobileContainment": null
+      },
+      "baseline": {
+        "renderer": "origin/main at 0c26cdb",
+        "widths": [
+          23,
+          25.6,
+          26.88,
+          24.6,
+          22,
+          20.3,
+          9
+        ]
+      }
+    },
+    {
+      "fixtureId": "art-005-wow-im-so-cute-expanded",
+      "title": "WOW IM SO CUTE",
+      "recordId": "70e96272-7f37-4021-89f6-d34610c27969",
+      "sourceContext": "kingshot-clipboard",
+      "sourceSha256": "fe6bfe732d320f75e810be9071788a5b749424a7cff20e7e2407161964cf14d2",
+      "byteLength": 431,
+      "lineContexts": [
+        "prose",
+        "caption",
+        "dense-structural",
+        "dense-structural",
+        "dense-structural",
+        "hybrid-text-art",
+        "dense-structural",
+        "dense-structural",
+        "dense-structural",
+        "hybrid-text-art"
+      ],
+      "candidate": {
+        "renderer": "ART-005 adaptive clipboard calibration",
+        "widths": [
+          22.6,
+          20.16,
+          20.55,
+          24.37,
+          26.33,
+          27.18,
+          27.57,
+          28.57,
+          27.04,
+          26.42
+        ]
+      },
+      "measurements": {
+        "status": "reference-screenshot-unavailable-in-worktree",
+        "visibleInk": null,
+        "leftRightDeltas": null,
+        "structuralAnchors": null,
+        "captionBounds": null,
+        "emojiAnchors": null
+      },
+      "responsive": {
+        "status": "requires browser evidence",
+        "mobileContainment": null
+      },
+      "baseline": {
+        "renderer": "origin/main at 0c26cdb",
+        "widths": [
+          20.6,
+          20.16,
+          10.2,
+          21.92,
+          24.33,
+          27.18,
+          27.57,
+          28.57,
+          25.04,
+          22.42
+        ]
+      }
+    }
+  ]
+}
