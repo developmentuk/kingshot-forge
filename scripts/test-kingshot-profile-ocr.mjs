@@ -117,6 +117,11 @@ for (const fixture of [['level-1.png', '1'], ['level-6.png', '6'], ['level-8.png
   const town = result.candidates.find((item) => item.field === 'townCenterLevel')
   assert.equal(town?.value, fixture[1], fixture[0])
   assert.ok(result.diagnostics?.passes?.filter((pass) => pass.passType === 'glyph_single_char' && pass.confidence > 0).length >= 2, fixture[0])
+  if (fixture[1] === '6') {
+    assert.equal(result.diagnostics?.townCenter?.tier, 'one_digit_isolated_glyph')
+    assert.ok(result.diagnostics?.townCenter?.passes?.filter((pass) => pass.source === 'glyph' && pass.countedAsIndependent).length >= 2)
+    assert.ok(!JSON.stringify(result.diagnostics?.townCenter).match(/rawText|crop|bytes|signedUrl|storagePath|sha256|token/i))
+  }
 }
 const glyphRegion = KINGSHOT_PROFILE_V8_REGIONS.find((item) => item.key === 'townCenterGlyph')
 assert.deepEqual([glyphRegion?.x, glyphRegion?.y, glyphRegion?.width, glyphRegion?.height], [.635, .52, .055, .14])
@@ -126,6 +131,38 @@ assert.ok(glyphPrepared.components.length >= 1); assert.equal(glyphPrepared.chos
 assert.equal(consensusTownCenterGlyph([{ source: 'glyph', value: '6', confidence: .9, psm: 'single_char' }, { source: 'glyph', value: '6', confidence: .8, psm: 'single_char' }], [], [], true).value, '6')
 assert.equal(consensusTownCenterGlyph([{ source: 'glyph', value: '6', confidence: .9, psm: 'single_char' }, { source: 'glyph', value: '8', confidence: .9, psm: 'single_char' }], [], [], true).disposition, 'conflicting_reads')
 assert.equal(consensusTownCenterGlyph([{ source: 'glyph', value: '6', confidence: .9, psm: 'single_word' }, { source: 'glyph', value: '6', confidence: .8, psm: 'single_word' }], [], [], true).disposition, 'could_not_read')
+assert.equal(consensusTownCenterGlyph([
+  { source: 'glyph', value: '6', confidence: .9, psm: 'single_char', mask: 'luminance', scale: 256, kernel: 'lanczos3' },
+  { source: 'glyph', value: '6', confidence: .45, psm: 'single_char', mask: 'outline', scale: 256, kernel: 'nearest' },
+  { source: undefined, confidence: 0, psm: 'single_char', mask: 'adaptive_a', scale: 256, kernel: 'lanczos3' },
+], [], [], true).value, '6')
+const noisyBadge = consensusTownCenterGlyph([
+  { source: 'glyph', value: '6', confidence: .8, psm: 'single_char', mask: 'luminance', scale: 256, kernel: 'lanczos3' },
+  { source: 'glyph', value: '6', confidence: .4, psm: 'single_char', mask: 'outline', scale: 256, kernel: 'nearest' },
+], [{ source: 'tight', value: '8', confidence: .98, psm: 'single_word' }], [], true)
+assert.equal(noisyBadge.value, '6'); assert.ok(noisyBadge.warnings.includes('supporting_badge_pass_disagreed'))
+assert.equal(consensusTownCenterGlyph([
+  { source: 'glyph', value: '6', confidence: .8, psm: 'single_char', mask: 'luminance', scale: 256, kernel: 'lanczos3' },
+  { source: 'glyph', value: '8', confidence: .8, psm: 'single_char', mask: 'outline', scale: 256, kernel: 'nearest' },
+], [], [], true).disposition, 'conflicting_reads')
+assert.equal(consensusTownCenterGlyph([{ source: 'glyph', value: '6', confidence: .8, psm: 'single_char', mask: 'luminance', scale: 256, kernel: 'lanczos3' }], [], [], true).disposition, 'could_not_read')
+assert.equal(consensusTownCenterGlyph([
+  { source: 'glyph', value: '6', confidence: .8, psm: 'single_char', mask: 'luminance', scale: 256, kernel: 'lanczos3' },
+  { source: 'glyph', value: '6', confidence: .4, psm: 'single_char', mask: 'luminance', scale: 384, kernel: 'nearest' },
+], [], [], true).disposition, 'could_not_read')
+assert.equal(consensusTownCenterGlyph([
+  { source: 'glyph', value: '6', confidence: .8, psm: 'single_char', mask: 'luminance', scale: 256, kernel: 'lanczos3' },
+  { source: 'glyph', value: '6', confidence: .4, psm: 'single_char', mask: 'outline', scale: 256, kernel: 'nearest' },
+  { source: 'glyph', value: '8', confidence: 0, psm: 'single_char', mask: 'adaptive_a', scale: 256, kernel: 'lanczos3' },
+], [], [], true).value, '6')
+for (const level of ['10', '20', '30']) assert.equal(consensusTownCenterGlyph([
+  { source: 'glyph', value: level, confidence: .8, psm: 'single_word', mask: 'luminance', scale: 256, kernel: 'lanczos3' },
+  { source: 'tight', value: level, confidence: .4, psm: 'single_word', mask: 'threshold', scale: 220, kernel: 'lanczos3' },
+], [], [], true).value, level)
+assert.equal(consensusTownCenterGlyph([
+  { source: 'glyph', value: '6', confidence: .8, psm: 'single_char', mask: 'luminance' },
+  { source: 'glyph', value: '6', confidence: .4, psm: 'single_char', mask: 'outline' },
+], [], [], false).disposition, 'could_not_read')
 assert.equal(consensusTownCenterBadge([{ source: 'tight', value: '6', confidence: .9 }, { source: 'tight', value: '6', confidence: .8 }, { source: 'tight', value: undefined, confidence: 0 }], [{ source: 'context', value: '6', confidence: .7 }], true).value, '6')
 assert.equal(consensusTownCenterBadge([{ source: 'tight', value: '6', confidence: .9 }, { source: 'tight', value: '6', confidence: .8 }], [{ source: 'context', value: '7', confidence: .95 }], true).value, '6')
 assert.equal(consensusTownCenterBadge([], [{ source: 'context', value: '6', confidence: .95 }], true).disposition, 'could_not_read')

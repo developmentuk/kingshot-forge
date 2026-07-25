@@ -7,7 +7,7 @@ import type { AccountLinkOcrAdapter } from './accountLinkingOcrService.js'
 import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, KINGSHOT_PROFILE_V4_MAPPING_VERSION, KINGSHOT_PROFILE_V5_MAPPING_VERSION, KINGSHOT_PROFILE_V6_MAPPING_VERSION, KINGSHOT_PROFILE_V7_MAPPING_VERSION, KINGSHOT_PROFILE_V8_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
 import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, KINGSHOT_PROFILE_V4_REGIONS, KINGSHOT_PROFILE_V5_REGIONS, KINGSHOT_PROFILE_V6_REGIONS, KINGSHOT_PROFILE_V7_REGIONS, KINGSHOT_PROFILE_V8_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
 import type { AccountLinkOcrDisposition, AccountLinkOcrMappingVersion, AccountLinkOcrRegionObservation } from '../../shared/domains/player-identity/accountLinkingOcr.js'
-import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, consensusTownCenterBadge, consensusTownCenterGlyph, type ComponentNumericObservation, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
+import { consensusPlayerId, consensusComponentDigits, consensusKingdomLine, consensusTownCenterBadge, consensusTownCenterGlyph, type ComponentNumericObservation, type PlayerIdObservation, type TownCenterConsensus } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
 import { prepareTownCenterGlyph, type TownCenterGlyphMask } from './townCenterGlyphOcr.js'
 
 const require = createRequire(import.meta.url)
@@ -29,6 +29,7 @@ function bundledPaths(): { workerPath: string; langPath: string } {
 
 type DiagnosticRegion = { field: KingshotProfileField; attempted: boolean; recognized: boolean; confidence: number; warnings: readonly string[] }
 type FieldDiagnostic = { field: KingshotProfileField; disposition: AccountLinkOcrDisposition; confidence: number; agreement: 'agree' | 'agree_with_missing_pass' | 'disagree' | 'not_applicable'; warnings: readonly string[] }
+type TownCenterPassDiagnostic = { source: 'glyph' | 'tight' | 'context'; mask?: string; psm: 'single_char' | 'single_word' | 'single_line'; confidence: number; acceptedValue?: string; countedAsIndependent: boolean; warnings: readonly string[] }
 
 export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
   readonly #workerFactory: TesseractJsWorkerFactory
@@ -181,6 +182,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     const observations: AccountLinkOcrRegionObservation[] = [{ field: 'playerId', rawText: '', confidence: idConsensus.confidence, warnings: idConsensus.warnings, acceptedValue: idConsensus.value, disposition: idConsensus.disposition, agreement: idConsensus.agreement === 'insufficient' ? 'not_applicable' : idConsensus.agreement, passType: 'label_component', variant: 'greyscale', labelContext: idContext }]
     const diagnostics: DiagnosticRegion[] = [{ field: 'playerId', attempted: true, recognized: Boolean(idConsensus.value), confidence: idConsensus.confidence, warnings: idConsensus.warnings }]
     const fields: FieldDiagnostic[] = [{ field: 'playerId', disposition: idConsensus.disposition, confidence: idConsensus.confidence, agreement: idConsensus.agreement === 'insufficient' ? 'not_applicable' : idConsensus.agreement, warnings: idConsensus.warnings }]
+    let townCenterDiagnostics: { tier: string; disposition: AccountLinkOcrDisposition; acceptedValue?: string; warnings: readonly string[]; passes: readonly TownCenterPassDiagnostic[] } | undefined
 
     const readNumericComponent = async (field: 'kingdom', labelKey: string, digitsKey: string, validator: (value: string) => boolean) => {
       const label = [await read(field, region(labelKey), 'greyscale', PSM.SINGLE_WORD, 'label_component', region(labelKey).characterWhitelist), await read(field, region(labelKey), 'threshold', PSM.SINGLE_WORD, 'label_component', region(labelKey).characterWhitelist)]
@@ -262,7 +264,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
       const labelContext = labelReads.some((item) => /town\s*(?:centre|center)/i.test(item.text)) || /town\s*(?:centre|center)/i.test(cleanRawText(panel.text))
       const numeric = badgeReads.map((item) => ({ source: 'tight' as const, value: extractDigits(item.text, 2), confidence: item.confidence }))
       const supporting = contextReads.map((item) => ({ source: 'context' as const, value: extractDigits(item.text, 2), confidence: item.confidence }))
-      const glyphReads: Array<{ value?: string; confidence: number; psm: 'single_char' | 'single_word'; mask: TownCenterGlyphMask }> = []
+      const glyphReads: Array<{ value?: string; confidence: number; psm: 'single_char' | 'single_word'; mask: TownCenterGlyphMask; scale: 192 | 256 | 384; kernel: 'nearest' | 'lanczos3' }> = []
       if (townCalibration === 'v8') {
         const glyphRegion = region('townCenterGlyph')
         const configurations: Array<{ mask: TownCenterGlyphMask; scale: 192 | 256 | 384; kernel: 'nearest' | 'lanczos3'; psm: 'single_char' | 'single_word' }> = [
@@ -277,12 +279,12 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
           const prepared = await prepareTownCenterGlyph({ bytes: request.image.bytes, region: glyphRegion, widthPx: request.image.widthPx, heightPx: request.image.heightPx, ...configuration })
           const result = await this.#recognize(worker, Buffer.from(prepared.bytes), { left: 0, top: 0, width: prepared.widthPx, height: prepared.heightPx }, configuration.psm === 'single_char' ? PSM.SINGLE_CHAR : PSM.SINGLE_WORD, '0123456789', prepared.scale)
           const value = extractDigits(cleanRawText(result.text), 2)
-          glyphReads.push({ value, confidence: result.confidence, psm: configuration.psm, mask: configuration.mask })
+          glyphReads.push({ value, confidence: result.confidence, psm: configuration.psm, mask: configuration.mask, scale: configuration.scale, kernel: configuration.kernel })
           passes.push({ field: 'townCenterLevel', passType: 'glyph_single_char', variant: configuration.mask === 'adaptive_b' ? 'threshold' : configuration.mask === 'outline' ? 'inverted' : 'greyscale', attempted: true, confidence: result.confidence, labelContext: false, warnings: [...prepared.warningCodes, ...(result.confidence === 0 ? ['zero_confidence_numeric'] : [])] })
         }
       }
       const consensus = townCalibration === 'v8'
-        ? consensusTownCenterGlyph(glyphReads.map((item) => ({ source: 'glyph' as const, value: item.value, confidence: item.confidence, psm: item.psm })), numeric.map((item) => ({ source: 'tight' as const, value: item.value, confidence: item.confidence, psm: 'single_word' as const })), supporting, labelContext)
+        ? consensusTownCenterGlyph(glyphReads.map((item) => ({ source: 'glyph' as const, value: item.value, confidence: item.confidence, psm: item.psm, mask: item.mask, scale: item.scale, kernel: item.kernel })), numeric.map((item) => ({ source: 'tight' as const, value: item.value, confidence: item.confidence, psm: 'single_word' as const })), supporting, labelContext)
         : townCalibration === 'v7'
         ? consensusTownCenterBadge(numeric, supporting, labelContext)
         : consensusComponentDigits(badgeReads.map((item, index) => ({ passType: componentPass(index), variant: componentVariant(index), digits: extractDigits(item.text, 2), confidence: item.confidence })), labelContext, (value) => Number(value) >= 1 && Number(value) <= 30)
@@ -291,10 +293,21 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
       const agreement = consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement
       observations.push({ field: 'townCenterLevel', rawText: '', confidence: consensus.confidence, warnings, acceptedValue: consensus.value, disposition, agreement, passType: 'label_component', variant: 'greyscale', labelContext })
       diagnostics.push({ field: 'townCenterLevel', attempted: true, recognized: Boolean(consensus.value), confidence: consensus.confidence, warnings })
+      townCenterDiagnostics = townCalibration === 'v8' ? {
+        tier: (consensus as TownCenterConsensus).tier,
+        disposition: consensus.disposition,
+        acceptedValue: consensus.value,
+        warnings: consensus.warnings,
+        passes: [
+          ...glyphReads.map((item) => ({ source: 'glyph' as const, mask: item.mask, psm: item.psm, confidence: item.confidence, acceptedValue: item.value && /^[1-9]$/u.test(item.value) ? item.value : undefined, countedAsIndependent: item.value !== undefined && item.confidence > 0 && item.psm === 'single_char', warnings: item.confidence === 0 ? ['zero_confidence_numeric'] : [] })),
+          ...numeric.map((item) => ({ source: 'tight' as const, psm: 'single_word' as const, confidence: item.confidence, acceptedValue: item.value, countedAsIndependent: false, warnings: item.confidence === 0 ? ['zero_confidence_numeric'] : [] })),
+          ...supporting.map((item) => ({ source: 'context' as const, psm: 'single_word' as const, confidence: item.confidence, acceptedValue: item.value, countedAsIndependent: false, warnings: item.confidence === 0 ? ['zero_confidence_numeric'] : [] })),
+        ] satisfies readonly TownCenterPassDiagnostic[],
+      } : undefined
       fields.push({ field: 'townCenterLevel', disposition, confidence: consensus.confidence, agreement, warnings })
     }
     const mappingVersion = townCenter ? townCalibration === 'v8' ? KINGSHOT_PROFILE_V8_MAPPING_VERSION : townCalibration === 'v7' ? KINGSHOT_PROFILE_V7_MAPPING_VERSION : KINGSHOT_PROFILE_V6_MAPPING_VERSION : labelledKingdomLine ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : KINGSHOT_PROFILE_V4_MAPPING_VERSION
-    return { ...this.#output('', Math.max(idConsensus.confidence, ...fields.map((item) => item.confidence)), observations, diagnostics, fields, mappingVersion), diagnostics: { mappingVersion, regions: diagnostics, fields, passes } }
+    return { ...this.#output('', Math.max(idConsensus.confidence, ...fields.map((item) => item.confidence)), observations, diagnostics, fields, mappingVersion), diagnostics: { mappingVersion, regions: diagnostics, fields, passes, ...(townCenter ? { townCenter: townCenterDiagnostics } : {}) } }
   }
 
   async #recognizePrepared(worker: Worker, request: VisionExtractionRequest, region: KingshotProfileRegion, variant: 'greyscale' | 'threshold' | 'inverted', psm: string, whitelist: string | null, thresholdValue = 168, focus?: { x: number; y: number; width: number; height: number }) {

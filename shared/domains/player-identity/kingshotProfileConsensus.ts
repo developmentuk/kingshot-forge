@@ -80,28 +80,79 @@ export function consensusKingdomLine(reads: readonly KingdomLineRead[], labelCon
 
 export type TownCenterBadgeObservation = { readonly source: 'tight' | 'context'; readonly value?: string; readonly confidence: number }
 
-export type TownCenterGlyphObservation = { readonly source: 'glyph' | 'tight'; readonly value?: string; readonly confidence: number; readonly psm: 'single_char' | 'single_word' }
+export type TownCenterObservationSource = 'glyph' | 'tight' | 'context'
+export type TownCenterObservationMask = 'luminance' | 'outline' | 'adaptive_a' | 'adaptive_b' | 'greyscale' | 'threshold' | 'inverted'
+export type TownCenterConsensusTier = 'one_digit_isolated_glyph' | 'isolated_glyph_conflict' | 'two_digit' | 'strict_broad_fallback' | 'fallback'
+export type TownCenterGlyphObservation = {
+  readonly source: TownCenterObservationSource
+  readonly value?: string
+  readonly confidence: number
+  readonly psm: 'single_char' | 'single_word'
+  readonly mask?: TownCenterObservationMask
+  readonly scale?: number
+  readonly kernel?: 'nearest' | 'lanczos3'
+}
 
-export function consensusTownCenterGlyph(glyph: readonly TownCenterGlyphObservation[], tight: readonly TownCenterGlyphObservation[], context: readonly TownCenterBadgeObservation[], labelContext: boolean): PlayerIdConsensus {
+export interface TownCenterConsensus extends PlayerIdConsensus {
+  readonly tier: TownCenterConsensusTier
+  readonly independentSupport?: readonly { readonly value: string; readonly masks: readonly string[]; readonly strongestConfidence: number }[]
+  readonly supportingBadgePassDisagreed?: boolean
+}
+
+export function consensusTownCenterGlyph(glyph: readonly TownCenterGlyphObservation[], tight: readonly TownCenterGlyphObservation[], context: readonly TownCenterBadgeObservation[], labelContext: boolean): TownCenterConsensus {
   const all = [...glyph, ...tight]
   const valid = all.filter((item) => item.value && Number(item.value) >= 1 && Number(item.value) <= 30 && item.confidence > 0)
-  const confidence = Math.max(...[...valid, ...context.filter((item) => item.confidence > 0)].map((item) => item.confidence), 0)
-  if (!labelContext) return { disposition: 'could_not_read', agreement: 'insufficient', confidence, warnings: ['town_center_label_context_required'] }
+  const validContext = context.filter((item) => item.value && Number(item.value) >= 1 && Number(item.value) <= 30 && item.confidence > 0)
+  const confidence = Math.max(...[...valid, ...validContext].map((item) => item.confidence), 0)
+  if (!labelContext) return { tier: 'fallback', disposition: 'could_not_read', agreement: 'insufficient', confidence, warnings: ['town_center_label_context_required'] }
+
+  const isolated = glyph.filter((item) => item.source === 'glyph' && item.psm === 'single_char' && item.value && /^[1-9]$/u.test(item.value) && item.confidence > 0)
+  const isolatedGroups = groupIndependentSupport(isolated)
+  const isolatedCandidates = [...isolatedGroups.entries()].map(([value, items]) => ({ value, items, masks: independentMasks(items), strongestConfidence: Math.max(...items.map((item) => item.confidence)) }))
+  const isolatedOneDigit = isolatedCandidates.filter((item) => item.masks.length >= 2 && item.strongestConfidence >= COMPONENT_NUMERIC_STRONG_CONFIDENCE && item.items.some((candidate) => candidate.confidence >= COMPONENT_NUMERIC_SUPPORTING_CONFIDENCE))
+  if (isolatedOneDigit.length > 0) {
+    const ranked = isolatedOneDigit.sort((a, b) => b.masks.length - a.masks.length || b.strongestConfidence - a.strongestConfidence)
+    const candidate = ranked[0]
+    const competing = isolatedOneDigit.filter((item) => item.value !== candidate.value && (item.masks.length >= candidate.masks.length || item.strongestConfidence >= candidate.strongestConfidence - 0.05))
+    if (competing.length > 0) return townCenterConflict(confidence, 'isolated_glyph_conflict', isolatedCandidates)
+    const supportingBadgePassDisagreed = [...tight, ...validContext].some((item) => item.value && item.value !== candidate.value && item.confidence > 0)
+    return { value: candidate.value, tier: 'one_digit_isolated_glyph', disposition: 'recognised', agreement: isolated.length < glyph.length ? 'agree_with_missing_pass' : 'agree', confidence: candidate.strongestConfidence, warnings: [...(isolated.length < glyph.length ? ['one_or_more_passes_failed'] : []), ...(supportingBadgePassDisagreed ? ['supporting_badge_pass_disagreed'] : [])], independentSupport: isolatedCandidates.map(supportSummary), supportingBadgePassDisagreed }
+  }
+  if (isolatedCandidates.length > 1) return townCenterConflict(confidence, 'isolated_glyph_conflict', isolatedCandidates)
+
+  const twoDigit = valid.filter((item) => Number(item.value) >= 10 && (item.psm === 'single_word' || item.source === 'tight' || item.source === 'glyph'))
+  const twoDigitGroups = groupIndependentSupport(twoDigit)
+  const twoDigitCandidates = [...twoDigitGroups.entries()].map(([value, items]) => ({ value, items, masks: independentMasks(items), strongestConfidence: Math.max(...items.map((item) => item.confidence)) })).filter((item) => item.items.length >= 2 && item.strongestConfidence >= COMPONENT_NUMERIC_STRONG_CONFIDENCE && item.items.some((candidate) => candidate.confidence >= COMPONENT_NUMERIC_SUPPORTING_CONFIDENCE))
+  if (twoDigitCandidates.length > 0) {
+    const candidate = twoDigitCandidates.sort((a, b) => b.masks.length - a.masks.length || b.strongestConfidence - a.strongestConfidence)[0]
+    const competing = twoDigitCandidates.filter((item) => item.value !== candidate.value && (item.masks.length >= candidate.masks.length || item.strongestConfidence >= candidate.strongestConfidence - 0.05))
+    if (competing.length > 0) return townCenterConflict(confidence, 'two_digit', twoDigitCandidates)
+    return { value: candidate.value, tier: 'two_digit', disposition: 'recognised', agreement: 'agree', confidence: candidate.strongestConfidence, warnings: [], independentSupport: twoDigitCandidates.map(supportSummary) }
+  }
+
+  const broadGroups = groupIndependentSupport(valid.filter((item) => item.source === 'tight'))
+  const broadCandidates = [...broadGroups.entries()].map(([value, items]) => ({ value, items, masks: independentMasks(items), strongestConfidence: Math.max(...items.map((item) => item.confidence)) })).filter((item) => item.masks.length >= 2 && item.strongestConfidence >= COMPONENT_NUMERIC_STRONG_CONFIDENCE)
+  if (broadCandidates.length === 1) {
+    const candidate = broadCandidates[0]
+    return { value: candidate.value, tier: 'strict_broad_fallback', disposition: 'recognised', agreement: 'agree', confidence: candidate.strongestConfidence, warnings: ['isolated_glyph_insufficient'], independentSupport: broadCandidates.map(supportSummary) }
+  }
+  return { tier: 'fallback', disposition: broadCandidates.length > 1 ? 'conflicting_reads' : 'could_not_read', agreement: broadCandidates.length > 1 ? 'disagree' : 'insufficient', confidence, warnings: [broadCandidates.length > 1 ? 'conflicting_town_center_levels' : 'insufficient_glyph_agreement'] }
+}
+
+function groupIndependentSupport(observations: readonly TownCenterGlyphObservation[]): Map<string, TownCenterGlyphObservation[]> {
   const groups = new Map<string, TownCenterGlyphObservation[]>()
-  for (const item of valid) groups.set(item.value!, [...(groups.get(item.value!) ?? []), item])
-  const strong = valid.filter((item) => item.confidence >= COMPONENT_NUMERIC_STRONG_CONFIDENCE)
-  const strongValues = new Set(strong.map((item) => item.value))
-  if (strongValues.size > 1) return { disposition: 'conflicting_reads', agreement: 'disagree', confidence, warnings: ['conflicting_town_center_levels'] }
-  const supported = [...groups.entries()].filter(([candidate, items]) => {
-    const oneDigit = Number(candidate) < 10
-    return items.length >= 2 && items.some((item) => item.confidence >= COMPONENT_NUMERIC_STRONG_CONFIDENCE) && (!oneDigit || items.some((item) => item.source === 'glyph' && item.psm === 'single_char'))
-  })
-  if (supported.length !== 1) return { disposition: groups.size > 1 ? 'conflicting_reads' : 'could_not_read', agreement: groups.size > 1 ? 'disagree' : 'insufficient', confidence, warnings: [groups.size > 1 ? 'conflicting_town_center_levels' : 'insufficient_glyph_agreement'] }
-  const [value, observations] = supported[0]
-  const strongest = Math.max(...observations.map((item) => item.confidence))
-  const conflict = [...groups.entries()].some(([candidate, items]) => candidate !== value && Math.max(...items.map((item) => item.confidence)) >= strongest - 0.05)
-  if (conflict) return { disposition: 'conflicting_reads', agreement: 'disagree', confidence, warnings: ['conflicting_town_center_levels'] }
-  return { value, disposition: 'recognised', agreement: valid.length < all.length ? 'agree_with_missing_pass' : 'agree', confidence: strongest, warnings: context.some((item) => item.value === value) ? [] : ['glyph_consensus_without_context_pass'] }
+  for (const item of observations) if (item.value) groups.set(item.value, [...(groups.get(item.value) ?? []), item])
+  return groups
+}
+
+function independentMasks(observations: readonly TownCenterGlyphObservation[]): string[] {
+  return [...new Set(observations.map((item, index) => item.mask ?? `${item.source}:${item.psm}:${index}`))]
+}
+
+function supportSummary(item: { value: string; masks: string[]; strongestConfidence: number }) { return { value: item.value, masks: item.masks, strongestConfidence: item.strongestConfidence } }
+
+function townCenterConflict(confidence: number, tier: TownCenterConsensusTier, candidates: readonly { value: string; masks: string[]; strongestConfidence: number }[]): TownCenterConsensus {
+  return { tier, disposition: 'conflicting_reads', agreement: 'disagree', confidence, warnings: ['conflicting_town_center_levels'], independentSupport: candidates.map(supportSummary) }
 }
 
 export function consensusTownCenterBadge(tight: readonly TownCenterBadgeObservation[], context: readonly TownCenterBadgeObservation[], labelContext: boolean): PlayerIdConsensus {
