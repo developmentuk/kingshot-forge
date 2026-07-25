@@ -54,3 +54,25 @@ that PNG and asserts the actual OCR candidate `987654321`; local recognition
 also returned `EMBER FOX` and `42` in 524 ms. Parser-only assertions remain
 separate. Authenticated preview acceptance and exact cancellation remain
 owner-scoped gates for the new preview.
+
+## VISION-LINK-003 real-card calibration outcome
+
+The genuine owner test was NO-GO. V2 correctly suppressed unsafe zero-confidence
+numeric output; Kingdom was extracted successfully; the mandatory Player ID was
+not accepted; and the display name remained a damaged, low-confidence supporting
+observation. The likely causes were clipboard-icon contamination of the numeric
+crop and an implemented threshold path that was not being executed. No lookup,
+link mutation or additional cleanup occurred.
+
+## VISION-LINK-004 v3 recovery
+
+V3 adds a shared Kingshot profile mapping with a broad labelled Player ID line and
+a configured numeric region ending before the clipboard-icon area. It executes
+greyscale and threshold observations for both labelled and numeric passes, uses a
+separate fail-closed consensus function, renders safe pass diagnostics, and marks
+low-confidence or normalised names as review-only. V1 and V2 remain historical
+regression mappings. Synthetic PNG/JPEG and adversarial consensus tests pass;
+owner retest remains a separate NO-GO-until-deployed-checks gate.
+The pinned Tesseract.js 7.0.0 fixture comparison selected `SINGLE_LINE` for the
+numeric crop: `SINGLE_WORD` was less reliable on the bounded low-resolution
+fixture. Numeric OCR is spatially isolated and post-parsed as digits only.

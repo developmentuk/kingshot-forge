@@ -107,3 +107,13 @@ It contains only synthetic values: Player ID `987654321`, name `EMBER FOX`
 and kingdom `42`. The real-runtime test loads the PNG and asserts the actual
 Tesseract.js candidate rather than treating parser-only text as runtime proof.
 The fixture is not evidence of real-screen Kingshot accuracy.
+
+## VISION-LINK-003 and VISION-LINK-004 calibration record
+
+The genuine V2 owner acceptance was NO-GO: Kingdom succeeded, unsafe Player ID
+output was suppressed, the mandatory Player ID failed, and the damaged display
+name remained review-only. No real account value is recorded here. V3 responds
+with configured line and icon-excluding numeric geometry, four bounded OCR
+observations, executed greyscale and threshold preprocessing, deterministic
+label-context consensus, and safe browser diagnostics. Synthetic and adversarial
+tests use fake values only; no real screenshot or account data is committed.

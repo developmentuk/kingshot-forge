@@ -1,5 +1,5 @@
 export type AccountLinkOcrField = 'playerId' | 'displayName' | 'kingdom'
-export type AccountLinkOcrMappingVersion = 'account-linking-ocr-mvp' | 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2'
+export type AccountLinkOcrMappingVersion = 'account-linking-ocr-mvp' | 'account-linking-kingshot-profile-v1' | 'account-linking-kingshot-profile-v2' | 'account-linking-kingshot-profile-v3'
 export type AccountLinkOcrDisposition = 'recognised' | 'review_required' | 'could_not_read' | 'conflicting_reads'
 
 export interface AccountLinkOcrRegionObservation {
@@ -10,6 +10,9 @@ export interface AccountLinkOcrRegionObservation {
   readonly acceptedValue?: string
   readonly disposition?: AccountLinkOcrDisposition
   readonly agreement?: 'agree' | 'disagree' | 'not_applicable'
+  readonly passType?: 'labelled_line' | 'numeric_only' | 'panel'
+  readonly variant?: 'greyscale' | 'threshold'
+  readonly labelContext?: boolean
 }
 
 export interface AccountLinkOcrCandidate {
@@ -26,11 +29,13 @@ export interface AccountLinkOcrCandidate {
 export interface AccountLinkOcrResult {
   readonly evidenceId: string
   readonly rawText?: string
+  readonly regionObservations?: readonly AccountLinkOcrRegionObservation[]
   readonly candidates: readonly AccountLinkOcrCandidate[]
   readonly diagnostics?: {
     readonly mappingVersion: AccountLinkOcrMappingVersion
     readonly regions: readonly { field: AccountLinkOcrField; attempted: boolean; recognized: boolean; confidence: number; warnings: readonly string[] }[]
     readonly fields?: readonly { field: AccountLinkOcrField; disposition: AccountLinkOcrDisposition; confidence: number; agreement: 'agree' | 'disagree' | 'not_applicable'; warnings: readonly string[] }[]
+    readonly passes?: readonly { field: AccountLinkOcrField; passType: 'labelled_line' | 'numeric_only' | 'panel'; variant: 'greyscale' | 'threshold'; attempted: boolean; confidence: number; labelContext: boolean; warnings: readonly string[] }[]
   }
   readonly provenance: {
     readonly pluginKey: string
@@ -59,7 +64,7 @@ export function parseAccountLinkCandidates(rawText: string, evidenceId: string, 
   const bounded = boundedConfidence(confidence)
   const candidates: AccountLinkOcrCandidate[] = []
   const regionFor = (field: AccountLinkOcrField) => options.regions?.find((region) => region.field === field)
-  const v2 = mappingVersion === 'account-linking-kingshot-profile-v2'
+  const v2 = mappingVersion === 'account-linking-kingshot-profile-v2' || mappingVersion === 'account-linking-kingshot-profile-v3'
 
   const idRegion = regionFor('playerId')
   const idText = idRegion?.rawText && /\d/.test(idRegion.rawText) ? idRegion.rawText : rawText

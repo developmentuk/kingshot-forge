@@ -16,7 +16,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const service = createSupabaseVisionEvidenceStorageService()
     const { metadata, bytes } = await service.readEvidenceBytes(evidenceActor, evidenceId)
     const data = await extractAccountLinkCandidates({ evidenceId, bytes, sha256: metadata.sha256, mimeType: metadata.mimeType as 'image/png' | 'image/jpeg' | 'image/webp' | 'image/tiff', widthPx: metadata.widthPx, heightPx: metadata.heightPx })
-    const { rawText: _rawText, ...safeData } = data
+    const { rawText: _rawText, regionObservations: _regionObservations, ...safeData } = data
     response.status(200).json({ status: 'success', data: safeData })
   } catch (error) {
     if (error instanceof ForgeAuthenticationError) { response.status(error.statusCode).json({ status: 'error', message: error.message }); return }

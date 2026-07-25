@@ -4,9 +4,10 @@ import { createWorker, PSM, type Worker } from 'tesseract.js'
 import type { VisionExtractionRequest } from '../../shared/platform/vision/contracts.js'
 import { VisionRuntimeError } from '../vision/runtime/errors.js'
 import type { AccountLinkOcrAdapter } from './accountLinkingOcrService.js'
-import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
-import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
+import { KINGSHOT_PROFILE_V1_MAPPING_VERSION, KINGSHOT_PROFILE_V2_MAPPING_VERSION, KINGSHOT_PROFILE_V3_MAPPING_VERSION, prepareProfileRegion, type KingshotProfileRegion } from './kingshotProfileOcr.js'
+import { KINGSHOT_PROFILE_V1_REGIONS, KINGSHOT_PROFILE_V2_REGIONS, KINGSHOT_PROFILE_V3_REGIONS, type KingshotProfileField } from '../../shared/domains/player-identity/kingshotProfileMapping.js'
 import type { AccountLinkOcrDisposition, AccountLinkOcrMappingVersion, AccountLinkOcrRegionObservation } from '../../shared/domains/player-identity/accountLinkingOcr.js'
+import { consensusPlayerId, type PlayerIdObservation } from '../../shared/domains/player-identity/kingshotProfileConsensus.js'
 
 const require = createRequire(import.meta.url)
 const RUNTIME_TIMEOUT_MS = 45_000
@@ -44,6 +45,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     try {
       const paths = bundledPaths()
       worker = await this.#workerFactory.create({ workerPath: paths.workerPath, langPath: paths.langPath, cacheMethod: 'none', gzip: true, workerBlobURL: false, logger: () => {} })
+      if (request.mappingVersionId === KINGSHOT_PROFILE_V3_MAPPING_VERSION) return await this.#extractV3(worker, request)
       if (request.mappingVersionId === KINGSHOT_PROFILE_V2_MAPPING_VERSION) return await this.#extractV2(worker, request)
       return await this.#extractV1(worker, request)
     } catch (error) {
@@ -75,7 +77,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     const observations: AccountLinkOcrRegionObservation[] = []
     const diagnostics: DiagnosticRegion[] = []
     const fields: FieldDiagnostic[] = []
-    for (const region of KINGSHOT_PROFILE_V2_REGIONS.filter((item) => item.field)) {
+    for (const region of KINGSHOT_PROFILE_V2_REGIONS.filter((item) => item.field && item.observation !== 'numeric')) {
       const line = await this.#recognizePrepared(worker, request, region, 'greyscale', PSM.SINGLE_LINE, region.characterWhitelist)
       const numericRegion = region.field === 'playerId' ? { ...region, x: region.x + 0.06, width: 0.35 } : region.field === 'kingdom' ? { ...region, x: region.x + 0.18, width: 0.20 } : region
       // Keep this pass spatially numeric, but let Tesseract score the glyphs normally;
@@ -110,6 +112,44 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
     return this.#output(panelResult.text, panelResult.confidence, observations, diagnostics, fields, KINGSHOT_PROFILE_V2_MAPPING_VERSION)
   }
 
+  async #extractV3(worker: Worker, request: VisionExtractionRequest) {
+    const panel = KINGSHOT_PROFILE_V3_REGIONS.find((region) => region.observation === 'panel')!
+    const panelPrepared = await this.#recognizePrepared(worker, request, panel, 'greyscale', PSM.SPARSE_TEXT, null)
+    const lineRegion = KINGSHOT_PROFILE_V3_REGIONS.find((region) => region.key === 'playerId')!
+    const numericRegion = KINGSHOT_PROFILE_V3_REGIONS.find((region) => region.key === 'playerIdNumeric')!
+    const idPasses: PlayerIdObservation[] = []
+    const passes: Array<{ field: KingshotProfileField; passType: 'labelled_line' | 'numeric_only' | 'panel'; variant: 'greyscale' | 'threshold'; attempted: boolean; confidence: number; labelContext: boolean; warnings: string[] }> = []
+    const readId = async (region: KingshotProfileRegion, passType: 'labelled_line' | 'numeric_only', variant: 'greyscale' | 'threshold', psm: string, whitelist: string | null) => {
+      const result = await this.#recognizePrepared(worker, request, region, variant, psm, whitelist)
+      const text = cleanRawText(result.text)
+      const labelContext = passType === 'labelled_line' && /(?:player\s*[i1]d|[i1]d)/i.test(text)
+      const digits = passType === 'labelled_line' ? extractNumber(text, 'playerId') : extractDigits(text, 20)
+      idPasses.push({ passType, variant, digits, confidence: result.confidence, labelContext })
+      passes.push({ field: 'playerId', passType, variant, attempted: true, confidence: result.confidence, labelContext, warnings: result.confidence === 0 ? ['zero_confidence_numeric'] : [] })
+      return { text, confidence: result.confidence, digits }
+    }
+    await readId(lineRegion, 'labelled_line', 'greyscale', PSM.SINGLE_LINE, lineRegion.characterWhitelist)
+    await readId(lineRegion, 'labelled_line', 'threshold', PSM.SINGLE_LINE, lineRegion.characterWhitelist)
+    await readId(numericRegion, 'numeric_only', 'greyscale', PSM.SINGLE_LINE, numericRegion.characterWhitelist)
+    await readId(numericRegion, 'numeric_only', 'threshold', PSM.SINGLE_LINE, numericRegion.characterWhitelist)
+    const consensus = consensusPlayerId(idPasses)
+    const observations: AccountLinkOcrRegionObservation[] = [{ field: 'playerId', rawText: '', confidence: consensus.confidence, warnings: consensus.warnings, acceptedValue: consensus.value, disposition: consensus.disposition, agreement: consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement, passType: 'labelled_line', variant: 'greyscale', labelContext: idPasses.some((pass) => pass.labelContext) }]
+    const diagnostics: DiagnosticRegion[] = [{ field: 'playerId', attempted: true, recognized: idPasses.some((pass) => Boolean(pass.digits)), confidence: consensus.confidence, warnings: consensus.warnings }]
+    const fields: FieldDiagnostic[] = [{ field: 'playerId', disposition: consensus.disposition, confidence: consensus.confidence, agreement: consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement, warnings: consensus.warnings }]
+    for (const region of KINGSHOT_PROFILE_V3_REGIONS.filter((item) => item.field && item.field !== 'playerId')) {
+      const line = await this.#recognizePrepared(worker, request, region, 'greyscale', PSM.SINGLE_LINE, region.characterWhitelist)
+      const threshold = await this.#recognizePrepared(worker, request, region, 'threshold', PSM.SINGLE_LINE, region.characterWhitelist)
+      const lineText = cleanRawText(line.text); const thresholdText = cleanRawText(threshold.text)
+      const field = region.field!
+      const selected = field === 'kingdom' ? chooseKingdom(lineText, thresholdText, line.confidence, threshold.confidence, cleanRawText(panelPrepared.text)) : chooseName(lineText, thresholdText, line.confidence, threshold.confidence)
+      observations.push({ field, rawText: '', confidence: selected.confidence, warnings: selected.warnings, acceptedValue: selected.value, disposition: selected.disposition, agreement: selected.agreement === 'insufficient' ? 'not_applicable' : selected.agreement, passType: 'labelled_line', variant: selected.variant, labelContext: selected.labelContext })
+      diagnostics.push({ field, attempted: true, recognized: Boolean(selected.value), confidence: selected.confidence, warnings: selected.warnings })
+      fields.push({ field, disposition: selected.disposition, confidence: selected.confidence, agreement: selected.agreement === 'insufficient' ? 'not_applicable' : selected.agreement, warnings: selected.warnings })
+      passes.push({ field, passType: 'labelled_line', variant: 'greyscale', attempted: true, confidence: line.confidence, labelContext: selected.labelContext, warnings: [] }, { field, passType: 'labelled_line', variant: 'threshold', attempted: true, confidence: threshold.confidence, labelContext: selected.labelContext, warnings: [] })
+    }
+    return { ...this.#output('', consensus.confidence, observations, diagnostics, fields, KINGSHOT_PROFILE_V3_MAPPING_VERSION), diagnostics: { mappingVersion: KINGSHOT_PROFILE_V3_MAPPING_VERSION, regions: diagnostics, fields, passes } }
+  }
+
   async #recognizePrepared(worker: Worker, request: VisionExtractionRequest, region: KingshotProfileRegion, variant: 'greyscale' | 'threshold', psm: string, whitelist: string | null) {
     const prepared = await prepareProfileRegion({ bytes: request.image.bytes, mimeType: request.image.mimeType, widthPx: request.image.widthPx, heightPx: request.image.heightPx, region, variant })
     const result = await this.#recognize(worker, Buffer.from(prepared.bytes), { left: 0, top: 0, width: prepared.widthPx, height: prepared.heightPx }, psm, whitelist, prepared.scale)
@@ -129,9 +169,25 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
 
 function cleanRawText(value: unknown): string { return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, MAX_RAW_TEXT) : '' }
 function confidenceValue(value: unknown): number { return typeof value === 'number' ? Math.max(0, Math.min(1, value / 100)) : 0 }
-function normalizeName(value: string): string { return value.replace(/^(?:name\s*[:#-]?\s*)/i, '').replace(/[|:;\s]+$/g, '').trim() }
+function normalizeName(value: string): string { return value.replace(/^[|¦Ⅰl]+\s*/u, '').replace(/^(?:name\s*[:#-]?\s*)/i, '').replace(/[|:;\s]+$/g, '').trim() }
 function extractNumber(text: string, field: KingshotProfileField): string | undefined { const pattern = field === 'playerId' ? /(?:player\s*[i1]d|[i1]d)\s*[:#-]?\s*((?:\d\s*){1,20})/i : /kingdom\s*(?:[#:]|no\.?\s*)?\s*((?:\d\s*){1,4})/i; return text.match(pattern)?.[1]?.replace(/\s+/g, '') }
 function extractBareNumber(text: string, field: KingshotProfileField): string | undefined { const max = field === 'playerId' ? 20 : 4; const value = text.match(new RegExp(`((?:\\d\\s*){1,${max}})`))?.[1]?.replace(/\s+/g, ''); return value }
+function extractDigits(text: string, max: number): string | undefined { const value = text.match(new RegExp(`((?:\\d\\s*){1,${max}})`))?.[1]?.replace(/\s+/g, ''); return value && /^\d{1,20}$/u.test(value) ? value : undefined }
+function chooseName(greyscale: string, threshold: string, grayConfidence: number, thresholdConfidence: number) {
+  const candidates = [{ value: normalizeName(greyscale), confidence: grayConfidence, variant: 'greyscale' as const }, { value: normalizeName(threshold), confidence: thresholdConfidence, variant: 'threshold' as const }].filter((item) => item.value)
+  const selected = candidates.sort((a, b) => b.confidence - a.confidence)[0]
+  if (!selected) return { value: undefined, confidence: 0, disposition: 'could_not_read' as const, agreement: 'not_applicable' as const, warnings: ['name_not_read'], variant: 'greyscale' as const, labelContext: false }
+  const review = selected.confidence < 0.65 || selected.value.length < 4 || !/\s/u.test(selected.value)
+  return { value: selected.value, confidence: selected.confidence, disposition: review ? 'review_required' as const : 'recognised' as const, agreement: 'not_applicable' as const, warnings: review ? ['partial_or_normalised_name'] : [], variant: selected.variant, labelContext: false }
+}
+function chooseKingdom(greyscale: string, threshold: string, grayConfidence: number, thresholdConfidence: number, panelText: string) {
+  const values = [{ text: greyscale, confidence: grayConfidence, variant: 'greyscale' as const }, { text: threshold, confidence: thresholdConfidence, variant: 'threshold' as const }].map((item) => ({ ...item, value: extractNumber(item.text, 'kingdom') })).filter((item) => item.value && item.confidence > 0 && Number(item.value) >= 1 && Number(item.value) <= 9999)
+  const panelHasKingdom = /kingdom/i.test(panelText)
+  const selected = values.sort((a, b) => b.confidence - a.confidence)[0]
+  if (!selected || !panelHasKingdom) return { value: undefined, confidence: selected?.confidence ?? 0, disposition: 'could_not_read' as const, agreement: 'insufficient' as const, warnings: ['kingdom_label_context_required'], variant: selected?.variant ?? 'greyscale' as const, labelContext: panelHasKingdom }
+  const agreement = values.length > 1 && new Set(values.map((item) => item.value)).size > 1 ? 'disagree' as const : 'agree' as const
+  return { value: agreement === 'disagree' ? undefined : selected.value, confidence: selected.confidence, disposition: agreement === 'disagree' ? 'conflicting_reads' as const : 'recognised' as const, agreement, warnings: agreement === 'disagree' ? ['conflicting_digit_strings'] : [], variant: selected.variant, labelContext: true }
+}
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined

@@ -1,0 +1,17 @@
+{
+  "fixture": "synthetic-only-kingshot-profile-v3-adversarial-cases",
+  "mappingVersion": "account-linking-kingshot-profile-v3",
+  "cases": [
+    "long-valid-player-id",
+    "repeated-digits",
+    "blurred-digits",
+    "threshold-friendly-digits",
+    "threshold-damaged-digits",
+    "one-observation-disagrees",
+    "one-numeric-pass-fails",
+    "numeric-agreement-without-label-context",
+    "town-center-badge-before-kingdom-row",
+    "bracketed-name-with-leading-vertical-artefact"
+  ],
+  "realAccountData": false
+}

@@ -199,9 +199,12 @@
 .vision-acceptance__preview-wrap { position: relative; width: fit-content; max-width: 100%; margin-top: 1rem; overflow: hidden; border-radius: .75rem; background: white; }
 .vision-acceptance__preview-wrap .vision-acceptance__preview { margin-top: 0; }
 .vision-acceptance__overlay { position: absolute; inset: 0; pointer-events: none; }
-.vision-acceptance__overlay-region { position: absolute; box-sizing: border-box; border: 2px solid #38bdf8; background: rgba(14, 165, 233, .08); color: #082f49; font-size: clamp(.55rem, 1.4vw, .8rem); font-weight: 700; text-shadow: 0 1px 0 #fff; }
-.vision-acceptance__overlay-region span { display: inline-block; padding: .15rem .3rem; background: rgba(255, 255, 255, .9); }
-.vision-acceptance__overlay-region--profilePanel { border-color: rgba(168, 85, 247, .8); }
+.vision-acceptance__overlay-region { position: absolute; box-sizing: border-box; border: 2px solid #38bdf8; background: rgba(14, 165, 233, .025); color: #082f49; font-size: clamp(.55rem, 1.4vw, .8rem); font-weight: 700; text-shadow: 0 1px 0 #fff; }
+.vision-acceptance__overlay-region span { position: absolute; left: 0; bottom: calc(100% + .15rem); display: inline-block; width: max-content; max-width: 20ch; padding: .12rem .28rem; background: rgba(255, 255, 255, .82); }
+.vision-acceptance__overlay-region--profilePanel { border: 1px dashed rgba(168, 85, 247, .65); background: transparent; }
+.vision-acceptance__overlay-region--profilePanel span { left: .2rem; }
+.vision-acceptance__overlay-region--playerIdNumeric { border-color: #fb923c; background: rgba(251, 146, 60, .025); }
+.vision-acceptance__toggle { margin-top: 1rem; }
 .vision-acceptance__overlay-region--displayName { border-color: #22c55e; }
 .vision-acceptance__overlay-region--playerId { border-color: #f59e0b; }
 .vision-acceptance__overlay-region--kingdom { border-color: #ef4444; }
