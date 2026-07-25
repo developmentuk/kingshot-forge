@@ -8,6 +8,7 @@ import { inspectTextProvenance } from '../shared/domains/art-studio/textProvenan
 const CATEGORIES = new Set(['Cats', 'Animals', 'Characters', 'Announcements', 'Battle', 'KvK', 'Alliance', 'Flags', 'Pixel Art', 'Nature', 'Funny', 'Gaming', 'Seasonal', 'Other'])
 const COMPATIBILITY = new Set(['untested', 'needs_testing', 'verified', 'known_issues'])
 const REACTION_TYPES = new Set(['like', 'heart', 'smile', 'wow'])
+const SOURCE_CONTEXTS = new Set(['authored', 'kingshot-clipboard'])
 
 function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
 function body(request: VercelRequest): Record<string, unknown> { return (request.body && typeof request.body === 'object' ? request.body : {}) as Record<string, unknown> }
@@ -28,7 +29,8 @@ async function reactionCounts(artworkIds: string[]) {
 function record(row: Record<string, unknown>, counts = emptyReactionCounts(), myReaction: string | null = null, includeRaw = false): Record<string, unknown> {
   const lines = Number(row.line_count ?? 0)
   const approvedPayload = typeof row.approved_copy_payload === 'string' ? row.approved_copy_payload : null
-  return { id: row.id, title: row.title, description: row.description, category: row.category, tags: row.tags ?? [], artworkText: row.artwork_text, ...(includeRaw ? { rawSourceText: row.raw_source_text ?? row.artwork_text, rawSourceSha256: row.raw_source_sha256 ?? row.source_hash ?? null, rawSourceByteLength: row.raw_source_byte_length ?? null } : {}), normalisedText: row.normalised_text ?? row.artwork_text, approvedCopyPayload: approvedPayload, renderedPreviewPayload: row.rendered_preview_payload ?? row.normalised_text ?? row.artwork_text, compatibilityProfile: row.compatibility_profile ?? 'kingshot-chat-bubble', repairOperations: row.repair_operations ?? [], sourceHash: row.source_hash ?? null, approvedPayloadHash: row.approved_payload_hash ?? (approvedPayload ? hashText(approvedPayload) : null), attribution: row.attribution_name ?? null, status: row.status, compatibilityStatus: row.compatibility_status ?? 'untested', characterCount: row.character_count, lineCount: lines, sizeClass: sizeClass(lines), createdAt: row.created_at, moderatedAt: row.moderated_at ?? null, publishedAt: row.published_at ?? null, submitterFeedback: row.submitter_feedback ?? null, reactionCounts: counts, myReaction }
+  const compatibilityProfile = row.compatibility_profile ?? 'kingshot-chat-bubble'
+  return { id: row.id, title: row.title, description: row.description, category: row.category, tags: row.tags ?? [], artworkText: row.artwork_text, ...(includeRaw ? { rawSourceText: row.raw_source_text ?? row.artwork_text, rawSourceSha256: row.raw_source_sha256 ?? row.source_hash ?? null, rawSourceByteLength: row.raw_source_byte_length ?? null } : {}), normalisedText: row.normalised_text ?? row.artwork_text, approvedCopyPayload: approvedPayload, renderedPreviewPayload: row.rendered_preview_payload ?? row.normalised_text ?? row.artwork_text, compatibilityProfile, sourceContext: compatibilityProfile === 'kingshot-clipboard' ? 'kingshot-clipboard' : 'authored', repairOperations: row.repair_operations ?? [], sourceHash: row.source_hash ?? null, approvedPayloadHash: row.approved_payload_hash ?? (approvedPayload ? hashText(approvedPayload) : null), attribution: row.attribution_name ?? null, status: row.status, compatibilityStatus: row.compatibility_status ?? 'untested', characterCount: row.character_count, lineCount: lines, sizeClass: sizeClass(lines), createdAt: row.created_at, moderatedAt: row.moderated_at ?? null, publishedAt: row.published_at ?? null, submitterFeedback: row.submitter_feedback ?? null, reactionCounts: counts, myReaction }
 }
 function moderatorRecord(row: Record<string, unknown>): Record<string, unknown> {
   return { ...record(row, emptyReactionCounts(), null, true), submitterContext: { userId: row.user_id, attributionType: row.attribution_type, attributionName: row.attribution_name ?? null } }
@@ -36,7 +38,8 @@ function moderatorRecord(row: Record<string, unknown>): Record<string, unknown> 
 function publicRecord(row: Record<string, unknown>, counts = emptyReactionCounts(), myReaction: string | null = null): Record<string, unknown> {
   const payload = typeof row.approved_copy_payload === 'string' ? row.approved_copy_payload : null
   const lines = Number(row.line_count ?? 0)
-  return { id: row.id, title: row.title, description: row.description, category: row.category, tags: row.tags ?? [], artworkText: payload, approvedCopyPayload: payload, renderedPreviewPayload: payload, compatibilityProfile: row.compatibility_profile ?? 'kingshot-chat-bubble', approvedPayloadHash: row.approved_payload_hash ?? null, attribution: row.attribution_name ?? null, status: 'published', compatibilityStatus: row.compatibility_status ?? 'untested', characterCount: payload?.length ?? 0, lineCount: lines, sizeClass: sizeClass(lines), publishedAt: row.published_at ?? null, reactionCounts: counts, myReaction }
+  const compatibilityProfile = row.compatibility_profile ?? 'kingshot-chat-bubble'
+  return { id: row.id, title: row.title, description: row.description, category: row.category, tags: row.tags ?? [], artworkText: payload, approvedCopyPayload: payload, renderedPreviewPayload: payload, compatibilityProfile, sourceContext: compatibilityProfile === 'kingshot-clipboard' ? 'kingshot-clipboard' : 'authored', approvedPayloadHash: row.approved_payload_hash ?? null, attribution: row.attribution_name ?? null, status: 'published', compatibilityStatus: row.compatibility_status ?? 'untested', characterCount: payload?.length ?? 0, lineCount: lines, sizeClass: sizeClass(lines), publishedAt: row.published_at ?? null, reactionCounts: counts, myReaction }
 }
 async function actor(request: VercelRequest): Promise<ForgeActor> { return requireForgeActor(request) }
 async function moderator(request: VercelRequest) {
@@ -104,6 +107,7 @@ async function submit(request: VercelRequest, response: VercelResponse) {
   const title = typeof input.title === 'string' ? input.title : ''
   const description = typeof input.description === 'string' ? input.description : ''
   const artworkText = typeof input.artworkText === 'string' ? input.artworkText : ''
+  const sourceContext = typeof input.sourceContext === 'string' && SOURCE_CONTEXTS.has(input.sourceContext) ? input.sourceContext : 'authored'
   const category = typeof input.category === 'string' ? input.category : ''
   const tags = Array.isArray(input.tags) ? input.tags.filter((tag): tag is string => typeof tag === 'string') : []
   const attributionType = typeof input.attributionType === 'string' ? input.attributionType : ''
@@ -112,7 +116,7 @@ async function submit(request: VercelRequest, response: VercelResponse) {
   if (!CATEGORIES.has(category)) issues.push({ field: 'artwork', message: 'Choose a registered Art Studio category.' })
   if (!input.ownershipConfirmed || !input.guidelinesConfirmed) issues.push({ field: 'artwork', message: 'Confirm ownership and the community guidelines before submitting.' })
   if (issues.length) { fail(response, 400, issues[0].message); return }
-  const profile = RENDER_PROFILES['kingshot-chat-bubble']
+  const profile = RENDER_PROFILES[sourceContext === 'kingshot-clipboard' ? 'kingshot-clipboard' : 'kingshot-chat-bubble']
   const repaired = repairText(artworkText, profile)
   const diagnostics = analyseText(artworkText, profile)
   const sourceSha256 = await sha256Text(artworkText)

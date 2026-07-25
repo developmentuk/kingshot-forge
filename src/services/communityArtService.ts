@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 export type CommunityArtCategory = 'Cats' | 'Animals' | 'Characters' | 'Announcements' | 'Battle' | 'KvK' | 'Alliance' | 'Flags' | 'Pixel Art' | 'Nature' | 'Funny' | 'Gaming' | 'Seasonal' | 'Other'
 export type CommunityArtAttribution = 'profile' | 'custom' | 'anonymous'
 export type CommunityArtCompatibility = 'untested' | 'needs_testing' | 'verified' | 'known_issues'
+export type CommunityArtSourceContext = 'authored' | 'kingshot-clipboard'
 export type CommunityArtReactionType = 'like' | 'heart' | 'smile' | 'wow'
 export type CommunityArtReactionCounts = Record<CommunityArtReactionType, number>
 export type CommunityArtRecord = {
@@ -17,6 +18,7 @@ export type CommunityArtRecord = {
   approvedCopyPayload: string | null
   renderedPreviewPayload: string
   compatibilityProfile: string
+  sourceContext: CommunityArtSourceContext
   repairOperations: Array<Record<string, unknown>>
   sourceHash: string | null
   approvedPayloadHash: string | null
@@ -73,6 +75,7 @@ export function submitCommunityArt(input: {
   category: CommunityArtCategory
   tags: string[]
   artworkText: string
+  sourceContext: CommunityArtSourceContext
   attributionType: CommunityArtAttribution
   attributionName: string | null
   ownershipConfirmed: boolean

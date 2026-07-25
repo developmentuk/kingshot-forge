@@ -14,6 +14,12 @@
   gap: 0;
 }
 
+.forge-render-engine--fit {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .forge-render-engine__device-controls {
   display: flex;
   flex-wrap: wrap;
@@ -86,6 +92,38 @@
   min-width: 100%;
   justify-content: flex-start;
   color: #4f4942;
+}
+
+.forge-render-engine__fit {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.forge-render-engine__fit-stage {
+  position: relative;
+  margin-inline: auto;
+  max-width: 100%;
+}
+
+.forge-render-engine__fit-content {
+  position: absolute;
+  inset: 0 auto auto 0;
+  transform-origin: top left;
+  will-change: transform;
+}
+
+.forge-render-engine__viewport--fit {
+  width: max-content;
+  max-width: none;
+  overflow: visible;
+}
+
+.forge-render-engine__viewport--fit .forge-render-engine__bubble {
+  width: max-content;
+  max-width: none;
+  overflow: visible;
 }
 
 .forge-render-engine--compact .forge-render-engine__viewport {

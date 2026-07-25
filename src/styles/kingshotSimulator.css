@@ -56,7 +56,10 @@
   font-family: var(--forge-glyph-family, inherit) !important;
   font-weight: var(--forge-glyph-weight, 600);
   line-height: var(--kingshot-grid-line-height);
-  transform: translateY(var(--forge-baseline-offset, 0px)) scale(
+  transform: translate(
+    calc(var(--kingshot-cell-width) * var(--forge-glyph-translate-x-cells, 0)),
+    var(--forge-baseline-offset, 0px)
+  ) scale(
     calc(var(--forge-glyph-scale, 1) * var(--forge-glyph-scale-x, 1)),
     calc(var(--forge-glyph-scale, 1) * var(--forge-glyph-scale-y, 1))
   );
@@ -77,7 +80,10 @@
 .kingshot-cell-grid__cell--pixel-circles .kingshot-cell-grid__glyph,
 .kingshot-cell-grid__cell--hearts .kingshot-cell-grid__glyph {
   font-family: var(--forge-glyph-family, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif) !important;
-  transform: translateY(var(--forge-baseline-offset, 0px)) scale(
+  transform: translate(
+    calc(var(--kingshot-cell-width) * var(--forge-glyph-translate-x-cells, 0)),
+    var(--forge-baseline-offset, 0px)
+  ) scale(
     calc(var(--forge-glyph-scale, 1) * var(--forge-glyph-scale-x, 1) * var(--kingshot-emoji-scale)),
     calc(var(--forge-glyph-scale, 1) * var(--forge-glyph-scale-y, 1) * var(--kingshot-emoji-scale))
   );
