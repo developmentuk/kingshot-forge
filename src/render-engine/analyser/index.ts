@@ -14,6 +14,19 @@ const STRUCTURAL_ASCII = /^[\\/|()[\]{}<>^]$/u
 export const PROSE_SPACE_ADVANCE = .72
 export const ARTWORK_SPACE_ADVANCE = .55
 export const ARTWORK_LEADING_SPACE_ADVANCE = .20
+export type ArtworkSourceContext = 'authored' | 'kingshot-clipboard'
+export type ArtworkSpacingProfile = { prose: number; artwork: number; leading: number }
+export const ARTWORK_SPACING_PROFILES: Record<ArtworkSourceContext, ArtworkSpacingProfile> = {
+  authored: { prose: PROSE_SPACE_ADVANCE, artwork: ARTWORK_SPACE_ADVANCE, leading: ARTWORK_LEADING_SPACE_ADVANCE },
+  'kingshot-clipboard': { prose: PROSE_SPACE_ADVANCE, artwork: .34, leading: ARTWORK_LEADING_SPACE_ADVANCE },
+}
+
+export function suggestKingshotClipboardMode(artwork: string): boolean {
+  const lines = normaliseArtwork(artwork).split('\n')
+  const artworkLines = lines.filter((line) => isArtworkLine(segmentGraphemes(line)))
+  const expandedRuns = artworkLines.filter((line) => (line.match(/ {3,}/g) ?? []).length > 0).length
+  return artworkLines.length >= 3 && expandedRuns >= 2 && (artwork.match(/ /g) ?? []).length >= 12
+}
 
 export function isArtworkLine(glyphs: string[]): boolean {
   const structural = glyphs.filter((glyph) => {
@@ -24,13 +37,14 @@ export function isArtworkLine(glyphs: string[]): boolean {
   return structural >= 2 && structural >= letters
 }
 
-export function resolveGlyphAdvance(glyph: string, glyphs: string[], index: number, calibration: CalibrationConfiguration): number {
+export function resolveGlyphAdvance(glyph: string, glyphs: string[], index: number, calibration: CalibrationConfiguration, sourceContext: ArtworkSourceContext = 'authored'): number {
   const family = classifyGlyph(glyph)
   if (family === 'line-art') return glyph === '＿' ? 2 : 1
   if (family !== 'space') return calibration[family].advanceCells
-  if (!isArtworkLine(glyphs)) return PROSE_SPACE_ADVANCE
+  const spacing = ARTWORK_SPACING_PROFILES[sourceContext]
+  if (!isArtworkLine(glyphs)) return spacing.prose
   const firstContent = glyphs.findIndex((item) => !/^\s$/u.test(item) && item !== '\u3000')
-  return index < firstContent ? ARTWORK_LEADING_SPACE_ADVANCE : ARTWORK_SPACE_ADVANCE
+  return index < firstContent ? spacing.leading : spacing.artwork
 }
 
 export function classifyGlyph(glyph: string): GlyphFamily {
@@ -79,7 +93,7 @@ export function countGlyphFamilies(glyphs: string[]): Record<GlyphFamily, number
   return counts
 }
 
-export function analyseArtworkDetailed(artwork: string, calibration: CalibrationConfiguration = DEFAULT_CALIBRATION): ArtworkAnalysis {
+export function analyseArtworkDetailed(artwork: string, calibration: CalibrationConfiguration = DEFAULT_CALIBRATION, sourceContext: ArtworkSourceContext = 'authored'): ArtworkAnalysis {
   const normalized = normaliseArtwork(artwork)
   const lines = normalized.split('\n')
   const glyphs = segmentGraphemes(normalized)
@@ -87,7 +101,7 @@ export function analyseArtworkDetailed(artwork: string, calibration: Calibration
   const artworkClass = classifyArtwork(artwork)
   const widestLine = Math.max(...lines.map((line) => {
     const lineGlyphs = segmentGraphemes(line)
-    return lineGlyphs.reduce((width, glyph, index) => width + resolveGlyphAdvance(glyph, lineGlyphs, index, calibration), 0)
+    return lineGlyphs.reduce((width, glyph, index) => width + resolveGlyphAdvance(glyph, lineGlyphs, index, calibration, sourceContext), 0)
   }), 0)
   const warnings: string[] = []
   if (widestLine > 50) warnings.push('Wide lines may scroll on smaller phones.')
