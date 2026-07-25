@@ -15,7 +15,8 @@ const reports = []
 for (const folder of entries) {
   const directory = join(root, folder)
   const metadata = JSON.parse(await readFile(join(directory, 'metadata.json'), 'utf8'))
-  const source = await readFile(join(directory, metadata.text.filename), 'utf8')
+  const sourceFile = await readFile(join(directory, metadata.text.filename), metadata.text.encoding === 'base64' ? 'utf8' : 'utf8')
+  const source = metadata.text.encoding === 'base64' ? Buffer.from(sourceFile.replace(/\s+/g, ''), 'base64').toString('utf8') : sourceFile
   const profile = RENDER_PROFILES[metadata.render_profile] ?? RENDER_PROFILES['kingshot-chat']
   const diagnostics = analyseText(source, profile)
   const sourceHash = sha256(Buffer.from(source, 'utf8'))

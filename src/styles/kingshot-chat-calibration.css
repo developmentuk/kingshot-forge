@@ -88,6 +88,29 @@
   color: #4f4942;
 }
 
+.forge-render-engine__fit {
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.forge-render-engine__fit-content {
+  transform-origin: top center;
+  will-change: transform;
+}
+
+.forge-render-engine__viewport--fit {
+  width: max-content;
+  max-width: none;
+  overflow: visible;
+}
+
+.forge-render-engine__viewport--fit .forge-render-engine__bubble {
+  width: max-content;
+  max-width: none;
+  overflow: visible;
+}
+
 .forge-render-engine--compact .forge-render-engine__viewport {
   width: 100%;
   min-height: 0;

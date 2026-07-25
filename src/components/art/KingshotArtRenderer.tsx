@@ -1,15 +1,46 @@
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { analyseArtworkDetailed, buildFixedCellGrid, DEFAULT_CALIBRATION, DEVICE_PROFILES, deviceProfileStyle, parseArtwork } from '../../render-engine'
 import type { ArtworkClass, ArtworkSourceContext, CalibrationConfiguration, DeviceProfile, DeviceProfileId, GlyphFamily } from '../../render-engine'
+import { calculateResponsiveScale } from './fitToContainer'
 
 export type ArtworkRenderMode = 'kingshot' | 'studio'
 export type ArtworkRenderProfile = ArtworkClass
 export type ArtworkDevicePreset = 'phone' | 'tablet' | 'desktop'
 export type ArtworkAnalysis = ReturnType<typeof analyseArtworkDetailed>
-export type KingshotArtRendererProps = { artwork: string; mode?: ArtworkRenderMode; compact?: boolean; className?: string; maxLines?: number; labelledBy?: string; profile?: ArtworkRenderProfile | 'auto'; deviceProfile?: DeviceProfileId; deviceProfileConfig?: DeviceProfile; calibration?: CalibrationConfiguration; showSimulation?: boolean; sourceContext?: ArtworkSourceContext }
+export type KingshotArtRendererProps = { artwork: string; mode?: ArtworkRenderMode; compact?: boolean; className?: string; maxLines?: number; labelledBy?: string; profile?: ArtworkRenderProfile | 'auto'; deviceProfile?: DeviceProfileId; deviceProfileConfig?: DeviceProfile; calibration?: CalibrationConfiguration; showSimulation?: boolean; sourceContext?: ArtworkSourceContext; fitToContainer?: boolean }
 
 const DEVICE_ALIAS: Record<ArtworkDevicePreset, DeviceProfileId> = { phone: 'android-default', tablet: 'tablet', desktop: 'desktop-preview' }
 const COMPACT_SCALE = .56
+
+function ResponsiveFit({ children, enabled }: { children: ReactNode; enabled: boolean }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [fit, setFit] = useState({ scale: 1, width: 0, height: 0 })
+
+  useLayoutEffect(() => {
+    if (!enabled) return
+    const measure = () => {
+      const container = containerRef.current
+      const content = contentRef.current
+      if (!container || !content) return
+      const width = Math.max(content.scrollWidth, content.offsetWidth)
+      const height = Math.max(content.scrollHeight, content.offsetHeight)
+      const availableWidth = container.clientWidth
+      const scale = calculateResponsiveScale(availableWidth, width)
+      setFit((current) => current.scale === scale && current.width === width && current.height === height ? current : { scale, width, height })
+    }
+    measure()
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : null
+    if (observer && containerRef.current) observer.observe(containerRef.current)
+    if (observer && contentRef.current) observer.observe(contentRef.current)
+    window.addEventListener('resize', measure)
+    return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
+  }, [enabled])
+
+  if (!enabled) return <>{children}</>
+  const scaledHeight = fit.height > 0 ? fit.height * fit.scale : undefined
+  return <div ref={containerRef} className="forge-render-engine__fit" style={{ height: scaledHeight }} data-fit-scale={fit.scale}><div ref={contentRef} className="forge-render-engine__fit-content" style={{ width: fit.width || 'max-content', height: fit.height || undefined, transform: `scale(${fit.scale})` }}>{children}</div></div>
+}
 
 function KingshotGrid({ artwork, lines, classes, labelledBy, calibration, style, sourceContext }: { artwork: string; lines: string[]; classes: string; labelledBy?: string; calibration: CalibrationConfiguration; style: CSSProperties; sourceContext: ArtworkSourceContext }) {
   const grid = useMemo(() => buildFixedCellGrid(lines, calibration, sourceContext), [lines, calibration, sourceContext])
@@ -24,7 +55,7 @@ function KingshotGrid({ artwork, lines, classes, labelledBy, calibration, style,
   </div>
 }
 
-export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = false, className = '', maxLines, labelledBy, profile = 'auto', deviceProfile, deviceProfileConfig, calibration = DEFAULT_CALIBRATION, showSimulation, sourceContext = 'authored' }: KingshotArtRendererProps) {
+export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = false, className = '', maxLines, labelledBy, profile = 'auto', deviceProfile, deviceProfileConfig, calibration = DEFAULT_CALIBRATION, showSimulation, sourceContext = 'authored', fitToContainer = false }: KingshotArtRendererProps) {
   const [device, setDevice] = useState<ArtworkDevicePreset>('phone')
   const lines = useMemo(() => parseArtwork(artwork, maxLines), [artwork, maxLines])
   const analysis = useMemo(() => analyseArtworkDetailed(artwork, calibration, sourceContext), [artwork, calibration, sourceContext])
@@ -41,14 +72,14 @@ export function KingshotArtRenderer({ artwork, mode = 'kingshot', compact = fals
 
   if (showSimulation === false) return artworkNode
 
-  const frame = <div className="forge-render-engine__viewport" style={profileStyle} data-device-profile={activeDevice}><div className="forge-render-engine__bubble"><div className="forge-render-engine__art">{artworkNode}</div></div></div>
+  const frame = <div className={`forge-render-engine__viewport${fitToContainer ? ' forge-render-engine__viewport--fit' : ''}`} style={profileStyle} data-device-profile={activeDevice}><div className="forge-render-engine__bubble"><div className="forge-render-engine__art">{artworkNode}</div></div></div>
   const presentationClass = deviceProfile ? activeDevice === 'tablet' ? 'tablet' : activeDevice === 'desktop-preview' ? 'desktop' : 'phone' : device
 
-  if (compact || !labelledBy) return <div className={`forge-render-engine forge-render-engine--${presentationClass} forge-render-engine--embedded${compact ? ' forge-render-engine--compact' : ''}`} aria-label={`${profileData.label} Kingshot preview`}>{frame}</div>
+  if (compact || !labelledBy) return <div className={`forge-render-engine forge-render-engine--${presentationClass} forge-render-engine--embedded${compact ? ' forge-render-engine--compact' : ''}${fitToContainer ? ' forge-render-engine--fit' : ''}`} aria-label={`${profileData.label} Kingshot preview`}><ResponsiveFit enabled={fitToContainer}>{frame}</ResponsiveFit></div>
 
   return <section className={`forge-render-engine forge-render-engine--${presentationClass}`} aria-label="Forge artwork analysis">
     {!deviceProfile && <div className="forge-render-engine__device-controls" role="group" aria-label="Preview device">{(['phone', 'tablet', 'desktop'] as ArtworkDevicePreset[]).map((preset) => <button key={preset} type="button" className={device === preset ? 'forge-render-engine__device forge-render-engine__device--active' : 'forge-render-engine__device'} aria-pressed={device === preset} onClick={() => setDevice(preset)}>{preset[0].toUpperCase() + preset.slice(1)}</button>)}</div>}
-    {frame}
+    <ResponsiveFit enabled={fitToContainer}>{frame}</ResponsiveFit>
     <div className="forge-render-engine__analysis"><div><span>Artwork type</span><strong>{analysis.artworkClass.toUpperCase()}</strong></div><div><span>Graphemes</span><strong>{analysis.graphemeCount}</strong></div><div><span>Renderer</span><strong>{analysis.rendererLabel}</strong></div><div><span>Device</span><strong>{profileData.label}</strong></div><div><span>Source</span><strong>{sourceContext === 'kingshot-clipboard' ? 'Kingshot clipboard' : 'Authored'}</strong></div><div><span>Dimensions</span><strong>{analysis.widestLine} × {analysis.lineCount}</strong></div></div>
     {(analysis.features.length > 0 || analysis.warnings.length > 0) && <div className="forge-render-engine__notes">{analysis.features.length > 0 && <p><strong>Detected:</strong> {analysis.features.join(', ')}.</p>}{analysis.warnings.map((warning) => <p className="forge-render-engine__warning" key={warning}>⚠ {warning}</p>)}</div>}
   </section>

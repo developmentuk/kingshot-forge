@@ -1,0 +1,28 @@
+{
+  "fixture_id": "community-art.kingshot-clipboard-expanded",
+  "title": "Kingshot clipboard expanded artwork",
+  "fixture_version": 1,
+  "render_profile": "kingshot-clipboard",
+  "expected_status": "calibrated",
+  "notes": "Deterministic regression fixture for the pending Kingshot clipboard submission and mobile containment.",
+  "text": {
+    "filename": "cat.txt.base64",
+    "encoding": "base64",
+    "sha256": "fe6bfe732d320f75e810be9071788a5b749424a7cff20e7e2407161964cf14d2",
+    "line_count": 10,
+    "code_point_count": 321,
+    "grapheme_count": 312,
+    "utf16_code_unit_count": 323,
+    "unicode_statistics": {
+      "ordinary_spaces": 158,
+      "non_breaking_spaces": 0,
+      "ideographic_spaces": 27,
+      "tabs": 0,
+      "emoji": 2,
+      "full_width_characters": 40,
+      "combining_marks": 0,
+      "invisible_characters": 0
+    }
+  },
+  "screenshots": []
+}
