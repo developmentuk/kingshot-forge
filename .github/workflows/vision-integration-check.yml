@@ -108,8 +108,30 @@ jobs:
         run: npm run test:ux003-contracts
       - name: Test RC4 security
         run: npm run test:rc4-security
-      - name: Test Forge Vision
-        run: npm run test:forge-vision
+
+      - name: Test Vision platform contracts
+        run: node --import tsx scripts/test-forge-vision-platform.mjs
+      - name: Test Vision worker
+        run: node --import tsx scripts/test-forge-vision-worker.mjs
+      - name: Test Vision authoring
+        run: node --import tsx scripts/test-forge-vision-authoring.mjs
+      - name: Test Vision authenticated acceptance contracts
+        run: node scripts/test-forge-vision-authenticated-acceptance.mjs
+      - name: Test Kingshot profile OCR
+        run: npm run test:forge-vision-kingshot-profile
+      - name: Test Vision account-linking page
+        run: npm run test:forge-vision-account-linking-page
+      - name: Test Vision evidence storage
+        run: npm run test:forge-vision-evidence-storage
+      - name: Test Vision permission transition
+        run: node --import tsx scripts/test-forge-vision-permission-transition.mjs
+      - name: Test Vision policy correction
+        run: node scripts/test-forge-vision-policy-correction.mjs
+      - name: Test Vision activation verifier
+        run: node --import tsx scripts/test-forge-vision-activation-verifier.mjs
+      - name: Test Vision activation preconditions
+        run: node --import tsx scripts/test-forge-vision-activation-preconditions.mjs
+
       - name: Lint candidate
         run: npm run lint
       - name: Build candidate
