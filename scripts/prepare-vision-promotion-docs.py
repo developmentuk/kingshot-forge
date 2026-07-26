@@ -60,7 +60,7 @@ notes.write_text(notes_text[:article_start] + entry + notes_text[article_start:]
 
 record = Path("docs/releases/VISION-REL-001-MERGE-READINESS.md")
 record_text = record.read_text()
-old_status = "Status: **Automated integration accepted — owner preview acceptance required**"
+old_status = "Status: **Automated and live-schema integration accepted — owner preview acceptance required**"
 if old_status not in record_text:
     raise SystemExit("Release record status not found")
 record_text = record_text.replace(
