@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - '.github/workflows/vision-integration-check.yml'
-      - '.github/workflows/vision-promotion-docs-once.yml'
       - 'api/**'
       - 'server/**'
       - 'shared/**'
@@ -20,66 +19,33 @@ on:
       - 'vercel.json'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: vision-integration-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  prepare-promotion-records:
-    name: Close accepted promotion records
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: integration/vision-release-readiness
-          fetch-depth: 0
-      - name: Capture promotion documentation output
-        run: |
-          set +e
-          python scripts/prepare-vision-promotion-docs.py > promotion-docs.log 2>&1
-          status=$?
-          cat promotion-docs.log
-          printf '%s\n' "$status" > promotion-docs.exit
-          exit 0
-      - name: Upload promotion diagnostic
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: vision-promotion-docs-diagnostic
-          path: |
-            promotion-docs.log
-            promotion-docs.exit
-          if-no-files-found: error
-      - name: Enforce promotion documentation result
-        run: test "$(cat promotion-docs.exit)" = "0"
-      - name: Commit promotion records and remove helpers
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm scripts/prepare-vision-promotion-docs.py
-          test ! -f .github/workflows/vision-promotion-docs-once.yml || git rm .github/workflows/vision-promotion-docs-once.yml
-          git add src/pages/RoadmapPage.tsx src/pages/ReleaseNotesPage.tsx docs/releases/VISION-REL-001-MERGE-READINESS.md
-          git commit -m "docs(vision): close promotion readiness gates"
-          git push origin HEAD:integration/vision-release-readiness
-
   validate:
     name: Full integration validation
     runs-on: ubuntu-latest
     timeout-minutes: 40
+
     steps:
       - name: Checkout candidate
         uses: actions/checkout@v4
         with:
           show-progress: false
+
       - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+
       - name: Install locked dependencies
         run: npm ci
+
       - name: Validate NodeNext imports
         run: npm run validate:nodenext
       - name: Validate PM2B
@@ -142,6 +108,7 @@ jobs:
         run: npm run test:ux003-contracts
       - name: Test RC4 security
         run: npm run test:rc4-security
+
       - name: Test Vision platform contracts
         run: node --import tsx scripts/test-forge-vision-platform.mjs
       - name: Test Vision worker
@@ -164,10 +131,12 @@ jobs:
         run: node --import tsx scripts/test-forge-vision-activation-verifier.mjs
       - name: Test Vision activation preconditions
         run: node --import tsx scripts/test-forge-vision-activation-preconditions.mjs
+
       - name: Lint candidate
         run: npm run lint
       - name: Build candidate
         run: npm run build
+
       - name: Test rendering simulator
         run: node --import tsx scripts/test-render.mjs
       - name: Test rendering context calibration
