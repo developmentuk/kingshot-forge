@@ -1,32 +1,13 @@
 from pathlib import Path
-
-
-def replace_once(path: Path, old: str, new: str, label: str) -> None:
-    text = path.read_text()
-    if old not in text:
-        raise SystemExit(f"{label} source block not found")
-    path.write_text(text.replace(old, new, 1))
-
+import re
 
 roadmap = Path("src/pages/RoadmapPage.tsx")
-replace_once(
-    roadmap,
-    '''  {
-    version: "Future",
-    name: "Forge Screenshot Intelligence Engine",
-    status: "future",
-    progress: 0,
-    priority: "Future platform capability",
-    description:
-      "A future human-reviewed screenshot intelligence capability. It is explicitly out of scope for Release 0.7.0 Sprint 9.2.",
-    features: [
-      "Kingshot screenshot classification",
-      "OCR-assisted player-stat, hero and progression import",
-      "Artwork extraction and automatic image alignment",
-      "Renderer comparison with human review and confidence scoring",
-    ],
-  },''',
-    '''  {
+roadmap_text = roadmap.read_text()
+roadmap_pattern = re.compile(
+    r'  \{\n    version: "Future",\n    name: "Forge Screenshot Intelligence Engine",.*?\n  \},',
+    re.DOTALL,
+)
+roadmap_replacement = '''  {
     version: "Vision",
     name: "Forge Vision Platform and Account Linking",
     status: "development",
@@ -43,17 +24,21 @@ replace_once(
       "Private evidence storage, forced RLS and append-only audit history",
       "Server-authoritative Player API conflict handling",
     ],
-  },''',
-    "Roadmap Vision",
-)
+  },'''
+roadmap_text, count = roadmap_pattern.subn(roadmap_replacement, roadmap_text, count=1)
+if count != 1:
+    raise SystemExit(f"Roadmap Vision block replacements: {count}")
+roadmap.write_text(roadmap_text)
 
 notes = Path("src/pages/ReleaseNotesPage.tsx")
 notes_text = notes.read_text()
-marker = '''      <article className="release-entry release-entry--latest">
-        <div className="release-entry__heading">
-          <div>
-            <span className="release-entry__badge">In development</span>
-            <h2>Release 0.8.0 — Forge Operations Centre</h2>'''
+needle = "<h2>Release 0.8.0 — Forge Operations Centre</h2>"
+needle_index = notes_text.find(needle)
+if needle_index < 0:
+    raise SystemExit("Release Notes Operations entry not found")
+article_start = notes_text.rfind('      <article className="release-entry release-entry--latest">', 0, needle_index)
+if article_start < 0:
+    raise SystemExit("Release Notes article boundary not found")
 entry = '''      <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
@@ -71,39 +56,22 @@ entry = '''      <article className="release-entry release-entry--latest">
       </article>
 
 '''
-if marker not in notes_text:
-    raise SystemExit("Release Notes insertion marker not found")
-notes.write_text(notes_text.replace(marker, entry + marker, 1))
+notes.write_text(notes_text[:article_start] + entry + notes_text[article_start:])
 
 record = Path("docs/releases/VISION-REL-001-MERGE-READINESS.md")
-record_text = record.read_text().replace(
-    "Status: **Automated integration accepted — owner preview acceptance required**",
+record_text = record.read_text()
+old_status = "Status: **Automated integration accepted — owner preview acceptance required**"
+if old_status not in record_text:
+    raise SystemExit("Release record status not found")
+record_text = record_text.replace(
+    old_status,
     "Status: **Owner accepted — ready for controlled promotion**",
     1,
 )
-old_remaining = '''## Remaining gates
-
-- The final PR head retains a successful `Vision integration gate` and READY protected Vercel deployment.
-- Protected preview is tested through an authenticated owner session.
-- Screenshot upload and review workflow is tested on a genuine owner screenshot.
-- Player ID and Kingdom extraction remain correct.
-- Display name and alliance remain editable and review-only.
-- Town Centre remains blank until manual confirmation.
-- Successful Player API lookup remains authoritative.
-- API-unavailable fallback remains explicit and unverified/pending.
-- Exact evidence deletion and recovery controls are verified.
-- Vision Studio and acceptance routes enforce server-backed permissions.
-- Desktop and mobile layouts are accepted at supported viewport sizes.
-- Art Studio rendering, clipboard and submission workflows are smoke-tested against the same preview.
-- Release Notes and Roadmap reflect the accepted release state.
-- Clark gives explicit promotion approval.
-
-## Recommendation
-
-**NO-GO for merging PR #24 while any owner/runtime gate remains open.**
-
-Automated integration is accepted. `main`, production and canonical live data remain unchanged until authenticated preview acceptance, documentation closure and explicit owner approval are complete.'''
-new_remaining = '''## Owner acceptance
+remaining_start = record_text.find("## Remaining gates")
+if remaining_start < 0:
+    raise SystemExit("Release record remaining gates heading not found")
+record_tail = '''## Owner acceptance
 
 Clark completed authenticated protected-preview acceptance on 26 July 2026 and explicitly approved PR #24 for promotion preparation.
 
@@ -120,7 +88,6 @@ The accepted preview covered desktop and mobile layouts, a genuine owner screens
 
 **GO for controlled merge of PR #24.**
 
-The candidate is technically ready, manually accepted and documented. Production is not confirmed until merge, deployment and post-deployment smoke testing succeed.'''
-if old_remaining not in record_text:
-    raise SystemExit("Release record remaining-gates block not found")
-record.write_text(record_text.replace(old_remaining, new_remaining, 1))
+The candidate is technically ready, manually accepted and documented. Production is not confirmed until merge, deployment and post-deployment smoke testing succeed.
+'''
+record.write_text(record_text[:remaining_start] + record_tail)
