@@ -29,11 +29,13 @@ jobs:
   validate:
     name: Full integration validation
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Checkout candidate
         uses: actions/checkout@v4
+        with:
+          show-progress: false
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -44,14 +46,77 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Run canonical Forge checks
-        run: npm run check
-
+      - name: Validate NodeNext imports
+        run: npm run validate:nodenext
+      - name: Validate PM2B
+        run: npm run validate:pm2b
+      - name: Validate hero skills
+        run: npm run validate:hero-skills
+      - name: Validate hero skill governance
+        run: npm run validate:hero-skills-governance
+      - name: Validate editorial platform
+        run: npm run validate:editorial-platform
+      - name: Validate Verification Centre
+        run: npm run validate:verification-centre
+      - name: Validate Player Identity
+        run: npm run validate:player-identity
+      - name: Validate Art Studio
+        run: npm run validate:art-studio
+      - name: Test editorial API
+        run: npm run test:editorial-api
+      - name: Test Content Studio
+        run: npm run test:content-studio
+      - name: Test publication integrity
+        run: npm run test:publication-integrity
+      - name: Test Buildings publication
+        run: npm run test:buildings-publication
+      - name: Test Buildings progression ordering
+        run: npm run test:buildings-progression-ordering
+      - name: Test Verification Centre
+        run: npm run test:verification-centre
+      - name: Test hero skill governance
+        run: npm run test:hero-skills-governance
+      - name: Test Player Identity
+        run: npm run test:player-identity
+      - name: Test Art Studio
+        run: npm run test:art-studio
+      - name: Test Auto Redeem
+        run: npm run test:auto-redeem
+      - name: Test Render Engine
+        run: npm run test:render-engine
+      - name: Test Search
+        run: npm run test:search
+      - name: Test Search persistence
+        run: npm run test:search-persistence
+      - name: Test Search performance
+        run: npm run test:search-performance
+      - name: Test Search API
+        run: npm run test:search-api
+      - name: Test Search experience
+        run: npm run test:search-experience
+      - name: Test workspaces
+        run: npm run test:workspaces
+      - name: Test Forge identity
+        run: npm run test:forge-identity
+      - name: Test favourites
+        run: npm run test:favourites
+      - name: Test contributor applications
+        run: npm run test:contributor-applications
+      - name: Test UX-002 contracts
+        run: npm run test:ux002-contracts
+      - name: Test UX-003 contracts
+        run: npm run test:ux003-contracts
+      - name: Test RC4 security
+        run: npm run test:rc4-security
+      - name: Test Forge Vision
+        run: npm run test:forge-vision
+      - name: Lint candidate
+        run: npm run lint
+      - name: Build candidate
+        run: npm run build
       - name: Run full rendering regression suite
         run: npm run test:render
-
       - name: Run Art Studio acceptance harness
         run: npm run test:art-studio-acceptance
-
       - name: Run Art Studio provenance regression
         run: npm run test:art-studio-submit-provenance
