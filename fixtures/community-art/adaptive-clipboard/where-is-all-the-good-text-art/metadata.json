@@ -22,12 +22,15 @@
   "sourceContext": "kingshot-clipboard",
   "compatibilityProfile": "kingshot-clipboard",
   "evidence": {
-    "referenceScreenshot": null,
-    "referenceScreenshotSha256": null,
-    "status": "database-source-recovered; screenshot-unavailable-in-worktree"
+    "referenceScreenshot": "kingshot-reference.png",
+    "referenceScreenshotOriginalFilename": "where-is-all-the-good-text-art-kingshot-reference.png",
+    "referenceScreenshotSha256": "dc908588cb25694222331b9becc370ebeb8e38558d089738582a8f44ff0d621a",
+    "referenceScreenshotByteLength": 28785,
+    "referenceScreenshotDimensions": { "width": 296, "height": 163 },
+    "status": "database-source-and-reference-screenshot-verified"
   },
   "calibration": {
-    "status": "baseline-pending",
+    "status": "visual-evidence-pending",
     "currentProduction": "origin/main at 0c26cdb",
     "candidate": null
   }

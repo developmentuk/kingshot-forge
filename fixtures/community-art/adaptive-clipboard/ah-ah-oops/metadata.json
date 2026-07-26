@@ -22,12 +22,15 @@
   "sourceContext": "kingshot-clipboard",
   "compatibilityProfile": "kingshot-clipboard",
   "evidence": {
-    "referenceScreenshot": null,
-    "referenceScreenshotSha256": null,
-    "status": "database-source-recovered; screenshot-unavailable-in-worktree"
+    "referenceScreenshot": "kingshot-reference.png",
+    "referenceScreenshotOriginalFilename": "ah-ah-oops-kingshot-reference.png",
+    "referenceScreenshotSha256": "74e2221496c0e7fa239ad59936aa305d4f33f6f9407ad5745148890a6a5f7321",
+    "referenceScreenshotByteLength": 37986,
+    "referenceScreenshotDimensions": { "width": 212, "height": 192 },
+    "status": "database-source-and-reference-screenshot-verified"
   },
   "calibration": {
-    "status": "baseline-pending",
+    "status": "visual-evidence-pending",
     "currentProduction": "origin/main at 0c26cdb",
     "candidate": null
   }

@@ -1,6 +1,6 @@
 # ART-005 — Adaptive Kingshot clipboard calibration
 
-Status: implementation and deterministic source-evidence recovery complete; owner visual review pending
+Status: implementation, source-evidence recovery, and local visual evidence capture complete; owner visual review pending
 
 Branch: `feature/art-studio-adaptive-clipboard-calibration`
 
@@ -63,18 +63,45 @@ The mobile form explains the five-per-hour limit beside the submit action. A
 and says the draft was preserved. No field, checkbox, pasted source, source
 context, or preview state is reset.
 
-## Evidence status and limitation
+## Evidence status
 
-Logical current-production and candidate reports are in
+The reference pack was supplied as
+`C:\Users\clark\Downloads\ART-005-Kingshot-reference-screenshots.zip`.
+Its SHA-256 is
+`f8267ce50a3ccd82c887d93956223b53c6b47d4b9315efd589a196a8347bf7e9`, matching
+the expected value. The manifest and every screenshot byte length and SHA-256
+were independently verified before copying the five PNGs byte-for-byte into
+the fixture directories.
+
+| Fixture | Reference file | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| AH AH oops | `ah-ah-oops/kingshot-reference.png` | 37,986 | `74e2221496c0e7fa239ad59936aa305d4f33f6f9407ad5745148890a6a5f7321` |
+| Where is all the good text art | `where-is-all-the-good-text-art/kingshot-reference.png` | 28,785 | `dc908588cb25694222331b9becc370ebeb8e38558d089738582a8f44ff0d621a` |
+| Free hard spanking | `free-hard-spanking/kingshot-reference.png` | 35,599 | `2503fdfbad6b3a3084215c96c4af6bb24ca810b4ed1d48262fd204d9223a4c41` |
+| Dont ask me | `dont-ask-me/kingshot-reference.png` | 35,939 | `0f90bf8e8b934c96d69a7d87b7bfab83e0d5f9e4f951058f6fe627477fbb821a` |
+| I have come to | `i-have-come-to/kingshot-reference.png` | 43,611 | `f9e5a5db48bb62b822c0aa59541569ac8a24ee67fab320747985542b11287e78` |
+
+The corrected `Dont ask me` record ID remains
+`3dbd4af9-61f3-4b6f-8456-a6d04e180504`; the incorrect `...4b6c...` UUID is
+not propagated. All seven source fixtures remain byte-identical to their
+verified pending database records, including the two controls Alliance Coffee
+Time and Expanded Wow I’m so cute.
+
+Five screenshot-backed comparison boards and five 390 CSS-pixel mobile boards
+are in `artifacts/art005/boards/` and `artifacts/art005/mobile/`. Each board
+shows the Kingshot reference, current production/main, adaptive candidate,
+centre guide, source hash, byte length, and configuration-driven line contexts.
+The boards were visually inspected at 1440 CSS pixels; mobile boards were
+checked at 390 CSS pixels and now contain no horizontal page overflow. The
+768, 1280, and 1440 desktop captures remain contained. The candidate preserves
+source order, line count, clipboard payload, directional calibration, and
+responsive fitting. The owner-review differences still visible in the evidence
+are font shape, emoji fallback appearance, stroke weight, and minor spacing;
+these are not claimed as Kingshot pixel identity.
+
+The logical baseline and candidate reports are in
 `artifacts/art005/current-production-baseline.json` and
-`artifacts/art005/adaptive-candidate-report.json`. Seven comparison-board SVGs
-are in `artifacts/art005/boards/` with bubble-centre guides and per-line
-contexts.
-
-The five matching Kingshot screenshot files described by the recovery request
-were not available in the workspace attachment manifest; only pasted-text
-attachments were present. Therefore no screenshot bytes were added, no
-reference SHA-256 was invented, and no visible-ink, left/right, centre,
-caption, emoji-anchor, mobile-containment, or 3%-threshold result is claimed.
-Owner visual review requires those exact screenshots (or a reattachment) and
-the Vercel preview before this task can be marked ready.
+`artifacts/art005/adaptive-candidate-report.json`. They record the before/after
+line-width arrays and the visual evidence status. No owner acceptance is
+claimed; the branch remains pending human visual review and the Vercel Draft PR
+preview.

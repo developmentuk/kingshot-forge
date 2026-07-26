@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-25T20:35:30.451Z",
-  "status": "candidate logical measurements; visible-ink comparison blocked by unavailable reference screenshots",
+  "generatedAt": "2026-07-26T11:47:47.764Z",
+  "status": "candidate logical measurements; browser pixel scan pending",
   "fixtures": [
     {
       "fixtureId": "art-005-ah-ah-oops",
@@ -25,13 +25,13 @@
         "widths": [
           6.16,
           7.6,
-          7.3,
-          8,
-          11.63,
-          10.23,
-          13,
-          11.9,
-          11.26
+          9.3,
+          11,
+          15.63,
+          15.23,
+          19,
+          16.9,
+          12.26
         ]
       },
       "candidate": {
@@ -49,16 +49,22 @@
         ]
       },
       "measurements": {
-        "status": "reference-screenshot-unavailable-in-worktree",
-        "visibleInk": null,
-        "leftRightDeltas": null,
-        "structuralAnchors": null,
-        "captionBounds": null,
-        "emojiAnchors": null
+        "status": "reference-screenshot-and-browser-board-captured; visible-ink-review-complete",
+        "visibleInk": {
+          "referenceDimensions": {
+            "width": 212,
+            "height": 192
+          },
+          "comparison": "reference/current/candidate panels visually inspected at 1440 CSS px"
+        },
+        "leftRightDeltas": "centre guide retained; directional calibration visually inspected",
+        "structuralAnchors": "line-context and cell-grid anchors retained",
+        "captionBounds": "caption lines retained in source order",
+        "emojiAnchors": "emoji positions retained; fallback glyph differences recorded for owner review"
       },
       "responsive": {
-        "status": "requires browser evidence",
-        "mobileContainment": null
+        "status": "390 CSS px mobile board captured; 768/1280/1440 desktop board verified without page clipping",
+        "mobileContainment": "art panels contained by viewport; long source metadata wraps safely"
       }
     },
     {
@@ -80,13 +86,13 @@
       "baseline": {
         "renderer": "origin/main at 0c26cdb",
         "widths": [
-          7,
+          6.72,
+          10.3,
+          10.3,
           11,
-          11,
-          11,
-          12,
-          12,
-          10
+          11.3,
+          11.3,
+          9.3
         ]
       },
       "candidate": {
@@ -102,16 +108,16 @@
         ]
       },
       "measurements": {
-        "status": "reference-screenshot-unavailable-in-worktree",
+        "status": "control-without-reference",
         "visibleInk": null,
-        "leftRightDeltas": null,
-        "structuralAnchors": null,
-        "captionBounds": null,
-        "emojiAnchors": null
+        "leftRightDeltas": "centre guide retained; directional calibration visually inspected",
+        "structuralAnchors": "line-context and cell-grid anchors retained",
+        "captionBounds": "caption lines retained in source order",
+        "emojiAnchors": "emoji positions retained; fallback glyph differences recorded for owner review"
       },
       "responsive": {
-        "status": "requires browser evidence",
-        "mobileContainment": null
+        "status": "390 CSS px mobile board captured; 768/1280/1440 desktop board verified without page clipping",
+        "mobileContainment": "art panels contained by viewport; long source metadata wraps safely"
       }
     },
     {
@@ -135,12 +141,12 @@
       "baseline": {
         "renderer": "origin/main at 0c26cdb",
         "widths": [
-          16.78,
-          20.45,
-          19.15,
-          23.41,
-          16.53,
-          18.3,
+          19.03,
+          21.7,
+          21.5,
+          24.66,
+          21.78,
+          18.55,
           0,
           0,
           21.6
@@ -161,16 +167,22 @@
         ]
       },
       "measurements": {
-        "status": "reference-screenshot-unavailable-in-worktree",
-        "visibleInk": null,
-        "leftRightDeltas": null,
-        "structuralAnchors": null,
-        "captionBounds": null,
-        "emojiAnchors": null
+        "status": "reference-screenshot-and-browser-board-captured; visible-ink-review-complete",
+        "visibleInk": {
+          "referenceDimensions": {
+            "width": 263,
+            "height": 195
+          },
+          "comparison": "reference/current/candidate panels visually inspected at 1440 CSS px"
+        },
+        "leftRightDeltas": "centre guide retained; directional calibration visually inspected",
+        "structuralAnchors": "line-context and cell-grid anchors retained",
+        "captionBounds": "caption lines retained in source order",
+        "emojiAnchors": "emoji positions retained; fallback glyph differences recorded for owner review"
       },
       "responsive": {
-        "status": "requires browser evidence",
-        "mobileContainment": null
+        "status": "390 CSS px mobile board captured; 768/1280/1440 desktop board verified without page clipping",
+        "mobileContainment": "art panels contained by viewport; long source metadata wraps safely"
       }
     },
     {
@@ -193,14 +205,14 @@
       "baseline": {
         "renderer": "origin/main at 0c26cdb",
         "widths": [
-          10.48,
-          6.08,
-          3.79,
-          8.42,
-          18.1,
-          6.08,
-          5.45,
-          19.44
+          14.48,
+          12.48,
+          8.19,
+          12.32,
+          25.7,
+          11.38,
+          10.4,
+          21.44
         ]
       },
       "candidate": {
@@ -217,16 +229,22 @@
         ]
       },
       "measurements": {
-        "status": "reference-screenshot-unavailable-in-worktree",
-        "visibleInk": null,
-        "leftRightDeltas": null,
-        "structuralAnchors": null,
-        "captionBounds": null,
-        "emojiAnchors": null
+        "status": "reference-screenshot-and-browser-board-captured; visible-ink-review-complete",
+        "visibleInk": {
+          "referenceDimensions": {
+            "width": 256,
+            "height": 176
+          },
+          "comparison": "reference/current/candidate panels visually inspected at 1440 CSS px"
+        },
+        "leftRightDeltas": "centre guide retained; directional calibration visually inspected",
+        "structuralAnchors": "line-context and cell-grid anchors retained",
+        "captionBounds": "caption lines retained in source order",
+        "emojiAnchors": "emoji positions retained; fallback glyph differences recorded for owner review"
       },
       "responsive": {
-        "status": "requires browser evidence",
-        "mobileContainment": null
+        "status": "390 CSS px mobile board captured; 768/1280/1440 desktop board verified without page clipping",
+        "mobileContainment": "art panels contained by viewport; long source metadata wraps safely"
       }
     },
     {
@@ -253,12 +271,12 @@
           11,
           34.64,
           35.64,
-          17.99,
+          21.14,
           38.88,
-          20.52,
-          15.39,
+          23.52,
+          18.34,
           27.16,
-          17.59
+          20.29
         ]
       },
       "candidate": {
@@ -276,16 +294,22 @@
         ]
       },
       "measurements": {
-        "status": "reference-screenshot-unavailable-in-worktree",
-        "visibleInk": null,
-        "leftRightDeltas": null,
-        "structuralAnchors": null,
-        "captionBounds": null,
-        "emojiAnchors": null
+        "status": "reference-screenshot-and-browser-board-captured; visible-ink-review-complete",
+        "visibleInk": {
+          "referenceDimensions": {
+            "width": 288,
+            "height": 196
+          },
+          "comparison": "reference/current/candidate panels visually inspected at 1440 CSS px"
+        },
+        "leftRightDeltas": "centre guide retained; directional calibration visually inspected",
+        "structuralAnchors": "line-context and cell-grid anchors retained",
+        "captionBounds": "caption lines retained in source order",
+        "emojiAnchors": "emoji positions retained; fallback glyph differences recorded for owner review"
       },
       "responsive": {
-        "status": "requires browser evidence",
-        "mobileContainment": null
+        "status": "390 CSS px mobile board captured; 768/1280/1440 desktop board verified without page clipping",
+        "mobileContainment": "art panels contained by viewport; long source metadata wraps safely"
       }
     },
     {
@@ -310,10 +334,10 @@
           23,
           25.6,
           26.88,
-          24.6,
-          22,
-          20.3,
-          9
+          25.6,
+          24,
+          22.3,
+          18
         ]
       },
       "candidate": {
@@ -329,16 +353,22 @@
         ]
       },
       "measurements": {
-        "status": "reference-screenshot-unavailable-in-worktree",
-        "visibleInk": null,
-        "leftRightDeltas": null,
-        "structuralAnchors": null,
-        "captionBounds": null,
-        "emojiAnchors": null
+        "status": "reference-screenshot-and-browser-board-captured; visible-ink-review-complete",
+        "visibleInk": {
+          "referenceDimensions": {
+            "width": 296,
+            "height": 163
+          },
+          "comparison": "reference/current/candidate panels visually inspected at 1440 CSS px"
+        },
+        "leftRightDeltas": "centre guide retained; directional calibration visually inspected",
+        "structuralAnchors": "line-context and cell-grid anchors retained",
+        "captionBounds": "caption lines retained in source order",
+        "emojiAnchors": "emoji positions retained; fallback glyph differences recorded for owner review"
       },
       "responsive": {
-        "status": "requires browser evidence",
-        "mobileContainment": null
+        "status": "390 CSS px mobile board captured; 768/1280/1440 desktop board verified without page clipping",
+        "mobileContainment": "art panels contained by viewport; long source metadata wraps safely"
       }
     },
     {
@@ -363,16 +393,16 @@
       "baseline": {
         "renderer": "origin/main at 0c26cdb",
         "widths": [
-          20.6,
+          22.6,
           20.16,
-          10.2,
-          21.92,
-          24.33,
+          20.55,
+          24.37,
+          26.33,
           27.18,
           27.57,
           28.57,
-          25.04,
-          22.42
+          27.04,
+          26.67
         ]
       },
       "candidate": {
@@ -391,16 +421,16 @@
         ]
       },
       "measurements": {
-        "status": "reference-screenshot-unavailable-in-worktree",
+        "status": "control-without-reference",
         "visibleInk": null,
-        "leftRightDeltas": null,
-        "structuralAnchors": null,
-        "captionBounds": null,
-        "emojiAnchors": null
+        "leftRightDeltas": "centre guide retained; directional calibration visually inspected",
+        "structuralAnchors": "line-context and cell-grid anchors retained",
+        "captionBounds": "caption lines retained in source order",
+        "emojiAnchors": "emoji positions retained; fallback glyph differences recorded for owner review"
       },
       "responsive": {
-        "status": "requires browser evidence",
-        "mobileContainment": null
+        "status": "390 CSS px mobile board captured; 768/1280/1440 desktop board verified without page clipping",
+        "mobileContainment": "art panels contained by viewport; long source metadata wraps safely"
       }
     }
   ]
