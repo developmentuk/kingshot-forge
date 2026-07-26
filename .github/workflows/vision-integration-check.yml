@@ -1,0 +1,56 @@
+name: Vision integration gate
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/vision-integration-check.yml'
+      - 'api/**'
+      - 'server/**'
+      - 'shared/**'
+      - 'src/**'
+      - 'scripts/**'
+      - 'fixtures/**'
+      - 'supabase/migrations/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vercel.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vision-integration-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Full integration validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run canonical Forge checks
+        run: npm run check
+
+      - name: Run full rendering regression suite
+        run: npm run test:render
+
+      - name: Run Art Studio acceptance harness
+        run: npm run test:art-studio-acceptance
+
+      - name: Run Art Studio provenance regression
+        run: npm run test:art-studio-submit-provenance
