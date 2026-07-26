@@ -101,7 +101,10 @@ const operationsGroups = [
     { label: 'Publish Centre', shortLabel: 'Publish', icon: '🚀', path: '/admin/publish', permission: 'cms.publish' as ForgePermission, status: 'planned' as const },
     { label: 'Version History', shortLabel: 'History', icon: '🕒', path: '/admin/history', permission: 'cms.history.view' as ForgePermission, status: 'planned' as const },
     { label: 'Data Engine', shortLabel: 'Engine', icon: '⚙️', path: '/admin/data-engine', permission: 'cms.view' as ForgePermission },
+  ] },
+  { title: 'Platform engines', items: [
     { label: 'Render Engine', shortLabel: 'Render', icon: '🖼️', path: '/admin/render-engine', permission: 'render_engine.view' as ForgePermission },
+    { label: 'Vision Studio', shortLabel: 'Vision', icon: '👁️', path: '/admin/vision-studio', permission: 'cms.view' as ForgePermission },
   ] },
   { title: 'Community operations', items: [
     { label: 'Contributor Applications', shortLabel: 'Applications', icon: '🤝', path: '/operations/applications', permission: 'applications.read' as ForgePermission },

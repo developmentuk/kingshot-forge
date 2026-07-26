@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PlayerAccount } from '../types/playerAccount'
@@ -36,6 +37,8 @@ export function PlayerIdentityProvider({
   children,
 }: PlayerIdentityProviderProps) {
   const { user, session, loading: authLoading } = useAuth()
+  const { pathname } = useLocation()
+  const isVisionAcceptanceRoute = pathname === '/admin/vision/account-linking-acceptance'
 
   const [playerAccount, setPlayerAccount] =
     useState<PlayerAccount | null>(null)
@@ -46,6 +49,7 @@ export function PlayerIdentityProvider({
     useState<string | null>(null)
 
   const loadPlayerIdentity = useCallback(async () => {
+    if (isVisionAcceptanceRoute) return
     if (!user) {
       setPlayerAccount(null)
       setPlayerIdentityError(null)
@@ -103,9 +107,10 @@ export function PlayerIdentityProvider({
     setPlayerAccount(account)
 
     setLoadingPlayerAccount(false)
-  }, [user])
+  }, [isVisionAcceptanceRoute, user])
 
   const refreshPlayerIdentity = useCallback(async () => {
+    if (isVisionAcceptanceRoute) return
     if (!user || !session?.access_token) return loadPlayerIdentity()
     const existing = refreshInFlight.get(user.id)
     if (existing) return existing
@@ -125,10 +130,10 @@ export function PlayerIdentityProvider({
     })().finally(() => refreshInFlight.delete(user.id))
     refreshInFlight.set(user.id, request)
     return request
-  }, [loadPlayerIdentity, session?.access_token, user])
+  }, [isVisionAcceptanceRoute, loadPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
-    if (authLoading) {
+    if (authLoading || isVisionAcceptanceRoute) {
       return
     }
 
@@ -143,14 +148,15 @@ export function PlayerIdentityProvider({
     }
     void establish()
     return () => { cancelled = true }
-  }, [authLoading, loadPlayerIdentity, playerAccount?.last_refreshed_at, refreshPlayerIdentity, session?.access_token, user])
+  }, [authLoading, isVisionAcceptanceRoute, loadPlayerIdentity, playerAccount?.last_refreshed_at, refreshPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
-    if (!session?.access_token || !user) return
+    if (isVisionAcceptanceRoute || !session?.access_token || !user) return
     void fetch('/api/giftcodes?action=auto-run', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: '{}' }).catch(() => undefined)
-  }, [session?.access_token, user])
+  }, [isVisionAcceptanceRoute, session?.access_token, user])
 
   useEffect(() => {
+    if (isVisionAcceptanceRoute) return
     function handlePlayerUpdate() {
       void refreshPlayerIdentity()
     }
@@ -166,17 +172,18 @@ export function PlayerIdentityProvider({
         handlePlayerUpdate,
       )
     }
-  }, [refreshPlayerIdentity])
+  }, [isVisionAcceptanceRoute, refreshPlayerIdentity])
 
   const value =
     useMemo<PlayerIdentityContextValue>(
       () => ({
-        playerAccount,
-        loadingPlayerAccount,
-        playerIdentityError,
-        refreshPlayerIdentity,
+        playerAccount: isVisionAcceptanceRoute ? null : playerAccount,
+        loadingPlayerAccount: isVisionAcceptanceRoute ? false : loadingPlayerAccount,
+        playerIdentityError: isVisionAcceptanceRoute ? null : playerIdentityError,
+        refreshPlayerIdentity: isVisionAcceptanceRoute ? async () => {} : refreshPlayerIdentity,
       }),
       [
+        isVisionAcceptanceRoute,
         playerAccount,
         loadingPlayerAccount,
         playerIdentityError,

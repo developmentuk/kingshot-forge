@@ -1,0 +1,13 @@
+{
+  "fixture": "synthetic-kingshot-profile-card",
+  "mappingVersion": "account-linking-kingshot-profile-v1",
+  "mimeType": "image/png",
+  "widthPx": 800,
+  "heightPx": 450,
+  "sha256": "beff98f5d140fd1db354e07cf3cc6e1f4570e011aed5ecbe54fbc53861c0e2fa",
+  "expected": {
+    "name": "EMBER FOX",
+    "playerId": "987654321",
+    "kingdom": "42"
+  }
+}

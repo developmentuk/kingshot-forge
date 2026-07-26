@@ -1,0 +1,13 @@
+{
+  "fixture": "independent-synthetic-kingshot-profile-v2",
+  "mappingVersion": "account-linking-kingshot-profile-v2",
+  "mimeType": "image/jpeg",
+  "widthPx": 800,
+  "heightPx": 450,
+  "sha256": "5ea8f2380497919f84e7594014edea4a1eed7582e45d196308e48981fb560777",
+  "expected": {
+    "name": "[FRG] EMBER FOX",
+    "playerId": "987654321",
+    "kingdom": "42"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "fixtureKey": "forge-vision-ocr",
+  "description": "Synthetic high-contrast OCR fixture for native local-worker acceptance.",
+  "source": "forge-vision-ocr.svg",
+  "renderedWidthPx": 1200,
+  "renderedHeightPx": 320,
+  "expectedTokens": ["FORGE", "VISION", "12345"],
+  "language": "eng",
+  "pageSegmentationMode": 6,
+  "ocrEngineMode": 1
+}

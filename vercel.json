@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/player/link-ocr.ts": {
+      "maxDuration": 60,
+      "includeFiles": "node_modules/{tesseract.js,tesseract.js-core,@tesseract.js-data/eng}/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!api(?:/|$)).*)",

@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase'
 import { getPlayer } from '../services/kingshotApi'
 import type { KingshotPlayer } from '../types/player'
 import type { PlayerAccount } from '../types/playerAccount'
+import type { AccountLinkOcrReview } from '../../shared/domains/player-identity/accountLinkingOcr'
+import ScreenshotLinkingPanel from './ScreenshotLinkingPanel'
 
 function getVerificationLabel(
   status: PlayerAccount['verification_status'],
@@ -99,6 +101,9 @@ function LinkedPlayerPanel() {
 
   const [errorMessage, setErrorMessage] =
     useState('')
+  const [ocrReview, setOcrReview] = useState<AccountLinkOcrReview | null>(null)
+  const [fallbackSaving, setFallbackSaving] = useState(false)
+  const [lookupFailed, setLookupFailed] = useState(false)
 
   async function handleLookup(
     event: FormEvent<HTMLFormElement>,
@@ -127,6 +132,7 @@ function LinkedPlayerPanel() {
     setMessage('')
     setErrorMessage('')
     setPreviewPlayer(null)
+    setLookupFailed(false)
 
     try {
       const response =
@@ -140,9 +146,22 @@ function LinkedPlayerPanel() {
           ? error.message
           : 'The player could not be found.',
       )
+      if (ocrReview?.playerId) setMessage('The Kingshot lookup is unavailable. You may save the reviewed screenshot details as an unverified link.')
+      setLookupFailed(true)
     } finally {
       setLookingUp(false)
     }
+  }
+
+  async function handleOcrFallbackSave() {
+    if (!session?.access_token || !ocrReview) return
+    setFallbackSaving(true); setErrorMessage(''); setMessage('')
+    try {
+      const response = await fetch('/api/player/ocr-fallback', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(ocrReview) })
+      const payload = await response.json().catch(() => null) as { status?: string; message?: string } | null
+      if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'The reviewed screenshot details could not be saved.')
+      setOcrReview(null); setMessage('Screenshot details saved as an unverified linked account.'); notifyPlayerIdentityChanged(); await refreshPlayerIdentity()
+    } catch (error) { setErrorMessage(error instanceof Error ? error.message : 'The OCR fallback could not be saved safely.') } finally { setFallbackSaving(false) }
   }
 
   async function handleLinkAccount() {
@@ -376,6 +395,14 @@ function LinkedPlayerPanel() {
     )
   }
 
+  const apiConflicts = previewPlayer && ocrReview
+    ? [
+      previewPlayer.playerId !== ocrReview.playerId ? 'Player ID' : null,
+      previewPlayer.name !== ocrReview.displayName ? 'Player name' : null,
+      String(previewPlayer.kingdom) !== ocrReview.kingdom ? 'Kingdom' : null,
+    ].filter((item): item is string => Boolean(item))
+    : []
+
   return (
     <section className="linked-player-panel">
       <div className="linked-player-panel__heading">
@@ -411,6 +438,7 @@ function LinkedPlayerPanel() {
 
       {!linkedAccount && (
         <>
+          <ScreenshotLinkingPanel onCandidate={(candidate) => setPlayerId(candidate)} onReview={setOcrReview} />
           <form
             className="linked-player-search"
             onSubmit={handleLookup}
@@ -515,6 +543,8 @@ function LinkedPlayerPanel() {
                 </p>
               </div>
 
+              {apiConflicts.length > 0 && <div className="linked-player-preview__warning"><strong>Review conflict with Player API</strong><p>{apiConflicts.join(', ')} differ from the reviewed screenshot. Player API values remain authoritative; no screenshot correction was overwritten.</p></div>}
+
               <div className="linked-player-preview__actions">
                 <button
                   type="button"
@@ -540,6 +570,13 @@ function LinkedPlayerPanel() {
                 </button>
               </div>
             </article>
+          )}
+          {ocrReview && lookupFailed && !previewPlayer && (
+            <div className="linked-player-preview__warning">
+              <strong>Lookup fallback</strong>
+              <p>The API lookup did not complete. Saving these reviewed values will remain unverified and will not invoke the player-link mutation.</p>
+              <button type="button" className="button button--secondary" disabled={fallbackSaving} onClick={() => void handleOcrFallbackSave()}>{fallbackSaving ? 'Saving review…' : 'Save as unverified review'}</button>
+            </div>
           )}
         </>
       )}
