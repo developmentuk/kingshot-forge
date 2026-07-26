@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const fixturePath = path.resolve(root, '..', 'kingshot-text-lab', 'fixtures', 'community-art', 'wow-im-so-cute', 'wow-im-so-cute.txt')
+const fixturePath = path.join(root, 'fixtures', 'community-art', 'wow-im-so-cute', 'wow-im-so-cute.txt')
 const fixture = await readFile(fixturePath)
 const expectedHash = 'c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79'
 assert.equal(createHash('sha256').update(fixture).digest('hex'), expectedHash, 'raw fixture hash must remain canonical')

@@ -1,0 +1,15 @@
+{
+  "fixturePurpose": "Deterministic synthetic OCR runtime acceptance fixture",
+  "syntheticOnly": true,
+  "accuracyClaim": "Not evidence of real-screen Kingshot OCR accuracy.",
+  "expected": {
+    "playerId": "987654321",
+    "name": "EMBER FOX",
+    "kingdom": "42"
+  },
+  "file": "synthetic-profile.png",
+  "mimeType": "image/png",
+  "widthPx": 1600,
+  "heightPx": 600,
+  "sha256": "c1293cf0d08e9aa41cdc10f0bf484d1f1805d376b96b043cc22fd570c3f29071"
+}

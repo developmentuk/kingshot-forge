@@ -1,0 +1,153 @@
+name: Vision integration gate
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/vision-integration-check.yml'
+      - 'api/**'
+      - 'server/**'
+      - 'shared/**'
+      - 'src/**'
+      - 'scripts/**'
+      - 'fixtures/**'
+      - 'docs/**'
+      - 'supabase/migrations/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vercel.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vision-integration-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Full integration validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate NodeNext imports
+        run: npm run validate:nodenext
+      - name: Validate PM2B
+        run: npm run validate:pm2b
+      - name: Validate hero skills
+        run: npm run validate:hero-skills
+      - name: Validate hero skill governance
+        run: npm run validate:hero-skills-governance
+      - name: Validate editorial platform
+        run: npm run validate:editorial-platform
+      - name: Validate Verification Centre
+        run: npm run validate:verification-centre
+      - name: Validate Player Identity
+        run: npm run validate:player-identity
+      - name: Validate Art Studio
+        run: npm run validate:art-studio
+      - name: Test editorial API
+        run: npm run test:editorial-api
+      - name: Test Content Studio
+        run: npm run test:content-studio
+      - name: Test publication integrity
+        run: npm run test:publication-integrity
+      - name: Test Buildings publication
+        run: npm run test:buildings-publication
+      - name: Test Buildings progression ordering
+        run: npm run test:buildings-progression-ordering
+      - name: Test Verification Centre
+        run: npm run test:verification-centre
+      - name: Test hero skill governance
+        run: npm run test:hero-skills-governance
+      - name: Test Player Identity
+        run: npm run test:player-identity
+      - name: Test Art Studio
+        run: npm run test:art-studio
+      - name: Test Auto Redeem
+        run: npm run test:auto-redeem
+      - name: Test Render Engine
+        run: npm run test:render-engine
+      - name: Test Search
+        run: npm run test:search
+      - name: Test Search persistence
+        run: npm run test:search-persistence
+      - name: Test Search performance
+        run: npm run test:search-performance
+      - name: Test Search API
+        run: npm run test:search-api
+      - name: Test Search experience
+        run: npm run test:search-experience
+      - name: Test workspaces
+        run: npm run test:workspaces
+      - name: Test Forge identity
+        run: npm run test:forge-identity
+      - name: Test favourites
+        run: npm run test:favourites
+      - name: Test contributor applications
+        run: npm run test:contributor-applications
+      - name: Test UX-002 contracts
+        run: npm run test:ux002-contracts
+      - name: Test UX-003 contracts
+        run: npm run test:ux003-contracts
+      - name: Test RC4 security
+        run: npm run test:rc4-security
+
+      - name: Test Vision platform contracts
+        run: node --import tsx scripts/test-forge-vision-platform.mjs
+      - name: Test Vision worker
+        run: node --import tsx scripts/test-forge-vision-worker.mjs
+      - name: Test Vision authoring
+        run: node --import tsx scripts/test-forge-vision-authoring.mjs
+      - name: Test Vision authenticated acceptance contracts
+        run: node scripts/test-forge-vision-authenticated-acceptance.mjs
+      - name: Test Kingshot profile OCR
+        run: npm run test:forge-vision-kingshot-profile
+      - name: Test Vision account-linking page
+        run: npm run test:forge-vision-account-linking-page
+      - name: Test Vision evidence storage
+        run: npm run test:forge-vision-evidence-storage
+      - name: Test Vision permission transition
+        run: node --import tsx scripts/test-forge-vision-permission-transition.mjs
+      - name: Test Vision policy correction
+        run: node scripts/test-forge-vision-policy-correction.mjs
+      - name: Test Vision activation verifier
+        run: node --import tsx scripts/test-forge-vision-activation-verifier.mjs
+      - name: Test Vision activation preconditions
+        run: node --import tsx scripts/test-forge-vision-activation-preconditions.mjs
+
+      - name: Lint candidate
+        run: npm run lint
+      - name: Build candidate
+        run: npm run build
+
+      - name: Test rendering simulator
+        run: node --import tsx scripts/test-render.mjs
+      - name: Test rendering context calibration
+        run: node --import tsx scripts/test-render-context-calibration.mjs
+      - name: Test rendering core
+        run: node --import tsx scripts/test-render-core.mjs
+      - name: Test Kingshot screenshot calibration
+        run: node --import tsx scripts/test-kingshot-screenshot-calibration.mjs
+      - name: Test Kingshot visible-ink alignment
+        run: node --import tsx scripts/test-kingshot-visible-ink-alignment.mjs
+      - name: Run Art Studio acceptance harness
+        run: npm run test:art-studio-acceptance
+      - name: Run Art Studio provenance regression
+        run: npm run test:art-studio-submit-provenance

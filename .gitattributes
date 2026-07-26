@@ -1,1 +1,2 @@
 fixtures/community-art/wow-im-so-cute/wow-im-so-cute.txt -text whitespace=cr-at-eol
+supabase/migrations/*.sql text eol=lf

@@ -1,0 +1,18 @@
+{
+  "migrationApplied": ["20260722193000_vision_001a_contracts_and_persistence.sql"],
+  "enums": ["vision_mapping_status", "vision_scan_status", "vision_value_status", "vision_extractor_family", "vision_execution_mode", "vision_plugin_status", "vision_detection_method"],
+  "tables": [
+    {"name":"vision_field_registry","rlsEnabled":true,"forceRls":true}, {"name":"vision_extractor_plugins","rlsEnabled":true,"forceRls":true}, {"name":"vision_screen_types","rlsEnabled":true,"forceRls":true}, {"name":"vision_mapping_versions","rlsEnabled":true,"forceRls":true}, {"name":"vision_evidence_images","rlsEnabled":true,"forceRls":true}, {"name":"vision_mapping_reference_images","rlsEnabled":true,"forceRls":true}, {"name":"vision_regions","rlsEnabled":true,"forceRls":true}, {"name":"vision_field_mappings","rlsEnabled":true,"forceRls":true}, {"name":"vision_mapping_extractors","rlsEnabled":true,"forceRls":true}, {"name":"vision_mapping_regions","rlsEnabled":true,"forceRls":true}, {"name":"vision_test_cases","rlsEnabled":true,"forceRls":true}, {"name":"vision_test_results","rlsEnabled":true,"forceRls":true}, {"name":"vision_scan_runs","rlsEnabled":true,"forceRls":true}, {"name":"vision_scan_values","rlsEnabled":true,"forceRls":true}, {"name":"vision_extraction_evidence","rlsEnabled":true,"forceRls":true}, {"name":"vision_user_corrections","rlsEnabled":true,"forceRls":true}, {"name":"vision_audit_events","rlsEnabled":true,"forceRls":true}
+  ],
+  "functions": [{"name":"guard_published_vision_version_mutation"},{"name":"guard_published_vision_direct_child_mutation"},{"name":"guard_published_vision_mapping_child_mutation"},{"name":"guard_append_only_vision_evidence"},{"name":"publish_vision_mapping_version"}],
+  "triggers": ["guard_published_vision_version", "guard_published_vision_region", "guard_published_vision_mapping", "guard_published_vision_reference", "guard_published_vision_test_case", "guard_published_vision_mapping_extractor", "guard_published_vision_mapping_region", "vision_test_results_append_only", "vision_extraction_evidence_append_only", "vision_user_corrections_append_only", "vision_audit_events_append_only"],
+  "indexes": ["vision_versions_screen_status_idx", "vision_scans_user_created_idx", "vision_evidence_scan_value_idx", "vision_audit_entity_idx"],
+  "policies": ["vision_registry_read", "vision_plugins_read", "vision_screen_types_read", "vision_versions_read", "vision_regions_read", "vision_mappings_read", "vision_mapping_extractors_read", "vision_mapping_regions_read", "vision_admin_references_read", "vision_admin_test_cases_read", "vision_admin_test_results_read", "vision_images_read", "vision_scans_read", "vision_values_read", "vision_extraction_evidence_read", "vision_corrections_read", "vision_audit_read"],
+  "grants": [{"object":"vision_field_registry","grantee":"authenticated","privilege":"SELECT"}],
+  "permissions": ["vision.admin.read", "vision.admin.edit", "vision.mapping.publish", "vision.scan.run", "vision.evidence.review"],
+  "extractorPlugins": ["tesseract"],
+  "screenTypeCount": 0,
+  "mappingVersionCount": 0,
+  "fieldMappingCount": 0,
+  "storageBucket": {"name":"vision-evidence","public":false,"fileSizeLimit":16777216,"mimeTypes":["image/png","image/jpeg","image/webp","image/tiff"]}
+}

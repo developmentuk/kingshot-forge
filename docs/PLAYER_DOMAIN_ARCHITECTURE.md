@@ -1547,6 +1547,19 @@ The implemented foundation lives in `shared/domains/player-identity/` and `serve
 - consumer boundaries expose minimal projections while Gift/provider, Hero canonical/editorial, Art moderation and Alliance authority remain with their owning domains.
 
 The [read-only schema report](./reference/player-identity-schema-discovery.md) records live evidence and drift. The [Sprint 9.3 release note](./releases/SPRINT_9_3_PLAYER_IDENTITY_FOUNDATION.md) records exact scope. This evidence does not change any ADR from Proposed.
+
+## Screenshot-assisted linking
+
+The OCR account-linking MVP is an assistive input path, not a second identity
+system. It may prefill the existing Player ID form, but it cannot lookup,
+link, verify ownership, replace an existing owner or write canonical player
+data. `/api/player/account` and `linkOrRevalidatePlayerAccount` remain the
+authoritative boundary for duplicate and ownership-conflict decisions.
 # Sprint 9.4 implementation posture
 
 The Player Identity repository, service, API, UI, integration, support and legacy boundaries now exist locally as a complete disabled vertical slice. This implementation does not accept any Proposed decision: all exact-match feature gates default OFF, capabilities deny all, production persistence is a disabled adapter, verification has no provider and public projection is not enabled. The operational specification is in [docs/player-identity/VERTICAL_SLICE.md](./player-identity/VERTICAL_SLICE.md); migration recovery remains governed by [docs/player-identity/MIGRATION_RECOVERY_AND_VALIDATION.md](./player-identity/MIGRATION_RECOVERY_AND_VALIDATION.md).
+## OCR account-linking acceptance boundary
+
+OCR may prefill Player ID and Kingdom after their existing validation/agreement gates. Alliance tags are normalised to three grapheme characters and remain review-only; display names remain editable and review-only. Town Centre Level is progression-supporting data and must be entered or explicitly confirmed by the user from the screenshot. OCR may provide an untrusted suggestion but never a recognised or trusted Town Centre value.
+
+The API-first path keeps Kingshot API data authoritative. An unavailable API may lead to a separately confirmed unverified/pending association only; no verified timestamp or verifier is written. Server-side fallback validation recomputes OCR from owner-scoped evidence, separates OCR provenance from user-confirmed values, rejects conflicting primary Player IDs, records audit history and removes exact screenshot evidence after success.
