@@ -26,12 +26,27 @@ const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const canonical = (path) => execFileSync('git', ['show', `HEAD:${path}`], { encoding: null })
 const workingTree = (path) => readFileSync(path)
 const normalise = (bytes) => Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8')
-const persistencePath = 'supabase/migrations/20260722193000_vision_001a_contracts_and_persistence.sql'
-const storagePath = 'supabase/migrations/20260723181223_vision_evidence_storage.sql'
-assert.equal(sha256(canonical(persistencePath)), '762dab82ccd9cbbbbec499184d8adfc285b9af9a3d40acbbdabe8a25aebacdaa')
-assert.equal(sha256(workingTree(persistencePath)), '126b863fdc6b7114572083687f1376023ad6d3cb0c1dcecb37fbda40f7acc9ac')
-assert.equal(sha256(normalise(workingTree(persistencePath))), sha256(canonical(persistencePath)))
-assert.equal(sha256(canonical(storagePath)), '0b7a3f7a0c8ac2db78bc9d172c7efcdff17ed4c807867ef67af80aadc77104dd')
-assert.equal(sha256(workingTree(storagePath)), 'b9535d831c37d3777211608629f974292ff69963bb0c32ac1824f0bd23f7ee16')
-assert.equal(sha256(normalise(workingTree(storagePath))), sha256(canonical(storagePath)))
-console.log('Forge Vision activation precondition tests passed: canonical Git blobs, CRLF diagnostics, missing blobs, external SHA, HEAD, cleanliness, ancestry, branch and digest gates.')
+const assertCanonicalOrLegacyCrlf = ({ path, canonicalDigest, legacyCrlfDigest }) => {
+  const canonicalBytes = canonical(path)
+  const workingBytes = workingTree(path)
+  const workingDigest = sha256(workingBytes)
+
+  assert.equal(sha256(canonicalBytes), canonicalDigest)
+  assert.ok(
+    workingDigest === canonicalDigest || workingDigest === legacyCrlfDigest,
+    `${path} working-tree digest must be canonical LF or the documented legacy CRLF form`,
+  )
+  assert.equal(sha256(normalise(workingBytes)), canonicalDigest)
+}
+
+assertCanonicalOrLegacyCrlf({
+  path: 'supabase/migrations/20260722193000_vision_001a_contracts_and_persistence.sql',
+  canonicalDigest: '762dab82ccd9cbbbbec499184d8adfc285b9af9a3d40acbbdabe8a25aebacdaa',
+  legacyCrlfDigest: '126b863fdc6b7114572083687f1376023ad6d3cb0c1dcecb37fbda40f7acc9ac',
+})
+assertCanonicalOrLegacyCrlf({
+  path: 'supabase/migrations/20260723181223_vision_evidence_storage.sql',
+  canonicalDigest: '0b7a3f7a0c8ac2db78bc9d172c7efcdff17ed4c807867ef67af80aadc77104dd',
+  legacyCrlfDigest: 'b9535d831c37d3777211608629f974292ff69963bb0c32ac1824f0bd23f7ee16',
+})
+console.log('Forge Vision activation precondition tests passed: canonical Git blobs, LF/legacy-CRLF diagnostics, missing blobs, external SHA, HEAD, cleanliness, ancestry, branch and digest gates.')
