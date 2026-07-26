@@ -1,6 +1,6 @@
 # VISION-REL-001 — Vision merge readiness and release integration
 
-Status: **Automated integration accepted — owner preview acceptance required**  
+Status: **Automated and live-schema integration accepted — owner preview acceptance required**  
 Date: 26 July 2026  
 Owner: Clark  
 Engineering partner: Aegis
@@ -80,18 +80,29 @@ Automated integration validation exposed four assumptions that were safe on the 
 
 No Supabase mutation was performed during merge integration.
 
-The five checked-in Vision migrations are carried into the candidate. Previously applied live Vision schema, private evidence bucket, forced RLS, grants, policies and retained audit history must be verified read-only before promotion. Migrations must not be reapplied or duplicated merely because the branch is being merged.
+Read-only live verification on 26 July 2026 confirmed:
 
-The closed evidence incident remains closed. No cleanup retry, synthetic activation or additional evidence mutation is authorised by this release integration.
+- all five Vision migrations are present in the live migration ledger;
+- all 18 public Vision relations have RLS enabled and forced;
+- authenticated users have SELECT grants on the 18 Vision relations, with no anonymous table grants found;
+- privileged mutation grants remain limited to PostgreSQL and `service_role`;
+- the `vision-evidence` Storage bucket exists, is private and contains zero objects;
+- `vision_evidence_images` contains 12 historical rows and zero active rows;
+- upload intents contain 12 completed and four abandoned rows, with no active intent status;
+- Vision audit events remain retained, including evidence creation, verification, cancellation and abandonment history.
+
+The checked-in migrations must not be reapplied or duplicated merely because the branch is being merged. The closed evidence incident remains closed. No cleanup retry, synthetic activation or additional evidence mutation is authorised by this release integration.
 
 ## Automated evidence
 
 - Integration branch contains current `main` with zero commits behind.
 - Vercel preview builds succeeded after the TypeScript integration correction; only the repository's documented large-chunk warning remained.
 - GitHub Actions run `30205423700` passed on implementation commit `0d60dba8ecec51b415d608d434d31a9428dbaaff`.
+- GitHub Actions run `30205552062` passed on documentation/cleanup head `5798803e93bc7c2edff5025135dfdc834aa90dad`.
 - The successful gate included locked dependency installation, all canonical Forge validations and domain tests, every Vision platform/worker/OCR/evidence/policy test, lint, production build, all five extended rendering checks, the Art Studio acceptance harness and submission-provenance regression.
+- Both Vercel checks succeeded on the same candidate head.
 - The temporary visible-ink diagnostic workflow was removed after its isolated check passed.
-- The PR check on the final documentation/cleanup head remains the authoritative exact-candidate result.
+- The PR check on the final documentation head remains the authoritative exact-candidate result.
 
 ## Remaining gates
 
@@ -103,7 +114,7 @@ The closed evidence incident remains closed. No cleanup retry, synthetic activat
 - Town Centre remains blank until manual confirmation.
 - Successful Player API lookup remains authoritative.
 - API-unavailable fallback remains explicit and unverified/pending.
-- Exact evidence deletion and recovery controls are verified.
+- Exact evidence deletion and recovery controls are exercised through the authenticated preview.
 - Vision Studio and acceptance routes enforce server-backed permissions.
 - Desktop and mobile layouts are accepted at supported viewport sizes.
 - Art Studio rendering, clipboard and submission workflows are smoke-tested against the same preview.
@@ -114,4 +125,4 @@ The closed evidence incident remains closed. No cleanup retry, synthetic activat
 
 **NO-GO for merging PR #24 while any owner/runtime gate remains open.**
 
-Automated integration is accepted. `main`, production and canonical live data remain unchanged until authenticated preview acceptance, documentation closure and explicit owner approval are complete.
+Automated integration and read-only live schema verification are accepted. `main`, production and canonical live data remain unchanged until authenticated preview acceptance, documentation closure and explicit owner approval are complete.
