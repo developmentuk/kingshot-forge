@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-import { buildFixedCellGrid, DEFAULT_CALIBRATION, getDirectionalGlyphCalibration } from '../src/render-engine/index.ts'
+import { buildFixedCellGrid } from '../src/render-engine/grid/index.ts'
+import { DEFAULT_CALIBRATION, getDirectionalGlyphCalibration } from '../src/render-engine/configuration/index.ts'
 
 const source = Buffer.from(fs.readFileSync('fixtures/community-art/kingshot-clipboard-expanded/cat.txt.base64', 'utf8').replace(/\s/g, ''), 'base64').toString('utf8')
 const lines = source.replace(/\r\n?/g, '\n').split('\n')
