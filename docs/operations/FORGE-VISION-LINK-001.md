@@ -60,3 +60,8 @@ owner-scoped synthetic acceptance followed by exact cancellation.
 ## VISION-LINK-007 integration notes
 
 Player Domain integration consumes the existing `town_center_level` field and existing `linked`/`none` verification semantics. The fallback does not add a verification-method enum, alter canonical Kingshot lookup authority, persist avatars, or write alliance membership. The evidence ID and bounded correction map are retained in the governed audit payload before exact screenshot evidence cancellation.
+## VISION-LINK-011 closeout boundary
+
+Final owner acceptance confirmed exact Player ID and Kingdom extraction, three-character alliance normalisation and populated review-only display name. Town Centre OCR failed to generalise on the genuine decorative badge and is now manual-only. The canonical Town Centre input starts blank, accepts only 1–30, and becomes `user_confirmed` only after explicit owner entry; an OCR suggestion is bounded, visible and untrusted.
+
+The Player API remains first choice and authoritative where available. API failure exposes an explicit unverified fallback only after review. No OCR result verifies ownership, creates alliance authority, or silently overwrites corrections. Exact screenshot evidence is deleted after completion or cancellation, with governed audit history retained.

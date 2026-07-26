@@ -53,6 +53,7 @@ export type AccountLinkOcrReview = {
   kingdom: string
   allianceTag: string
   townCenterLevel: string
+  townCenterSuggestion?: string
   evidenceId: string
   confidence: number
   source: 'Screenshot OCR'

@@ -116,6 +116,7 @@ for (const fixture of [['level-1.png', '1'], ['level-6.png', '6'], ['level-8.png
   const result = await extractAccountLinkCandidates({ evidenceId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', bytes, sha256: createHash('sha256').update(bytes).digest('hex'), mimeType: fixture[0].endsWith('.jpg') ? 'image/jpeg' : 'image/png', widthPx: 1600, heightPx: 900, mappingVersion: 'account-linking-kingshot-profile-v8' })
   const town = result.candidates.find((item) => item.field === 'townCenterLevel')
   assert.equal(town?.value, fixture[1], fixture[0])
+  assert.equal(result.diagnostics?.fields?.find((field) => field.field === 'townCenterLevel')?.disposition, 'review_required', fixture[0])
   assert.ok(result.diagnostics?.passes?.filter((pass) => pass.passType === 'glyph_single_char' && pass.confidence > 0).length >= 2, fixture[0])
   if (fixture[1] === '6') {
     assert.equal(result.diagnostics?.townCenter?.tier, 'one_digit_isolated_glyph')

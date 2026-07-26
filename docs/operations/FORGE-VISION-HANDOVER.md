@@ -111,3 +111,12 @@ V8 preserves V1–V7 and adds the measured central glyph region `(0.635, 0.52, 0
 ## VISION-LINK-009A — owner evidence recovery
 
 The owner acceptance route now validates a persisted evidence ID, clears stale session state, and falls back to a bounded authenticated owner query. Recovery is restricted to active, non-held `scan_source` evidence with the exact preview-only OCR upload purpose; the safe response contains only evidence ID, upload time, MIME, byte length and active status. One record is restored automatically, while multiple records require an exact owner-selected cancellation. Local preview clearing never implies server deletion, and duplicate uploads surface the existing owner recovery control. No automatic cleanup or live owner recovery was performed during implementation.
+## VISION-LINK-011 — OCR acceptance closeout
+
+The final owner screenshot acceptance passed Player ID, Kingdom, alliance-tag normalisation and review-only name behaviour. The decorative Town Centre badge did not generalise: the genuine screenshot produced an incorrect OCR number. Town Centre OCR is therefore permanently supporting information only; it is never `recognised`, never prefilled into the canonical review field, and requires explicit manual confirmation as a whole number from 1 through 30.
+
+The supported automatic extraction boundary is Player ID and Kingdom, with alliance tag and display name review-only. The review form keeps all five fields editable, displays an OCR Town Centre suggestion separately as untrusted, and records the Town Centre value as `user_confirmed` only after manual entry. OCR completion performs no save and never verifies ownership.
+
+The normal flow attempts the Kingshot Player API after review. API values remain authoritative and conflicts are shown. If the API is unavailable, the owner may explicitly save reviewed screenshot details as an unverified/pending association; `verified_at` and `verified_by` remain null. The server recomputes OCR from exact owner evidence, validates the required identity fields, retains an append-only audit event, and deletes the exact evidence after successful completion. Owner recovery and exact cancellation remain unchanged.
+
+No further Town Centre calibration, mapping version, crop or preprocessing sprint is planned.

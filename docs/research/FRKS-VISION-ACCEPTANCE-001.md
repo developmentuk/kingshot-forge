@@ -153,3 +153,8 @@ V7 corrected the badge location and proved two-digit runtime extraction, while o
 ## VISION-LINK-009A recovery record
 
 Owner recovery is now a general authenticated, owner-scoped query rather than a historic synthetic-evidence lookup. The repository applies exact owner, `scan_source`, preview-only upload-purpose, `deleted_at IS NULL`, `legal_hold = false`, newest-first and limit-five predicates. The client validates session storage first, falls back to safe metadata discovery, preserves recovery after local form reset, and uses exact cancellation only after explicit owner action. No live record was deleted during this repair.
+## VISION-LINK-011 final owner acceptance
+
+Owner acceptance outcome: Player ID passed exactly; Kingdom passed exactly; alliance normalisation passed; display name remained review-required. Automatic Town Centre OCR failed on the genuine screenshot despite bounded runtime fixtures and is not generalisable to the decorative game badge. Town Centre is therefore manually confirmed and no further calibration is planned.
+
+OCR remains supporting evidence and never verifies ownership. The review form leaves Town Centre blank, marks any OCR suggestion untrusted, validates manual values 1–30 and records explicit entry as user-confirmed. API success remains authoritative; API-unavailable fallback is explicit and unverified. No real screenshot or account value was committed.

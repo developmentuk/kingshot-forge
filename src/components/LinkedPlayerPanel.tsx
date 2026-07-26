@@ -103,6 +103,7 @@ function LinkedPlayerPanel() {
     useState('')
   const [ocrReview, setOcrReview] = useState<AccountLinkOcrReview | null>(null)
   const [fallbackSaving, setFallbackSaving] = useState(false)
+  const [lookupFailed, setLookupFailed] = useState(false)
 
   async function handleLookup(
     event: FormEvent<HTMLFormElement>,
@@ -131,6 +132,7 @@ function LinkedPlayerPanel() {
     setMessage('')
     setErrorMessage('')
     setPreviewPlayer(null)
+    setLookupFailed(false)
 
     try {
       const response =
@@ -145,6 +147,7 @@ function LinkedPlayerPanel() {
           : 'The player could not be found.',
       )
       if (ocrReview?.playerId) setMessage('The Kingshot lookup is unavailable. You may save the reviewed screenshot details as an unverified link.')
+      setLookupFailed(true)
     } finally {
       setLookingUp(false)
     }
@@ -392,6 +395,14 @@ function LinkedPlayerPanel() {
     )
   }
 
+  const apiConflicts = previewPlayer && ocrReview
+    ? [
+      previewPlayer.playerId !== ocrReview.playerId ? 'Player ID' : null,
+      previewPlayer.name !== ocrReview.displayName ? 'Player name' : null,
+      String(previewPlayer.kingdom) !== ocrReview.kingdom ? 'Kingdom' : null,
+    ].filter((item): item is string => Boolean(item))
+    : []
+
   return (
     <section className="linked-player-panel">
       <div className="linked-player-panel__heading">
@@ -532,6 +543,8 @@ function LinkedPlayerPanel() {
                 </p>
               </div>
 
+              {apiConflicts.length > 0 && <div className="linked-player-preview__warning"><strong>Review conflict with Player API</strong><p>{apiConflicts.join(', ')} differ from the reviewed screenshot. Player API values remain authoritative; no screenshot correction was overwritten.</p></div>}
+
               <div className="linked-player-preview__actions">
                 <button
                   type="button"
@@ -558,7 +571,7 @@ function LinkedPlayerPanel() {
               </div>
             </article>
           )}
-          {ocrReview && !previewPlayer && (
+          {ocrReview && lookupFailed && !previewPlayer && (
             <div className="linked-player-preview__warning">
               <strong>Lookup fallback</strong>
               <p>The API lookup did not complete. Saving these reviewed values will remain unverified and will not invoke the player-link mutation.</p>

@@ -289,7 +289,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
         ? consensusTownCenterBadge(numeric, supporting, labelContext)
         : consensusComponentDigits(badgeReads.map((item, index) => ({ passType: componentPass(index), variant: componentVariant(index), digits: extractDigits(item.text, 2), confidence: item.confidence })), labelContext, (value) => Number(value) >= 1 && Number(value) <= 30)
       const warnings = labelContext ? consensus.warnings : [...consensus.warnings, 'town_center_label_context_required']
-      const disposition = consensus.disposition
+      const disposition = consensus.value ? 'review_required' as const : consensus.disposition
       const agreement = consensus.agreement === 'insufficient' ? 'not_applicable' : consensus.agreement
       observations.push({ field: 'townCenterLevel', rawText: '', confidence: consensus.confidence, warnings, acceptedValue: consensus.value, disposition, agreement, passType: 'label_component', variant: 'greyscale', labelContext })
       diagnostics.push({ field: 'townCenterLevel', attempted: true, recognized: Boolean(consensus.value), confidence: consensus.confidence, warnings })
@@ -304,7 +304,7 @@ export class TesseractJsAccountLinkOcrAdapter implements AccountLinkOcrAdapter {
           ...supporting.map((item) => ({ source: 'context' as const, psm: 'single_word' as const, confidence: item.confidence, acceptedValue: item.value, countedAsIndependent: false, warnings: item.confidence === 0 ? ['zero_confidence_numeric'] : [] })),
         ] satisfies readonly TownCenterPassDiagnostic[],
       } : undefined
-      fields.push({ field: 'townCenterLevel', disposition, confidence: consensus.confidence, agreement, warnings })
+      fields.push({ field: 'townCenterLevel', disposition, confidence: consensus.confidence, agreement, warnings: consensus.value ? [...warnings, 'town_center_manual_confirmation_required'] : warnings })
     }
     const mappingVersion = townCenter ? townCalibration === 'v8' ? KINGSHOT_PROFILE_V8_MAPPING_VERSION : townCalibration === 'v7' ? KINGSHOT_PROFILE_V7_MAPPING_VERSION : KINGSHOT_PROFILE_V6_MAPPING_VERSION : labelledKingdomLine ? KINGSHOT_PROFILE_V5_MAPPING_VERSION : KINGSHOT_PROFILE_V4_MAPPING_VERSION
     return { ...this.#output('', Math.max(idConsensus.confidence, ...fields.map((item) => item.confidence)), observations, diagnostics, fields, mappingVersion), diagnostics: { mappingVersion, regions: diagnostics, fields, passes, ...(townCenter ? { townCenter: townCenterDiagnostics } : {}) } }

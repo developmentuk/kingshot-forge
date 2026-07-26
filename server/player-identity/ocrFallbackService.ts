@@ -3,6 +3,7 @@ import { createSupabaseVisionEvidenceStorageService } from '../vision/evidence/s
 import type { VisionEvidenceActor } from '../../shared/platform/vision/evidenceStorageContracts.js'
 import { normalizeAllianceTag } from '../../shared/domains/player-identity/accountLinkingOcr.js'
 import { LinkedPlayerServiceError, validatePlayerId } from './linkedPlayerService.js'
+import { extractAccountLinkCandidates } from './accountLinkingOcrService.js'
 
 export type OcrFallbackInput = {
   evidenceId: string
@@ -26,14 +27,23 @@ function boundedInteger(value: unknown, label: string, min: number, max: number)
 }
 
 export async function saveOcrFallbackAccount(userId: string, input: OcrFallbackInput) {
-  const playerId = validatePlayerId(input.playerId)
-  const playerName = text(input.displayName, 'Display name', 80)
-  const kingdomId = boundedInteger(input.kingdom, 'Kingdom', 1, 9999)
-  const townCenterLevel = boundedInteger(input.townCenterLevel, 'Town Centre level', 1, 30)
-  const alliance = normalizeAllianceTag(typeof input.allianceTag === 'string' ? input.allianceTag : '')
+  const evidenceId = text(input.evidenceId, 'Evidence', 80)
+  const corrections = input.corrections && typeof input.corrections === 'object' ? Object.fromEntries(Object.entries(input.corrections).filter(([key, value]) => ['playerId', 'displayName', 'kingdom', 'allianceTag', 'townCenterLevel'].includes(key) && typeof value === 'boolean')) : {}
+  if (corrections.townCenterLevel !== true) throw new LinkedPlayerServiceError(422, 'Town Centre Level requires explicit manual confirmation.')
   const evidence = createSupabaseVisionEvidenceStorageService()
   const actor: VisionEvidenceActor = { userId, accountStatus: 'active', permissions: [] }
-  await evidence.getEvidenceMetadata(actor, text(input.evidenceId, 'Evidence', 80))
+  const stored = await evidence.readEvidenceBytes(actor, evidenceId)
+  const ocr = await extractAccountLinkCandidates({ evidenceId, bytes: stored.bytes, sha256: stored.metadata.sha256, mimeType: stored.metadata.mimeType, widthPx: stored.metadata.widthPx, heightPx: stored.metadata.heightPx })
+  const ocrPlayerId = ocr.candidates.find((candidate) => candidate.field === 'playerId')?.value
+  const ocrKingdom = ocr.candidates.find((candidate) => candidate.field === 'kingdom')?.value
+  if (!ocrPlayerId || !ocrKingdom) throw new LinkedPlayerServiceError(422, 'The stored screenshot does not contain the required OCR identity fields.')
+  const playerId = validatePlayerId(input.playerId)
+  if (corrections.playerId !== true && playerId !== ocrPlayerId) throw new LinkedPlayerServiceError(409, 'Player ID does not match the server OCR result.')
+  const playerName = text(input.displayName, 'Display name', 80)
+  const kingdomId = boundedInteger(input.kingdom, 'Kingdom', 1, 9999)
+  if (corrections.kingdom !== true && String(kingdomId) !== ocrKingdom) throw new LinkedPlayerServiceError(409, 'Kingdom does not match the server OCR result.')
+  const townCenterLevel = boundedInteger(input.townCenterLevel, 'Town Centre level', 1, 30)
+  const alliance = normalizeAllianceTag(typeof input.allianceTag === 'string' ? input.allianceTag : '')
   const admin = getSupabaseAdmin()
   const existingResult = await admin.from('player_accounts').select('id,player_id,is_primary,is_public').eq('user_id', userId).eq('is_primary', true).maybeSingle()
   if (existingResult.error) throw existingResult.error
@@ -51,9 +61,8 @@ export async function saveOcrFallbackAccount(userId: string, input: OcrFallbackI
     : admin.from('player_accounts').insert(payload)
   const saved = await query.select('id,player_id,player_name,kingdom_id,town_center_level,verification_status,verification_method,is_primary,is_public,updated_at').single()
   if (saved.error) throw saved.error
-  const corrections = input.corrections && typeof input.corrections === 'object' ? Object.fromEntries(Object.entries(input.corrections).filter(([key, value]) => ['playerId', 'displayName', 'kingdom', 'allianceTag', 'townCenterLevel'].includes(key) && typeof value === 'boolean')) : {}
-  const audit = await admin.from('vision_audit_events').insert({ actor_id: userId, event_type: 'vision.player.ocr_fallback_saved', entity_type: 'player_account', entity_id: input.evidenceId, payload: { evidenceId: input.evidenceId, playerId, kingdom: kingdomId, townCenterLevel, allianceTagPresent: Boolean(alliance.value), corrections, verifiedOwnership: false } })
+  const audit = await admin.from('vision_audit_events').insert({ actor_id: userId, event_type: 'vision.player.ocr_fallback_saved', entity_type: 'player_account', entity_id: evidenceId, payload: { evidenceId, playerId, kingdom: kingdomId, townCenterLevel, allianceTagPresent: Boolean(alliance.value), corrections, verifiedOwnership: false, source: 'server_recomputed_ocr_plus_user_review' } })
   if (audit.error) throw audit.error
-  await evidence.cancelOwnerScanEvidence(actor, input.evidenceId, 'Account-linking OCR fallback review completed; exact evidence removed.')
+  await evidence.cancelOwnerScanEvidence(actor, evidenceId, 'Account-linking OCR fallback review completed; exact evidence removed.')
   return saved.data
 }
