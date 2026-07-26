@@ -101,6 +101,11 @@
   overflow: hidden;
 }
 
+.forge-render-engine__fit--contain {
+  height: 100%;
+  min-height: 0;
+}
+
 .forge-render-engine__fit-stage {
   position: relative;
   margin-inline: auto;
