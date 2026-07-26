@@ -12,6 +12,7 @@ on:
       - 'src/**'
       - 'scripts/**'
       - 'fixtures/**'
+      - 'docs/**'
       - 'supabase/migrations/**'
       - 'package.json'
       - 'package-lock.json'
