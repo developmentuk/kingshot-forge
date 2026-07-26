@@ -1,9 +1,9 @@
 name: Prepare Vision promotion records
 
 on:
-  push:
+  pull_request:
     branches:
-      - integration/vision-release-readiness
+      - main
     paths:
       - '.github/workflows/vision-promotion-docs-once.yml'
 
