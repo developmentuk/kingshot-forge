@@ -44,7 +44,7 @@ assert.equal(lineArt.map((cell) => cell.glyph).join(''), '＿_＿＿_', 'mixed l
 assert.deepEqual(lineArt.map((cell) => cell.span), [2, 1, 2, 2, 1], 'mixed line-art glyphs retain calibrated full-width/ASCII ratios')
 assert.equal(analyseArtworkDetailed(mixedSource).graphemeCount, segmentGraphemes(mixedSource).length, 'analysis preserves every grapheme')
 
-const fixturePath = '../kingshot-text-lab/fixtures/community-art/wow-im-so-cute/wow-im-so-cute.txt'
+const fixturePath = 'fixtures/community-art/wow-im-so-cute/wow-im-so-cute.txt'
 const source = fs.readFileSync(fixturePath)
 assert.equal(createHash('sha256').update(source).digest('hex'), 'c4b0112b0e43312d1bbf3f2e18472814564d184f55c114c2749d0e921613cd79', 'canonical fixture bytes remain unchanged')
 console.log('Context calibration tests passed: prose/layout spaces, structural classifier, contiguous line-art geometry, grapheme preservation and canonical bytes.')
