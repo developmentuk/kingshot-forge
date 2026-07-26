@@ -60,6 +60,12 @@ export type AccountLinkOcrReview = {
   userConfirmed: Readonly<Record<AccountLinkOcrField, boolean>>
 }
 
+type GraphemeSegment = { readonly segment: string }
+type GraphemeSegmenterConstructor = new (
+  locales?: string | readonly string[],
+  options?: { readonly granularity: 'grapheme' },
+) => { segment(input: string): Iterable<GraphemeSegment> }
+
 function boundedConfidence(confidence: number): number {
   return Math.max(0, Math.min(1, confidence))
 }
@@ -76,8 +82,11 @@ function normalizeName(value: string): string {
 export function normalizeAllianceTag(value: string): { value?: string; warning?: string } {
   const trimmed = value.trim()
   const inner = /^[[(](.*)[\])]$/u.exec(trimmed)?.[1] ?? trimmed
-  const graphemes = typeof Intl !== 'undefined' && 'Segmenter' in Intl
-    ? [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(inner)].map((item) => item.segment)
+  const segmenterConstructor = typeof Intl !== 'undefined'
+    ? (Intl as typeof Intl & { readonly Segmenter?: GraphemeSegmenterConstructor }).Segmenter
+    : undefined
+  const graphemes = segmenterConstructor
+    ? Array.from(new segmenterConstructor(undefined, { granularity: 'grapheme' }).segment(inner), (item) => item.segment)
     : Array.from(inner)
   if (graphemes.length !== 3) return { warning: 'alliance_tag_must_have_exactly_three_characters' }
   return { value: graphemes.join('').toUpperCase() }
