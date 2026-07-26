@@ -1,6 +1,6 @@
 # ART-005 — Adaptive Kingshot clipboard calibration
 
-Status: implementation, source-evidence recovery, and local visual evidence capture complete; owner visual review pending
+Status: implementation, source-evidence recovery, local visual evidence capture, and owner visual review complete; GO WITH RECORDED CALIBRATION DIFFERENCES
 
 Branch: `feature/art-studio-adaptive-clipboard-calibration`
 
@@ -102,6 +102,36 @@ these are not claimed as Kingshot pixel identity.
 The logical baseline and candidate reports are in
 `artifacts/art005/current-production-baseline.json` and
 `artifacts/art005/adaptive-candidate-report.json`. They record the before/after
-line-width arrays and the visual evidence status. No owner acceptance is
-claimed; the branch remains pending human visual review and the Vercel Draft PR
-preview.
+line-width arrays and the visual evidence status.
+
+## Owner acceptance
+
+Owner-authenticated preview review completed on PR #22 with Zoom set to Fit.
+Decision: **GO WITH RECORDED CALIBRATION DIFFERENCES**.
+
+The five screenshot-backed fixtures were reviewed as follows:
+
+| Fixture | Accepted full-preview result |
+| --- | --- |
+| Dont ask me | Complete lower structure, caption, and bubble boundaries visible; submission details begin below the completed preview. |
+| AH AH oops | Completes automatically in Fit; manual 75% selection is not required; water emoji and all structural rows are visible. |
+| Free hard spanking | Complete body, legs, caption, and emoji visible with no vertical clipping. |
+| I have come to | Complete left structure and right-hand text visible with no clipping or unexpected wrapping. |
+| Where is all the good text art | Complete prose, cat, and lower rule visible with no clipping or unexpected wrapping. |
+
+The owner accepted that width and contain fit modes behave correctly, full-preview
+Fit accounts for available width and height, manual zoom remains available as a
+larger scrollable view, and inline submission and moderation previews retain
+width-only fitting. Adaptive clipboard calibration generalises across the
+verified fixture set. Exact source, hashes, byte counts, clipboard payloads,
+authored mode, and the five-per-hour draft-preserving rate-limit UX remain
+unchanged and accepted.
+
+The following remain recorded non-blocking simulation differences: emoji
+appearance and scale can vary by device and operating system; Forge does not
+use Kingshot's proprietary font; exact glyph shapes and stroke thickness are
+not pixel-identical; and minor letter-spacing and glyph-paint differences
+remain. These differences do not alter artwork structure, source, or copy
+payload.
+
+Final owner decision: **GO WITH RECORDED CALIBRATION DIFFERENCES**.
