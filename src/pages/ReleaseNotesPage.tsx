@@ -21,6 +21,22 @@ function ReleaseNotesPage() {
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
+            <span className="release-entry__badge">Promotion candidate</span>
+            <h2>VISION-REL-001 — Forge Vision Platform and Account Linking</h2>
+            <p>Authenticated preview accepted 26 July 2026 · production promotion pending</p>
+          </div>
+          <Link className="button button--secondary" to="/my-forge">Open My Forge</Link>
+        </div>
+        <div className="release-entry__sections">
+          <section><h3>Screenshot-assisted account linking</h3><ul><li>Bundled Tesseract.js OCR proposes Player ID and Kingdom from a Kingshot profile screenshot.</li><li>Display name and alliance tag remain editable, supporting and review-only.</li><li>Town Centre remains blank until the player manually confirms a whole number from 1 through 30.</li></ul></section>
+          <section><h3>Trust and evidence</h3><ul><li>Successful Kingshot Player API values remain authoritative and conflicts stay visible.</li><li>OCR never verifies ownership, membership, rank or authority.</li><li>Private evidence storage, forced RLS, exact-evidence deletion and append-only audit controls are preserved.</li></ul></section>
+          <section><h3>Release readiness</h3><ul><li>Authenticated desktop and mobile preview acceptance completed by the Product Owner.</li><li>All canonical Forge, Vision, rendering, Art Studio, lint and production-build gates pass.</li><li>Controlled merge, production deployment and production smoke testing remain required.</li></ul></section>
+        </div>
+      </article>
+
+      <article className="release-entry release-entry--latest">
+        <div className="release-entry__heading">
+          <div>
             <span className="release-entry__badge">In development</span>
             <h2>Release 0.8.0 — Forge Operations Centre</h2>
             <p>Active major milestone · not live</p>

@@ -1,6 +1,6 @@
 # VISION-REL-001 — Vision merge readiness and release integration
 
-Status: **Automated and live-schema integration accepted — owner preview acceptance required**  
+Status: **Owner accepted — ready for controlled promotion**  
 Date: 26 July 2026  
 Owner: Clark  
 Engineering partner: Aegis
@@ -104,25 +104,21 @@ The checked-in migrations must not be reapplied or duplicated merely because the
 - The temporary visible-ink diagnostic workflow was removed after its isolated check passed.
 - The PR check on the final documentation head remains the authoritative exact-candidate result.
 
-## Remaining gates
+## Owner acceptance
 
-- The final PR head retains a successful `Vision integration gate` and READY protected Vercel deployment.
-- Protected preview is tested through an authenticated owner session.
-- Screenshot upload and review workflow is tested on a genuine owner screenshot.
-- Player ID and Kingdom extraction remain correct.
-- Display name and alliance remain editable and review-only.
-- Town Centre remains blank until manual confirmation.
-- Successful Player API lookup remains authoritative.
-- API-unavailable fallback remains explicit and unverified/pending.
-- Exact evidence deletion and recovery controls are exercised through the authenticated preview.
-- Vision Studio and acceptance routes enforce server-backed permissions.
-- Desktop and mobile layouts are accepted at supported viewport sizes.
-- Art Studio rendering, clipboard and submission workflows are smoke-tested against the same preview.
-- Release Notes and Roadmap reflect the accepted release state.
-- Clark gives explicit promotion approval.
+Clark completed authenticated protected-preview acceptance on 26 July 2026 and explicitly approved PR #24 for promotion preparation.
+
+The accepted preview covered desktop and mobile layouts, a genuine owner screenshot, Player ID and Kingdom extraction, editable review-only display name and alliance tag, blank-until-confirmed Town Centre handling, Player API authority, explicit unverified fallback behaviour, permission boundaries, evidence controls and Art Studio smoke testing.
+
+## Remaining promotion gates
+
+- Merge PR #24 to `main` using the approved repository merge method and exact reviewed head.
+- Confirm the production deployment is built from the resulting `main` merge commit.
+- Run the production smoke test required by the release process.
+- Record the production result and create the appropriate semantic version tag when the release is confirmed.
 
 ## Recommendation
 
-**NO-GO for merging PR #24 while any owner/runtime gate remains open.**
+**GO for controlled merge of PR #24.**
 
-Automated integration and read-only live schema verification are accepted. `main`, production and canonical live data remain unchanged until authenticated preview acceptance, documentation closure and explicit owner approval are complete.
+The candidate is technically ready, manually accepted and documented. Production is not confirmed until merge, deployment and post-deployment smoke testing succeed.
