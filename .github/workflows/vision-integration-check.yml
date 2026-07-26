@@ -136,8 +136,17 @@ jobs:
         run: npm run lint
       - name: Build candidate
         run: npm run build
-      - name: Run full rendering regression suite
-        run: npm run test:render
+
+      - name: Test rendering simulator
+        run: node --import tsx scripts/test-render.mjs
+      - name: Test rendering context calibration
+        run: node --import tsx scripts/test-render-context-calibration.mjs
+      - name: Test rendering core
+        run: node --import tsx scripts/test-render-core.mjs
+      - name: Test Kingshot screenshot calibration
+        run: node --import tsx scripts/test-kingshot-screenshot-calibration.mjs
+      - name: Test Kingshot visible-ink alignment
+        run: node --import tsx scripts/test-kingshot-visible-ink-alignment.mjs
       - name: Run Art Studio acceptance harness
         run: npm run test:art-studio-acceptance
       - name: Run Art Studio provenance regression
