@@ -13,7 +13,7 @@ import "./styles/heroCollectionPolish.css";
 import "./styles/forgeUxPolish.css";
 import "./styles/kingshotSimulator.css";
 import "./features/admin/renderEngineCalibration.css";
-import "./features/art-studio/artStudioAcceptance.css";
+import "./features/admin/visionStudio.css";
 
 import HomePage from "./pages/HomePage";
 import NameStudioPage from "./pages/NameStudioPage";
@@ -61,6 +61,8 @@ import { PrivatePlayerIdentityPage } from "./features/player-identity/PrivatePla
 import { PlayerSupportWorkspacePage } from "./features/player-identity/PlayerSupportWorkspacePage";
 import { GiftRedemptionOperationsPage } from "./features/admin/GiftRedemptionOperationsPage";
 import { RenderEngineCalibrationPage } from "./features/admin/RenderEngineCalibrationPage";
+import { VisionStudioPage } from "./features/admin/VisionStudioPage";
+import { VisionAccountLinkingAcceptancePage } from "./features/admin/VisionAccountLinkingAcceptancePage";
 import { EditorialImportManagerPage } from "./features/admin/EditorialImportManagerPage";
 import { EditorialOperationsPage } from "./features/admin/editorial/EditorialOperationsPage";
 import { AnalyticsPage } from "./features/admin/AnalyticsPage";
@@ -77,11 +79,6 @@ import ContributorApplicationPage from "./pages/ContributorApplicationPage";
 import MyContributorApplicationPage from "./pages/MyContributorApplicationPage";
 import ContributorApplicationsPage from "./features/operations/ContributorApplicationsPage";
 import ContributorApplicationDetailPage from "./features/operations/ContributorApplicationDetailPage";
-import ArtStudioAcceptancePage from "./features/art-studio/ArtStudioAcceptancePage";
-
-const developmentAcceptanceRoute = import.meta.env.DEV
-  ? <Route path="art-studio/acceptance" element={<ArtStudioAcceptancePage />} />
-  : null;
 
 function App() {
   return (
@@ -90,7 +87,6 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="name-studio" element={<NameStudioPage />} />
         <Route path="art-studio" element={<ArtStudioPage />} />
-        {developmentAcceptanceRoute}
         <Route path="chat-studio" element={<ChatStudioPage />} />
         <Route path="characters" element={<CharacterLibraryPage />} />
         <Route path="compatibility" element={<CompatibilityPage />} />
@@ -161,6 +157,8 @@ function App() {
         <Route path="admin/player-identity/:caseId" element={<ProtectedRoute permission="platform.users.manage"><PlayerSupportWorkspacePage /></ProtectedRoute>} />
         <Route path="admin/gift-redemption" element={<ProtectedRoute permission="cms.view"><GiftRedemptionOperationsPage /></ProtectedRoute>} />
         <Route path="admin/render-engine" element={<ProtectedRoute permission="render_engine.view"><RenderEngineCalibrationPage /></ProtectedRoute>} />
+        <Route path="admin/vision-studio" element={<ProtectedRoute permission="cms.view"><VisionStudioPage /></ProtectedRoute>} />
+        <Route path="admin/vision/account-linking-acceptance" element={<ProtectedRoute permission="vision.scan.create"><VisionAccountLinkingAcceptancePage /></ProtectedRoute>} />
         <Route path="admin/imports" element={<ProtectedRoute permission="cms.import.run"><EditorialImportManagerPage /></ProtectedRoute>} />
         <Route path="admin/history" element={<ProtectedRoute permission="cms.history.view"><EditorialOperationsPage mode="history" /></ProtectedRoute>} />
         <Route path="admin/search" element={<ProtectedRoute permission="cms.view"><SearchExplorerPage /></ProtectedRoute>} />
