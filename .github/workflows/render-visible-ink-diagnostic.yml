@@ -1,0 +1,50 @@
+name: Render visible-ink diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/render-visible-ink-diagnostic.yml'
+      - 'scripts/test-kingshot-visible-ink-alignment.mjs'
+      - 'src/render-engine/**'
+      - 'fixtures/community-art/kingshot-clipboard-expanded/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capture visible-ink test output
+        run: |
+          set +e
+          node --import tsx scripts/test-kingshot-visible-ink-alignment.mjs > visible-ink.log 2>&1
+          status=$?
+          cat visible-ink.log
+          printf '%s\n' "$status" > visible-ink.exit
+          exit 0
+      - name: Upload diagnostic output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visible-ink-diagnostic
+          path: |
+            visible-ink.log
+            visible-ink.exit
+          if-no-files-found: error
+      - name: Enforce test result
+        run: test "$(cat visible-ink.exit)" = "0"
