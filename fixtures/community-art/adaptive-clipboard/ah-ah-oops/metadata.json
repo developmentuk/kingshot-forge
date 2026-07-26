@@ -1,0 +1,37 @@
+{
+  "fixtureId": "art-005-ah-ah-oops",
+  "database": {
+    "recordId": "5e496c7d-294d-4a2e-b20a-6ae780b1fef4",
+    "status": "pending",
+    "title": "AH AH oops"
+  },
+  "source": {
+    "filename": "source.txt.base64",
+    "encoding": "base64-encoded UTF-8",
+    "sha256": "3eb998a5526650229360f453bab2506f7ee3a54f1f28b4645431451c7bc923c6",
+    "utf8ByteLength": 199,
+    "codePointCount": 96,
+    "graphemeCount": 95,
+    "utf16CodeUnitCount": 107,
+    "lineCount": 9,
+    "ordinarySpaceCount": 20,
+    "ideographicSpaceCount": 12,
+    "emojiCount": 11,
+    "sourceEqualsArtworkText": true
+  },
+  "sourceContext": "kingshot-clipboard",
+  "compatibilityProfile": "kingshot-clipboard",
+  "evidence": {
+    "referenceScreenshot": "kingshot-reference.png",
+    "referenceScreenshotOriginalFilename": "ah-ah-oops-kingshot-reference.png",
+    "referenceScreenshotSha256": "74e2221496c0e7fa239ad59936aa305d4f33f6f9407ad5745148890a6a5f7321",
+    "referenceScreenshotByteLength": 37986,
+    "referenceScreenshotDimensions": { "width": 212, "height": 192 },
+    "status": "database-source-and-reference-screenshot-verified"
+  },
+  "calibration": {
+    "status": "visual-evidence-pending",
+    "currentProduction": "origin/main at 0c26cdb",
+    "candidate": null
+  }
+}

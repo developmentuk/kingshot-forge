@@ -38,6 +38,8 @@
     "test:render-engine": "node scripts/test-render-engine.mjs && node scripts/test-render-engine-persistence.mjs && node --import tsx scripts/test-render-permissions.mjs && node --import tsx scripts/test-render-repair.mjs",
     "test:render": "node --import tsx scripts/test-render.mjs && node --import tsx scripts/test-render-context-calibration.mjs && node --import tsx scripts/test-render-core.mjs && node --import tsx scripts/test-kingshot-screenshot-calibration.mjs && node --import tsx scripts/test-kingshot-visible-ink-alignment.mjs",
     "test:art-studio-acceptance": "node scripts/test-art-studio-acceptance-harness.mjs",
+    "test:art005-adaptive-calibration": "node --import tsx scripts/test-art005-adaptive-calibration.mjs",
+    "test:art-studio-fit": "node --import tsx scripts/test-art-studio-fit.mjs",
     "test:art-studio-submit-provenance": "node --import tsx scripts/test-art-studio-submit-provenance.mjs",
     "test:art001-rendering": "node --import tsx scripts/test-art001-rendering.mjs",
     "test:auto-redeem": "node scripts/test-auto-redeem.mjs && node scripts/test-auto-redeem-ui.mjs && node scripts/test-auto-redeem-admin.mjs",

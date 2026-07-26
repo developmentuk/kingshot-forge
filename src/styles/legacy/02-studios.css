@@ -246,10 +246,11 @@
 .art-preview-modal__panel {
   position: relative;
   z-index: 1;
-  display: flex;
+  display: grid;
   width: min(960px, 100%);
+  height: min(calc(100dvh - 2.5rem), 960px);
   max-height: calc(100dvh - 2.5rem);
-  flex-direction: column;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto auto;
   overflow: hidden;
   border: 1px solid #3a485a;
   border-radius: 1rem;
@@ -286,11 +287,51 @@
 }
 
 .art-preview-modal__content {
-  flex: 1;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
   overflow: auto;
   padding: 1rem;
   background: #080f18;
   overscroll-behavior: contain;
+}
+
+.art-preview-stage {
+  min-width: 0;
+}
+
+.art-preview-stage--fit {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.art-preview-stage--fit .forge-render-engine--fit {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.art-preview-stage--fit .forge-render-engine__fit {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.art-preview-stage--fit .forge-render-engine__analysis,
+.art-preview-stage--fit .forge-render-engine__notes {
+  display: none;
+}
+
+.art-preview-stage--zoomed {
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  overflow: auto;
 }
 
 .art-preview-modal__content pre {
@@ -419,6 +460,7 @@
 
   .art-preview-modal__panel {
     width: 100%;
+    height: calc(100dvh - env(safe-area-inset-top));
     max-height: calc(
       100dvh - env(safe-area-inset-top)
     );
@@ -429,7 +471,7 @@
   }
 
   .art-preview-modal__content {
-    min-height: 42dvh;
+    min-height: 0;
   }
 
   .art-preview-modal__content pre {

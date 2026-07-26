@@ -1,0 +1,37 @@
+{
+  "fixtureId": "art-005-i-have-come-to",
+  "database": {
+    "recordId": "3c490bb3-31d1-481a-a4c8-a45ad6bd7562",
+    "status": "pending",
+    "title": "I have come to"
+  },
+  "source": {
+    "filename": "source.txt.base64",
+    "encoding": "base64-encoded UTF-8",
+    "sha256": "3bea8beb8d0a1345306552abe1f3e395ff0aeb84595d1c8a0897c66f159d8985",
+    "utf8ByteLength": 387,
+    "codePointCount": 342,
+    "graphemeCount": 338,
+    "utf16CodeUnitCount": 343,
+    "lineCount": 9,
+    "ordinarySpaceCount": 232,
+    "ideographicSpaceCount": 0,
+    "emojiCount": 1,
+    "sourceEqualsArtworkText": true
+  },
+  "sourceContext": "kingshot-clipboard",
+  "compatibilityProfile": "kingshot-clipboard",
+  "evidence": {
+    "referenceScreenshot": "kingshot-reference.png",
+    "referenceScreenshotOriginalFilename": "i-have-come-to-kingshot-reference.png",
+    "referenceScreenshotSha256": "f9e5a5db48bb62b822c0aa59541569ac8a24ee67fab320747985542b11287e78",
+    "referenceScreenshotByteLength": 43611,
+    "referenceScreenshotDimensions": { "width": 288, "height": 196 },
+    "status": "database-source-and-reference-screenshot-verified"
+  },
+  "calibration": {
+    "status": "visual-evidence-pending",
+    "currentProduction": "origin/main at 0c26cdb",
+    "candidate": null
+  }
+}

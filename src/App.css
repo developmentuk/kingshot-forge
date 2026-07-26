@@ -18,6 +18,7 @@
 .art-studio-live-message { color: #9fe1b7; font-weight: 700; }
 .art-studio-submission-shell, .art-studio-status-panel, .art-studio-auth-card { border: 1px solid #2b394a; border-radius: 1rem; padding: 1.25rem; background: linear-gradient(180deg, rgba(255,255,255,.025), transparent), rgba(18,26,37,.9); color: #f7f2e8; }
 .art-studio-submission-shell { max-width: 820px; }
+.art-studio-rate-limit-helper { flex-basis: 100%; color: #b9c4d2; font-size: .875rem; }
 .art-studio-form { display: grid; gap: 1rem; }
 .art-studio-form > label, .art-studio-form fieldset { display: grid; gap: .4rem; color: #f7f2e8; }
 .art-studio-form > label > span { color: #aeb9c7; font-size: .78rem; }

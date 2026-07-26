@@ -1,0 +1,37 @@
+{
+  "fixtureId": "art-005-dont-ask-me",
+  "database": {
+    "recordId": "3dbd4af9-61f3-4b6f-8456-a6d04e180504",
+    "status": "pending",
+    "title": "Dont ask me"
+  },
+  "source": {
+    "filename": "source.txt.base64",
+    "encoding": "base64-encoded UTF-8",
+    "sha256": "7cfbe9fcb122a6412a25b6d665f5924c242b03a2dac898149c87ef7c569a5fa7",
+    "utf8ByteLength": 252,
+    "codePointCount": 170,
+    "graphemeCount": 170,
+    "utf16CodeUnitCount": 170,
+    "lineCount": 9,
+    "ordinarySpaceCount": 70,
+    "ideographicSpaceCount": 16,
+    "emojiCount": 0,
+    "sourceEqualsArtworkText": true
+  },
+  "sourceContext": "kingshot-clipboard",
+  "compatibilityProfile": "kingshot-clipboard",
+  "evidence": {
+    "referenceScreenshot": "kingshot-reference.png",
+    "referenceScreenshotOriginalFilename": "dont-ask-me-kingshot-reference.png",
+    "referenceScreenshotSha256": "0f90bf8e8b934c96d69a7d87b7bfab83e0d5f9e4f951058f6fe627477fbb821a",
+    "referenceScreenshotByteLength": 35939,
+    "referenceScreenshotDimensions": { "width": 263, "height": 195 },
+    "status": "database-source-and-reference-screenshot-verified"
+  },
+  "calibration": {
+    "status": "visual-evidence-pending",
+    "currentProduction": "origin/main at 0c26cdb",
+    "candidate": null
+  }
+}

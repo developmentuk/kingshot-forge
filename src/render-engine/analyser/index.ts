@@ -1,6 +1,7 @@
 import { DEFAULT_CALIBRATION } from '../configuration'
 import { normaliseArtwork, segmentGraphemes } from '../parser'
 import type { ArtworkAnalysis, ArtworkClass, CalibrationConfiguration, GlyphFamily } from '../types'
+import { resolveAdaptiveSpaceAdvance } from '../adaptiveCalibration'
 
 const BOX_DRAWING = /^[─━│┃┌┐└┘├┤┬┴┼╔╗╚╝╠╣╦╩╬═║]$/u
 const PIXEL_CIRCLE = /^[🔴🔵⚪🟢🟡🟣🟠🟤●○]$/u
@@ -44,6 +45,7 @@ export function resolveGlyphAdvance(glyph: string, glyphs: string[], index: numb
   if (family !== 'space') return calibration[family].advanceCells
   const spacing = ARTWORK_SPACING_PROFILES[sourceContext]
   if (!isArtworkLine(glyphs)) return spacing.prose
+  if (sourceContext === 'kingshot-clipboard') return resolveAdaptiveSpaceAdvance({ line: glyphs.join(''), index, glyphs, sourceContext })
   const firstContent = glyphs.findIndex((item) => item !== ' ')
   if (index < firstContent) {
     if (index > 0 && glyphs[index - 1] === ' ') return 0
