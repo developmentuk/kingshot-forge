@@ -1,6 +1,6 @@
 # VISION-REL-001 — Vision merge readiness and release integration
 
-Status: **Integration candidate — not approved for production**  
+Status: **Automated integration accepted — owner preview acceptance required**  
 Date: 26 July 2026  
 Owner: Clark  
 Engineering partner: Aegis
@@ -67,6 +67,15 @@ The candidate retains accepted work from PRs #18 through #21:
 - mobile containment and visible-ink alignment checks;
 - development-only Art Studio acceptance route.
 
+## Integration corrections
+
+Automated integration validation exposed four assumptions that were safe on the original developer workstation but not portable to the combined release line:
+
+1. `Intl.Segmenter` was available at runtime but absent from the current TypeScript library declaration. The helper now uses a narrow optional runtime type and retains the existing `Array.from` fallback without raising the application-wide compiler target.
+2. Vision activation-precondition tests required Windows CRLF working-tree hashes even though the merged `.gitattributes` correctly enforces LF for SQL migrations. The guard now accepts canonical LF or the recorded legacy CRLF form and still requires the exact canonical digest after normalisation.
+3. Render context calibration and Art Studio acceptance tests referenced a sibling `kingshot-text-lab` checkout. They now read the same hash-locked, byte-locked fixtures checked into Kingshot Forge.
+4. The visible-ink Node test imported the browser-facing render-engine barrel, which transitively loads a raw text fixture. It now imports the grid and calibration modules directly; calibrated values and product runtime behaviour are unchanged.
+
 ## Database and evidence state
 
 No Supabase mutation was performed during merge integration.
@@ -78,13 +87,15 @@ The closed evidence incident remains closed. No cleanup retry, synthetic activat
 ## Automated evidence
 
 - Integration branch contains current `main` with zero commits behind.
-- Exact integrated application commit `64f9ee1b0ba235b75dbfdaf595e6987f57b87747` deployed successfully to Vercel preview deployment `dpl_4zFfcjhTpwEWFhry9vgjTgBr7kWd` with state `READY`.
-- A scoped GitHub Actions workflow, `Vision integration gate`, runs locked installation, the canonical `npm run check` suite, full rendering regressions, Art Studio acceptance and submission-provenance tests.
-- CI result is pending at the time of this record and remains a blocking gate.
+- Vercel preview builds succeeded after the TypeScript integration correction; only the repository's documented large-chunk warning remained.
+- GitHub Actions run `30205423700` passed on implementation commit `0d60dba8ecec51b415d608d434d31a9428dbaaff`.
+- The successful gate included locked dependency installation, all canonical Forge validations and domain tests, every Vision platform/worker/OCR/evidence/policy test, lint, production build, all five extended rendering checks, the Art Studio acceptance harness and submission-provenance regression.
+- The temporary visible-ink diagnostic workflow was removed after its isolated check passed.
+- The PR check on the final documentation/cleanup head remains the authoritative exact-candidate result.
 
 ## Remaining gates
 
-- GitHub Actions integration gate passes on the exact final candidate commit.
+- The final PR head retains a successful `Vision integration gate` and READY protected Vercel deployment.
 - Protected preview is tested through an authenticated owner session.
 - Screenshot upload and review workflow is tested on a genuine owner screenshot.
 - Player ID and Kingdom extraction remain correct.
@@ -101,6 +112,6 @@ The closed evidence incident remains closed. No cleanup retry, synthetic activat
 
 ## Recommendation
 
-**NO-GO for merging PR #24 while any remaining gate is open.**
+**NO-GO for merging PR #24 while any owner/runtime gate remains open.**
 
-The integration history and preview build are ready for validation. `main`, production and canonical live data remain unchanged until explicit owner approval and final gate closure.
+Automated integration is accepted. `main`, production and canonical live data remain unchanged until authenticated preview acceptance, documentation closure and explicit owner approval are complete.
