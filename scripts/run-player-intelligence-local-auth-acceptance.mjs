@@ -250,6 +250,10 @@ export async function runPlayerIntelligenceLocalAuthAcceptance({
       callbackResolve = resolve
       callbackReject = reject
     }, localAuth.authTimeoutMs)
+    // The browser launcher may await the callback response before this function awaits
+    // callbackPromise. Attach a handler now so a fast cancellation cannot become an
+    // unhandled rejection; the original promise still rejects when awaited below.
+    void callbackPromise.catch(() => {})
 
     server.on('request', async (req, res) => {
       if (callbackConsumed) {
@@ -313,19 +317,25 @@ export async function runPlayerIntelligenceLocalAuthAcceptance({
           storage.clear()
         }
 
+        if (!temporarySessionRevoked) {
+          throw new PlayerIntelligenceLocalAuthError(
+            'temporary_session_revoke_failed',
+            'The one-call lookup completed, but the temporary sign-in session could not be revoked automatically.',
+            result,
+          )
+        }
+
         result = {
           ...result,
           authenticationFlow: 'pkce_loopback_memory_only',
           browserSessionPersisted: false,
           credentialsDisplayed: false,
-          temporarySessionRevoked,
+          temporarySessionRevoked: true,
           repository,
         }
         const evidencePath = evidenceWriter(result, environment)
         result = { ...result, evidencePath }
-        respond(res, 200, 'Acceptance complete', temporarySessionRevoked
-          ? 'The one-call player acceptance completed and the temporary sign-in session was revoked.'
-          : 'The one-call player acceptance completed, but automatic temporary-session revocation needs review.')
+        respond(res, 200, 'Acceptance complete', 'The one-call player acceptance completed and the temporary sign-in session was revoked.')
         callbackResolve(result)
       } catch (cause) {
         try {
