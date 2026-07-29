@@ -222,6 +222,7 @@ export function createOfficialGiftCodeProvider(
         return result({ status: 'failed', externalRequestSent: false, requestDisposition: 'not_sent', providerReference: null, failureCategory: 'invalid_request', retryAfterSeconds: null, safeDiagnosticCode: 'kingdom_required', safeMessage: SAFE_MESSAGES.kingdom })
       }
 
+      let requestStarted = false
       try {
         const code = createSignedFields({
           cdk: request.code,
@@ -229,6 +230,7 @@ export function createOfficialGiftCodeProvider(
           kid: request.kingdomId,
           time: String(Math.floor(Date.now() / 1000)),
         }, config.signingKey)
+        requestStarted = true
         const codeResponse = await requestJson(fetcher, config.codeUrl, code, config)
         if (codeResponse.response.status === 429) {
           return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'rate_limited', retryAfterSeconds: 60, safeDiagnosticCode: 'rate_limited', safeMessage: SAFE_MESSAGES.retry })
@@ -238,7 +240,7 @@ export function createOfficialGiftCodeProvider(
         }
         return normaliseOfficialResponse(codeResponse.payload)
       } catch (error) {
-        return result({ status: 'failed', externalRequestSent: false, requestDisposition: 'unknown', providerReference: null, failureCategory: 'transient_provider', retryAfterSeconds: 30, safeDiagnosticCode: error instanceof DOMException && error.name === 'AbortError' ? 'timeout' : 'network_error', safeMessage: SAFE_MESSAGES.unavailable })
+        return result({ status: 'failed', externalRequestSent: requestStarted, requestDisposition: requestStarted ? 'unknown' : 'not_sent', providerReference: null, failureCategory: 'transient_provider', retryAfterSeconds: 30, safeDiagnosticCode: error instanceof DOMException && error.name === 'AbortError' ? 'timeout' : 'network_error', safeMessage: SAFE_MESSAGES.unavailable })
       }
     },
   })
