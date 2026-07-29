@@ -9,7 +9,6 @@ import type {
 export const OFFICIAL_GIFT_CODE_PROVIDER_ID = 'official-kingshot'
 
 export type OfficialProviderConfig = Readonly<{
-  playerUrl: string
   codeUrl: string
   signingKey: string
   timeoutMs: number
@@ -38,6 +37,9 @@ const SAFE_MESSAGES = Object.freeze({
   expired: 'The provider reports that this code has expired.',
   invalid: 'The provider did not accept this code.',
   player: 'The provider could not validate this Governor.',
+  kingdom: 'The provider could not validate this Governor and kingdom combination. Refresh or relink the Governor details before trying again.',
+  ineligible: 'This Governor does not currently meet the provider requirements for this code.',
+  exhausted: 'The provider reports that this code can no longer be claimed.',
   retry: 'The provider asked Forge to try again later.',
   unavailable: 'The redemption provider is temporarily unavailable.',
   unknown: 'The provider returned an unexpected result.',
@@ -50,13 +52,11 @@ function readBoolean(value: string | undefined) {
 export function readOfficialProviderConfig(
   environment: NodeJS.ProcessEnv = process.env,
 ): OfficialProviderConfig | null {
-  const playerUrl = environment.KINGSHOT_REDEMPTION_PLAYER_URL?.trim()
   const codeUrl = environment.KINGSHOT_REDEMPTION_CODE_URL?.trim()
   const signingKey = environment.KINGSHOT_REDEMPTION_SIGNING_KEY?.trim()
   const timeoutMs = Number(environment.KINGSHOT_REDEMPTION_TIMEOUT_MS ?? 15_000)
 
   if (
-    !playerUrl ||
     !codeUrl ||
     !signingKey ||
     !Number.isInteger(timeoutMs) ||
@@ -67,7 +67,6 @@ export function readOfficialProviderConfig(
   }
 
   return Object.freeze({
-    playerUrl,
     codeUrl,
     signingKey,
     timeoutMs,
@@ -126,10 +125,10 @@ export function normaliseOfficialResponse(
   const message = String(payload.msg ?? '').trim().toUpperCase().replace(/\.$/, '')
   const errorCode = Number(payload.err_code)
 
-  if (message === 'SUCCESS') {
+  if (message === 'SUCCESS' || errorCode === 20000) {
     return result({ status: 'succeeded', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: null, retryAfterSeconds: null, safeDiagnosticCode: 'confirmed', safeMessage: SAFE_MESSAGES.success })
   }
-  if (message === 'RECEIVED' && errorCode === 40008 || message === 'SAME TYPE EXCHANGE' && errorCode === 40011 || message === 'USED' && errorCode === 40005) {
+  if ((message === 'RECEIVED' && errorCode === 40008) || (message === 'SAME TYPE EXCHANGE' && errorCode === 40011)) {
     return result({ status: 'already_claimed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: null, retryAfterSeconds: null, safeDiagnosticCode: 'already_claimed', safeMessage: SAFE_MESSAGES.already })
   }
   if (message === 'TIME ERROR' && errorCode === 40007) {
@@ -138,11 +137,34 @@ export function normaliseOfficialResponse(
   if (message === 'CDK NOT FOUND' && errorCode === 40014) {
     return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'permanent', retryAfterSeconds: null, safeDiagnosticCode: 'invalid_code', safeMessage: SAFE_MESSAGES.invalid })
   }
-  if (message === 'STOVE_LV ERROR' || message === 'RECHARGE_MONEY ERROR' || message === 'RECHARGE_MONEY_VIP ERROR' || message === 'NOT LOGIN') {
+  if ((message === 'USED' && errorCode === 40005) || errorCode === 40005) {
+    return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'permanent', retryAfterSeconds: null, safeDiagnosticCode: 'code_limit_reached', safeMessage: SAFE_MESSAGES.exhausted })
+  }
+  if (errorCode === 40019 || message.includes('TOO FREQUENT') || message.includes('FREQUENT')) {
+    return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'rate_limited', retryAfterSeconds: 60, safeDiagnosticCode: 'rate_limited', safeMessage: SAFE_MESSAGES.retry })
+  }
+  if (errorCode === 40020 || message.includes('KID_MISMATCH') || message.includes('USER INFO ERROR')) {
+    return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'invalid_request', retryAfterSeconds: null, safeDiagnosticCode: 'kingdom_mismatch', safeMessage: SAFE_MESSAGES.kingdom })
+  }
+  if (errorCode === 40001 || message.includes('ROLE NOT EXIST')) {
     return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'invalid_request', retryAfterSeconds: null, safeDiagnosticCode: 'invalid_player', safeMessage: SAFE_MESSAGES.player })
   }
-  if (message === 'TIMEOUT RETRY' || message.includes('SIGN ERROR')) {
+  if (
+    errorCode === 40006 ||
+    errorCode === 40010 ||
+    errorCode === 40017 ||
+    errorCode === 40018 ||
+    message === 'STOVE_LV ERROR' ||
+    message === 'RECHARGE_MONEY ERROR' ||
+    message === 'RECHARGE_MONEY_VIP ERROR'
+  ) {
+    return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'invalid_request', retryAfterSeconds: null, safeDiagnosticCode: 'ineligible_player', safeMessage: SAFE_MESSAGES.ineligible })
+  }
+  if (message === 'TIMEOUT RETRY' || errorCode === 40004 || message.includes('SIGN ERROR')) {
     return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'unknown', providerReference: null, failureCategory: 'transient_provider', retryAfterSeconds: 30, safeDiagnosticCode: message.includes('SIGN') ? 'signing_rejected' : 'provider_retry', safeMessage: SAFE_MESSAGES.retry })
+  }
+  if (message === 'NOT LOGIN') {
+    return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'unknown', providerReference: null, failureCategory: 'transient_provider', retryAfterSeconds: 30, safeDiagnosticCode: 'provider_session_rejected', safeMessage: SAFE_MESSAGES.retry })
   }
 
   return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'unknown', providerReference: null, failureCategory: 'transient_provider', retryAfterSeconds: 30, safeDiagnosticCode: 'unknown_response', safeMessage: SAFE_MESSAGES.unknown })
@@ -154,31 +176,13 @@ function timeoutSignal(timeoutMs: number) {
   return { controller, timeout }
 }
 
-function sessionHeaders(cookie: string | null) {
+function sessionHeaders() {
   return {
     Accept: 'application/json',
     'Content-Type': 'application/x-www-form-urlencoded',
     Origin: 'https://kingshot-giftcode.centurygame.com',
     Referer: 'https://kingshot-giftcode.centurygame.com/',
-    ...(cookie ? { Cookie: cookie } : {}),
   }
-}
-
-function readCookie(response: Response, current: string | null) {
-  const values = typeof response.headers.getSetCookie === 'function'
-    ? response.headers.getSetCookie()
-    : (response.headers.get('set-cookie') ?? '').split(',')
-  const cookies = new Map<string, string>()
-  if (current) for (const item of current.split('; ')) {
-    const [name, value] = item.split('=', 2)
-    if (name && value) cookies.set(name, value)
-  }
-  for (const item of values) {
-    const [pair] = item.split(';', 1)
-    const [name, value] = pair.split('=', 2)
-    if (name && value) cookies.set(name, value)
-  }
-  return [...cookies.entries()].map(([name, value]) => `${name}=${value}`).join('; ') || null
 }
 
 async function requestJson(
@@ -186,17 +190,20 @@ async function requestJson(
   url: string,
   fields: Readonly<Record<string, string>>,
   config: OfficialProviderConfig,
-  cookie: string | null,
 ) {
   const { controller, timeout } = timeoutSignal(config.timeoutMs)
   try {
     const body = new URLSearchParams(fields).toString()
-    const response = await fetcher(url, { method: 'POST', headers: sessionHeaders(cookie), body, signal: controller.signal })
+    const response = await fetcher(url, { method: 'POST', headers: sessionHeaders(), body, signal: controller.signal })
     const payload = await response.json().catch(() => null)
-    return { response, payload, cookie: readCookie(response, cookie) }
+    return { response, payload }
   } finally {
     clearTimeout(timeout)
   }
+}
+
+function validKingdomId(value: string) {
+  return /^\d{1,4}$/u.test(value) && Number(value) >= 1 && Number(value) <= 9999
 }
 
 export function createOfficialGiftCodeProvider(
@@ -211,15 +218,24 @@ export function createOfficialGiftCodeProvider(
       if (!config || !config.enabled) {
         return result({ status: 'not_supported', externalRequestSent: false, requestDisposition: 'not_sent', providerReference: null, failureCategory: 'permanent', retryAfterSeconds: null, safeDiagnosticCode: 'provider_not_configured', safeMessage: 'Automatic redemption is not configured.' })
       }
+      if (!validKingdomId(request.kingdomId)) {
+        return result({ status: 'failed', externalRequestSent: false, requestDisposition: 'not_sent', providerReference: null, failureCategory: 'invalid_request', retryAfterSeconds: null, safeDiagnosticCode: 'kingdom_required', safeMessage: SAFE_MESSAGES.kingdom })
+      }
 
       try {
-        const player = createSignedFields({ fid: request.playerId, time: String(Math.floor(Date.now() / 1000)) }, config.signingKey)
-        const playerResponse = await requestJson(fetcher, config.playerUrl, player, config, null)
-        if (!playerResponse.response.ok || (playerResponse.payload as Record<string, unknown> | null)?.msg !== 'success') {
-          return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'invalid_request', retryAfterSeconds: null, safeDiagnosticCode: 'invalid_player', safeMessage: SAFE_MESSAGES.player })
+        const code = createSignedFields({
+          cdk: request.code,
+          fid: request.playerId,
+          kid: request.kingdomId,
+          time: String(Math.floor(Date.now() / 1000)),
+        }, config.signingKey)
+        const codeResponse = await requestJson(fetcher, config.codeUrl, code, config)
+        if (codeResponse.response.status === 429) {
+          return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'sent', providerReference: null, failureCategory: 'rate_limited', retryAfterSeconds: 60, safeDiagnosticCode: 'rate_limited', safeMessage: SAFE_MESSAGES.retry })
         }
-        const code = createSignedFields({ fid: request.playerId, cdk: request.code, time: String(Date.now()) }, config.signingKey)
-        const codeResponse = await requestJson(fetcher, config.codeUrl, code, config, playerResponse.cookie)
+        if (!codeResponse.response.ok && codeResponse.payload === null) {
+          return result({ status: 'failed', externalRequestSent: true, requestDisposition: 'unknown', providerReference: null, failureCategory: 'transient_provider', retryAfterSeconds: 30, safeDiagnosticCode: `http_${codeResponse.response.status}`, safeMessage: SAFE_MESSAGES.unavailable })
+        }
         return normaliseOfficialResponse(codeResponse.payload)
       } catch (error) {
         return result({ status: 'failed', externalRequestSent: false, requestDisposition: 'unknown', providerReference: null, failureCategory: 'transient_provider', retryAfterSeconds: 30, safeDiagnosticCode: error instanceof DOMException && error.name === 'AbortError' ? 'timeout' : 'network_error', safeMessage: SAFE_MESSAGES.unavailable })
