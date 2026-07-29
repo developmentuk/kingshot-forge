@@ -36,6 +36,7 @@ export async function getGiftCodes(): Promise<GiftCodesResponse> {
 
 export async function getPlayer(
   playerId: string,
+  kingdomId: string,
 ): Promise<PlayerInfoResponse> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseKey =
@@ -50,6 +51,7 @@ export async function getPlayer(
   )
 
   functionUrl.searchParams.set('playerId', playerId)
+  functionUrl.searchParams.set('kingdomId', kingdomId)
 
   const {
     data: { session },
@@ -86,6 +88,12 @@ export async function getPlayer(
   ) {
     throw new Error(
       'The player service returned an unexpected response.',
+    )
+  }
+
+  if (String(playerResponse.data.kingdom) !== kingdomId) {
+    throw new Error(
+      `This Player ID belongs to State ${playerResponse.data.kingdom}, not State ${kingdomId}.`,
     )
   }
 
