@@ -1,0 +1,76 @@
+name: Art Studio validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'api/art-studio.ts'
+      - 'api/art-studio/**'
+      - 'server/art-studio/**'
+      - 'server/rendering/**'
+      - 'shared/domains/art-studio/**'
+      - 'shared/platform/rendering/**'
+      - 'src/features/art-studio/**'
+      - 'src/pages/ArtStudioPage.tsx'
+      - 'src/services/communityArtService.ts'
+      - 'scripts/test-art-studio*.mjs'
+      - 'scripts/test-render*.mjs'
+      - 'scripts/test-kingshot-*-alignment.mjs'
+      - 'scripts/test-kingshot-screenshot-calibration.mjs'
+      - 'scripts/validate-art-studio-foundation.mjs'
+      - 'fixtures/community-art/**'
+      - 'docs/**/ART-*.md'
+      - 'docs/FORGE_RENDER_ENGINE.md'
+      - 'docs/FORGE_RENDER_CALIBRATION.md'
+      - 'docs/platform/RENDER-FIXTURES.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: art-studio-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Art Studio and rendering validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate Art Studio
+        run: npm run validate:art-studio
+      - name: Test Art Studio
+        run: npm run test:art-studio
+      - name: Test Render Engine
+        run: npm run test:render-engine
+      - name: Test rendering simulator
+        run: node --import tsx scripts/test-render.mjs
+      - name: Test rendering context calibration
+        run: node --import tsx scripts/test-render-context-calibration.mjs
+      - name: Test rendering core
+        run: node --import tsx scripts/test-render-core.mjs
+      - name: Test Kingshot screenshot calibration
+        run: node --import tsx scripts/test-kingshot-screenshot-calibration.mjs
+      - name: Test Kingshot visible-ink alignment
+        run: node --import tsx scripts/test-kingshot-visible-ink-alignment.mjs
+      - name: Run Art Studio acceptance harness
+        run: npm run test:art-studio-acceptance
+      - name: Run Art Studio provenance regression
+        run: npm run test:art-studio-submit-provenance

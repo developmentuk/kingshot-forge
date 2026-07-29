@@ -4,7 +4,7 @@ import { createOfficialGiftCodeProvider, OFFICIAL_GIFT_CODE_PROVIDER_ID, readOff
 import { createGiftCodeIdempotencyIdentity } from './workflow/idempotency.js'
 
 const CONSENT_VERSION = 'giftcode-redemption-v1'
-const POLICY_TEXT = 'Forge Auto Redeem submits the linked Player ID and selected active Gift Codes to the Kingshot provider, records normalized outcomes and timestamps, never requests a game password, and only processes codes after explicit opt-in and an automatic or user-triggered run.'
+const POLICY_TEXT = 'Forge Auto Redeem submits the linked Player ID, linked kingdom ID and selected active Gift Codes to the Kingshot provider, records normalized outcomes and timestamps, never requests a game password, and only processes codes after explicit opt-in and an automatic or user-triggered run.'
 const POLICY_DIGEST = createHash('sha256').update(POLICY_TEXT).digest('hex')
 const MAX_CODES_PER_RUN = 20
 const MIN_DELAY_MS = 750
@@ -53,6 +53,10 @@ export type GiftCodeAdminMetrics = Readonly<{
 function now() { return new Date().toISOString() }
 function configured() { return readOfficialProviderConfig() }
 function isVerified(value: unknown) { return value === 'verified' || value === 'community_verified' || value === 'officially_verified' }
+function hasValidKingdom(value: unknown) {
+  const kingdom = typeof value === 'number' ? value : Number(value)
+  return Number.isInteger(kingdom) && kingdom >= 1 && kingdom <= 9999
+}
 
 async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs: number) {
   const controller = new AbortController()
@@ -125,6 +129,7 @@ function eligibility(input: { player: PlayerRow | null; consent: PlayerRow | nul
   const reasons: string[] = []
   if (!input.player) reasons.push('player_required')
   if (input.player && !isVerified(input.player.verification_status)) reasons.push('player_verification_required')
+  if (input.player && !hasValidKingdom(input.player.kingdom_id)) reasons.push('player_kingdom_required')
   if (!input.consent) reasons.push('consent_required')
   if (!input.providerReady) reasons.push('provider_not_configured')
   if (input.codeCount === 0) reasons.push('no_active_codes')
@@ -152,6 +157,7 @@ export async function getAutoRedeemContext(userId: string | null) {
 export async function grantConsent(userId: string) {
   const player = await ownedPlayer(userId)
   if (!player || !isVerified(player.verification_status)) throw Object.assign(new Error('A verified linked Governor is required.'), { statusCode: 409 })
+  if (!hasValidKingdom(player.kingdom_id)) throw Object.assign(new Error('The linked Governor needs a verified kingdom before Auto Redeem can be enabled.'), { statusCode: 409 })
   const grantedAt = now()
   const { data, error } = await getSupabaseAdmin().from('gift_code_redemption_consents').insert({ user_id: userId, player_account_id: player.id, character_ref: player.id, character_revision: Math.max(1, Math.floor(Date.parse(String(player.updated_at ?? grantedAt)) / 1000)), provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', provider_mode: 'automatic_selection', purpose: 'official_gift_code_redemption', policy_version: CONSENT_VERSION, policy_digest: POLICY_DIGEST, evidence_version: 'gift-centre-0.7.5', evidence_metadata: { surface: 'gift-centre', user_triggered: true }, granted_at: grantedAt }).select('id,granted_at,policy_version').single()
   if (error) throw error
@@ -170,7 +176,9 @@ function providerToAttempt(provider: Awaited<ReturnType<ReturnType<typeof create
   if (provider.status === 'already_claimed') return { outcome: 'provider_already_claimed', resultCode: 'already_claimed', requestResultCode: 'already_claimed', requestDisposition: 'sent', requestStatus: 'already_claimed', retryable: false }
   if (provider.status === 'expired') return { outcome: 'provider_terminal_failure', resultCode: 'provider_terminal_failure', requestResultCode: 'request_expired', requestDisposition: 'sent', requestStatus: 'expired', retryable: false }
   if (provider.safeDiagnosticCode === 'invalid_code') return { outcome: 'provider_terminal_failure', resultCode: 'invalid_code', requestDisposition: 'sent', requestStatus: 'failed_terminal', retryable: false }
-  if (provider.safeDiagnosticCode === 'invalid_player') return { outcome: 'provider_terminal_failure', resultCode: 'invalid_player', requestDisposition: 'sent', requestStatus: 'failed_terminal', retryable: false }
+  if (provider.safeDiagnosticCode === 'rate_limited') return { outcome: 'provider_retryable_failure', resultCode: 'rate_limited', requestResultCode: 'rate_limited', requestDisposition: 'sent', requestStatus: 'failed_retryable', retryable: true }
+  if (provider.safeDiagnosticCode === 'invalid_player' || provider.safeDiagnosticCode === 'kingdom_mismatch' || provider.safeDiagnosticCode === 'ineligible_player' || provider.safeDiagnosticCode === 'kingdom_required') return { outcome: 'provider_terminal_failure', resultCode: 'invalid_player', requestDisposition: provider.externalRequestSent ? 'sent' : 'not_sent', requestStatus: 'failed_terminal', retryable: false }
+  if (provider.safeDiagnosticCode === 'code_limit_reached') return { outcome: 'provider_terminal_failure', resultCode: 'provider_terminal_failure', requestDisposition: 'sent', requestStatus: 'failed_terminal', retryable: false }
   if (provider.externalRequestSent) return { outcome: 'provider_ambiguous', resultCode: 'provider_ambiguous', requestDisposition: 'unknown', requestStatus: 'ambiguous', retryable: false }
   return { outcome: 'provider_retryable_failure', resultCode: 'provider_retryable_failure', requestDisposition: 'not_sent', requestStatus: 'failed_retryable', retryable: true }
 }
@@ -183,6 +191,7 @@ export async function redeemAvailable(userId: string, options: { allowedCodes?: 
   const player = await ownedPlayer(userId)
   const consent = player ? await currentConsent(userId, String(player.id)) : null
   if (!player || !consent) throw Object.assign(new Error('Redemption consent is required.'), { statusCode: 409 })
+  if (!hasValidKingdom(player.kingdom_id)) throw Object.assign(new Error('The linked Governor needs a verified kingdom before redemption.'), { statusCode: 409 })
   const availableCodes = await activeCodes()
   const codes = (options.allowedCodes
     ? availableCodes.filter((code) => options.allowedCodes?.includes(code.code))
@@ -209,11 +218,11 @@ export async function redeemAvailable(userId: string, options: { allowedCodes?: 
     await waitBetween(previousRequest); previousRequest = Date.now()
     const attemptId = randomUUID()
     await admin.from('gift_code_redemption_attempts').insert({ id: attemptId, request_id: request.id, user_id: userId, ordinal: 1, provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, lease_owner: `run:${run.id}`, started_at: now(), deadline_at: new Date(Date.now() + 20_000).toISOString(), code_publication_id: code.id, publication_version: code.version, code_snapshot: code.code })
-    const providerResult = await provider.redeem({ attemptId, playerAccountId: String(player.id), playerId: String(player.player_id), giftCodeId: code.id, giftCodeVersion: code.version, code: code.code, idempotencyKey: identity.hash, consentVersion: CONSENT_VERSION })
+    const providerResult = await provider.redeem({ attemptId, playerAccountId: String(player.id), playerId: String(player.player_id), kingdomId: String(player.kingdom_id), giftCodeId: code.id, giftCodeVersion: code.version, code: code.code, idempotencyKey: identity.hash, consentVersion: CONSENT_VERSION })
     const mapped = providerToAttempt(providerResult)
     await admin.from('gift_code_redemption_attempts').update({ outcome: mapped.outcome, request_disposition: mapped.requestDisposition, result_code: mapped.resultCode, safe_diagnostic_code: providerResult.safeDiagnosticCode, retryable: mapped.retryable, completed_at: now(), version: 1 }).eq('id', attemptId)
     const completedAt = now()
-    const { error: completionError } = await admin.from('gift_code_redemption_requests').update({ status: mapped.requestStatus, result_code: mapped.requestResultCode ?? mapped.resultCode, completed_attempts: 1, optimistic_version: 4, lease_owner: null, lease_acquired_at: null, lease_expires_at: null, updated_at: completedAt, terminal_at: mapped.requestStatus === 'succeeded' || mapped.requestStatus === 'already_claimed' || mapped.requestStatus === 'expired' || mapped.requestStatus === 'failed_terminal' || mapped.requestStatus === 'ambiguous' ? completedAt : null }).eq('id', request.id)
+    const { error: completionError } = await admin.from('gift_code_redemption_requests').update({ status: mapped.requestStatus, result_code: mapped.requestResultCode ?? mapped.resultCode, completed_attempts: 1, optimistic_version: 4, lease_owner: null, lease_acquired_at: null, lease_expires_at: null, next_attempt_at: mapped.retryable && providerResult.retryAfterSeconds ? new Date(Date.now() + providerResult.retryAfterSeconds * 1000).toISOString() : null, updated_at: completedAt, terminal_at: mapped.requestStatus === 'succeeded' || mapped.requestStatus === 'already_claimed' || mapped.requestStatus === 'expired' || mapped.requestStatus === 'failed_terminal' || mapped.requestStatus === 'ambiguous' ? completedAt : null }).eq('id', request.id)
     if (completionError) throw completionError
     results.push({ code: code.code, status: providerResult.status, retryable: mapped.retryable, message: providerResult.safeMessage, attemptedAt: now() })
   }

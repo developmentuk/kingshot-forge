@@ -7,6 +7,7 @@ export type GiftCodeRedemptionRequest = {
   attemptId: string
   playerAccountId: string
   playerId: string
+  kingdomId: string
   giftCodeId: string
   giftCodeVersion: string
   code: string

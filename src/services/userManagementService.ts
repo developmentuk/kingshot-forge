@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { UserDetail, UserListItem } from '../../server/identity/contracts'
+import type { KingshotPlayer } from '../types/player'
 
 type ApiResponse<T> = { status: 'success' | 'error'; data?: T; message?: string }
 
@@ -13,6 +14,15 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export type UserListQuery = { search?: string; role?: string; status?: string; page?: number; pageSize?: number }
 export type UserListResponse = { items: UserListItem[]; page: number; pageSize: number; total: number; totalPages: number }
+export type ManagedPlayerLookup = { source: 'kingshot_player_lookup'; player: KingshotPlayer }
+export type ManagedPlayerInput = {
+  playerId: string
+  kingdomId: string
+  playerName?: string
+  reason?: string
+  mode?: 'lookup' | 'manual'
+  replaceExisting?: boolean
+}
 
 export function getUsers(query: UserListQuery) {
   const params = new URLSearchParams()
@@ -24,4 +34,12 @@ export function getUser(userId: string) { return request<UserDetail>(`/api/opera
 
 export function mutateUser(userId: string, payload: { action: 'assign_role' | 'revoke_role' | 'change_status'; role?: string; status?: string; reason: string }) {
   return request<Record<string, unknown>>(`/api/operations/users?userId=${encodeURIComponent(userId)}`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export function lookupPlayerForUser(userId: string, input: Pick<ManagedPlayerInput, 'playerId' | 'kingdomId'>) {
+  return request<ManagedPlayerLookup>(`/api/operations/users?userId=${encodeURIComponent(userId)}`, { method: 'POST', body: JSON.stringify({ action: 'lookup_player', ...input }) })
+}
+
+export function linkPlayerForUser(userId: string, input: ManagedPlayerInput) {
+  return request<Record<string, unknown>>(`/api/operations/users?userId=${encodeURIComponent(userId)}`, { method: 'POST', body: JSON.stringify({ action: 'link_player', ...input }) })
 }

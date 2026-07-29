@@ -20,6 +20,7 @@ const request = {
   attemptId: 'attempt-1',
   playerAccountId: 'account-1',
   playerId: 'player-1',
+  kingdomId: '850',
   giftCodeId: 'code-1',
   giftCodeVersion: 'published-1',
   code: 'TESTCODE',
@@ -166,12 +167,12 @@ test('official provider skeleton cannot contact external systems', async () => {
 
 test('official signing is deterministic and alphabetically ordered', () => {
   const signed = createSignedFields(
-    { cdk: 'CODE', fid: 'PLAYER', time: '123' },
+    { cdk: 'CODE', fid: 'PLAYER', kid: '850', time: '123' },
     'fixture-signing-key',
   )
   assert.equal(
     signed.sign,
-    '1622ae4ea35277aa89541e802fa7b03d',
+    'd0ea1d1f2dc144b1342c61acea91ef5e',
   )
   assert.equal('fixture-signing-key' in signed, false)
 })
@@ -181,5 +182,7 @@ test('official response mappings stay provider-safe', () => {
   assert.equal(normaliseOfficialResponse({ msg: 'RECEIVED', err_code: 40008 }).status, 'already_claimed')
   assert.equal(normaliseOfficialResponse({ msg: 'TIME ERROR', err_code: 40007 }).status, 'expired')
   assert.equal(normaliseOfficialResponse({ msg: 'CDK NOT FOUND', err_code: 40014 }).safeDiagnosticCode, 'invalid_code')
+  assert.equal(normaliseOfficialResponse({ msg: 'TOO FREQUENT', err_code: 40019 }).failureCategory, 'rate_limited')
+  assert.equal(normaliseOfficialResponse({ msg: 'USER INFO ERROR', err_code: 40020 }).safeDiagnosticCode, 'kingdom_mismatch')
   assert.equal(normaliseOfficialResponse({ msg: 'TIMEOUT RETRY', err_code: 40004 }).failureCategory, 'transient_provider')
 })

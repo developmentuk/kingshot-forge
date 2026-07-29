@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
-import { assignRole, changeAccountStatus, getUserDetail, listUsers, UserManagementError, roleCatalogue, revokeRole } from '../../server/identity/userManagementService.js'
+import { assignRole, changeAccountStatus, getUserDetail, linkManagedPlayer, listUsers, lookupManagedPlayer, UserManagementError, roleCatalogue, revokeRole } from '../../server/identity/userManagementService.js'
 
 function body(request: VercelRequest) { return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {} }
 function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
@@ -26,6 +26,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
       if (input.action === 'assign_role') response.status(200).json({ status: 'success', data: await assignRole(actor, userId, input.role, input.reason) })
       else if (input.action === 'revoke_role') response.status(200).json({ status: 'success', data: await revokeRole(actor, userId, input.role, input.reason) })
       else if (input.action === 'change_status') response.status(200).json({ status: 'success', data: await changeAccountStatus(actor, userId, input.status, input.reason) })
+      else if (input.action === 'lookup_player') response.status(200).json({ status: 'success', data: await lookupManagedPlayer(actor, input) })
+      else if (input.action === 'link_player') response.status(200).json({ status: 'success', data: await linkManagedPlayer(actor, userId, input) })
       else fail(response, 400, 'A valid identity management action is required.')
       return
     }

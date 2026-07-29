@@ -1,11 +1,13 @@
 import type { ForgeActor } from '../auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
 import { notifyIdentityMutation } from '../notifications/notificationService.js'
+import { LinkedPlayerServiceError, lookupKingshotPlayer, validateKingdomId, validatePlayerId } from '../player-identity/linkedPlayerService.js'
 import { canAssignRole, dedupeCapabilities, isForgeRole, workspaceIdsForCapabilities, type ForgeRole } from './roleCapabilities.js'
 import type { AccountStatus, UserAuditEntry, UserDetail, UserListItem, UserRoleAssignment } from './contracts.js'
 
 const PAGE_SIZE_MAX = 50
 type PlayerRow = { id: string; user_id: string; player_id: string; player_name: string; kingdom_id: number; verification_status: string; verified_at: string | null; is_primary: boolean }
+type ManagedPlayerInput = Readonly<Record<string, unknown>>
 
 export class UserManagementError extends Error {
   constructor(readonly statusCode: number, message: string) { super(message); this.name = 'UserManagementError' }
@@ -102,7 +104,13 @@ export async function listUsers(actor: ForgeActor, query: { search?: string; rol
   if (error) throw new UserManagementError(502, 'The Forge identity directory is temporarily unavailable.')
   let projected = await projectUsers(actor, data.users)
   const search = query.search?.trim().toLowerCase()
-  if (search) projected = projected.filter((user) => [user.displayName, user.safeEmail ?? '', user.kingdom?.toString() ?? '', user.alliance ?? '', user.userId].some((value) => value.toLowerCase().includes(search)))
+  if (search) {
+    const { data: matchingPlayers } = /^\d{1,20}$/u.test(search)
+      ? await getSupabaseAdmin().from('player_accounts').select('user_id').eq('player_id', search)
+      : { data: [] }
+    const matchingUserIds = new Set((matchingPlayers ?? []).map((row) => row.user_id))
+    projected = projected.filter((user) => matchingUserIds.has(user.userId) || [user.displayName, user.safeEmail ?? '', user.kingdom?.toString() ?? '', user.alliance ?? '', user.userId].some((value) => value.toLowerCase().includes(search)))
+  }
   if (query.role && isForgeRole(query.role)) projected = projected.filter((user) => user.roles.includes(query.role as ForgeRole))
   if (query.status && ['active', 'restricted', 'suspended', 'deactivated'].includes(query.status)) projected = projected.filter((user) => user.accountStatus === query.status)
   const total = projected.length
@@ -125,6 +133,7 @@ async function getUser(actor: ForgeActor, userId: string) {
     ...item,
     providerNames: [String(data.user.app_metadata?.provider ?? 'OAuth')],
     emailConfirmed: Boolean(data.user.email_confirmed_at),
+    canManagePlayers: actor.capabilities.includes('users.manage_players'),
     linkedPlayers: (players ?? []).map((player) => ({ playerAccountId: player.id, maskedPlayerId: maskPlayerId(player.player_id), playerName: player.player_name, kingdom: player.kingdom_id, verificationStatus: player.verification_status, verificationDate: player.verified_at, isPrimary: player.is_primary })),
     assignments: ((assignments ?? []) as Array<{ id: string; role: string; active: boolean; granted_at: string; grant_reason: string; revoked_at: string | null; revoke_reason: string | null }>).filter((assignment) => isForgeRole(assignment.role)).map<UserRoleAssignment>((assignment) => ({ id: assignment.id, role: assignment.role as ForgeRole, active: assignment.active, grantedAt: assignment.granted_at, grantReason: assignment.grant_reason, revokedAt: assignment.revoked_at, revokeReason: assignment.revoke_reason })),
     audit: ((audit ?? []) as Array<{ id: string; actor_user_id: string; target_user_id: string; action: string; domain: string; reason: string; before_state: Record<string, unknown>; after_state: Record<string, unknown>; created_at: string }>).map<UserAuditEntry>((entry) => ({ id: entry.id, actorUserId: entry.actor_user_id, targetUserId: entry.target_user_id, action: entry.action, domain: entry.domain, reason: entry.reason, beforeState: entry.before_state, afterState: entry.after_state, createdAt: entry.created_at })),
@@ -140,6 +149,116 @@ function requireTargetExists(userId: string) {
 function requireReason(reason: unknown): string {
   if (typeof reason !== 'string' || reason.trim().length < 3 || reason.trim().length > 2000) throw new UserManagementError(400, 'A mutation reason of 3 to 2000 characters is required.')
   return reason.trim()
+}
+
+function playerInput(input: ManagedPlayerInput) {
+  try {
+    return {
+      playerId: validatePlayerId(input.playerId),
+      kingdomId: validateKingdomId(input.kingdomId ?? input.state),
+    }
+  } catch (error) {
+    if (error instanceof LinkedPlayerServiceError) throw new UserManagementError(error.statusCode, error.message)
+    throw error
+  }
+}
+
+function optionalText(value: unknown, maximum = 240) {
+  if (typeof value !== 'string') return null
+  const text = value.trim()
+  if (!text) return null
+  if (text.length > maximum) throw new UserManagementError(422, `Text values must be ${maximum} characters or fewer.`)
+  return text
+}
+
+function mapLookupError(error: unknown): never {
+  if (error instanceof LinkedPlayerServiceError) throw new UserManagementError(error.statusCode, error.message)
+  throw error
+}
+
+export async function lookupManagedPlayer(actor: ForgeActor, input: ManagedPlayerInput) {
+  requireCapability(actor, 'users.manage_players')
+  const { playerId, kingdomId } = playerInput(input)
+  try {
+    const player = await lookupKingshotPlayer(playerId, kingdomId)
+    return { source: 'kingshot_player_lookup', player }
+  } catch (error) {
+    return mapLookupError(error)
+  }
+}
+
+export async function linkManagedPlayer(actor: ForgeActor, targetUserId: string, input: ManagedPlayerInput) {
+  requireCapability(actor, 'users.manage_players')
+  const target = await requireTargetExists(targetUserId)
+  const reason = requireReason(input.reason)
+  const { playerId, kingdomId } = playerInput(input)
+  const mode = input.mode === 'manual' ? 'manual' : input.mode === 'lookup' ? 'lookup' : null
+  if (!mode) throw new UserManagementError(400, 'Choose lookup verification or manual administrator verification.')
+
+  let playerName: string
+  let playerLevel: number | null = null
+  let levelRendered: string | null = null
+  let levelRenderedDetailed: string | null = null
+  let levelImage: string | null = null
+  let profilePhoto: string | null = null
+  let verificationStatus: 'verified' | 'community_verified'
+  let verificationMethod: 'kingshot_player_lookup' | 'forge_admin'
+
+  if (mode === 'lookup') {
+    try {
+      const player = await lookupKingshotPlayer(playerId, kingdomId)
+      playerName = player.name
+      playerLevel = Number.isFinite(player.level) ? player.level : null
+      levelRendered = player.levelRendered || null
+      levelRenderedDetailed = player.levelRenderedDetailed || null
+      levelImage = player.levelImage
+      profilePhoto = player.profilePhoto
+      verificationStatus = 'verified'
+      verificationMethod = 'kingshot_player_lookup'
+    } catch (error) {
+      return mapLookupError(error)
+    }
+  } else {
+    const admin = getSupabaseAdmin()
+    const [{ data: profile }, { data: existing }] = await Promise.all([
+      admin.from('profiles').select('display_name').eq('id', targetUserId).maybeSingle(),
+      admin.from('player_accounts').select('player_name').eq('user_id', targetUserId).maybeSingle(),
+    ])
+    playerName = optionalText(input.playerName, 120)
+      ?? optionalText(existing?.player_name, 120)
+      ?? optionalText(profile?.display_name, 120)
+      ?? optionalText(target.user_metadata?.full_name, 120)
+      ?? optionalText(target.user_metadata?.name, 120)
+      ?? target.email?.split('@')[0]
+      ?? `Player ${playerId.slice(-4)}`
+    verificationStatus = 'community_verified'
+    verificationMethod = 'forge_admin'
+  }
+
+  const { data, error } = await getSupabaseAdmin().rpc('admin_link_player_account', {
+    p_actor_user_id: actor.userId,
+    p_target_user_id: targetUserId,
+    p_player_id: playerId,
+    p_kingdom_id: kingdomId,
+    p_player_name: playerName,
+    p_player_level: playerLevel,
+    p_level_rendered: levelRendered,
+    p_level_rendered_detailed: levelRenderedDetailed,
+    p_level_image: levelImage,
+    p_profile_photo: profilePhoto,
+    p_verification_status: verificationStatus,
+    p_verification_method: verificationMethod,
+    p_reason: reason,
+    p_replace_existing: input.replaceExisting === true,
+  })
+  if (error) {
+    if (error.code === '42501') throw new UserManagementError(403, error.message)
+    if (error.code === 'P0002') throw new UserManagementError(404, 'Forge user not found.')
+    if (error.code === 'P0001' || error.code === '23505') throw new UserManagementError(409, error.message)
+    if (error.code === '22023') throw new UserManagementError(422, error.message)
+    throw new UserManagementError(500, 'The Player Account link could not be applied safely.')
+  }
+  return data
 }
 
 async function audit(actor: ForgeActor, targetUserId: string, action: string, reason: string, beforeState: Record<string, unknown>, afterState: Record<string, unknown>) {

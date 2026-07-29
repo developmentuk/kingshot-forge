@@ -13,6 +13,7 @@ on:
       - 'scripts/**'
       - 'fixtures/**'
       - 'docs/**'
+      - 'supabase/functions/**'
       - 'supabase/migrations/**'
       - 'package.json'
       - 'package-lock.json'
@@ -60,8 +61,6 @@ jobs:
         run: npm run validate:verification-centre
       - name: Validate Player Identity
         run: npm run validate:player-identity
-      - name: Validate Art Studio
-        run: npm run validate:art-studio
       - name: Test editorial API
         run: npm run test:editorial-api
       - name: Test Content Studio
@@ -78,12 +77,10 @@ jobs:
         run: npm run test:hero-skills-governance
       - name: Test Player Identity
         run: npm run test:player-identity
-      - name: Test Art Studio
-        run: npm run test:art-studio
+      - name: Test Player State linking
+        run: npm run test:player-state-linking
       - name: Test Auto Redeem
         run: npm run test:auto-redeem
-      - name: Test Render Engine
-        run: npm run test:render-engine
       - name: Test Search
         run: npm run test:search
       - name: Test Search persistence
@@ -136,18 +133,3 @@ jobs:
         run: npm run lint
       - name: Build candidate
         run: npm run build
-
-      - name: Test rendering simulator
-        run: node --import tsx scripts/test-render.mjs
-      - name: Test rendering context calibration
-        run: node --import tsx scripts/test-render-context-calibration.mjs
-      - name: Test rendering core
-        run: node --import tsx scripts/test-render-core.mjs
-      - name: Test Kingshot screenshot calibration
-        run: node --import tsx scripts/test-kingshot-screenshot-calibration.mjs
-      - name: Test Kingshot visible-ink alignment
-        run: node --import tsx scripts/test-kingshot-visible-ink-alignment.mjs
-      - name: Run Art Studio acceptance harness
-        run: npm run test:art-studio-acceptance
-      - name: Run Art Studio provenance regression
-        run: npm run test:art-studio-submit-provenance
