@@ -43,7 +43,8 @@ const contracts = [
   ['operations UI', read('src/features/operations/UserManagementPage.tsx'), ['Lookup details', 'Apply verified lookup', 'Apply manual link', 'Replace the existing linked Player Account']],
   ['admin permission', read('server/identity/roleCapabilities.ts'), ['users.manage_players']],
   ['audited transaction', read('supabase/migrations/20260729193000_admin_player_linking.sql'), ['admin_link_player_account', 'forge_identity_audit_events', 'player_account_linked', 'users.manage_players']],
-  ['edge function', read('supabase/functions/kingshot-player/index.ts'), ['kingdomId', 'STATE_MISMATCH', 'belongs to State']],
+  ['edge function', read('supabase/functions/kingshot-player/index.ts'), ['kingdomId', 'STATE_MISMATCH', 'belongs to State', 'PLAYER_LOOKUP_UPSTREAM_UNAVAILABLE', 'No player details have been changed']],
+  ['server lookup', read('server/player-identity/linkedPlayerService.ts'), ['passthroughStatuses', '503']],
 ]
 
 for (const [name, content, needles] of contracts) {

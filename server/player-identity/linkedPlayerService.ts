@@ -105,7 +105,9 @@ export async function lookupKingshotPlayer(playerIdInput: unknown, kingdomIdInpu
   if (!response.ok) {
     const safePayload = record(payload)
     const message = typeof safePayload?.message === 'string' ? safePayload.message : ''
-    throw new LinkedPlayerServiceError(response.status === 409 ? 409 : 502, message || 'The Kingshot player service could not validate this Player ID and State.')
+    const passthroughStatuses = new Set([404, 409, 429, 503])
+    const statusCode = passthroughStatuses.has(response.status) ? response.status : 502
+    throw new LinkedPlayerServiceError(statusCode, message || 'The Kingshot player service could not validate this Player ID and State.')
   }
   return normalizeKingshotLookup(payload, playerId, kingdomId)
 }
