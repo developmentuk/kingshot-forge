@@ -21,7 +21,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const input = body(request)
     const action = input.action === 'revalidate' ? 'revalidate' : input.action === 'link' ? 'link' : null
     if (!action) { fail(response, 400, 'A valid player action is required.'); return }
-    const data = await linkOrRevalidatePlayerAccount(actor.userId, { action, playerId: input.playerId })
+    const data = await linkOrRevalidatePlayerAccount(actor.userId, {
+      action,
+      playerId: input.playerId,
+      kingdomId: input.kingdomId ?? input.state,
+    })
     response.status(200).json({ status: 'success', data })
   } catch (error) {
     if (error instanceof ForgeAuthenticationError || error instanceof LinkedPlayerServiceError) {
