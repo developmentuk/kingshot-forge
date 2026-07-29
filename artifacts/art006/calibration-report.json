@@ -1,0 +1,174 @@
+{
+  "generatedAt": "2026-07-29T15:26:41.747Z",
+  "objective": "constrained shared-coefficient fit minimising bubble-normalised visible-ink landmark error while preserving accepted controls and exact source provenance",
+  "penalties": {
+    "fixtureSpecificParameters": "forbidden",
+    "sourceOrderMutation": "forbidden",
+    "semanticGapDistortionAbove": 2.5,
+    "acceptedEmojiControlRegression": "forbidden"
+  },
+  "coefficients": {
+    "proseSpaceAdvanceCells": 0.72,
+    "captionSpaceAdvanceCells": 0.55,
+    "leadingRunBaseCells": 0.2,
+    "leadingRunIncrementCells": 0.45,
+    "leadingRunCap": 23,
+    "structuralGapBaseCells": 0.3,
+    "structuralGapIncrementCells": 0.33,
+    "structuralGapCap": 3,
+    "mixedEmojiGapBaseCells": 0.26,
+    "mixedEmojiGapIncrementCells": 0.3,
+    "mixedEmojiGapCap": 3,
+    "artworkLineAdvance": 1,
+    "emptyLineAdvance": 0.45,
+    "repeatedBlankLineAdvance": 1,
+    "preCaptionSeparatorAdvance": 1,
+    "captionLineAdvance": 1,
+    "hybridColumnGapBaseCells": 3.4,
+    "hybridColumnGapIncrementCells": 0.16,
+    "minimumColumnSeparationCells": 2.5,
+    "maximumSemanticGapDistortion": 2.5,
+    "sourceAdvances": {
+      "u0020Leading": 0.38,
+      "u0020Structural": 0.42,
+      "u0020Prose": 0.58,
+      "u0020Caption": 0.66,
+      "u3000": 0.9,
+      "asciiStructural": 0.65,
+      "asciiLetter": 0.8,
+      "asciiLetterCaption": 0.72,
+      "narrowPunctuation": 0.52,
+      "widePunctuation": 0.5,
+      "fullWidth": 1.35,
+      "lineArt": 0.85,
+      "unicodeStructural": 0.45,
+      "emoji": 3,
+      "hybrid": {
+        "asciiStructural": 0.78,
+        "u0020Structural": 0.36,
+        "asciiLetter": 0.86,
+        "narrowPunctuation": 0.52,
+        "widePunctuation": 0.78,
+        "fullWidth": 1.28,
+        "lineArt": 0.82,
+        "unicodeStructural": 0.6,
+        "emoji": 1.75
+      }
+    }
+  },
+  "baseline": {
+    "sha": "410fa374928bbb8d87dfd62dc5b1d30fb32b8fa5",
+    "invalidAssumptions": [
+      "ART-005 equality outside semantic gaps",
+      "max-left-bound shared prose anchor",
+      "logical cells as a proxy for visible ink"
+    ]
+  },
+  "fixtures": [
+    {
+      "slug": "i-have-come-to",
+      "source": {
+        "sha256": "3bea8beb8d0a1345306552abe1f3e395ff0aeb84595d1c8a0897c66f159d8985",
+        "utf8ByteLength": 387,
+        "lineCount": 9,
+        "exact": true
+      },
+      "profile": "source-coordinate",
+      "horizontalOffsetCells": 0.6,
+      "maximumLogicalWidth": 25.710000000000022,
+      "maximumSemanticGapDistortion": 1,
+      "visibleResidual": 0.41328440366972474,
+      "visibleStatus": "canonical comparison measured"
+    },
+    {
+      "slug": "dont-ask-me",
+      "source": {
+        "sha256": "7cfbe9fcb122a6412a25b6d665f5924c242b03a2dac898149c87ef7c569a5fa7",
+        "utf8ByteLength": 252,
+        "lineCount": 9,
+        "exact": true
+      },
+      "profile": "caption-structural",
+      "horizontalOffsetCells": -0.75,
+      "maximumLogicalWidth": 17.05,
+      "maximumSemanticGapDistortion": 1,
+      "visibleResidual": 0.03572992700729927,
+      "visibleStatus": "canonical comparison measured"
+    },
+    {
+      "slug": "ah-ah-oops",
+      "source": {
+        "sha256": "3eb998a5526650229360f453bab2506f7ee3a54f1f28b4645431451c7bc923c6",
+        "utf8ByteLength": 199,
+        "lineCount": 9,
+        "exact": true
+      },
+      "profile": "emoji-structural-control",
+      "horizontalOffsetCells": 0,
+      "maximumLogicalWidth": 19,
+      "maximumSemanticGapDistortion": 1,
+      "visibleResidual": 0.07247503683090523,
+      "visibleStatus": "canonical comparison measured"
+    },
+    {
+      "slug": "free-hard-spanking",
+      "source": {
+        "sha256": "ceb4e2b817146c1714b02edcfba0bb6dcbc9b93fc72fd3b88c08522d63315ae4",
+        "utf8ByteLength": 226,
+        "lineCount": 8,
+        "exact": true
+      },
+      "profile": "emoji-structural-control",
+      "horizontalOffsetCells": 0,
+      "maximumLogicalWidth": 22.150000000000013,
+      "maximumSemanticGapDistortion": 1,
+      "visibleResidual": 0.19813472893183037,
+      "visibleStatus": "canonical comparison measured"
+    },
+    {
+      "slug": "where-is-all-the-good-text-art",
+      "source": {
+        "sha256": "cfacdd29930f5a94438291406e56360c7139253c74aadb294f27bb77c042bff6",
+        "utf8ByteLength": 245,
+        "lineCount": 7,
+        "exact": true
+      },
+      "profile": "source-coordinate",
+      "horizontalOffsetCells": 0,
+      "maximumLogicalWidth": 16.91,
+      "maximumSemanticGapDistortion": 1,
+      "visibleResidual": 0.6899659814497136,
+      "visibleStatus": "canonical comparison measured"
+    },
+    {
+      "slug": "alliance-coffee-time",
+      "source": {
+        "sha256": "c4b0c423a3501da0e77b26b08a40b4af41937dd433cc3e0f6efd6d98bbf6a6d5",
+        "utf8ByteLength": 227,
+        "lineCount": 7,
+        "exact": true
+      },
+      "profile": "source-coordinate",
+      "horizontalOffsetCells": 0,
+      "maximumLogicalWidth": 11.249999999999996,
+      "maximumSemanticGapDistortion": 1,
+      "visibleResidual": null,
+      "visibleStatus": "source-coordinate regression control; canonical screenshot unavailable"
+    },
+    {
+      "slug": "wow-im-so-cute-expanded",
+      "source": {
+        "sha256": "fe6bfe732d320f75e810be9071788a5b749424a7cff20e7e2407161964cf14d2",
+        "utf8ByteLength": 431,
+        "lineCount": 10,
+        "exact": true
+      },
+      "profile": "emoji-structural-control",
+      "horizontalOffsetCells": 0,
+      "maximumLogicalWidth": 28.570000000000007,
+      "maximumSemanticGapDistortion": 1,
+      "visibleResidual": null,
+      "visibleStatus": "source-coordinate regression control; canonical screenshot unavailable"
+    }
+  ]
+}

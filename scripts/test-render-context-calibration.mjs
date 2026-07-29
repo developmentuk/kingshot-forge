@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import { buildFixedCellGrid } from '../src/render-engine/grid/index.ts'
 import { DEFAULT_CALIBRATION } from '../src/render-engine/configuration/index.ts'
 import { analyseArtworkDetailed, ARTWORK_LEADING_SPACE_ADVANCE, ARTWORK_SPACE_ADVANCE, PROSE_SPACE_ADVANCE, isArtworkLine } from '../src/render-engine/analyser/index.ts'
+import { ADAPTIVE_CLIPBOARD_CALIBRATION } from '../src/render-engine/adaptiveCalibration.ts'
 import { segmentGraphemes } from '../src/render-engine/parser/index.ts'
 
 const prose = buildFixedCellGrid(['word gap'], DEFAULT_CALIBRATION)[0].cells
@@ -21,21 +22,20 @@ const authoredRun = buildFixedCellGrid([runText], DEFAULT_CALIBRATION, 'authored
 const clipboardRun = buildFixedCellGrid([runText], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.filter((cell) => cell.glyph === ' ')
 assert.equal(authoredRun.length, 7, 'authored mode retains every ordinary space')
 assert.ok(authoredRun.every((cell) => cell.sourceGlyphs.length === 1 && cell.span === ARTWORK_SPACE_ADVANCE), 'authored internal spaces remain literal')
-assert.equal(clipboardRun.length, 1, 'clipboard mode collapses an internal ordinary-space run into one visual token')
-assert.equal(clipboardRun[0]?.sourceGlyphs.length, 7, 'clipboard visual token retains all source graphemes')
-assert.equal(clipboardRun[0]?.span, 1.29, 'clipboard logical gap uses the bounded run transfer function')
-const leadingRun = buildFixedCellGrid([`${' '.repeat(24)}＿_＿＿_`], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.find((cell) => cell.glyph === ' ')
-assert.equal(leadingRun?.sourceGlyphs.length, 24, 'clipboard leading run retains every source grapheme')
-assert.ok(Math.abs((leadingRun?.span ?? 0) - 10.55) < 0.000001, 'clipboard artwork leading runs use separate screenshot-grounded calibration')
-assert.equal(buildFixedCellGrid(['word gap'], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.find((cell) => cell.glyph === ' ')?.span, PROSE_SPACE_ADVANCE, 'clipboard prose spaces remain unchanged')
+assert.equal(clipboardRun.length, 7, 'clipboard mode retains one monotonic coordinate per internal source space')
+assert.ok(clipboardRun.every((cell) => cell.sourceGlyphs.length === 1 && cell.span === .42), 'clipboard structural spaces use the shared source-coordinate profile')
+const leadingRun = buildFixedCellGrid([`${' '.repeat(24)}＿_＿＿_`], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.filter((cell) => cell.glyph === ' ')
+assert.equal(leadingRun.length, 24, 'clipboard leading run retains every source grapheme independently')
+assert.ok(leadingRun.every((cell) => cell.sourceGlyphs.length === 1 && cell.span === .38), 'clipboard artwork leading spaces use separate screenshot-grounded coordinates')
+assert.equal(buildFixedCellGrid(['word gap'], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.find((cell) => cell.glyph === ' ')?.span, ADAPTIVE_CLIPBOARD_CALIBRATION.sourceAdvances.u0020Caption, 'clipboard caption spaces use the fitted source-coordinate profile')
 const leading = buildFixedCellGrid([`     / |`], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.filter((cell) => cell.glyph === ' ')
-assert.equal(leading[0]?.sourceGlyphs.length, 5, 'clipboard leading indentation retains its source run')
-assert.ok(Math.abs((leading[0]?.span ?? 0) - 2) < 0.000001, 'clipboard leading indentation uses the separate calibrated run model')
+assert.equal(leading.slice(0, 5).length, 5, 'clipboard leading indentation retains its source run')
+assert.ok(leading.slice(0, 5).every((cell) => cell.sourceGlyphs.length === 1 && cell.span === .38), 'clipboard leading indentation uses independent source coordinates')
 const trailing = buildFixedCellGrid(['/ |   '], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.filter((cell) => cell.glyph === ' ')
 assert.equal(trailing.length, 4, 'clipboard trailing spaces remain represented')
 assert.ok(trailing.slice(-3).every((cell) => cell.sourceGlyphs.length === 1), 'clipboard trailing spaces remain source-preserved')
 const ideographic = buildFixedCellGrid(['/\u3000|'], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.find((cell) => cell.glyph === '\u3000')
-assert.equal(ideographic?.span, 2, 'ideographic spaces retain their calibrated full-width span')
+assert.equal(ideographic?.span, .9, 'ideographic spaces use their independently fitted source-coordinate span')
 
 const mixedSource = '  ＿_＿＿_'
 const mixed = buildFixedCellGrid([mixedSource], DEFAULT_CALIBRATION)[0].cells

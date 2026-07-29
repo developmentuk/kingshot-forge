@@ -40,6 +40,10 @@
     "test:art-studio-acceptance": "node scripts/test-art-studio-acceptance-harness.mjs",
     "test:art005-adaptive-calibration": "node --import tsx scripts/test-art005-adaptive-calibration.mjs",
     "test:art006-region-aware-calibration": "node --import tsx scripts/test-art006-region-aware-calibration.mjs",
+    "capture:art006": "node scripts/capture-art006-candidates.mjs",
+    "measure:art006": "node scripts/measure-art006-visible-ink.mjs",
+    "evidence:art006": "node scripts/generate-art006-comparison-boards.mjs",
+    "report:art006": "node --import tsx scripts/generate-art006-calibration-report.mjs",
     "test:art-studio-fit": "node --import tsx scripts/test-art-studio-fit.mjs",
     "test:art-studio-submit-provenance": "node --import tsx scripts/test-art-studio-submit-provenance.mjs",
     "test:art001-rendering": "node --import tsx scripts/test-art001-rendering.mjs",
@@ -97,6 +101,7 @@
     "@vercel/node": "^5.8.24",
     "@vitejs/plugin-react": "^6.0.3",
     "oxlint": "^1.71.0",
+    "playwright": "1.62.0",
     "tsx": "^4.21.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"

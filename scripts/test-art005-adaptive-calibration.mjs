@@ -39,9 +39,11 @@ for (const [slug, [recordId, hash, sourceContext]] of expected) {
 
 const authored = buildFixedCellGrid(['word gap'], DEFAULT_CALIBRATION, 'authored')[0].cells.find((cell) => cell.glyph === ' ')
 assert.equal(authored?.span, PROSE_SPACE_ADVANCE, 'authored spacing remains unchanged')
-const clipboard = buildFixedCellGrid(['/       |'], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells.find((cell) => cell.glyph === ' ')
-assert.equal(clipboard?.sourceGlyphs.length, 7, 'clipboard source run remains grouped without mutation')
-assert.equal(clipboard?.span, 1.29, 'ART-004 clipboard run calibration remains unchanged')
+const clipboardCells = buildFixedCellGrid(['/       |'], DEFAULT_CALIBRATION, 'kingshot-clipboard')[0].cells
+const clipboardSpaces = clipboardCells.filter((cell) => cell.glyph === ' ')
+assert.equal(clipboardSpaces.length, 7, 'each clipboard source space has one monotonic source-coordinate cell')
+assert.ok(clipboardSpaces.every((cell) => cell.sourceGlyphs.length === 1), 'clipboard source spaces remain literal and ungrouped')
+assert.ok(clipboardSpaces.every((cell, index) => !index || cell.column > clipboardSpaces[index - 1].column), 'clipboard source-space positions are monotonic')
 assert.equal(segmentGraphemes('  / | _').length, 7, 'grapheme parser remains source-preserving')
 assert.equal(ARTWORK_SPACE_ADVANCE, .55, 'authored artwork spacing constant remains unchanged')
 

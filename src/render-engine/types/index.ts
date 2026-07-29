@@ -82,6 +82,7 @@ export type GridCell = {
   row: number
   column: number
   role?: 'semantic-gap'
+  sourceRole?: 'u0020-leading' | 'u0020-structural' | 'u0020-prose' | 'u0020-caption' | 'u3000' | 'ascii-structural' | 'ascii-letter' | 'narrow-punctuation' | 'wide-punctuation' | 'full-width' | 'line-art' | 'unicode-structural' | 'emoji'
 }
 
 export type ClipboardBlockKind = 'structural-body' | 'hybrid-columns' | 'blank-separator' | 'trailing-caption' | 'prose' | 'mixed'
@@ -96,8 +97,11 @@ export type ClipboardDocumentRow = {
   columnAnchor?: number
   leftRegionEndColumn?: number
   semanticGapWidthCells?: number
+  semanticGapDistortion?: number
   sourceGapGlyphs?: string[]
   hybridRejectionReason?: string
+  sourceProfile?: 'source-coordinate' | 'caption-structural' | 'emoji-structural-control'
+  horizontalOffsetCells?: number
 }
 
 export type ClipboardDocumentBlock = {
@@ -115,7 +119,7 @@ export type ClipboardDocumentLayout = {
   blocks: ClipboardDocumentBlock[]
 }
 
-export type GridRow = { row: number; cells: GridCell[]; visualAdvanceCells: number; context: string }
+export type GridRow = { row: number; cells: GridCell[]; visualAdvanceCells: number; context: string; horizontalOffsetCells: number }
 
 export type ArtworkAnalysis = {
   artworkClass: ArtworkClass

@@ -33,6 +33,34 @@ export type AdaptiveClipboardCalibration = {
   hybridColumnGapBaseCells: number
   hybridColumnGapIncrementCells: number
   minimumColumnSeparationCells: number
+  maximumSemanticGapDistortion: number
+  sourceAdvances: {
+    u0020Leading: number
+    u0020Structural: number
+    u0020Prose: number
+    u0020Caption: number
+    u3000: number
+    asciiStructural: number
+    asciiLetter: number
+    asciiLetterCaption: number
+    narrowPunctuation: number
+    widePunctuation: number
+    fullWidth: number
+    lineArt: number
+    unicodeStructural: number
+    emoji: number
+    hybrid: {
+      asciiStructural: number
+      u0020Structural: number
+      asciiLetter: number
+      narrowPunctuation: number
+      widePunctuation: number
+      fullWidth: number
+      lineArt: number
+      unicodeStructural: number
+      emoji: number
+    }
+  }
 }
 
 export const ADAPTIVE_CLIPBOARD_CALIBRATION: AdaptiveClipboardCalibration = {
@@ -49,17 +77,110 @@ export const ADAPTIVE_CLIPBOARD_CALIBRATION: AdaptiveClipboardCalibration = {
   mixedEmojiGapCap: 3,
   artworkLineAdvance: 1,
   emptyLineAdvance: .45,
-  repeatedBlankLineAdvance: .25,
-  preCaptionSeparatorAdvance: .40,
+  repeatedBlankLineAdvance: 1,
+  preCaptionSeparatorAdvance: 1,
   captionLineAdvance: 1,
   hybridColumnGapBaseCells: 3.4,
   hybridColumnGapIncrementCells: .16,
   minimumColumnSeparationCells: 2.5,
+  maximumSemanticGapDistortion: 2.5,
+  sourceAdvances: {
+    u0020Leading: .38,
+    u0020Structural: .42,
+    u0020Prose: .58,
+    u0020Caption: .66,
+    u3000: .9,
+    asciiStructural: .65,
+    asciiLetter: .8,
+    asciiLetterCaption: .72,
+    narrowPunctuation: .52,
+    widePunctuation: .5,
+    fullWidth: 1.35,
+    lineArt: .85,
+    unicodeStructural: .45,
+    emoji: 3,
+    hybrid: {
+      asciiStructural: .78,
+      u0020Structural: .36,
+      asciiLetter: .86,
+      narrowPunctuation: .52,
+      widePunctuation: .78,
+      fullWidth: 1.28,
+      lineArt: .82,
+      unicodeStructural: .6,
+      emoji: 1.75,
+    },
+  },
 }
 
 const STRUCTURAL_FAMILIES = new Set(['ideographic-space', 'full-width', 'box-drawing', 'line-art'])
 const STRUCTURAL_ASCII = /^[\\/|()[\]{}<>^]$/u
 const ASCII_LETTER = /^[A-Za-z]$/u
+const NARROW_PUNCTUATION = /^[.,'`!:;*]$/u
+const WIDE_PUNCTUATION = /^[-=+~]$/u
+
+export type ClipboardSourceRole = NonNullable<import('./types').GridCell['sourceRole']>
+
+export function classifyClipboardSourceRole(line: string, glyphs: string[], index: number, row?: Pick<ClipboardDocumentRow, 'context' | 'rightRegionStartIndex'>): ClipboardSourceRole {
+  const glyph = glyphs[index]
+  const context = row?.context ?? classifyClipboardLineContext(line)
+  if (glyph === '\u3000') return 'u3000'
+  if (glyph === ' ') {
+    const firstContent = glyphs.findIndex((item) => item !== ' ')
+    if (index < firstContent) return 'u0020-leading'
+    if (context === 'hybrid-text-art') return row?.rightRegionStartIndex !== undefined && index >= row.rightRegionStartIndex ? 'u0020-prose' : 'u0020-structural'
+    if (context === 'caption' || context === 'prose') return context === 'caption' ? 'u0020-caption' : 'u0020-prose'
+    return 'u0020-structural'
+  }
+  if (/\p{Extended_Pictographic}/u.test(glyph)) return 'emoji'
+  const family = classifyGlyph(glyph)
+  if (family === 'line-art') return 'line-art'
+  if (family === 'full-width' || family === 'box-drawing') return 'full-width'
+  if (STRUCTURAL_ASCII.test(glyph)) return 'ascii-structural'
+  if (ASCII_LETTER.test(glyph)) return context === 'hybrid-text-art' && row?.rightRegionStartIndex !== undefined && index < row.rightRegionStartIndex ? 'ascii-structural' : 'ascii-letter'
+  if (NARROW_PUNCTUATION.test(glyph)) return 'narrow-punctuation'
+  if (WIDE_PUNCTUATION.test(glyph)) return 'wide-punctuation'
+  return 'unicode-structural'
+}
+
+export function resolveClipboardSourceAdvance(line: string, glyphs: string[], index: number, row?: Pick<ClipboardDocumentRow, 'context' | 'rightRegionStartIndex' | 'sourceProfile'>): number {
+  const role = classifyClipboardSourceRole(line, glyphs, index, row)
+  if (row?.sourceProfile === 'emoji-structural-control') {
+    const glyph = glyphs[index]
+    const family = classifyGlyph(glyph)
+    if (glyph === ' ') {
+      if (!isArtworkLine(glyphs)) return ADAPTIVE_CLIPBOARD_CALIBRATION.proseSpaceAdvanceCells
+      let runStart = index
+      while (runStart > 0 && glyphs[runStart - 1] === ' ') runStart -= 1
+      let runEnd = index + 1
+      while (runEnd < glyphs.length && glyphs[runEnd] === ' ') runEnd += 1
+      const runLength = runEnd - runStart
+      return resolveAdaptiveSpaceAdvance({ line, index: runStart, glyphs, sourceContext: 'kingshot-clipboard' }) / runLength
+    }
+    if (family === 'line-art') return glyph === '＿' ? 2 : 1
+    if (family === 'ideographic-space' || family === 'full-width' || family === 'emoji' || family === 'pixel-circles' || family === 'hearts') return 2
+    return 1
+  }
+  const values = ADAPTIVE_CLIPBOARD_CALIBRATION.sourceAdvances
+  const context = row?.context ?? classifyClipboardLineContext(line)
+  const hybrid = values.hybrid
+  const advances: Record<ClipboardSourceRole, number> = {
+    'u0020-leading': values.u0020Leading,
+    'u0020-structural': context === 'hybrid-text-art' ? hybrid.u0020Structural : values.u0020Structural,
+    'u0020-prose': values.u0020Prose,
+    'u0020-caption': values.u0020Caption,
+    u3000: values.u3000,
+    'ascii-structural': context === 'hybrid-text-art' ? hybrid.asciiStructural : values.asciiStructural,
+    'ascii-letter': context === 'hybrid-text-art' ? hybrid.asciiLetter : context === 'caption' ? values.asciiLetterCaption : values.asciiLetter,
+    'narrow-punctuation': context === 'hybrid-text-art' ? hybrid.narrowPunctuation : values.narrowPunctuation,
+    'wide-punctuation': context === 'hybrid-text-art' ? hybrid.widePunctuation : values.widePunctuation,
+    'full-width': context === 'hybrid-text-art' ? hybrid.fullWidth : values.fullWidth,
+    'line-art': context === 'hybrid-text-art' ? hybrid.lineArt : row?.sourceProfile === 'caption-structural' ? 1.15 : values.lineArt,
+    'unicode-structural': context === 'hybrid-text-art' ? hybrid.unicodeStructural : values.unicodeStructural,
+    emoji: context === 'hybrid-text-art' ? hybrid.emoji : values.emoji,
+  }
+  return advances[role]
+}
 
 type SemanticGapProposal = {
   row: number
@@ -113,7 +234,7 @@ export function classifyClipboardLineContext(line: string): ClipboardLineContext
   const structural = nonSpace.filter((glyph) => STRUCTURAL_FAMILIES.has(classifyGlyph(glyph)) || /^[\\/|()[\]{}<>^]$/u.test(glyph)).length
   const leading = glyphs.findIndex((glyph) => glyph !== ' ')
   const trailingEmoji = emoji > 0 && /\p{Extended_Pictographic}\s*$/u.test(line)
-  if (!isArtworkLine(glyphs)) return letters > 3 && emoji === 0 ? 'caption' : 'prose'
+  if (!isArtworkLine(glyphs) && !(leading >= 2 && structural >= 2)) return letters > 3 && emoji === 0 ? 'caption' : 'prose'
   if (trailingEmoji && letters === 0) return 'trailing-emoji'
   if (emoji > 0 && structural > 0) return 'mixed-emoji-ascii'
   if (structural >= 6 && letters === 0 && (nonSpace.filter((glyph) => classifyGlyph(glyph) === 'line-art').length / Math.max(nonSpace.length, 1)) >= .5) return 'horizontal-structural-run'
@@ -121,19 +242,11 @@ export function classifyClipboardLineContext(line: string): ClipboardLineContext
   return structural / Math.max(nonSpace.length, 1) >= .55 ? 'dense-structural' : 'sparse-structural'
 }
 
-function hybridLeftBound(glyphs: string[], gapStart: number, sourceContext: ArtworkSourceContext): number {
-  let width = 0
-  const logicalArtworkRuns = sourceContext === 'kingshot-clipboard' && isArtworkLine(glyphs)
-  for (let index = 0; index < gapStart; index += 1) {
-    const glyph = glyphs[index]
-    if (glyph === ' ' && logicalArtworkRuns) {
-      const runLength = glyphs.slice(index).findIndex((item) => item !== ' ')
-      width += resolveAdaptiveSpaceAdvance({ line: glyphs.join(''), index, glyphs, sourceContext })
-      if (runLength > 1) index += runLength - 1
-    } else if (glyph === ' ') width += ADAPTIVE_CLIPBOARD_CALIBRATION.proseSpaceAdvanceCells
-    else width += glyph === '＿' ? 2 : 1
-  }
-  return width
+function hybridLeftBound(glyphs: string[], gapStart: number, rightRegionStartIndex: number, sourceContext: ArtworkSourceContext): number {
+  if (sourceContext !== 'kingshot-clipboard') return glyphs.slice(0, gapStart).reduce((width, glyph) => width + (glyph === ' ' ? ADAPTIVE_CLIPBOARD_CALIBRATION.proseSpaceAdvanceCells : glyph === '＿' ? 2 : 1), 0)
+  const line = glyphs.join('')
+  const row = { context: 'hybrid-text-art', rightRegionStartIndex }
+  return glyphs.slice(0, gapStart).reduce((width, _, index) => width + resolveClipboardSourceAdvance(line, glyphs, index, row), 0)
 }
 
 function blockForRows(start: number, end: number, kind: ClipboardBlockKind, details: Partial<ClipboardDocumentBlock> = {}): ClipboardDocumentBlock {
@@ -142,9 +255,10 @@ function blockForRows(start: number, end: number, kind: ClipboardBlockKind, deta
 
 export function analyseClipboardDocument(lines: string[], sourceContext: ArtworkSourceContext = 'authored'): ClipboardDocumentLayout {
   const contexts = lines.map((line) => classifyClipboardLineContext(line))
+  const emojiStructuralControl = lines.flatMap(segmentGraphemes).filter((glyph) => /\p{Extended_Pictographic}/u.test(glyph)).length >= 2
   const rows: ClipboardDocumentRow[] = lines.map((_, row) => {
     const context = contexts[row]
-    return { row, context, visualAdvanceCells: context === 'caption' ? ADAPTIVE_CLIPBOARD_CALIBRATION.captionLineAdvance : ADAPTIVE_CLIPBOARD_CALIBRATION.artworkLineAdvance }
+    return { row, context, visualAdvanceCells: context === 'caption' ? ADAPTIVE_CLIPBOARD_CALIBRATION.captionLineAdvance : ADAPTIVE_CLIPBOARD_CALIBRATION.artworkLineAdvance, sourceProfile: emojiStructuralControl ? 'emoji-structural-control' : 'source-coordinate' }
   })
   if (sourceContext !== 'kingshot-clipboard') return { rows: rows.map((row) => ({ ...row, visualAdvanceCells: 1 })), blocks: [] }
 
@@ -165,16 +279,20 @@ export function analyseClipboardDocument(lines: string[], sourceContext: Artwork
     const rightStarts = group.map((item) => item.rightRegionStartIndex)
     const compatible = Math.max(...rightStarts) - Math.min(...rightStarts) <= 6
     if (group.length >= 2 && compatible) {
-      const bounds = group.map((item) => hybridLeftBound(segmentGraphemes(lines[item.row]), item.semanticGapStartIndex, sourceContext))
-      const regionStartColumn = Math.max(...bounds)
-      const semanticColumnGap = ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapBaseCells + Math.max(0, group.length - 1) * ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapIncrementCells
-      const columnAnchor = regionStartColumn + Math.max(semanticColumnGap, ADAPTIVE_CLIPBOARD_CALIBRATION.minimumColumnSeparationCells)
+      const bounds = group.map((item) => hybridLeftBound(segmentGraphemes(lines[item.row]), item.semanticGapStartIndex, item.rightRegionStartIndex, sourceContext))
+      const gapWidths = group.map((item) => {
+        const glyphs = segmentGraphemes(lines[item.row])
+        const row = { context: 'hybrid-text-art', rightRegionStartIndex: item.rightRegionStartIndex }
+        return glyphs.slice(item.semanticGapStartIndex, item.semanticGapEndIndex).reduce((width, _, offset) => width + resolveClipboardSourceAdvance(lines[item.row], glyphs, item.semanticGapStartIndex + offset, row), 0)
+      })
+      const medianGap = [...gapWidths].sort((a, b) => a - b)[Math.floor(gapWidths.length / 2)] || 1
       group.forEach((item, offset) => {
         Object.assign(rows[item.row], item, {
           context: 'hybrid-text-art',
           leftRegionEndColumn: bounds[offset],
-          semanticGapWidthCells: columnAnchor - bounds[offset],
-          columnAnchor,
+          semanticGapWidthCells: gapWidths[offset],
+          semanticGapDistortion: gapWidths[offset] / medianGap,
+          columnAnchor: bounds[offset] + gapWidths[offset],
         })
       })
     } else {
@@ -199,10 +317,10 @@ export function analyseClipboardDocument(lines: string[], sourceContext: Artwork
       while (index + 1 < rows.length && rows[index + 1].context === 'hybrid-text-art') index += 1
       const end = index
       const hybridRows = rows.slice(start, end + 1)
-      const regionStartColumn = Math.max(...hybridRows.map((item) => item.leftRegionEndColumn ?? 0), 0)
-      const semanticColumnGap = ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapBaseCells + Math.max(0, hybridRows.length - 1) * ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapIncrementCells
-      const columnAnchor = hybridRows[0]?.columnAnchor ?? regionStartColumn + Math.max(semanticColumnGap, ADAPTIVE_CLIPBOARD_CALIBRATION.minimumColumnSeparationCells)
-      blocks.push(blockForRows(start, end, 'hybrid-columns', { regionStartColumn, regionEndColumn: columnAnchor, columnAnchor, semanticColumnGap }))
+      const regionStartColumn = Math.min(...hybridRows.map((item) => item.leftRegionEndColumn ?? 0))
+      const regionEndColumn = Math.max(...hybridRows.map((item) => item.columnAnchor ?? 0))
+      const semanticColumnGap = Math.max(...hybridRows.map((item) => item.semanticGapWidthCells ?? 0))
+      blocks.push(blockForRows(start, end, 'hybrid-columns', { regionStartColumn, regionEndColumn, semanticColumnGap }))
     } else if (row.context === 'caption') {
       const start = index
       while (index + 1 < rows.length && rows[index + 1].context === 'caption') index += 1
@@ -224,6 +342,16 @@ export function analyseClipboardDocument(lines: string[], sourceContext: Artwork
     }
     index += 1
   }
+  const hasCaptionSeparator = blocks.some((block) => block.kind === 'blank-separator') && blocks.some((block) => block.kind === 'trailing-caption')
+  const horizontalOffsetCells = blocks.some((block) => block.kind === 'hybrid-columns')
+    ? .6
+    : hasCaptionSeparator
+      ? -.75
+      : 0
+  rows.forEach((row) => {
+    row.horizontalOffsetCells = horizontalOffsetCells
+    if (hasCaptionSeparator && row.sourceProfile === 'source-coordinate') row.sourceProfile = 'caption-structural'
+  })
   return { rows, blocks }
 }
 

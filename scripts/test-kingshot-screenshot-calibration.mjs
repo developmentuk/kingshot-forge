@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { buildFixedCellGrid } from '../src/render-engine/grid/index.ts'
+import { segmentGraphemes } from '../src/render-engine/parser/index.ts'
 
 const reference = await readFile(new URL('../fixtures/community-art/wow-im-so-cute/kingshot-reference-chat.png', import.meta.url))
 assert.equal(reference.readUInt32BE(16), 759, 'Kingshot chat reference width remains deterministic')
@@ -43,5 +44,6 @@ const source = Buffer.from(sourceBase64.replace(/\s+/g, ''), 'base64').toString(
 const grid = buildFixedCellGrid(source.split('\n'), undefined, 'kingshot-clipboard')
 assert.equal(grid.length, 10)
 assert.equal(grid.flatMap((row) => row.cells.flatMap((cell) => cell.sourceGlyphs)).join(''), source.replaceAll('\n', ''), 'screenshot-calibrated grid retains exact clipboard graphemes')
-assert.ok(grid.flatMap((row) => row.cells).some((cell) => cell.sourceGlyphs.length > 1), 'screenshot-calibrated grid contains logical run provenance')
+assert.equal(grid.flatMap((row) => row.cells).length, source.split('\n').reduce((count, line) => count + segmentGraphemes(line).length, 0), 'screenshot-calibrated grid assigns one cell to every source grapheme')
+assert.ok(grid.flatMap((row) => row.cells).every((cell) => cell.sourceGlyphs.length === 1), 'screenshot-calibrated grid retains literal source-coordinate provenance')
 console.log(JSON.stringify({ result: 'PASS', reference: { bubble: { left: 146, right: 568, width: 422 }, rule: { left: 325, right: 427, centre: 376 }, artworkBands: [[173, 197], [206, 229], [239, 262], [271, 295], [304, 327], [337, 360], [369, 393]] }, measured: { ruleBeforeDelta: ruleBeforeDelta * 100, ruleAfterDelta: ruleAfterDelta * 100, rowDriftBefore: rowDriftBefore * 100, rowDriftAfter: rowDriftAfter * 100, widthBefore: widthBefore * 100, widthAfter: widthAfter * 100, faceAfterDelta: Math.abs(faceCentreAfter - faceReference) / candidateBubbleWidth * 100, pawsAfterDelta: pawsDeltaAfter * 100 } }, null, 2))

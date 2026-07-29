@@ -1,5 +1,5 @@
-import { classifyGlyph, isLogicalInternalSpaceRun, isLogicalLeadingSpaceRun, resolveGlyphAdvance } from '../analyser'
-import { analyseClipboardDocument } from '../adaptiveCalibration'
+import { classifyGlyph, resolveGlyphAdvance } from '../analyser'
+import { analyseClipboardDocument, classifyClipboardSourceRole, resolveClipboardSourceAdvance } from '../adaptiveCalibration'
 import { DEFAULT_CALIBRATION } from '../configuration'
 import { segmentGraphemes } from '../parser'
 import type { CalibrationConfiguration, GridCell, GridRow } from '../types'
@@ -12,28 +12,14 @@ export function buildFixedCellGrid(lines: string[], calibration: CalibrationConf
     const glyphs = segmentGraphemes(line)
     const cells: GridCell[] = []
     const rowLayout = layout.rows[row]
-    const textAnchor = rowLayout?.columnAnchor
-    const textIndex = rowLayout?.rightRegionStartIndex
     for (let index = 0; index < glyphs.length; index += 1) {
       const glyph = glyphs[index]
-      if (textAnchor !== undefined && textIndex !== undefined && index === textIndex) logicalColumn = Math.max(logicalColumn, textAnchor)
-      if (rowLayout?.semanticGapStartIndex === index && rowLayout.semanticGapEndIndex !== undefined && rowLayout.semanticGapWidthCells !== undefined) {
-        const sourceGlyphs = glyphs.slice(index, rowLayout.semanticGapEndIndex)
-        cells.push({ glyph, sourceGlyphs, sourceStartIndex: index, sourceEndIndex: rowLayout.semanticGapEndIndex, family: classifyGlyph(glyph), span: rowLayout.semanticGapWidthCells, row, column: logicalColumn, role: 'semantic-gap' })
-        logicalColumn += rowLayout.semanticGapWidthCells
-        index = rowLayout.semanticGapEndIndex - 1
-        continue
-      }
-      const logicalRun = isLogicalInternalSpaceRun(glyphs, index, sourceContext) || isLogicalLeadingSpaceRun(glyphs, index, sourceContext)
-      if (logicalRun && index > 0 && glyphs[index - 1] === ' ') continue
-      const runLength = logicalRun ? glyphs.slice(index).findIndex((item) => item !== ' ') : 1
-      const sourceGlyphs = runLength > 0 ? glyphs.slice(index, index + runLength) : [glyph]
       const family = classifyGlyph(glyph)
-      const span = resolveGlyphAdvance(glyph, glyphs, index, calibration, sourceContext)
-      cells.push({ glyph, sourceGlyphs, sourceStartIndex: index, sourceEndIndex: index + sourceGlyphs.length, family, span, row, column: logicalColumn })
+      const span = sourceContext === 'kingshot-clipboard' ? resolveClipboardSourceAdvance(line, glyphs, index, rowLayout) : resolveGlyphAdvance(glyph, glyphs, index, calibration, sourceContext)
+      const role = rowLayout?.semanticGapStartIndex !== undefined && rowLayout.semanticGapEndIndex !== undefined && index >= rowLayout.semanticGapStartIndex && index < rowLayout.semanticGapEndIndex ? 'semantic-gap' : undefined
+      cells.push({ glyph, sourceGlyphs: [glyph], sourceStartIndex: index, sourceEndIndex: index + 1, family, span, row, column: logicalColumn, role, sourceRole: sourceContext === 'kingshot-clipboard' ? classifyClipboardSourceRole(line, glyphs, index, rowLayout) : undefined })
       logicalColumn += span
-      if (runLength > 1) index += runLength - 1
     }
-    return { row, cells, visualAdvanceCells: rowLayout?.visualAdvanceCells ?? 1, context: rowLayout?.context ?? 'prose' }
+    return { row, cells, visualAdvanceCells: rowLayout?.visualAdvanceCells ?? 1, context: rowLayout?.context ?? 'prose', horizontalOffsetCells: rowLayout?.horizontalOffsetCells ?? 0 }
   })
 }

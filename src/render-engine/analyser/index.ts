@@ -9,7 +9,7 @@ const HEART = /^[♥❤💕💖💗💓💞💘💝💟♡]$/u
 const DECORATIVE = /^[★☆✦✧✩✪✫✬✭✮✯✰◆◇◈❖❈❉❊❋✿❀]$/u
 const EMOJI = /^\p{Extended_Pictographic}$/u
 const FULL_WIDTH = /^[\u1100-\u115F\u2329\u232A\u2E80-\u303E\u3040-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE10-\uFE19\uFE30-\uFE6F\uFF00-\uFF60\uFFE0-\uFFE6]$/u
-const LINE_ART = /^[_＿]$/u
+const LINE_ART = /^[_＿▁▔]$/u
 const STRUCTURAL_ASCII = /^[\\/|()[\]{}<>^]$/u
 
 export const PROSE_SPACE_ADVANCE = .72

@@ -36,6 +36,7 @@
   min-height: calc(var(--kingshot-cell-height) * var(--forge-row-advance, 1));
   height: calc(var(--kingshot-cell-height) * var(--forge-row-advance, 1));
   align-items: center;
+  transform: translateX(calc(var(--kingshot-cell-width) * var(--forge-row-offset-cells, 0)));
 }
 
 .kingshot-cell-grid__cell {
