@@ -1,6 +1,6 @@
 # PLAYER-INTEL-001 — Local PKCE acceptance flow
 
-**Status:** Implemented and deterministically tested; live execution pending  
+**Status:** Implemented; deterministic validation pending on the operator worktree; live execution pending  
 **Branch:** `research/player-intelligence-discovery`  
 **Supabase project:** `hrvdhjscwitqpwjhnjkm`  
 **Production data writes:** Prohibited
@@ -44,9 +44,10 @@ The replacement harness:
 8. never writes access, refresh or provider tokens to Local Storage, disk, clipboard, terminal output or evidence;
 9. calls the existing one-request Player acceptance runner once;
 10. revokes the temporary Supabase session using local-scope sign-out;
-11. clears all in-memory authentication material;
-12. closes the loopback server;
-13. records only redacted technical evidence.
+11. refuses to report success when temporary-session revocation fails;
+12. clears all in-memory authentication material;
+13. closes the loopback server;
+14. records only redacted technical evidence.
 
 The local callback page uses no-store headers, a restrictive Content Security Policy and no external assets.
 
@@ -84,6 +85,7 @@ The synthetic suite verifies:
 - exactly one Auth Code exchange occurs;
 - the Player acceptance runner is called once;
 - the temporary session is signed out with local scope;
+- failed temporary-session revocation is classified as a failed acceptance;
 - in-memory auth material is cleared;
 - cancellation performs no Player acceptance request;
 - evidence contains no Player ID, access token or refresh token;
