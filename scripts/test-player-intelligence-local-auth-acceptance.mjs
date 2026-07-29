@@ -199,6 +199,83 @@ await assert.rejects(
 assert.equal(cancelledAcceptanceCount, 0)
 assert.equal(capturedStorage.size(), 0)
 
+let revokeFailureSignOutCount = 0
+let revokeFailureEvidenceCount = 0
+await assert.rejects(
+  runPlayerIntelligenceLocalAuthAcceptance({
+    args: ['--execute', '--player-id', playerId, '--approved-sha', approvedSha],
+    environment: {},
+    createClientImpl: (_url, _key, options) => {
+      capturedStorage = options.auth.storage
+      return {
+        auth: {
+          async signInWithOAuth({ options: oauthOptions }) {
+            redirectUrl = oauthOptions.redirectTo
+            capturedStorage.setItem('pkce-verifier', 'clear-on-revoke-failure')
+            return { data: { url: 'https://accounts.example.test/authorise' }, error: null }
+          },
+          async exchangeCodeForSession() {
+            capturedStorage.setItem('session', 'must-still-be-cleared')
+            return { data: { session: { access_token: accessToken, refresh_token: 'synthetic-refresh-token' } }, error: null }
+          },
+          async signOut(options) {
+            revokeFailureSignOutCount += 1
+            assert.deepEqual(options, { scope: 'local' })
+            return { error: new Error('synthetic revocation failure') }
+          },
+        },
+      }
+    },
+    loadEnvImpl: () => ({
+      VITE_SUPABASE_URL: 'https://hrvdhjscwitqpwjhnjkm.supabase.co/',
+      VITE_SUPABASE_PUBLISHABLE_KEY: publishableKey,
+    }),
+    browserLauncher: async () => {
+      const response = await fetch(`${redirectUrl}?code=single-use-code`)
+      assert.equal(response.status, 500)
+      const html = await response.text()
+      assert.match(html, /Acceptance stopped safely/)
+      assert.equal(html.includes(playerId), false)
+      assert.equal(html.includes(accessToken), false)
+    },
+    acceptanceRunner: async () => ({
+      status: 'passed',
+      runId: randomUUID(),
+      requestCount: 1,
+      externalRequestMade: true,
+      databaseConnectionMade: false,
+      persistencePerformed: false,
+      rawPayloadRecorded: false,
+      playerValuesRecorded: false,
+    }),
+    evidenceWriter: (payload) => {
+      revokeFailureEvidenceCount += 1
+      const safe = JSON.stringify(payload)
+      assert.equal(payload.temporarySessionRevoked, false)
+      assert.equal(safe.includes(playerId), false)
+      assert.equal(safe.includes(accessToken), false)
+      assert.equal(safe.includes('synthetic-refresh-token'), false)
+      return '/tmp/synthetic-revoke-failure-evidence.json'
+    },
+    repositoryGate: () => ({ branch: 'research/player-intelligence-discovery', sha: approvedSha, clean: true }),
+    localAuth: {
+      listenHost: '127.0.0.1',
+      redirectHost: 'localhost',
+      port: 0,
+      callbackPath: '/player-intelligence-acceptance/callback',
+      authTimeoutMs: 5_000,
+    },
+  }),
+  (error) => {
+    assert.equal(error.code, 'temporary_session_revoke_failed')
+    assert.equal(error.result.temporarySessionRevoked, false)
+    return true
+  },
+)
+assert.equal(revokeFailureSignOutCount, 2)
+assert.equal(revokeFailureEvidenceCount, 1)
+assert.equal(capturedStorage.size(), 0)
+
 await assert.rejects(
   runPlayerIntelligenceLocalAuthAcceptance({
     args: ['--player-id', playerId, '--approved-sha', approvedSha],
