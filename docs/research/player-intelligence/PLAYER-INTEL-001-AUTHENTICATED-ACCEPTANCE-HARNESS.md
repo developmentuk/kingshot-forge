@@ -1,31 +1,57 @@
 # PLAYER-INTEL-001 — Authenticated read-only acceptance harness
 
-**Status:** Implemented and deterministically tested; live execution pending  
+**Status:** Core one-request runner retained; manual operator-token execution retired  
 **Branch:** `research/player-intelligence-discovery`  
 **Supabase project:** `hrvdhjscwitqpwjhnjkm`  
 **Production data writes:** Prohibited
 
-## Purpose
+## Important operator notice
 
-Provide one tightly controlled way to test the existing JWT-protected `kingshot-player` Edge Function without using the write-capable `/api/player/account` route and without changing `player_accounts`, Player Intelligence tables, migrations, Edge Functions or Vercel deployments.
+The original operator procedure required a short-lived authenticated JWT to be supplied manually to the local process. That procedure is retired and must not be used.
 
-The harness is an acceptance tool, not a product endpoint. It is not callable from the Forge browser UI and must not be used for public search, Player ID enumeration, bulk collection or scheduled refreshes.
+During the first operator attempt, Chrome DevTools displayed the full Supabase browser session object, including access, refresh and provider tokens. The operator immediately signed out, removed the Google connection, allowed the exposed access token to expire and stopped before any live Player request occurred.
+
+For all future live acceptance work:
+
+- do not inspect Supabase Local Storage;
+- do not copy session JSON;
+- do not paste tokens into PowerShell;
+- do not use the browser Console or DevTools to extract credentials;
+- do not place credentials in `.env`, screenshots, chat, GitHub, documentation or evidence.
+
+The only approved operator path is the memory-only PKCE wrapper documented in:
+
+`docs/research/player-intelligence/PLAYER-INTEL-001-LOCAL-PKCE-ACCEPTANCE.md`
+
+## Purpose of the retained core runner
+
+The core runner provides one tightly controlled way to call the existing JWT-protected `kingshot-player` Edge Function without using the write-capable `/api/player/account` route and without changing `player_accounts`, Player Intelligence tables, migrations, Edge Functions or Vercel deployments.
+
+It remains an internal implementation primitive used by:
+
+- deterministic synthetic tests;
+- the approved local PKCE wrapper;
+- future controlled server-authoritative acceptance tooling.
+
+It is not a product endpoint and must not be called directly by an operator with manually obtained credentials.
 
 ## Files
 
 - `scripts/player-intelligence-acceptance-controls.mjs`
 - `scripts/run-player-intelligence-authenticated-acceptance.mjs`
 - `scripts/test-player-intelligence-authenticated-acceptance.mjs`
+- `scripts/run-player-intelligence-local-auth-acceptance.mjs`
+- `scripts/test-player-intelligence-local-auth-acceptance.mjs`
 - `package.json`
 
-## Operating boundary
+## Core operating boundary
 
-A successful execute run:
+A successful core execution:
 
 1. requires the exact branch `research/player-intelligence-discovery`;
 2. requires a clean working tree and an explicitly approved 40-character commit SHA;
 3. targets only `https://hrvdhjscwitqpwjhnjkm.supabase.co/`;
-4. requires a short-lived JWT whose local claims identify an `authenticated` user;
+4. requires an authenticated-user Supabase JWT supplied by an approved wrapper;
 5. requires a separate Supabase publishable key;
 6. refuses `sb_secret_`, service-role and same-token-as-key configurations;
 7. accepts exactly one numeric Kingshot Player ID;
@@ -39,7 +65,7 @@ The Supabase gateway remains responsible for cryptographic JWT verification. Loc
 
 ## Evidence policy
 
-The harness never writes the requested Player ID, returned Player ID, player name, kingdom, level, profile image, raw response body, JWT, publishable key or actor subject to the evidence file.
+The runner never writes the requested Player ID, returned Player ID, player name, kingdom, level, profile image, raw response body, JWT, publishable key or actor subject to the evidence file.
 
 Permitted evidence is restricted to:
 
@@ -56,17 +82,17 @@ Permitted evidence is restricted to:
 - selected non-personal cache/rate headers;
 - explicit no-database, no-persistence and no-raw-payload attestations.
 
-Evidence is written outside the repository to a local temporary directory with restrictive file permissions. The evidence file must not be committed.
+Evidence is written outside the repository to a local temporary directory with restrictive file permissions. It must not be committed.
 
-## Commands
+## Approved commands
 
-### Deterministic tests
+### Deterministic core tests
 
 ```bash
 npm run test:player-intelligence-acceptance
 ```
 
-The test suite uses synthetic responses only. It validates:
+The synthetic suite validates:
 
 - plan mode performs no external request;
 - execute mode performs exactly one request;
@@ -90,41 +116,37 @@ npm run accept:player-intelligence-authenticated -- \
   --approved-sha <EXACT_40_CHARACTER_SHA>
 ```
 
-### Execute mode
+### Live operator execution
 
-Execution additionally requires environment variables supplied only to the operator's local process:
-
-```text
-PLAYER_INTEL_ACCEPTANCE_APPROVED=YES
-PLAYER_INTEL_ACCEPTANCE_ACCESS_TOKEN=<SHORT_LIVED_AUTHENTICATED_USER_JWT>
-SUPABASE_PUBLISHABLE_KEY=<PUBLIC_OR_LEGACY_ANON_KEY>
-```
-
-Then run:
+Use only:
 
 ```bash
-npm run accept:player-intelligence-authenticated -- \
+npm run accept:player-intelligence-local-auth -- \
   --execute \
   --player-id <PLAYER_ID> \
   --approved-sha <EXACT_40_CHARACTER_SHA>
 ```
 
-No access token, key or Player value may be pasted into GitHub, documentation, issue comments, PR comments or chat transcripts.
+That wrapper performs normal Google/Supabase PKCE authentication, retains the session in memory, calls this core runner once, revokes the temporary session and clears the memory store.
+
+Direct live execution of `accept:player-intelligence-authenticated` with manually supplied environment tokens is prohibited.
 
 ## Current result
 
-The harness code and synthetic test suite are complete. No live execute run has been performed by this implementation commit because no short-lived authenticated-user JWT was supplied to the controlled local process.
+The core runner and both synthetic acceptance suites are implemented. The safe no-request plan mode has passed on the operator's isolated local worktree.
 
-Therefore the current-connectivity gate remains pending. No claim is made yet about live latency, current upstream availability, current cache status, response byte size or current provider throttling.
+No live execute run has yet completed, so current connectivity, latency, upstream availability, cache status, response byte size and provider throttling remain unproven.
 
 ## Exit criteria for the one-call acceptance
 
-The live gate may be marked complete only when one owner-approved execute run:
+The live gate may be marked complete only when one owner-approved local PKCE run:
 
 - passes every repository and authentication guard;
-- performs exactly one request;
+- performs exactly one Player request;
 - receives a structurally valid exact-ID response or a safely classified failure;
 - produces a redacted evidence file containing no Player values or credentials;
+- revokes the temporary authentication session;
+- clears all in-memory authentication material;
 - causes no database write, migration, deployment or linked-account revalidation;
 - is recorded in PLAYER-INTEL-001 documentation using technical metadata only.
 
