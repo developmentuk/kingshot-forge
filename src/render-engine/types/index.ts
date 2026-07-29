@@ -75,10 +75,13 @@ export type SavedCalibrationProfile = {
 export type GridCell = {
   glyph: string
   sourceGlyphs: string[]
+  sourceStartIndex: number
+  sourceEndIndex: number
   span: number
   family: GlyphFamily
   row: number
   column: number
+  role?: 'semantic-gap'
 }
 
 export type ClipboardBlockKind = 'structural-body' | 'hybrid-columns' | 'blank-separator' | 'trailing-caption' | 'prose' | 'mixed'
@@ -87,8 +90,14 @@ export type ClipboardDocumentRow = {
   row: number
   context: string
   visualAdvanceCells: number
-  hybridTextStartIndex?: number
+  semanticGapStartIndex?: number
+  semanticGapEndIndex?: number
+  rightRegionStartIndex?: number
   columnAnchor?: number
+  leftRegionEndColumn?: number
+  semanticGapWidthCells?: number
+  sourceGapGlyphs?: string[]
+  hybridRejectionReason?: string
 }
 
 export type ClipboardDocumentBlock = {

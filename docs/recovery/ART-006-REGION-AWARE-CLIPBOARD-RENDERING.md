@@ -1,6 +1,6 @@
 # ART-006 — Region-aware Kingshot clipboard rendering
 
-Status: implementation complete; automated and structural evidence complete; owner visual review required
+Status: owner review at `d831798d0ce6b717180e5e8a4927da28a0e6542f` failed; semantic-gap correction implemented; automated and structural evidence complete; owner re-review required
 
 Branch: `hotfix/art-studio-region-aware-clipboard`
 
@@ -22,21 +22,33 @@ The supplied production evidence archive was verified before use:
 
 The production images are preserved byte-for-byte in the generated comparison-board data. AH AH oops is the non-regression control.
 
+## Failed owner-review evidence
+
+The owner reviewed the exact Vercel preview for `d831798d0ce6b717180e5e8a4927da28a0e6542f` on a phone at Fit and rejected it. The verified failure archive is `ART-006-owner-review-fail-evidence.zip`, SHA-256 `da9714e21734a8069c99d6d46c1d395911a61c8effcf29aacf7bbadabec36128`.
+
+| Fixture | Failure screenshot | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| I have come to | `i-have-come-to-art006-owner-fail.png` | 73,935 | `8c7e8e337c902bb6160443f43bfe05a0d4ad313eded21f743adcc58bec053e03` |
+| Dont ask me | `dont-ask-me-art006-owner-fail.png` | 65,068 | `fe427764930e114850eea09fc27e04f01f60a1d08c06167598cd98f14f1b302b` |
+| AH AH oops | `ah-ah-oops-art006-control-regression.png` | 57,367 | `55f004dfa3d1561ae061d560ffae71c132e5c7f6f255d44be9bde5e895430b37` |
+
 ## Architectural cause
 
-ART-005 calibrated each line independently. A `hybrid-text-art` row therefore used the ordinary structural-gap transfer function, even when neighbouring rows formed one left-art/right-prose composition. The renderer also gave every source row the same visual line advance, so copied blank separator rows occupied a full ordinary row.
+The failed ART-006 implementation treated any Unicode `\p{Letter}` as possible prose and applied the hybrid gap formula to every internal space on a classified row. Structural glyphs such as `Д`/`Դ`, `ω`, `U` and `I` could therefore trigger hybrid treatment, while spaces inside faces, bodies, limbs and prose were expanded globally. The vertical blank-separator model was not implicated and is retained.
 
 ## Region/block model
 
-`analyseClipboardDocument()` now creates a deterministic document layout in clipboard mode. It identifies structural body, hybrid-column, blank-separator, trailing-caption and prose blocks. Each row keeps its original row index and context, with optional `hybridTextStartIndex`, `columnAnchor` and `visualAdvanceCells` metadata.
+`analyseClipboardDocument()` creates a deterministic document layout in clipboard mode. It identifies structural body, verified hybrid-column, blank-separator, trailing-caption and prose blocks. Each verified column row records the exact source-indexed `semanticGapStartIndex`, exclusive `semanticGapEndIndex`, `rightRegionStartIndex`, `sourceGapGlyphs`, left-region bound, gap width and shared `columnAnchor`.
 
-The model is configuration-driven and contains no fixture title, database ID, caption, line number or shape-specific correction. Authored mode returns one visual advance per source row and no region calibration.
+Candidates require a two-or-more-space internal run, meaningful structural density on the left, a low-structural-density right region with at least three ASCII letters in word-like clusters, and at least two neighbouring candidates with compatible right-region starts. Punctuation inside words is supported. A lone Unicode or ASCII letter is insufficient. The model is configuration-driven and contains no fixture title, database ID, caption, line number or shape-specific correction. Authored mode returns one visual advance per source row and no region calibration.
 
 ## Horizontal column calibration
 
-Contiguous hybrid rows are treated as one block. The block derives the left structural bound from the source graphemes, then chooses one semantic column anchor for all neighbouring right-text rows. The anchor uses `hybridColumnGapBaseCells`, `hybridColumnGapIncrementCells` and `minimumColumnSeparationCells`. The grid moves only the visual token at the detected right-text boundary; source spaces remain grouped as source provenance and are not removed.
+Contiguous verified rows are treated as one block. The block derives each left structural bound using ART-005 spacing, then chooses one semantic column anchor for all neighbouring right-text rows. The anchor uses `hybridColumnGapBaseCells`, `hybridColumnGapIncrementCells` and `minimumColumnSeparationCells`.
 
-For `I have come to`, the detected hybrid block is source rows 1–3. The candidate has one shared logical right-column anchor of `29.59` cells and a semantic gap of `3.72` cells. The three right-text anchors are identical in logical layout; visible-ink tolerance still requires owner review against the supplied screenshot.
+The grid applies special width only to the exact source separator run. Every other leading, left-region, right-region and trailing space retains ART-005 resolution. The separator cell preserves every source grapheme and skips only the spaces represented by that cell.
+
+For `I have come to`, the detected hybrid block is source rows 1–4. The exact semantic gaps are indexes `[37,39)`, `[37,39)`, `[34,36)` and `[34,36)`, each preserving two source spaces. The corrected candidate has one shared logical right-column anchor; visible-ink tolerance still requires owner re-review.
 
 ## Blank-separator and caption calibration
 
@@ -58,9 +70,9 @@ Production before is represented by the supplied, hash-verified screenshots and 
 
 | Fixture | Production before | Candidate after |
 | --- | --- | --- |
-| I have come to | Independent rows; right text starts vary with each row’s compressed gap; large source gaps are not a shared column region. | One rows 1–3 hybrid block; shared `29.59`-cell right anchor; `3.72`-cell semantic gap; source remains 9 lines / 387 bytes. |
-| Dont ask me | Two blank rows paint at ordinary row height, leaving an excessive body-to-caption gap. | Blank-separator block rows 6–7 advance `0.40 + 0.25`; caption remains row 8; source remains 9 lines / 252 bytes. |
-| AH AH oops | Passing control screenshot. | No blank/caption compression; all nine rows remain ordinary advance `1`; existing emoji/structural source provenance remains intact. |
+| I have come to | Failed ART-006 expanded ordinary internal spaces and displaced the structural figure. | Rows 1–4 share one source-indexed right anchor; only each exact two-space semantic separator receives special width; all other horizontal spans equal ART-005; source remains 9 lines / 387 bytes. |
+| Dont ask me | Failed ART-006 improved vertical separation but distorted the structural body. | No hybrid block or semantic gap is detected; horizontal geometry equals ART-005; blank rows 6–7 retain `0.40 + 0.25`; caption remains row 8; source remains 9 lines / 252 bytes. |
+| AH AH oops | Failed ART-006 regressed the passing control by treating a letter-shaped glyph as prose evidence. | No hybrid block or semantic gap is detected; every horizontal cell equals ART-005; all nine rows retain advance `1`; source remains 9 lines / 199 bytes. |
 
 The requested percentage measurements are visible-ink measurements and must be confirmed by owner review of the candidate boards at Fit. Logical anchor equality is automated; it is not a claim of pixel identity.
 
@@ -76,7 +88,7 @@ The grid retains every source row and every source grapheme in `sourceGlyphs`. N
 - Focused tests: `scripts/test-art006-region-aware-calibration.mjs`
 - Supplied production evidence: the verified ZIP named above; it is not modified.
 
-The in-app browser could not open local evidence-board HTML because its URL policy blocks local evidence-server pages. The supplied reference and production PNGs were inspected directly. Candidate-board HTML was structurally verified for the three panels and required guides; owner review must inspect the rendered boards in a permitted browser.
+Each board contains four panels: Kingshot reference, ART-005 production baseline, failed ART-006 owner screenshot and corrected candidate. Source-index diagnostics list verified gaps, rejected rows, rejection reasons and ART-005 ordinary-span equality. The boards were regenerated and structurally verified without browser automation; owner re-review must inspect the rendered preview.
 
 ## Limitations and owner-review requirements
 

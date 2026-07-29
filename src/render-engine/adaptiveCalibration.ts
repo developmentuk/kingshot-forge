@@ -58,6 +58,52 @@ export const ADAPTIVE_CLIPBOARD_CALIBRATION: AdaptiveClipboardCalibration = {
 }
 
 const STRUCTURAL_FAMILIES = new Set(['ideographic-space', 'full-width', 'box-drawing', 'line-art'])
+const STRUCTURAL_ASCII = /^[\\/|()[\]{}<>^]$/u
+const ASCII_LETTER = /^[A-Za-z]$/u
+
+type SemanticGapProposal = {
+  row: number
+  semanticGapStartIndex: number
+  semanticGapEndIndex: number
+  rightRegionStartIndex: number
+  sourceGapGlyphs: string[]
+}
+
+function isStructuralGlyph(glyph: string): boolean {
+  return STRUCTURAL_FAMILIES.has(classifyGlyph(glyph)) || STRUCTURAL_ASCII.test(glyph)
+}
+
+function isProseLikeRegion(glyphs: string[]): boolean {
+  const nonSpace = glyphs.filter((glyph) => glyph !== ' ' && glyph !== '\u3000')
+  const asciiLetters = nonSpace.filter((glyph) => ASCII_LETTER.test(glyph)).length
+  const structural = nonSpace.filter(isStructuralGlyph).length
+  const clusters = glyphs.join('').trim().split(/ +/u).filter(Boolean)
+  const wordLikeClusters = clusters.filter((cluster) => {
+    const tokens = segmentGraphemes(cluster).filter((glyph) => glyph !== '\u3000')
+    const letters = tokens.filter((glyph) => ASCII_LETTER.test(glyph)).length
+    return letters >= 2 && letters / Math.max(tokens.length, 1) >= .5
+  })
+  return asciiLetters >= 3
+    && wordLikeClusters.length >= 1
+    && structural / Math.max(nonSpace.length, 1) <= .2
+}
+
+function semanticGapProposal(line: string, row: number): SemanticGapProposal | undefined {
+  const glyphs = segmentGraphemes(line)
+  const candidates: SemanticGapProposal[] = []
+  for (let start = 1; start < glyphs.length - 1; start += 1) {
+    if (glyphs[start] !== ' ' || glyphs[start - 1] === ' ') continue
+    let end = start
+    while (end < glyphs.length && glyphs[end] === ' ') end += 1
+    if (end - start < 2 || end >= glyphs.length) continue
+    const left = glyphs.slice(0, start).filter((glyph) => glyph !== ' ' && glyph !== '\u3000')
+    const right = glyphs.slice(end)
+    const leftStructural = left.filter(isStructuralGlyph).length
+    if (leftStructural < 2 || leftStructural / Math.max(left.length, 1) < .25 || !isProseLikeRegion(right)) continue
+    candidates.push({ row, semanticGapStartIndex: start, semanticGapEndIndex: end, rightRegionStartIndex: end, sourceGapGlyphs: glyphs.slice(start, end) })
+  }
+  return candidates.at(-1)
+}
 
 export function classifyClipboardLineContext(line: string): ClipboardLineContext {
   const glyphs = segmentGraphemes(line)
@@ -67,40 +113,25 @@ export function classifyClipboardLineContext(line: string): ClipboardLineContext
   const structural = nonSpace.filter((glyph) => STRUCTURAL_FAMILIES.has(classifyGlyph(glyph)) || /^[\\/|()[\]{}<>^]$/u.test(glyph)).length
   const leading = glyphs.findIndex((glyph) => glyph !== ' ')
   const trailingEmoji = emoji > 0 && /\p{Extended_Pictographic}\s*$/u.test(line)
-  const firstLetter = glyphs.findIndex((glyph) => /\p{Letter}/u.test(glyph))
-  const structuralBeforeText = firstLetter > 0 ? glyphs.slice(0, firstLetter).filter((glyph) => STRUCTURAL_FAMILIES.has(classifyGlyph(glyph)) || /^[\\/|()[\]{}<>^]$/u.test(glyph)).length : 0
-  const lettersAfterText = firstLetter >= 0 ? glyphs.slice(firstLetter + 1).filter((glyph) => /\p{Letter}/u.test(glyph)).length : 0
-  if (firstLetter >= 12 && structuralBeforeText >= 2 && lettersAfterText > 0) return 'hybrid-text-art'
   if (!isArtworkLine(glyphs)) return letters > 3 && emoji === 0 ? 'caption' : 'prose'
   if (trailingEmoji && letters === 0) return 'trailing-emoji'
   if (emoji > 0 && structural > 0) return 'mixed-emoji-ascii'
-  if (letters > 0 && structural > 0) return 'hybrid-text-art'
   if (structural >= 6 && letters === 0 && (nonSpace.filter((glyph) => classifyGlyph(glyph) === 'line-art').length / Math.max(nonSpace.length, 1)) >= .5) return 'horizontal-structural-run'
   if (leading > 0) return structural / Math.max(nonSpace.length, 1) >= .55 ? 'dense-structural' : 'leading-structural'
   return structural / Math.max(nonSpace.length, 1) >= .55 ? 'dense-structural' : 'sparse-structural'
 }
 
-function firstHybridTextIndex(glyphs: string[], context: ClipboardLineContext): number | undefined {
-  if (context !== 'hybrid-text-art') return undefined
-  const firstLetter = glyphs.findIndex((glyph) => /\p{Letter}/u.test(glyph))
-  if (firstLetter <= 0) return undefined
-  const before = glyphs.slice(0, firstLetter)
-  const after = glyphs.slice(firstLetter)
-  const laterLetters = after.findIndex((glyph, index) => index > 0 && /\p{Letter}/u.test(glyph))
-  return before.some((glyph) => STRUCTURAL_FAMILIES.has(classifyGlyph(glyph)) || /^[\\/|()[\]{}<>^]$/u.test(glyph)) && (laterLetters >= 0 || before.some((glyph) => glyph === ' ')) ? firstLetter : undefined
-}
-
-function hybridLeftBound(glyphs: string[], textIndex: number, sourceContext: ArtworkSourceContext): number {
-  let gapStart = textIndex
-  while (gapStart > 0 && glyphs[gapStart - 1] === ' ') gapStart -= 1
+function hybridLeftBound(glyphs: string[], gapStart: number, sourceContext: ArtworkSourceContext): number {
   let width = 0
+  const logicalArtworkRuns = sourceContext === 'kingshot-clipboard' && isArtworkLine(glyphs)
   for (let index = 0; index < gapStart; index += 1) {
     const glyph = glyphs[index]
-    if (glyph === ' ') {
+    if (glyph === ' ' && logicalArtworkRuns) {
       const runLength = glyphs.slice(index).findIndex((item) => item !== ' ')
       width += resolveAdaptiveSpaceAdvance({ line: glyphs.join(''), index, glyphs, sourceContext })
       if (runLength > 1) index += runLength - 1
-    } else width += 1
+    } else if (glyph === ' ') width += ADAPTIVE_CLIPBOARD_CALIBRATION.proseSpaceAdvanceCells
+    else width += glyph === '＿' ? 2 : 1
   }
   return width
 }
@@ -111,13 +142,53 @@ function blockForRows(start: number, end: number, kind: ClipboardBlockKind, deta
 
 export function analyseClipboardDocument(lines: string[], sourceContext: ArtworkSourceContext = 'authored'): ClipboardDocumentLayout {
   const contexts = lines.map((line) => classifyClipboardLineContext(line))
-  const rows: ClipboardDocumentRow[] = lines.map((line, row) => {
-    const glyphs = segmentGraphemes(line)
+  const rows: ClipboardDocumentRow[] = lines.map((_, row) => {
     const context = contexts[row]
-    const textIndex = firstHybridTextIndex(glyphs, context)
-    return { row, context, visualAdvanceCells: context === 'caption' ? ADAPTIVE_CLIPBOARD_CALIBRATION.captionLineAdvance : ADAPTIVE_CLIPBOARD_CALIBRATION.artworkLineAdvance, hybridTextStartIndex: textIndex }
+    return { row, context, visualAdvanceCells: context === 'caption' ? ADAPTIVE_CLIPBOARD_CALIBRATION.captionLineAdvance : ADAPTIVE_CLIPBOARD_CALIBRATION.artworkLineAdvance }
   })
   if (sourceContext !== 'kingshot-clipboard') return { rows: rows.map((row) => ({ ...row, visualAdvanceCells: 1 })), blocks: [] }
+
+  const proposals = lines.map((line, row) => semanticGapProposal(line, row))
+  let proposalIndex = 0
+  while (proposalIndex < proposals.length) {
+    const proposal = proposals[proposalIndex]
+    if (!proposal) {
+      proposalIndex += 1
+      continue
+    }
+    const group = [proposal]
+    let end = proposalIndex
+    while (end + 1 < proposals.length && proposals[end + 1]) {
+      group.push(proposals[end + 1]!)
+      end += 1
+    }
+    const rightStarts = group.map((item) => item.rightRegionStartIndex)
+    const compatible = Math.max(...rightStarts) - Math.min(...rightStarts) <= 6
+    if (group.length >= 2 && compatible) {
+      const bounds = group.map((item) => hybridLeftBound(segmentGraphemes(lines[item.row]), item.semanticGapStartIndex, sourceContext))
+      const regionStartColumn = Math.max(...bounds)
+      const semanticColumnGap = ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapBaseCells + Math.max(0, group.length - 1) * ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapIncrementCells
+      const columnAnchor = regionStartColumn + Math.max(semanticColumnGap, ADAPTIVE_CLIPBOARD_CALIBRATION.minimumColumnSeparationCells)
+      group.forEach((item, offset) => {
+        Object.assign(rows[item.row], item, {
+          context: 'hybrid-text-art',
+          leftRegionEndColumn: bounds[offset],
+          semanticGapWidthCells: columnAnchor - bounds[offset],
+          columnAnchor,
+        })
+      })
+    } else {
+      group.forEach((item) => { rows[item.row].hybridRejectionReason = group.length < 2 ? 'candidate lacks a neighbouring prose-bearing row' : 'neighbouring right-region starts are incompatible' })
+    }
+    proposalIndex = end + 1
+  }
+
+  rows.forEach((row) => {
+    if (row.context === 'hybrid-text-art' || row.hybridRejectionReason) return
+    if (row.context === 'caption') row.hybridRejectionReason = 'caption row is outside a verified multi-row semantic column'
+    else if (segmentGraphemes(lines[row.row]).some((glyph) => /\p{Letter}/u.test(glyph))) row.hybridRejectionReason = 'no qualifying structural-left/prose-right semantic separator'
+    else row.hybridRejectionReason = 'no prose-like right region'
+  })
 
   const blocks: ClipboardDocumentBlock[] = []
   let index = 0
@@ -128,14 +199,9 @@ export function analyseClipboardDocument(lines: string[], sourceContext: Artwork
       while (index + 1 < rows.length && rows[index + 1].context === 'hybrid-text-art') index += 1
       const end = index
       const hybridRows = rows.slice(start, end + 1)
-      const bounds = hybridRows.map((item) => {
-        const glyphs = segmentGraphemes(lines[item.row])
-        return hybridLeftBound(glyphs, item.hybridTextStartIndex ?? glyphs.length, sourceContext)
-      })
-      const regionStartColumn = Math.max(...bounds, 0)
+      const regionStartColumn = Math.max(...hybridRows.map((item) => item.leftRegionEndColumn ?? 0), 0)
       const semanticColumnGap = ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapBaseCells + Math.max(0, hybridRows.length - 1) * ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapIncrementCells
-      const columnAnchor = regionStartColumn + Math.max(semanticColumnGap, ADAPTIVE_CLIPBOARD_CALIBRATION.minimumColumnSeparationCells)
-      hybridRows.forEach((item) => { item.columnAnchor = columnAnchor })
+      const columnAnchor = hybridRows[0]?.columnAnchor ?? regionStartColumn + Math.max(semanticColumnGap, ADAPTIVE_CLIPBOARD_CALIBRATION.minimumColumnSeparationCells)
       blocks.push(blockForRows(start, end, 'hybrid-columns', { regionStartColumn, regionEndColumn: columnAnchor, columnAnchor, semanticColumnGap }))
     } else if (row.context === 'caption') {
       const start = index
@@ -173,9 +239,8 @@ export function resolveAdaptiveSpaceAdvance(input: { line: string; index: number
   const runLength = glyphs.slice(index).findIndex((item) => item !== ' ')
   if (runLength < 0) return ADAPTIVE_CLIPBOARD_CALIBRATION.structuralGapBaseCells
   const mixed = context === 'mixed-emoji-ascii' || context === 'trailing-emoji'
-  const hybrid = context === 'hybrid-text-art'
-  const base = mixed ? ADAPTIVE_CLIPBOARD_CALIBRATION.mixedEmojiGapBaseCells : hybrid ? ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapBaseCells : context === 'caption' ? ADAPTIVE_CLIPBOARD_CALIBRATION.captionSpaceAdvanceCells : ADAPTIVE_CLIPBOARD_CALIBRATION.structuralGapBaseCells
-  const increment = mixed ? ADAPTIVE_CLIPBOARD_CALIBRATION.mixedEmojiGapIncrementCells : hybrid ? ADAPTIVE_CLIPBOARD_CALIBRATION.hybridColumnGapIncrementCells : ADAPTIVE_CLIPBOARD_CALIBRATION.structuralGapIncrementCells
-  const cap = mixed ? ADAPTIVE_CLIPBOARD_CALIBRATION.mixedEmojiGapCap : hybrid ? 3 : ADAPTIVE_CLIPBOARD_CALIBRATION.structuralGapCap
+  const base = mixed ? ADAPTIVE_CLIPBOARD_CALIBRATION.mixedEmojiGapBaseCells : context === 'caption' ? ADAPTIVE_CLIPBOARD_CALIBRATION.captionSpaceAdvanceCells : ADAPTIVE_CLIPBOARD_CALIBRATION.structuralGapBaseCells
+  const increment = mixed ? ADAPTIVE_CLIPBOARD_CALIBRATION.mixedEmojiGapIncrementCells : ADAPTIVE_CLIPBOARD_CALIBRATION.structuralGapIncrementCells
+  const cap = mixed ? ADAPTIVE_CLIPBOARD_CALIBRATION.mixedEmojiGapCap : ADAPTIVE_CLIPBOARD_CALIBRATION.structuralGapCap
   return base + increment * Math.min(Math.max(runLength - 1, 0), cap)
 }
