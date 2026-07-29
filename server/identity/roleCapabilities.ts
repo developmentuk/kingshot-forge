@@ -6,7 +6,7 @@ export type ForgeRole = typeof FORGE_ROLES[number]
 
 export const USER_MANAGEMENT_CAPABILITIES = [
   'users.read', 'users.read_sensitive', 'users.manage_status', 'users.manage_roles',
-  'users.view_audit', 'roles.assign_standard', 'roles.assign_privileged',
+  'users.manage_players', 'users.view_audit', 'roles.assign_standard', 'roles.assign_privileged',
   'roles.assign_owner', 'roles.revoke', 'audit.read',
 ] as const
 
