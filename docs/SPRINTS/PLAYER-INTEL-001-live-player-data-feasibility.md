@@ -5,7 +5,8 @@
 **Base:** accepted `main` at `b481495454b121630f8a7177c1e92f70448d227a`  
 **Product owner:** Clark  
 **Engineering partner:** Aegis  
-**Started:** 29 July 2026
+**Started:** 29 July 2026  
+**Tracked by:** GitHub issue #26 and draft PR #27
 
 ## Sprint objective
 
@@ -31,6 +32,8 @@ Forge already has a server-authoritative linked-player workflow:
 
 The current path stores the latest account projection but does not provide a dedicated immutable observation/snapshot history for independent player intelligence.
 
+Read-only operational inspection confirmed that the active version 6 `kingshot-player` Edge Function is JWT-protected and proxies `https://kingshot.net/api/player-info`. Existing verified `player_accounts` rows show previous successful use of this source. No production revalidation or new live lookup was performed during this sprint stage.
+
 ## Governing constraints
 
 The sprint must comply with:
@@ -55,7 +58,7 @@ The Player ADRs remain Proposed. Owner approval to begin this sprint authorises 
 3. Classify candidate sources by trust, privacy, legal and operational risk.
 4. Define a source-neutral Player Observation and Snapshot contract.
 5. Inspect the existing Forge lookup path and identify the smallest additive integration.
-6. Define a read-only proof-of-concept test against the already configured Forge player service.
+6. Define and test a read-only source-adapter proof against the existing Forge player-service contract.
 7. Produce a migration proposal, but do not apply it.
 8. Produce a go/no-go recommendation for deeper loadout research.
 
@@ -87,9 +90,11 @@ Deliverables:
 - explicit supported inferences and unknowns;
 - prohibition on Jeabs API dependency and token reuse.
 
+Evidence: `docs/research/player-intelligence/PLAYER-INTEL-001-JEABSLIST-HAR-ANALYSIS.md`.
+
 ### M1 — Source and contract design
 
-**Status:** In progress
+**Status:** Complete for discovery review
 
 Deliverables:
 
@@ -97,43 +102,72 @@ Deliverables:
 - source-risk register;
 - canonical terminology;
 - freshness, confidence and provenance rules;
-- separation between Player Identity verification and Player Intelligence observations.
+- separation between Player Identity verification and Player Intelligence observations;
+- read-only inspection of the currently active Forge source.
+
+Evidence:
+
+- `docs/architecture/PLAYER-SNAPSHOT-SERVICE.md`;
+- `docs/research/player-intelligence/PLAYER-INTEL-001-FORGE-SOURCE-INSPECTION.md`.
 
 ### M2 — Read-only adapter proof
 
-**Status:** Not started
+**Status:** Contract proof complete; current-connectivity probe deferred
 
-Deliverables:
+Deliverables completed:
 
-- test-only adapter invoking the existing configured Forge `kingshot-player` service;
-- validation of the current response contract;
-- deterministic normalisation tests;
-- timeout, unavailable, invalid and mismatched-ID tests;
-- no persistent write.
+- source-neutral adapter for the configured Forge `kingshot-player` service;
+- exact current basic response-contract validation;
+- deterministic normalisation and SHA-256 fingerprint tests;
+- timeout, unavailable, rate-limit, invalid JSON/content type, oversized payload, unsafe image and mismatched-ID tests;
+- safe projection tests proving raw payload, actor and unknown source fields are excluded;
+- no route integration and no persistent write;
+- Player Identity CI step, lint and build passed.
+
+Files:
+
+- `server/player-intelligence/basicPlayerSourceAdapter.ts`;
+- `scripts/test-player-intelligence-source-adapter.mjs`;
+- `package.json`.
+
+A controlled current-connectivity call was not made because the available production route would revalidate/write `player_accounts`, while the Edge Function requires a JWT. A future probe must be explicitly read-only and must not change production Player state.
 
 ### M3 — Additive persistence proposal
 
-**Status:** Not started
+**Status:** Logical and SQL proposal complete; unapplied
 
-Deliverables:
+Deliverables completed:
 
-- reviewed SQL migration file or schema proposal;
-- immutable observation and snapshot model;
-- source and payload fingerprint storage;
-- duplicate/idempotency policy;
-- field allowlist and raw-payload access boundary;
-- retention classification awaiting owner/privacy approval;
+- immutable source observation and distinct normalised state model;
+- payload fingerprint storage without raw payload bodies in the first slice;
+- request idempotency key;
+- repeated unchanged observations linked to one deduplicated state;
+- append-only database triggers;
+- field allowlist and server-only latest projection;
+- retention classification still awaiting owner/privacy approval;
 - no migration application.
+
+Evidence: `docs/reference/player-intelligence-snapshot-schema-proposal.sql`.
+
+The proposal deliberately depends on the separately proposed `player_identity_private.game_characters` model. It does not reference legacy `player_accounts` and does not reuse the user-authored/publicly shareable `player_progression_snapshots` table.
 
 ### M4 — Feasibility decision
 
-**Status:** Not started
+**Status:** In progress
 
-Deliverables:
+Completed findings:
 
-- basic lookup feasibility result;
-- operating cost and rate-limit estimate;
-- privacy/security review;
+- basic source adapter is technically feasible;
+- existing Forge source and historic successful records are confirmed;
+- deterministic contract, lint and build validation passed;
+- browser/public exposure, persistence and scheduled collection remain unapproved;
+- public Kingshot.net source terms and sustained rate posture were not found in the public site search and remain a decision blocker for automation.
+
+Remaining deliverables:
+
+- controlled current-connectivity result;
+- operating-cost and rate-limit estimate based on measured calls and confirmed provider policy;
+- final privacy/security review;
 - go/no-go for an authenticated user-facing snapshot vertical slice;
 - separate go/no-go for deeper loadout research.
 
@@ -144,17 +178,18 @@ The first implementation candidate is intentionally narrow:
 1. An authenticated Forge user submits a Player ID.
 2. A server API validates and resolves it through an approved source adapter.
 3. Forge records an immutable source observation.
-4. Forge creates a normalised immutable snapshot only when the payload is valid.
-5. The API returns an allowlisted basic projection with source and freshness.
-6. Repeated lookup is bounded by cache and rate policy.
-7. Any detected name, kingdom or Town Centre change is derived from snapshot comparison.
-8. The result does not prove ownership and grants no Alliance, Kingdom or operational authority.
+4. Forge creates or reuses a normalised immutable state only when the payload is valid.
+5. Forge links each accepted observation to the state so freshness advances even when values do not change.
+6. The API returns an allowlisted basic projection with source and freshness.
+7. Repeated lookup is bounded by cache and rate policy.
+8. Any detected name, kingdom or Town Centre change is derived from snapshot comparison.
+9. The result does not prove ownership and grants no Alliance, Kingdom or operational authority.
 
 ## Candidate basic fields
 
 Only fields already supported by the current Forge lookup contract are candidates for the first slice:
 
-- external Player ID;
+- external Player ID through private game-character identity;
 - player name;
 - kingdom ID;
 - game/account level;
@@ -185,22 +220,32 @@ The sprint is complete only when:
 
 ## Required validation
 
-- TypeScript and NodeNext compatibility for any proof code;
+Completed:
+
+- TypeScript and NodeNext compatibility for proof code;
 - invalid/missing/mismatched Player ID cases;
-- upstream timeout and non-JSON response cases;
+- upstream timeout, rate-limit and non-JSON response cases;
 - payload-size boundary;
 - payload-hash determinism;
-- duplicate observation idempotency;
-- no secret in client bundle or logs;
-- no direct browser access to privileged Supabase data;
-- no raw Player payload in public projection;
-- negative tests for ownership, membership and authority inference.
+- no raw Player payload in the safe projection;
+- no direct browser integration;
+- no ownership, membership or authority inference.
+
+Pending an approved non-production schema rehearsal:
+
+- duplicate request idempotency under concurrent inserts;
+- repeated unchanged observation/state reuse;
+- append-only trigger enforcement;
+- service-role grants and client denial;
+- account closure/export/deletion behaviour;
+- recovery and rollback receipt.
 
 ## Deferred decisions
 
 The following require explicit later approval:
 
-- retention duration for raw observations and normalised snapshots;
+- retention duration for observation metadata and normalised states;
+- whether raw source payload evidence is ever stored;
 - whether historical public profiles are permitted;
 - whether external Player IDs may appear in public routes;
 - refresh quotas and who may trigger them;
@@ -211,4 +256,4 @@ The following require explicit later approval:
 
 ## Current recommendation
 
-Continue through M1 and M2 using the existing Forge player service. Do not investigate or implement Jeabs-style detailed loadouts until the basic read-only adapter, provenance model and source-risk review are complete.
+The basic Player Intelligence adapter and persistence design are feasible, but no production vertical slice should begin yet. First confirm provider terms/rate posture, design a genuinely read-only current-connectivity probe, and resolve the Player Identity replacement dependency. Jeabs-style detailed loadouts remain out of scope until those gates pass.
