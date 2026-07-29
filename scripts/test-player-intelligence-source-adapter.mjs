@@ -224,9 +224,10 @@ try {
   await expectAdapterError(badImageAdapter.lookup({ playerId: '123456', purpose: 'support_review', actorId: 'actor' }), 'invalid_source_payload')
 
   assert.throws(() => createBasicPlayerSourceAdapter({ baseUrl: '', apiKey: '' }), (error) => error?.code === 'source_not_configured')
-  assert.throws(() => createBasicPlayerSourceAdapter({ baseUrl: 'http://external.example.test', apiKey: 'key' }).lookup({
+  const unsafeSourceAdapter = createBasicPlayerSourceAdapter({ baseUrl: 'http://external.example.test', apiKey: 'key' })
+  await expectAdapterError(unsafeSourceAdapter.lookup({
     playerId: '123456', purpose: 'support_review', actorId: 'actor',
-  }), /configured safely/u)
+  }), 'source_not_configured')
 
   console.log('Player intelligence source adapter tests passed.')
 } finally {
