@@ -240,8 +240,8 @@ function LinkedPlayerPanel() {
             onCandidate={(candidate) => setPlayerId(candidate)}
             onReview={(review) => {
               setOcrReview(review)
-              setPlayerId(review.playerId)
-              setKingdomId(review.kingdom)
+              setPlayerId(review?.playerId ?? '')
+              setKingdomId(review?.kingdom ?? '')
             }}
           />
           <form className="linked-player-search linked-player-search--state-aware" onSubmit={handleLookup}>
