@@ -125,6 +125,7 @@ function respond(res, statusCode, title, message) {
   const body = safePage(title, message)
   res.writeHead(statusCode, {
     'Cache-Control': 'no-store, max-age=0',
+    Connection: 'close',
     'Content-Type': 'text/html; charset=utf-8',
     'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     'Referrer-Policy': 'no-referrer',
@@ -159,8 +160,27 @@ export function launchSystemBrowser(url, {
 
 function closeServer(server) {
   return new Promise((resolve) => {
-    if (!server.listening) return resolve()
-    server.close(() => resolve())
+    if (!server.listening) {
+      resolve()
+      return
+    }
+
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      clearTimeout(forceTimer)
+      resolve()
+    }
+
+    const forceTimer = setTimeout(() => {
+      server.closeAllConnections?.()
+      finish()
+    }, 1_000)
+    forceTimer.unref?.()
+
+    server.close(finish)
+    server.closeIdleConnections?.()
   })
 }
 
