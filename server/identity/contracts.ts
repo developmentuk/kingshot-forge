@@ -58,6 +58,7 @@ export type UserAuditEntry = {
 export type UserDetail = UserListItem & {
   providerNames: string[]
   emailConfirmed: boolean
+  canManagePlayers: boolean
   linkedPlayers: LinkedPlayerSummary[]
   assignments: UserRoleAssignment[]
   audit: UserAuditEntry[]
