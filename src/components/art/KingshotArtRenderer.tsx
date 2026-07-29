@@ -51,8 +51,8 @@ function ResponsiveFit({ children, mode }: { children: ReactNode; mode?: Artwork
 function KingshotGrid({ artwork, lines, classes, labelledBy, calibration, style, sourceContext }: { artwork: string; lines: string[]; classes: string; labelledBy?: string; calibration: CalibrationConfiguration; style: CSSProperties; sourceContext: ArtworkSourceContext }) {
   const grid = useMemo(() => buildFixedCellGrid(lines, calibration, sourceContext), [lines, calibration, sourceContext])
   return <div className={classes} role="img" aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : 'Fixed-cell artwork preview'} data-source-text={artwork} style={style}>
-    {grid.map((row) => <div className="kingshot-cell-grid__row" key={row.row} aria-hidden="true">
-      {row.cells.length === 0 ? <span className="kingshot-cell-grid__cell kingshot-cell-grid__cell--space"><span className="kingshot-cell-grid__glyph">&nbsp;</span></span> : row.cells.map((cell) => {
+    {grid.map((row) => <div className="kingshot-cell-grid__row" key={row.row} aria-hidden="true" data-grid-row={row.row} data-line-context={row.context} data-visual-advance={row.visualAdvanceCells} style={{ '--forge-row-advance': row.visualAdvanceCells } as CSSProperties}>
+      {row.cells.length === 0 ? <span className="kingshot-cell-grid__cell kingshot-cell-grid__cell--space" data-source-row={row.row} data-source-empty="true" style={{ '--forge-cell-span': 0 } as CSSProperties}><span className="kingshot-cell-grid__glyph">&nbsp;</span></span> : row.cells.map((cell) => {
         const paint = calibration[cell.family]
         const directionalPaint = getDirectionalGlyphCalibration(cell.glyph, cell.family)
         const horizontalScale = (paint.horizontalScale ?? 1) * (paint.glyphScaleX ?? 1) * directionalPaint.glyphScaleX

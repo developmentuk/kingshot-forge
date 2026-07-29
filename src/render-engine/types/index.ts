@@ -81,7 +81,32 @@ export type GridCell = {
   column: number
 }
 
-export type GridRow = { row: number; cells: GridCell[] }
+export type ClipboardBlockKind = 'structural-body' | 'hybrid-columns' | 'blank-separator' | 'trailing-caption' | 'prose' | 'mixed'
+
+export type ClipboardDocumentRow = {
+  row: number
+  context: string
+  visualAdvanceCells: number
+  hybridTextStartIndex?: number
+  columnAnchor?: number
+}
+
+export type ClipboardDocumentBlock = {
+  kind: ClipboardBlockKind
+  startRow: number
+  endRow: number
+  regionStartColumn?: number
+  regionEndColumn?: number
+  columnAnchor?: number
+  semanticColumnGap?: number
+}
+
+export type ClipboardDocumentLayout = {
+  rows: ClipboardDocumentRow[]
+  blocks: ClipboardDocumentBlock[]
+}
+
+export type GridRow = { row: number; cells: GridCell[]; visualAdvanceCells: number; context: string }
 
 export type ArtworkAnalysis = {
   artworkClass: ArtworkClass
