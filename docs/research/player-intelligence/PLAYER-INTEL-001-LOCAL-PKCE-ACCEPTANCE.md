@@ -1,6 +1,6 @@
 # PLAYER-INTEL-001 — Local PKCE acceptance flow
 
-**Status:** Implemented; deterministic validation pending on the operator worktree; live execution pending  
+**Status:** Deterministic validation passed; one owner-approved live execution completed with a safely classified upstream failure  
 **Branch:** `research/player-intelligence-discovery`  
 **Supabase project:** `hrvdhjscwitqpwjhnjkm`  
 **Production data writes:** Prohibited
@@ -46,10 +46,10 @@ The replacement harness:
 10. revokes the temporary Supabase session using local-scope sign-out;
 11. refuses to report success when temporary-session revocation fails;
 12. clears all in-memory authentication material;
-13. closes the loopback server;
+13. closes the loopback server, including idle or keep-alive browser connections;
 14. records only redacted technical evidence.
 
-The local callback page uses no-store headers, a restrictive Content Security Policy and no external assets.
+The local callback page uses no-store headers, a restrictive Content Security Policy, `Connection: close` and no external assets.
 
 ## Configuration
 
@@ -102,6 +102,28 @@ npm run accept:player-intelligence-local-auth -- \
 
 The command opens the normal Google sign-in page. Credentials remain between the operator, Google and Supabase Auth. No token must be copied, displayed or shared.
 
+## Live acceptance result — 29 July 2026
+
+The owner-approved one-call acceptance was completed against the existing Forge `kingshot-player` Edge Function using a farm-account Player ID. The Player ID and returned data were not recorded in project evidence.
+
+Redacted technical outcome:
+
+- status: `failed`;
+- failure classification: `source_unavailable`;
+- request count: `1`;
+- external request made: `true`;
+- HTTP status: `503`;
+- measured harness duration: `1103 ms`;
+- database connection made: `false`;
+- persistence performed: `false`;
+- temporary PKCE session revoked: `true`.
+
+This is a valid acceptance outcome because the authentication, one-request limit, redaction, no-write boundary and automatic session revocation all worked. It demonstrates current Forge-to-Edge-Function connectivity but does not demonstrate current upstream player-data availability. The source returned a safely classified temporary-unavailability response.
+
+No second live request is authorised solely to obtain a successful payload. Further investigation should use provider/source diagnostics and existing logs before any owner-approved repeat.
+
+During the first live run, Chrome retained a localhost keep-alive connection after the callback response. The lookup and session revocation had completed, but the Node process waited while closing its temporary server. The harness was subsequently hardened to send `Connection: close`, close idle connections immediately and force-close any remaining local connection after one second.
+
 ## Evidence policy
 
 The wrapper retains the original acceptance evidence allow list and adds only:
@@ -115,14 +137,14 @@ Player values, actor identity, access tokens, refresh tokens, provider tokens, A
 
 ## Exit criteria
 
-The live gate is complete only when one operator-approved run:
+The live gate is complete because the owner-approved run:
 
-- completes normal Google/Supabase PKCE authentication;
-- performs exactly one Player lookup;
-- returns a structurally valid exact-ID result or a safely classified failure;
-- writes redacted evidence only;
-- revokes the temporary local Auth session;
-- clears in-memory storage;
-- causes no database write, migration, deployment or linked-account revalidation.
+- completed normal Google/Supabase PKCE authentication;
+- performed exactly one Player lookup;
+- returned a safely classified failure;
+- wrote redacted evidence only;
+- revoked the temporary local Auth session;
+- cleared in-memory storage;
+- caused no database write, migration, deployment or linked-account revalidation.
 
-A successful result does not approve production rollout, persistence, public search, enumeration, scheduled collection or detailed hero/loadout ingestion.
+Completion of this gate does not approve production rollout, persistence, public search, enumeration, scheduled collection or detailed hero/loadout ingestion.
