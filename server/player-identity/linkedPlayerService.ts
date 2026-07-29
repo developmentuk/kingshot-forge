@@ -16,18 +16,26 @@ export class LinkedPlayerServiceError extends Error {
 }
 
 export function validatePlayerId(value: unknown): string {
-  const playerId = typeof value === 'string' ? value.trim() : ''
+  const playerId = typeof value === 'string' ? value.trim().replace(/\s+/gu, '') : ''
   if (!/^\d{1,20}$/u.test(playerId)) {
     throw new LinkedPlayerServiceError(422, 'Enter a valid Kingshot Player ID.')
   }
   return playerId
 }
 
+export function validateKingdomId(value: unknown): number {
+  const kingdomId = typeof value === 'number' ? value : Number(String(value ?? '').trim())
+  if (!Number.isInteger(kingdomId) || kingdomId < 1 || kingdomId > 9999) {
+    throw new LinkedPlayerServiceError(422, 'Enter a valid Kingshot State between 1 and 9999.')
+  }
+  return kingdomId
+}
+
 function record(value: unknown): LookupRecord | null {
   return value && typeof value === 'object' ? value as LookupRecord : null
 }
 
-export function normalizeKingshotLookup(value: unknown, requestedPlayerId: string): KingshotPlayer {
+export function normalizeKingshotLookup(value: unknown, requestedPlayerId: string, requestedKingdomId?: number): KingshotPlayer {
   const response = record(value)
   const data = record(response?.data)
   const returnedPlayerId = typeof data?.playerId === 'string'
@@ -41,6 +49,9 @@ export function normalizeKingshotLookup(value: unknown, requestedPlayerId: strin
 
   if (response?.status !== 'success' || returnedPlayerId !== requestedPlayerId || !name || !Number.isInteger(kingdom) || kingdom < 1 || kingdom > 9999 || !Number.isFinite(level)) {
     throw new LinkedPlayerServiceError(502, 'The Kingshot player service returned an invalid player record.')
+  }
+  if (requestedKingdomId !== undefined && kingdom !== requestedKingdomId) {
+    throw new LinkedPlayerServiceError(409, `This Player ID belongs to State ${kingdom}, not State ${requestedKingdomId}.`)
   }
 
   return {
@@ -74,13 +85,16 @@ export function createVerifiedPlayerFields(player: KingshotPlayer, userId: strin
   }
 }
 
-async function lookupKingshotPlayer(playerId: string): Promise<KingshotPlayer> {
+export async function lookupKingshotPlayer(playerIdInput: unknown, kingdomIdInput: unknown): Promise<KingshotPlayer> {
+  const playerId = validatePlayerId(playerIdInput)
+  const kingdomId = validateKingdomId(kingdomIdInput)
   const baseUrl = process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim()
   const key = process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ?? process.env.SUPABASE_SECRET_KEY?.trim() ?? process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
   if (!baseUrl || !key) throw new LinkedPlayerServiceError(503, 'The Kingshot player service is not configured.')
 
   const url = new URL(`${baseUrl.replace(/\/$/u, '')}/functions/v1/kingshot-player`)
   url.searchParams.set('playerId', playerId)
+  url.searchParams.set('kingdomId', String(kingdomId))
   let response: Response
   try {
     response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }, signal: AbortSignal.timeout(15_000) })
@@ -88,8 +102,12 @@ async function lookupKingshotPlayer(playerId: string): Promise<KingshotPlayer> {
     throw new LinkedPlayerServiceError(502, 'The Kingshot player service could not be reached.')
   }
   const payload = await response.json().catch(() => null)
-  if (!response.ok) throw new LinkedPlayerServiceError(502, 'The Kingshot player service could not validate this Player ID.')
-  return normalizeKingshotLookup(payload, playerId)
+  if (!response.ok) {
+    const safePayload = record(payload)
+    const message = typeof safePayload?.message === 'string' ? safePayload.message : ''
+    throw new LinkedPlayerServiceError(response.status === 409 ? 409 : 502, message || 'The Kingshot player service could not validate this Player ID and State.')
+  }
+  return normalizeKingshotLookup(payload, playerId, kingdomId)
 }
 
 function safeAccount(value: unknown) {
@@ -115,9 +133,9 @@ function safeAccount(value: unknown) {
   }
 }
 
-export async function linkOrRevalidatePlayerAccount(userId: string, input: { action: 'link' | 'revalidate'; playerId?: unknown }) {
+export async function linkOrRevalidatePlayerAccount(userId: string, input: { action: 'link' | 'revalidate'; playerId?: unknown; kingdomId?: unknown }) {
   const admin = getSupabaseAdmin()
-  const { data: existing, error: existingError } = await admin.from('player_accounts').select('id,player_id,is_primary,is_public').eq('user_id', userId).eq('is_primary', true).maybeSingle()
+  const { data: existing, error: existingError } = await admin.from('player_accounts').select('id,player_id,kingdom_id,is_primary,is_public').eq('user_id', userId).eq('is_primary', true).maybeSingle()
   if (existingError) throw existingError
 
   if (input.action === 'revalidate' && !existing) throw new LinkedPlayerServiceError(404, 'No linked Kingshot player requires revalidation.')
@@ -125,9 +143,12 @@ export async function linkOrRevalidatePlayerAccount(userId: string, input: { act
   const requestedPlayerId = input.action === 'revalidate'
     ? validatePlayerId(existing?.player_id)
     : validatePlayerId(input.playerId)
+  const requestedKingdomId = input.action === 'revalidate'
+    ? validateKingdomId(existing?.kingdom_id)
+    : validateKingdomId(input.kingdomId)
   if (existing && existing.player_id !== requestedPlayerId) throw new LinkedPlayerServiceError(409, 'A different primary Kingshot player is already linked.')
 
-  const player = await lookupKingshotPlayer(requestedPlayerId)
+  const player = await lookupKingshotPlayer(requestedPlayerId, requestedKingdomId)
   const verifiedFields = createVerifiedPlayerFields(player, userId)
   const payload = existing
     ? { ...verifiedFields, is_public: existing.is_public, is_primary: true }
