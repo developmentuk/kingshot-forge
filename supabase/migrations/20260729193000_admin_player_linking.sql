@@ -1,5 +1,15 @@
 begin;
 
+insert into public.forge_permissions (permission_key, label, description)
+values (
+  'users.manage_players',
+  'Manage linked Player Accounts',
+  'Lookup, link and correct Player IDs and States through audited Operations workflows.'
+)
+on conflict (permission_key) do update set
+  label = excluded.label,
+  description = excluded.description;
+
 insert into public.forge_role_permissions (role, permission_key)
 values
   ('owner', 'users.manage_players'),
