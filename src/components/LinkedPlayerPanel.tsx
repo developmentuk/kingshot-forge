@@ -279,7 +279,7 @@ function LinkedPlayerPanel() {
   return (
     <section className="linked-player-panel">
       <div className="linked-player-panel__heading">
-        <div><p className="eyebrow">Kingshot identity</p><h2>{linkedAccount ? 'Your linked player' : 'Link your Kingshot account'}</h2><p>Player ID and State are checked through the official Kingshot Gift Code Centre. Human verification is required.</p></div>
+        <div><p className="eyebrow">Kingshot identity</p><h2>{linkedAccount ? 'Your linked player' : 'Link your Kingshot account'}</h2><p>Player ID and State are both required and are checked through the official Kingshot Gift Code Centre. Human verification is required.</p></div>
         {linkedAccount && <span className={`linked-player-status linked-player-status--${linkedAccount.verification_status}`}>{getVerificationLabel(linkedAccount.verification_status)}</span>}
       </div>
 
@@ -315,7 +315,7 @@ function LinkedPlayerPanel() {
                 <div><span>Confirm official result</span><h3>{previewPlayer.name}</h3><p>State {previewPlayer.kingdom} · {previewPlayer.levelRenderedDetailed || previewPlayer.levelRendered || `Level ${previewPlayer.level}`}</p><small>Player ID: {previewPlayer.playerId}</small></div>
               </div>
               <div className="linked-player-preview__warning"><strong>Is this your account?</strong><p>Forge will store this public player information. Resolving an official Player ID does not prove exclusive ownership.</p></div>
-              {apiConflicts.length > 0 && <div className="linked-player-preview__warning"><strong>Review conflict with official result</strong><p>{apiConflicts.join(', ')} differ from the reviewed screenshot. The official result has not overwritten the screenshot evidence.</p></div>}
+              {apiConflicts.length > 0 && <div className="linked-player-preview__warning"><strong>Review conflict with official result</strong><p>{apiConflicts.join(', ')} differ from the reviewed screenshot. The API result has not overwritten the screenshot evidence.</p></div>}
               <div className="linked-player-preview__actions"><button type="button" className="button button--secondary" onClick={resetOfficialLookup}>Search Again</button><button type="button" className="button button--primary" disabled={linking || !lookupReceipt} onClick={() => void handleLinkAccount()}>{linking ? 'Linking…' : 'Link This Player'}</button></div>
             </article>
           )}
