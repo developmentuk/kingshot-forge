@@ -17,6 +17,7 @@ const workflowService = readFileSync('src/platform/editorial/services/EditorialW
 const adapter = readFileSync('src/features/admin/buildingsDatasetAdapter.ts', 'utf8')
 const migration = readFileSync('supabase/migrations/20260802193000_buildings_editorial_media_projection.sql', 'utf8')
 const readiness = readFileSync('shared/data-engine/readiness-registry.ts', 'utf8')
+const roleContext = readFileSync('src/context/RoleContext.tsx', 'utf8')
 
 for (const buildingKey of [
   'academy',
@@ -84,6 +85,10 @@ assert.match(connectedEditor, /current public version remains live/u)
 assert.match(recordEditorPanel, /onDisabledAction/u)
 assert.match(recordEditorPanel, /disabledActionBusy/u)
 
+assert.match(roleContext, /resolvedUserIdRef = useRef/u, 'Admin permission refreshes must remember the resolved signed-in user')
+assert.match(roleContext, /shouldBlockForUserChange/u, 'Only an actual user change may enter the route-blocking role loading state')
+assert.match(roleContext, /if \(shouldBlockForUserChange\) \{\s*setLoadingRole\(true\)/u, 'Returning from the file picker must not unmount an active editor')
+
 assert.match(page, /BuildingIllustration/u)
 assert.match(page, /BuildingArtwork/u)
 assert.match(page, /onError=\{\(\) => setImageFailed\(true\)\}/u)
@@ -134,4 +139,4 @@ assert.doesNotMatch(migration, /grant .* authenticated/iu, 'Building editorial o
 assert.match(readiness, /return DATASET_CAPABILITY_REGISTRY\[key\]\.publishing\s*\? 'partial'/u)
 assert.match(readiness, /live transaction remain unverified/u, 'Admin must remain Partial until the migration and live publish acceptance are complete')
 
-console.log('Buildings Companion completion, governed media and published-record redraft contracts passed.')
+console.log('Buildings Companion completion, governed media, published-record redraft and upload-state contracts passed.')
