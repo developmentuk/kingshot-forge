@@ -12,6 +12,7 @@ const editorForm = readFileSync('src/features/admin/recordEditor/RecordEditorFor
 const recordEditorPanel = readFileSync('src/features/admin/recordEditor/RecordEditorPanel.tsx', 'utf8')
 const imageField = readFileSync('src/features/admin/recordEditor/CompanionImageField.tsx', 'utf8')
 const connectedEditor = readFileSync('src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx', 'utf8')
+const editorialApi = readFileSync('src/features/admin/editorial/editorialApi.ts', 'utf8')
 const workflowPanel = readFileSync('src/features/admin/editorial/EditorialWorkflowPanel.tsx', 'utf8')
 const workflowService = readFileSync('src/platform/editorial/services/EditorialWorkflowService.ts', 'utf8')
 const adapter = readFileSync('src/features/admin/buildingsDatasetAdapter.ts', 'utf8')
@@ -89,6 +90,15 @@ assert.match(roleContext, /resolvedUserIdRef = useRef/u, 'Admin permission refre
 assert.match(roleContext, /shouldBlockForUserChange/u, 'Only an actual user change may enter the route-blocking role loading state')
 assert.match(roleContext, /if \(shouldBlockForUserChange\) \{\s*setLoadingRole\(true\)/u, 'Returning from the file picker must not unmount an active editor')
 
+assert.match(connectedEditor, /loadSequenceRef = useRef/u, 'Editorial state refreshes must ignore stale overlapping requests')
+assert.match(connectedEditor, /requestId !== loadSequenceRef\.current/u)
+assert.match(connectedEditor, /\{ blocking: false \}/u, 'Post-action state refreshes must remain non-blocking')
+assert.match(connectedEditor, /const initialLoading =\s*loading && state === null/u, 'Only the first load may replace the editor with a blocking state')
+assert.match(connectedEditor, /Refreshing editorial status/u)
+assert.match(editorialApi, /cache: "no-store"/u)
+assert.match(editorialApi, /"Cache-Control": "no-store"/u)
+assert.match(editorialApi, /cacheBust: Date\.now\(\)\.toString\(\)/u)
+
 assert.match(page, /BuildingIllustration/u)
 assert.match(page, /BuildingArtwork/u)
 assert.match(page, /onError=\{\(\) => setImageFailed\(true\)\}/u)
@@ -139,4 +149,4 @@ assert.doesNotMatch(migration, /grant .* authenticated/iu, 'Building editorial o
 assert.match(readiness, /return DATASET_CAPABILITY_REGISTRY\[key\]\.publishing\s*\? 'partial'/u)
 assert.match(readiness, /live transaction remain unverified/u, 'Admin must remain Partial until the migration and live publish acceptance are complete')
 
-console.log('Buildings Companion completion, governed media, published-record redraft and upload-state contracts passed.')
+console.log('Buildings Companion completion, governed media, published-record redraft, upload-state and post-publication refresh contracts passed.')
