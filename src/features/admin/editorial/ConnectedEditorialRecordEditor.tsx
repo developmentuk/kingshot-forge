@@ -231,7 +231,26 @@ export function ConnectedEditorialRecordEditor({
     schema.datasetId === "buildings"
       ? isRealBuildingsDraft(state)
       : Boolean(state?.head && state.head.status === "draft" && state.currentVersion);
-  const draftIsEditable = hasRealDraft;
+  const canCreateInitialDraft =
+    !state?.head &&
+    mode !== "review" &&
+    savePermission;
+  const draftIsEditable =
+    hasRealDraft ||
+    canCreateInitialDraft;
+  const canReturnToDraft = Boolean(
+    state?.head &&
+    [
+      "in_review",
+      "approved",
+      "published",
+    ].includes(state.head.status) &&
+    allowedActions.includes("return_to_draft"),
+  );
+  const redraftActionLabel =
+    state?.head?.status === "published"
+      ? "Create editable draft"
+      : "Return to draft";
   const editingDisabled =
     loading ||
     Boolean(runtimeError && !state) ||
@@ -244,11 +263,17 @@ export function ConnectedEditorialRecordEditor({
         ? "Editorial state could not be loaded, so saving is disabled. Retry the request below."
         : !savePermission
           ? "Your role can view this record but cannot save editorial drafts."
+          : state?.head?.status === "published"
+            ? canReturnToDraft
+              ? "This is the live published version. Create an editable draft before changing values. The current public version remains live until the replacement is approved and published."
+              : "This is the live published version. Your role cannot create an editable draft from it."
           : !state?.head
-            ? "This published record has no active draft. Return it to draft before editing."
-          : !draftIsEditable
-            ? `This record is ${state?.head?.status.replaceAll("_", " ")}. Return it to draft before editing values.`
-            : undefined;
+            ? undefined
+            : !draftIsEditable
+              ? canReturnToDraft
+                ? `This record is ${state.head.status.replaceAll("_", " ")}. Return it to draft before editing values.`
+                : `This record is ${state.head.status.replaceAll("_", " ")}. Your role cannot return it to draft.`
+              : undefined;
 
   async function saveDraft(
     nextRecord: RecordEditorRecord,
@@ -443,9 +468,25 @@ export function ConnectedEditorialRecordEditor({
       schema={schema}
       record={currentRecord}
       disabled={editingDisabled}
-      validationEnabled={!loading && hasRealDraft}
+      validationEnabled={!loading && draftIsEditable}
       disabledMessage={
         editingDisabledMessage
+      }
+      disabledActionLabel={
+        canReturnToDraft
+          ? redraftActionLabel
+          : undefined
+      }
+      disabledActionBusy={
+        busyAction === "return_to_draft"
+      }
+      onDisabledAction={
+        canReturnToDraft
+          ? () =>
+              runWorkflowAction(
+                "return_to_draft",
+              )
+          : undefined
       }
       onClose={onClose}
       onSave={saveDraft}
@@ -536,7 +577,7 @@ export function ConnectedEditorialRecordEditor({
           ) : (
             <section className="editorial-admin-card">
               <p className="editorial-admin-empty">
-                This published record has no active draft. Return it to draft before editing.
+                No editorial draft exists yet. Edit the fields above and save changes to create the first draft.
               </p>
             </section>
           )}
