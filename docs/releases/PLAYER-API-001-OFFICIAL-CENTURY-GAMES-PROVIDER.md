@@ -74,3 +74,7 @@ None of these values belongs in browser variables or source control.
 - confirm the official provider's acceptable-use and sustained rate posture;
 - run the complete repository checks and Vercel preview smoke test;
 - do not enable production until those gates pass.
+
+## Acceptance redeploy
+
+An owner-requested preview redeploy was triggered on 2 August 2026 after the preview environment configuration step. This documentation-only commit exists to produce a fresh Git-linked Vercel preview from the exact `feature/official-player-api-captcha` branch. Production remains unchanged.
