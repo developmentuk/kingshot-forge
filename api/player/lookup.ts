@@ -5,61 +5,6 @@ import {
   OfficialKingshotProviderError,
 } from '../../server/player-identity/officialKingshotPlayerProvider.js'
 
-const OFFICIAL_PROVIDER_ORIGIN = 'https://ks-giftcode.centurygame.com'
-const OFFICIAL_PROVIDER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-
-type FetchState = typeof globalThis & {
-  __forgeOfficialProviderFetchInstalled?: boolean
-}
-
-function installOfficialProviderFetchProfile() {
-  const state = globalThis as FetchState
-  if (state.__forgeOfficialProviderFetchInstalled) return
-
-  const nativeFetch = globalThis.fetch.bind(globalThis)
-  globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
-    const requestUrl = typeof input === 'string'
-      ? input
-      : input instanceof URL
-        ? input.toString()
-        : input.url
-
-    if (!requestUrl.startsWith(`${OFFICIAL_PROVIDER_ORIGIN}/`)) {
-      return nativeFetch(input, init)
-    }
-
-    const headers = new Headers(input instanceof Request ? input.headers : undefined)
-    if (init?.headers) {
-      new Headers(init.headers).forEach((value, key) => headers.set(key, value))
-    }
-
-    headers.set('Accept', 'application/json, text/plain, */*')
-    headers.set('Accept-Language', 'en-GB,en;q=0.9')
-    headers.set('Referer', `${OFFICIAL_PROVIDER_ORIGIN}/`)
-    headers.set('User-Agent', OFFICIAL_PROVIDER_USER_AGENT)
-    if ((init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase() !== 'GET') {
-      headers.set('Origin', OFFICIAL_PROVIDER_ORIGIN)
-    }
-
-    const upstream = await nativeFetch(input, { ...init, headers })
-    const contentType = upstream.headers.get('content-type') ?? ''
-    if (!contentType.toLowerCase().includes('json')) {
-      console.warn('[official-player-provider-response]', {
-        status: upstream.status,
-        contentType: contentType.slice(0, 120),
-        contentLength: upstream.headers.get('content-length') ?? 'unknown',
-        server: (upstream.headers.get('server') ?? 'unknown').slice(0, 80),
-        location: (upstream.headers.get('location') ?? '').slice(0, 160),
-      })
-    }
-    return upstream
-  }
-
-  state.__forgeOfficialProviderFetchInstalled = true
-}
-
-installOfficialProviderFetchProfile()
-
 type RateRecord = { count: number; resetAt: number }
 const rateLimits = new Map<string, RateRecord>()
 const RATE_WINDOW_MS = 5 * 60 * 1000
