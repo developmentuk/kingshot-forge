@@ -77,9 +77,12 @@ try {
   assert.match(ocrService, /player_verification_events/u)
   assert.match(ocrService, /vision\.player\.verification_requested/u)
   assert.match(ocrService, /reviewState: 'pending'/u)
+  assert.match(ocrService, /RESUBMITTABLE_STATUSES = new Set\(\['linked', 'rejected'\]\)/u)
+  assert.match(ocrService, /protected verification state and cannot be replaced/u)
+  assert.match(ocrService, /verification request is already waiting for review/u)
   assert.doesNotMatch(ocrService, /cancelOwnerScanEvidence/u)
 
-  console.log('PASS PLAYER-IDENTITY-002: indexed claims remain non-official, private by default and reviewable through Forge Vision')
+  console.log('PASS PLAYER-IDENTITY-002: claims stay private and non-official, Vision requests remain reviewable, and protected assurance cannot be downgraded')
 } finally {
   await vite.close()
 }
