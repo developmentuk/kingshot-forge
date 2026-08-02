@@ -10,6 +10,7 @@ on:
       - 'src/components/buildings/**'
       - 'src/styles/buildingsBrowser.css'
       - 'src/styles/buildingsProgressionPolish.css'
+      - 'src/context/RoleContext.tsx'
       - 'src/features/admin/buildingsDatasetAdapter.ts'
       - 'src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx'
       - 'src/features/admin/editorial/EditorialWorkflowPanel.tsx'
