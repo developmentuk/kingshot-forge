@@ -45,7 +45,6 @@ const playerGroups = [
   { title: 'Kingshot companion', items: [
     { label: 'Buildings', shortLabel: 'Buildings', icon: '🏛️', path: '/buildings' },
     { label: 'Hero Companion', shortLabel: 'Heroes', icon: '🦸', path: '/companion/heroes' },
-    { label: 'Player Lookup', shortLabel: 'Players', icon: '👤', path: '/player-lookup' },
     { label: 'Gift Codes', shortLabel: 'Codes', icon: '🎁', path: '/gift-codes' },
     { label: 'Kingdom Explorer', shortLabel: 'Kingdoms', icon: '🏰', path: '/kingdom-explorer' },
     { label: 'Kingdom Community', shortLabel: 'Community', icon: '🌍', path: '/kingdom-community' },

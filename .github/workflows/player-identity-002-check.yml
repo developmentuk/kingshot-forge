@@ -1,0 +1,65 @@
+name: PLAYER-IDENTITY-002 validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'api/player/**'
+      - 'server/player-identity/**'
+      - 'shared/domains/player-identity/**'
+      - 'src/components/HybridPlayerClaimPanel.tsx'
+      - 'src/components/LinkedPlayerPanel.tsx'
+      - 'src/components/ScreenshotLinkingPanel.tsx'
+      - 'src/pages/PlayerLookupPage.tsx'
+      - 'src/services/playerClaimService.ts'
+      - 'src/types/playerClaim.ts'
+      - 'scripts/test-player-hybrid-claims.mjs'
+      - 'scripts/test-player-linking-ui.mjs'
+      - 'docs/releases/PLAYER-IDENTITY-002-HYBRID-CLAIMS.md'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: player-identity-002-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Hybrid player claim validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate hybrid claims
+        run: node --import tsx scripts/test-player-hybrid-claims.mjs
+
+      - name: Test Player Identity regression suite
+        run: npm run test:player-identity
+
+      - name: Test State-aware linking contracts
+        run: npm run test:player-state-linking
+
+      - name: Validate NodeNext imports
+        run: npm run validate:nodenext
+
+      - name: Build candidate
+        run: npm run build

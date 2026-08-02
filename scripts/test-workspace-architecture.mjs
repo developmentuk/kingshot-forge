@@ -14,6 +14,10 @@ for (const forbidden of ['/admin/datasets', '/admin/verification', '/admin/gift-
   if (playerSection.includes(forbidden)) throw new Error(`Internal route leaked into Player View: ${forbidden}`)
 }
 
+const playerSection = registry.slice(registry.indexOf('const playerGroups'), registry.indexOf('const contributorGroups'))
+if (playerSection.includes('/player-lookup')) throw new Error('Disabled Player Lookup leaked into Player View navigation')
+if (layout.includes("path: '/player-lookup'")) throw new Error('Disabled Player Lookup leaked into mobile navigation')
+
 for (const route of ['operations', 'contributor', 'creator', 'moderation']) {
   if (!app.includes(`path="${route}"`)) throw new Error(`Missing workspace route: ${route}`)
 }
