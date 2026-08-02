@@ -2,7 +2,7 @@
 
 **Status:** Public companion and governed media implementation candidate; owner acceptance and migration approval pending  
 **Branch:** `feature/buildings-companion-completion`  
-**Validated head:** `c7dfc13d649aabb1a8c3852ee47cb69ab6650309`  
+**Validated head:** `477bc99a300fb054a4f5f633177a1560b6e07aa8`  
 **Production:** Unchanged  
 **Supabase:** Read-only inspection only; additive migration prepared but not applied
 
@@ -112,7 +112,7 @@ Uploaded replacements require appropriate usage permission. Forge records alt te
 
 ## Validation
 
-Exact head `c7dfc13d649aabb1a8c3852ee47cb69ab6650309`:
+Exact head `477bc99a300fb054a4f5f633177a1560b6e07aa8`:
 
 - Buildings Companion validation: passed;
 - full Forge integration gate: passed;
@@ -125,7 +125,7 @@ Exact head `c7dfc13d649aabb1a8c3852ee47cb69ab6650309`:
 - TypeScript/Vite production build: passed;
 - Vercel Preview build: passed.
 
-Preview deployment: `dpl_ABiHHSCYAbnU957L9oqrMbjDP9F4`.
+Preview deployment: `dpl_7sjfPtfNxhs9sESXavwVohyLrkBb`.
 
 ## Remaining release gates
 
