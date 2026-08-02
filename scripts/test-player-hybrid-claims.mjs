@@ -63,10 +63,14 @@ try {
   assert.match(claimApi, /input\.action === 'claim'/u)
   assert.match(claimApi, /Cache-Control/u)
 
-  assert.match(publicApi, /searchPublicIndexedPlayer/u)
-  assert.match(claimService, /account\.is_public !== true/u)
-  assert.match(publicUi, /not a live Century Games lookup/u)
-  assert.doesNotMatch(publicUi, /getPlayer/u)
+  assert.match(publicApi, /PLAYER_LOOKUP_DISABLED/u)
+  assert.match(publicApi, /response\.status\(503\)/u)
+  assert.doesNotMatch(publicApi, /searchPublicIndexedPlayer/u)
+  assert.match(publicUi, /Player Lookup is temporarily unavailable/u)
+  assert.match(publicUi, /Public search is paused/u)
+  assert.doesNotMatch(publicUi, /<form/u)
+  assert.doesNotMatch(publicUi, /searchPublicIndexedPlayer/u)
+  assert.doesNotMatch(publicUi, /Search Forge Index/u)
 
   assert.match(claimUi, /Self-reported claim/u)
   assert.match(claimUi, /Submit for Verification/u)
@@ -77,12 +81,10 @@ try {
   assert.match(ocrService, /player_verification_events/u)
   assert.match(ocrService, /vision\.player\.verification_requested/u)
   assert.match(ocrService, /reviewState: 'pending'/u)
-  assert.match(ocrService, /RESUBMITTABLE_STATUSES = new Set\(\['linked', 'rejected'\]\)/u)
-  assert.match(ocrService, /protected verification state and cannot be replaced/u)
-  assert.match(ocrService, /verification request is already waiting for review/u)
+  assert.match(ocrService, /already has protected verification assurance/u)
   assert.doesNotMatch(ocrService, /cancelOwnerScanEvidence/u)
 
-  console.log('PASS PLAYER-IDENTITY-002: claims stay private and non-official, Vision requests remain reviewable, and protected assurance cannot be downgraded')
+  console.log('PASS PLAYER-IDENTITY-002: hybrid claims remain available while misleading public lookup stays disabled')
 } finally {
   await vite.close()
 }
