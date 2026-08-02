@@ -11,6 +11,8 @@ Players can connect a Kingshot Player ID and State to their authenticated Forge 
 
 The claim is usable immediately for Player Passport workflows, but Forge does not describe self-reported values as verified. Verification remains a separate evidence and review decision.
 
+Public Player Lookup is intentionally disabled. The current Forge records are not a complete player index, and private Player Passports are correctly excluded from public search. Returning “no match” for a known Forge player would therefore be misleading.
+
 ## Why this replaces PLAYER-API-001
 
 The supplied CAPTCHA/player wrapper targeted Century Games routes that were removed on 21 July 2026. Live acceptance testing returned an Amazon S3 `403` response instead of CAPTCHA JSON. The blocked investigation remains in PR #30 and must not be merged.
@@ -32,9 +34,9 @@ Claim and verification are separate:
 
 A verification failure never means that the Player ID is invalid. It means only that the submitted evidence or provider route did not establish the required assurance.
 
-## Indexed search
+## Authenticated claim search
 
-Forge searches existing `player_accounts` records by exact Player ID and State.
+Forge searches existing `player_accounts` records by exact Player ID and State during the signed-in claim workflow.
 
 Authenticated claim search can return:
 
@@ -43,7 +45,20 @@ Authenticated claim search can return:
 - `claimed_elsewhere` — the unique Player ID belongs to another Forge account;
 - `state_mismatch` — the entered State conflicts with the indexed record.
 
-Public Player Lookup returns only records whose owner enabled `is_public`. It does not call KingShot.net or Century Games and never implies live freshness.
+This search is part of the private claim workflow. It does not call KingShot.net or Century Games and does not expose another player’s private profile data.
+
+## Public Player Lookup suspension
+
+The `/player-lookup` route remains available only as an explanatory disabled page. It contains no search form and makes no lookup request.
+
+The `/api/player/indexed-lookup` endpoint returns HTTP `503` with `PLAYER_LOOKUP_DISABLED` for POST requests.
+
+Public lookup must remain disabled until Forge has a dependable, governed player index that can distinguish:
+
+- a player absent from Forge;
+- a player present only as a private Player Passport;
+- a public player record;
+- an independently sourced indexed observation.
 
 ## Self-reported claim
 
@@ -76,12 +91,13 @@ Account, verification-history and audit writes use compensating rollback if a la
 ## Privacy and safety
 
 - Self-reported claims are private by default.
-- Public lookup reads public records only.
+- Public Player Lookup is disabled while the index is incomplete.
 - Private claimed records do not expose names or profile details to another claimant.
 - No external provider cookie, CAPTCHA value or raw third-party payload is stored.
 - No browser automation is used.
 - No Century Games or KingShot.net request occurs in the claim path.
 - Verified claims cannot be deleted directly by the player; they require review.
+- A screenshot submission cannot downgrade an existing protected verification state.
 
 ## Reused platform capabilities
 
@@ -101,18 +117,21 @@ Required checks:
 - hybrid claim validation;
 - existing Player Identity regression suite;
 - State-aware linking contracts;
+- public lookup page contains no search form;
+- public lookup API returns `PLAYER_LOOKUP_DISABLED` with HTTP `503`;
 - NodeNext import validation;
 - full TypeScript/Vite build;
 - protected Vercel preview;
 - signed-in self-report smoke test;
 - duplicate Player ID rejection;
-- wrong-State indexed result;
+- wrong-State indexed result in the private claim flow;
 - screenshot evidence submission to `pending`;
 - desktop and mobile review;
 - confirmation that production and Supabase schema remain unchanged.
 
 ## Deferred
 
+- a complete and governed public player index;
 - moderator Verification Centre UI specifically for player evidence;
 - account-recovery/dispute workflow for a Player ID claimed elsewhere;
 - ingestion of independently licensed player observations into a separate evidence pipeline;
