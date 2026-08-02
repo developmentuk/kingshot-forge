@@ -2,7 +2,6 @@
 
 **Status:** Public companion and governed media implementation candidate; owner acceptance and migration approval pending  
 **Branch:** `feature/buildings-companion-completion`  
-**Validated head:** `477bc99a300fb054a4f5f633177a1560b6e07aa8`  
 **Production:** Unchanged  
 **Supabase:** Read-only inspection only; additive migration prepared but not applied
 
@@ -112,20 +111,20 @@ Uploaded replacements require appropriate usage permission. Forge records alt te
 
 ## Validation
 
-Exact head `477bc99a300fb054a4f5f633177a1560b6e07aa8`:
+The current PR head must pass:
 
-- Buildings Companion validation: passed;
-- full Forge integration gate: passed;
-- Buildings publication integrity: passed;
-- Buildings progression ordering: passed;
-- Content Studio integration: passed;
-- image upload/media contracts: passed;
-- server-only projection and rollback structure: passed;
-- lint: passed;
-- TypeScript/Vite production build: passed;
-- Vercel Preview build: passed.
+- Buildings Companion validation;
+- full Forge integration gate;
+- Buildings publication integrity;
+- Buildings progression ordering;
+- Content Studio integration;
+- image upload/media contracts;
+- server-only projection and rollback structure;
+- lint;
+- TypeScript/Vite production build;
+- Vercel Preview build.
 
-Preview deployment: `dpl_7sjfPtfNxhs9sESXavwVohyLrkBb`.
+The exact validated commit and Preview deployment are recorded in PR #32.
 
 ## Remaining release gates
 
