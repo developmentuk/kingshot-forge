@@ -16,6 +16,11 @@
     rgba(15, 23, 42, 0.72);
 }
 
+.record-editor-image-field--building .record-editor-image-field__preview {
+  width: min(100%, 34rem);
+  aspect-ratio: 16 / 9;
+}
+
 .record-editor-image-field__preview img {
   width: 100%;
   height: 100%;
@@ -83,7 +88,8 @@
 }
 
 @media (max-width: 640px) {
-  .record-editor-image-field__preview {
+  .record-editor-image-field__preview,
+  .record-editor-image-field--building .record-editor-image-field__preview {
     width: 100%;
   }
 
