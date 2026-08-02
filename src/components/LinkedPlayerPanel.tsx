@@ -2,7 +2,11 @@ import { useState, type FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 import { supabase } from '../lib/supabase'
-import { getPlayer } from '../services/kingshotApi'
+import {
+  completeOfficialPlayerLookup,
+  startOfficialPlayerLookup,
+} from '../services/officialPlayerLookup'
+import type { OfficialPlayerChallenge } from '../types/officialPlayerLookup'
 import type { KingshotPlayer } from '../types/player'
 import type { PlayerAccount } from '../types/playerAccount'
 import type { AccountLinkOcrReview } from '../../shared/domains/player-identity/accountLinkingOcr'
@@ -22,7 +26,7 @@ function getVerificationLabel(status: PlayerAccount['verification_status']) {
 
 function getVerificationDescription(status: PlayerAccount['verification_status']) {
   switch (status) {
-    case 'verified': return 'This Player ID and State were checked against the Kingshot player service.'
+    case 'verified': return 'This Player ID and State were checked through the official Kingshot Gift Code Centre.'
     case 'community_verified': return 'This account has been verified by an authorised Kingshot Forge community representative.'
     case 'officially_verified': return 'This account has been verified through an approved official method.'
     case 'pending': return 'A verification request is currently being reviewed.'
@@ -54,6 +58,10 @@ function LinkedPlayerPanel() {
   } = usePlayerIdentity()
 
   const [previewPlayer, setPreviewPlayer] = useState<KingshotPlayer | null>(null)
+  const [lookupReceipt, setLookupReceipt] = useState('')
+  const [lookupChallenge, setLookupChallenge] = useState<OfficialPlayerChallenge | null>(null)
+  const [pendingLookupAction, setPendingLookupAction] = useState<'link' | 'revalidate' | null>(null)
+  const [captchaCode, setCaptchaCode] = useState('')
   const [playerId, setPlayerId] = useState('')
   const [kingdomId, setKingdomId] = useState('')
   const [lookingUp, setLookingUp] = useState(false)
@@ -66,6 +74,14 @@ function LinkedPlayerPanel() {
   const [fallbackSaving, setFallbackSaving] = useState(false)
   const [lookupFailed, setLookupFailed] = useState(false)
 
+  function resetOfficialLookup() {
+    setPreviewPlayer(null)
+    setLookupReceipt('')
+    setLookupChallenge(null)
+    setPendingLookupAction(null)
+    setCaptchaCode('')
+  }
+
   function validateInputs() {
     const cleanedPlayerId = cleanPlayerId(playerId)
     const cleanedKingdomId = cleanKingdomId(kingdomId)
@@ -74,13 +90,27 @@ function LinkedPlayerPanel() {
     return { cleanedPlayerId, cleanedKingdomId }
   }
 
-  async function handleLookup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  async function beginOfficialLookup(action: 'link' | 'revalidate', requestedPlayerId: string, requestedKingdomId: string) {
+    setLookingUp(true)
     setMessage('')
     setErrorMessage('')
-    setPreviewPlayer(null)
     setLookupFailed(false)
+    resetOfficialLookup()
+    try {
+      const response = await startOfficialPlayerLookup(requestedPlayerId, requestedKingdomId)
+      setLookupChallenge(response.data)
+      setPendingLookupAction(action)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'The player could not be found.')
+      if (ocrReview?.playerId && action === 'link') setMessage('The official lookup is unavailable. You may save the reviewed screenshot details as an unverified link.')
+      setLookupFailed(true)
+    } finally {
+      setLookingUp(false)
+    }
+  }
 
+  async function handleLookup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     let values: ReturnType<typeof validateInputs>
     try {
       values = validateInputs()
@@ -88,19 +118,49 @@ function LinkedPlayerPanel() {
       setErrorMessage(error instanceof Error ? error.message : 'Enter a valid Player ID and State.')
       return
     }
+    setPlayerId(values.cleanedPlayerId)
+    setKingdomId(values.cleanedKingdomId)
+    await beginOfficialLookup('link', values.cleanedPlayerId, values.cleanedKingdomId)
+  }
 
+  async function handleCaptchaSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!lookupChallenge || !pendingLookupAction) return
     setLookingUp(true)
+    setErrorMessage('')
     try {
-      const response = await getPlayer(values.cleanedPlayerId, values.cleanedKingdomId)
-      setPreviewPlayer(response.data)
-      setPlayerId(values.cleanedPlayerId)
-      setKingdomId(values.cleanedKingdomId)
+      const result = await completeOfficialPlayerLookup(lookupChallenge.challengeToken, captchaCode)
+      setLookupChallenge(null)
+      setCaptchaCode('')
+      if (pendingLookupAction === 'revalidate') {
+        if (!session?.access_token) throw new Error('Your Forge session has expired.')
+        setRefreshing(true)
+        const response = await fetch('/api/player/account', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'revalidate', lookupReceipt: result.lookupReceipt }),
+        })
+        const payload = await response.json().catch(() => null) as { status?: string; message?: string } | null
+        if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'The player could not be revalidated.')
+        setPendingLookupAction(null)
+        setMessage('Player ID and State verified through the official Kingshot service.')
+        notifyPlayerIdentityChanged()
+        await refreshPlayerIdentity()
+      } else {
+        setPreviewPlayer(result.data)
+        setLookupReceipt(result.lookupReceipt)
+        setPendingLookupAction(null)
+      }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'The player could not be found.')
-      if (ocrReview?.playerId) setMessage('The Kingshot lookup is unavailable. You may save the reviewed screenshot details as an unverified link.')
+      setLookupChallenge(null)
+      setCaptchaCode('')
+      setPendingLookupAction(null)
+      setErrorMessage(error instanceof Error ? error.message : 'The official player verification failed.')
+      if (ocrReview?.playerId) setMessage('The official lookup did not complete. You may save the reviewed screenshot details as an unverified link.')
       setLookupFailed(true)
     } finally {
       setLookingUp(false)
+      setRefreshing(false)
     }
   }
 
@@ -129,7 +189,7 @@ function LinkedPlayerPanel() {
   }
 
   async function handleLinkAccount() {
-    if (!user || !session?.access_token || !previewPlayer) return
+    if (!user || !session?.access_token || !previewPlayer || !lookupReceipt) return
     setLinking(true)
     setMessage('')
     setErrorMessage('')
@@ -138,11 +198,16 @@ function LinkedPlayerPanel() {
       const response = await fetch('/api/player/account', {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'link', playerId: values.cleanedPlayerId, kingdomId: values.cleanedKingdomId }),
+        body: JSON.stringify({
+          action: 'link',
+          playerId: values.cleanedPlayerId,
+          kingdomId: values.cleanedKingdomId,
+          lookupReceipt,
+        }),
       })
       const payload = await response.json().catch(() => null) as { status?: string; message?: string } | null
       if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'The player could not be linked.')
-      setPreviewPlayer(null)
+      resetOfficialLookup()
       setPlayerId('')
       setKingdomId('')
       setMessage('Kingshot account linked successfully.')
@@ -158,24 +223,8 @@ function LinkedPlayerPanel() {
   async function handleRefresh() {
     if (!user || !linkedAccount || !session?.access_token) return
     setRefreshing(true)
-    setMessage('')
-    setErrorMessage('')
-    try {
-      const response = await fetch('/api/player/account', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'revalidate' }),
-      })
-      const payload = await response.json().catch(() => null) as { status?: string; message?: string } | null
-      if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'The player could not be revalidated.')
-      setMessage('Player ID and State verified through the Kingshot player service.')
-      notifyPlayerIdentityChanged()
-      await refreshPlayerIdentity()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Player data could not be refreshed.')
-    } finally {
-      setRefreshing(false)
-    }
+    await beginOfficialLookup('revalidate', linkedAccount.player_id, String(linkedAccount.kingdom_id))
+    setRefreshing(false)
   }
 
   async function handleRemoveAccount() {
@@ -195,7 +244,7 @@ function LinkedPlayerPanel() {
       setRemoving(false)
       return
     }
-    setPreviewPlayer(null)
+    resetOfficialLookup()
     setPlayerId('')
     setKingdomId('')
     setMessage('Linked Kingshot account removed.')
@@ -230,7 +279,7 @@ function LinkedPlayerPanel() {
   return (
     <section className="linked-player-panel">
       <div className="linked-player-panel__heading">
-        <div><p className="eyebrow">Kingshot identity</p><h2>{linkedAccount ? 'Your linked player' : 'Link your Kingshot account'}</h2><p>Player ID and State are both required to validate the correct Governor and support Auto Redeem.</p></div>
+        <div><p className="eyebrow">Kingshot identity</p><h2>{linkedAccount ? 'Your linked player' : 'Link your Kingshot account'}</h2><p>Player ID and State are checked through the official Kingshot Gift Code Centre. Human verification is required.</p></div>
         {linkedAccount && <span className={`linked-player-status linked-player-status--${linkedAccount.verification_status}`}>{getVerificationLabel(linkedAccount.verification_status)}</span>}
       </div>
 
@@ -242,35 +291,36 @@ function LinkedPlayerPanel() {
               setOcrReview(review)
               setPlayerId(review?.playerId ?? '')
               setKingdomId(review?.kingdom ?? '')
+              resetOfficialLookup()
             }}
           />
           <form className="linked-player-search linked-player-search--state-aware" onSubmit={handleLookup}>
             <div className="field">
               <label htmlFor="linked-player-id">Kingshot Player ID</label>
-              <input id="linked-player-id" type="text" inputMode="numeric" autoComplete="off" value={playerId} maxLength={20} placeholder="Enter your Player ID" onChange={(event) => { setPlayerId(event.target.value); setPreviewPlayer(null) }} />
+              <input id="linked-player-id" type="text" inputMode="numeric" autoComplete="off" value={playerId} maxLength={20} placeholder="Enter your Player ID" onChange={(event) => { setPlayerId(event.target.value); resetOfficialLookup() }} />
               <span className="field__help">Found on your in-game Kingshot profile.</span>
             </div>
             <div className="field">
               <label htmlFor="linked-player-state">Kingshot State</label>
-              <input id="linked-player-state" type="text" inputMode="numeric" autoComplete="off" value={kingdomId} maxLength={4} placeholder="e.g. 850" onChange={(event) => { setKingdomId(event.target.value); setPreviewPlayer(null) }} />
+              <input id="linked-player-state" type="text" inputMode="numeric" autoComplete="off" value={kingdomId} maxLength={4} placeholder="e.g. 850" onChange={(event) => { setKingdomId(event.target.value); resetOfficialLookup() }} />
               <span className="field__help">Enter the State number shown on the same profile.</span>
             </div>
-            <button type="submit" className="button button--primary" disabled={lookingUp}>{lookingUp ? 'Finding player…' : 'Find Player'}</button>
+            <button type="submit" className="button button--primary" disabled={lookingUp}>{lookingUp ? 'Preparing verification…' : 'Find Player'}</button>
           </form>
 
           {previewPlayer && (
             <article className="linked-player-preview">
               <div className="linked-player-preview__identity">
                 {previewPlayer.profilePhoto ? <img src={previewPlayer.profilePhoto} alt={`${previewPlayer.name} profile`} /> : <span className="linked-player-preview__avatar-fallback">👤</span>}
-                <div><span>Confirm player</span><h3>{previewPlayer.name}</h3><p>State {previewPlayer.kingdom} · {previewPlayer.levelRenderedDetailed || previewPlayer.levelRendered || `Level ${previewPlayer.level}`}</p><small>Player ID: {previewPlayer.playerId}</small></div>
+                <div><span>Confirm official result</span><h3>{previewPlayer.name}</h3><p>State {previewPlayer.kingdom} · {previewPlayer.levelRenderedDetailed || previewPlayer.levelRendered || `Level ${previewPlayer.level}`}</p><small>Player ID: {previewPlayer.playerId}</small></div>
               </div>
-              <div className="linked-player-preview__warning"><strong>Is this your account?</strong><p>Forge will store this public player information. Ownership verification remains a separate trust decision.</p></div>
-              {apiConflicts.length > 0 && <div className="linked-player-preview__warning"><strong>Review conflict with Player API</strong><p>{apiConflicts.join(', ')} differ from the reviewed screenshot. The API result has not overwritten the screenshot evidence.</p></div>}
-              <div className="linked-player-preview__actions"><button type="button" className="button button--secondary" onClick={() => setPreviewPlayer(null)}>Search Again</button><button type="button" className="button button--primary" disabled={linking} onClick={() => void handleLinkAccount()}>{linking ? 'Linking…' : 'Link This Player'}</button></div>
+              <div className="linked-player-preview__warning"><strong>Is this your account?</strong><p>Forge will store this public player information. Resolving an official Player ID does not prove exclusive ownership.</p></div>
+              {apiConflicts.length > 0 && <div className="linked-player-preview__warning"><strong>Review conflict with official result</strong><p>{apiConflicts.join(', ')} differ from the reviewed screenshot. The official result has not overwritten the screenshot evidence.</p></div>}
+              <div className="linked-player-preview__actions"><button type="button" className="button button--secondary" onClick={resetOfficialLookup}>Search Again</button><button type="button" className="button button--primary" disabled={linking || !lookupReceipt} onClick={() => void handleLinkAccount()}>{linking ? 'Linking…' : 'Link This Player'}</button></div>
             </article>
           )}
 
-          {ocrReview && lookupFailed && !previewPlayer && <div className="linked-player-preview__warning"><strong>Lookup fallback</strong><p>The API lookup did not complete. Saving the reviewed screenshot values remains unverified and does not claim an official lookup.</p><button type="button" className="button button--secondary" disabled={fallbackSaving} onClick={() => void handleOcrFallbackSave()}>{fallbackSaving ? 'Saving review…' : 'Save as unverified review'}</button></div>}
+          {ocrReview && lookupFailed && !previewPlayer && <div className="linked-player-preview__warning"><strong>Lookup fallback</strong><p>The official lookup did not complete. Saving the reviewed screenshot values remains unverified and does not claim an official lookup.</p><button type="button" className="button button--secondary" disabled={fallbackSaving} onClick={() => void handleOcrFallbackSave()}>{fallbackSaving ? 'Saving review…' : 'Save as unverified review'}</button></div>}
         </>
       )}
 
@@ -283,8 +333,26 @@ function LinkedPlayerPanel() {
           <div className="linked-player-card__stats"><div><span>State</span><strong>{linkedAccount.kingdom_id}</strong></div><div><span>Player ID</span><strong>{linkedAccount.player_id}</strong></div><div><span>Last refreshed</span><strong>{new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(linkedAccount.last_refreshed_at))}</strong></div></div>
           <div className="linked-player-card__verification"><strong>{getVerificationLabel(linkedAccount.verification_status)}</strong><p>{getVerificationDescription(linkedAccount.verification_status)}</p>{linkedAccount.verified_at && <p>Verified {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(linkedAccount.verified_at))}</p>}</div>
           <label className="linked-player-privacy"><input type="checkbox" checked={linkedAccount.is_public} onChange={(event) => void handlePrivacyChange(event.target.checked)} /><span>Show this player on public State and alliance member lists</span></label>
-          <div className="linked-player-card__actions"><button type="button" className="button button--secondary" disabled={refreshing} onClick={() => void handleRefresh()}>{refreshing ? 'Checking player…' : 'Refresh Player Data'}</button><button type="button" className="remove-saved-button" disabled={removing} onClick={() => void handleRemoveAccount()}>{removing ? 'Removing…' : 'Remove Linked Player'}</button></div>
+          <div className="linked-player-card__actions"><button type="button" className="button button--secondary" disabled={refreshing || lookingUp} onClick={() => void handleRefresh()}>{refreshing || lookingUp ? 'Preparing check…' : 'Refresh Player Data'}</button><button type="button" className="remove-saved-button" disabled={removing} onClick={() => void handleRemoveAccount()}>{removing ? 'Removing…' : 'Remove Linked Player'}</button></div>
         </article>
+      )}
+
+      {lookupChallenge && (
+        <form className="linked-player-preview" onSubmit={handleCaptchaSubmit}>
+          <div className="linked-player-preview__warning">
+            <strong>Complete the official verification image</strong>
+            <p>Enter the four characters yourself. Forge does not use OCR or browser automation to bypass this check.</p>
+          </div>
+          <img src={lookupChallenge.captchaImage} alt="Century Games verification characters" style={{ maxWidth: '240px', width: '100%', height: 'auto' }} />
+          <div className="field">
+            <label htmlFor="linked-player-captcha">Verification characters</label>
+            <input id="linked-player-captcha" type="text" autoComplete="off" value={captchaCode} maxLength={4} onChange={(event) => setCaptchaCode(event.target.value.replace(/[^a-zA-Z0-9]/gu, ''))} />
+          </div>
+          <div className="linked-player-preview__actions">
+            <button type="button" className="button button--secondary" onClick={resetOfficialLookup}>Cancel</button>
+            <button type="submit" className="button button--primary" disabled={lookingUp || captchaCode.length !== 4}>{lookingUp ? 'Verifying…' : 'Verify player'}</button>
+          </div>
+        </form>
       )}
 
       {message && <p className="linked-player-message linked-player-message--success">{message}</p>}
