@@ -131,6 +131,14 @@ function sealToken(payload: ChallengePayload | ReceiptPayload, secret: string) {
     .join('.')
 }
 
+function decodeTokenPart(value: string) {
+  const decoded = Buffer.from(value, 'base64url')
+  if (decoded.length === 0 || decoded.toString('base64url') !== value) {
+    throw new OfficialKingshotProviderError(422, 'TOKEN_INVALID', 'The player verification request is invalid. Start again.')
+  }
+  return decoded
+}
+
 function verifyToken<T extends ChallengePayload | ReceiptPayload>(token: unknown, expectedKind: T['kind'], secret: string, now = Date.now()): T {
   if (typeof token !== 'string' || token.length < 20 || token.length > MAX_TOKEN_LENGTH) {
     throw new OfficialKingshotProviderError(422, 'TOKEN_INVALID', 'The player verification request is invalid. Start again.')
@@ -143,11 +151,11 @@ function verifyToken<T extends ChallengePayload | ReceiptPayload>(token: unknown
 
   let parsed: unknown
   try {
-    const decipher = createDecipheriv('aes-256-gcm', tokenKey(secret), Buffer.from(encodedIv, 'base64url'))
+    const decipher = createDecipheriv('aes-256-gcm', tokenKey(secret), decodeTokenPart(encodedIv))
     decipher.setAAD(Buffer.from(`${expectedKind}.v1`, 'utf8'))
-    decipher.setAuthTag(Buffer.from(encodedTag, 'base64url'))
+    decipher.setAuthTag(decodeTokenPart(encodedTag))
     const plaintext = Buffer.concat([
-      decipher.update(Buffer.from(encodedPayload, 'base64url')),
+      decipher.update(decodeTokenPart(encodedPayload)),
       decipher.final(),
     ]).toString('utf8')
     parsed = JSON.parse(plaintext)
