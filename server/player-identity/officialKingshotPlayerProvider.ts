@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
 import type { KingshotPlayer } from '../../src/types/player.js'
 
 const OFFICIAL_PROVIDER_ID = 'century-games-gift-centre'
@@ -101,7 +101,7 @@ function providerConfig() {
   } catch {
     throw new OfficialKingshotProviderError(503, 'PROVIDER_CONFIG_INVALID', 'The official Kingshot player provider is not configured safely.')
   }
-  if (host.protocol !== 'https:' || host.hostname !== 'ks-giftcode.centurygame.com') {
+  if (host.origin !== DEFAULT_PROVIDER_HOST || host.username || host.password) {
     throw new OfficialKingshotProviderError(503, 'PROVIDER_CONFIG_INVALID', 'The official Kingshot player provider is not configured safely.')
   }
 
@@ -114,12 +114,21 @@ function providerConfig() {
   return { host: host.origin, signatureSalt, tokenSecret }
 }
 
-function signToken(payload: ChallengePayload | ReceiptPayload, secret: string) {
-  const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url')
-  const signature = createHmac('sha256', secret)
-    .update(`${payload.kind}.${encoded}`)
-    .digest('base64url')
-  return `${encoded}.${signature}`
+function tokenKey(secret: string) {
+  return createHash('sha256').update(secret, 'utf8').digest()
+}
+
+function sealToken(payload: ChallengePayload | ReceiptPayload, secret: string) {
+  const iv = randomBytes(12)
+  const cipher = createCipheriv('aes-256-gcm', tokenKey(secret), iv)
+  cipher.setAAD(Buffer.from(`${payload.kind}.v1`, 'utf8'))
+  const encrypted = Buffer.concat([
+    cipher.update(JSON.stringify(payload), 'utf8'),
+    cipher.final(),
+  ])
+  return [iv, encrypted, cipher.getAuthTag()]
+    .map((value) => value.toString('base64url'))
+    .join('.')
 }
 
 function verifyToken<T extends ChallengePayload | ReceiptPayload>(token: unknown, expectedKind: T['kind'], secret: string, now = Date.now()): T {
@@ -127,23 +136,21 @@ function verifyToken<T extends ChallengePayload | ReceiptPayload>(token: unknown
     throw new OfficialKingshotProviderError(422, 'TOKEN_INVALID', 'The player verification request is invalid. Start again.')
   }
 
-  const [encoded, suppliedSignature, extra] = token.split('.')
-  if (!encoded || !suppliedSignature || extra) {
-    throw new OfficialKingshotProviderError(422, 'TOKEN_INVALID', 'The player verification request is invalid. Start again.')
-  }
-
-  const expectedSignature = createHmac('sha256', secret)
-    .update(`${expectedKind}.${encoded}`)
-    .digest('base64url')
-  const supplied = Buffer.from(suppliedSignature)
-  const expected = Buffer.from(expectedSignature)
-  if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
+  const [encodedIv, encodedPayload, encodedTag, extra] = token.split('.')
+  if (!encodedIv || !encodedPayload || !encodedTag || extra) {
     throw new OfficialKingshotProviderError(422, 'TOKEN_INVALID', 'The player verification request is invalid. Start again.')
   }
 
   let parsed: unknown
   try {
-    parsed = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'))
+    const decipher = createDecipheriv('aes-256-gcm', tokenKey(secret), Buffer.from(encodedIv, 'base64url'))
+    decipher.setAAD(Buffer.from(`${expectedKind}.v1`, 'utf8'))
+    decipher.setAuthTag(Buffer.from(encodedTag, 'base64url'))
+    const plaintext = Buffer.concat([
+      decipher.update(Buffer.from(encodedPayload, 'base64url')),
+      decipher.final(),
+    ]).toString('utf8')
+    parsed = JSON.parse(plaintext)
   } catch {
     throw new OfficialKingshotProviderError(422, 'TOKEN_INVALID', 'The player verification request is invalid. Start again.')
   }
@@ -272,6 +279,7 @@ export async function createOfficialPlayerChallenge(playerIdInput: unknown, king
   try {
     response = await fetch(`${host}/api/captcha`, {
       method: 'GET',
+      redirect: 'error',
       headers: { Accept: 'application/json', 'User-Agent': 'Kingshot-Forge/1.0' },
       signal: AbortSignal.timeout(10_000),
     })
@@ -286,7 +294,7 @@ export async function createOfficialPlayerChallenge(playerIdInput: unknown, king
   const captchaImage = normalizeCaptchaImage(data?.img)
   const issuedAt = now
   const expiresAt = now + CHALLENGE_TTL_MS
-  const challengeToken = signToken({
+  const challengeToken = sealToken({
     version: 1,
     kind: 'challenge',
     provider: OFFICIAL_PROVIDER_ID,
@@ -308,7 +316,7 @@ export async function createOfficialPlayerChallenge(playerIdInput: unknown, king
 
 export function createOfficialPlayerLookupReceipt(player: KingshotPlayer, now = Date.now()) {
   const { tokenSecret } = providerConfig()
-  return signToken({
+  return sealToken({
     version: 1,
     kind: 'receipt',
     provider: OFFICIAL_PROVIDER_ID,
@@ -337,6 +345,7 @@ export async function completeOfficialPlayerLookup(challengeTokenInput: unknown,
   try {
     response = await fetch(`${host}/api/player`, {
       method: 'POST',
+      redirect: 'error',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded',
