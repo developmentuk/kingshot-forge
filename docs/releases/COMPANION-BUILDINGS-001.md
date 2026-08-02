@@ -1,15 +1,17 @@
 # COMPANION-BUILDINGS-001 — Complete Buildings Companion
 
-**Status:** Milestone 1 implementation candidate  
+**Status:** Public companion and governed media implementation candidate  
 **Branch:** `feature/buildings-companion-completion`  
 **Production:** Unchanged  
-**Supabase:** Read-only inspection only; no schema or data mutation
+**Supabase:** Read-only inspection only; additive migration prepared but not applied
 
 ## Player outcome
 
 The Buildings section becomes a complete, image-led Kingshot Companion experience rather than a plain progression table.
 
 Players can browse every published Forge building, understand what it does, see the fields that are actually present in the owner-approved publication, switch between standard and Truegold progression, review source and verification context, and use the experience on desktop or mobile.
+
+Approved editors can upload or replace a building image in Admin. A replacement is not public merely because its file was uploaded: it must be saved to an editorial draft, reviewed, approved and published before the public Data Engine projection consumes it.
 
 ## Canonical baseline
 
@@ -23,9 +25,9 @@ The current owner-approved publication contains:
 - Truegold and Tempered Truegold where published;
 - building-specific fields including hero level caps, training capacity, training speed, rally capacity, troop deployment and reinforcement capacity.
 
-The public page continues to read only the current published Buildings projection through the Data Engine. It does not read drafts, staged import records or a second editable data source.
+The public page continues to read only the current published Buildings projection through the Data Engine. It does not expose drafts or staged import records.
 
-## Milestone 1 — Public companion completion
+## Public companion completion
 
 Included:
 
@@ -45,55 +47,78 @@ Included:
 - responsive desktop, tablet and phone layouts;
 - regression validation for artwork, effect coverage, publication boundary and responsive structure.
 
+## Governed building media
+
+The Buildings Record Editor now includes:
+
+- building image upload, replacement and removal;
+- WebP, PNG and JPEG support;
+- 2 MB maximum file size;
+- recommended 1600 × 900 and minimum 800 × 450 dimensions;
+- immutable object paths for replacement files;
+- image alt text;
+- image credit;
+- image source/evidence URL;
+- licence or permission statement.
+
+Alt text is mandatory whenever an image is supplied. Images are stored in the existing public `companion-images` bucket under `buildings/<building-key>/` and remain subject to the bucket's existing authenticated editor policies.
+
+The public page prefers an approved published image. If no image exists or loading fails, it falls back to the original Forge illustration.
+
+## Publication architecture
+
+The existing full-dataset Buildings publisher remains the immutable source of the 10 catalogue and 587 progression records.
+
+A new additive, server-only `building_editorial_overrides` projection is proposed for Record Editor publications. It stores only the latest approved Buildings editorial values together with their published version, actor and timestamp. The immutable source publication and its historical publication records are not rewritten.
+
+The proposed atomic queue publication path:
+
+1. verifies the queued version still matches the approved Buildings editorial head;
+2. writes a new immutable published editorial version;
+3. upserts the server-only Buildings projection;
+4. records the audit event;
+5. marks the queue item complete;
+6. allows rollback to reapply an older published version to the same projection.
+
+The Data Engine applies only published projection values. Drafts and approved-but-unpublished versions remain private.
+
+## Why Admin currently says “Publishing: Partial”
+
+This is a real readiness distinction, not missing building statistics.
+
+Forge already has a complete atomic **full-dataset** Buildings publication workflow. However, the currently deployed shared Record Editor publisher supports live canonical projection only for Heroes and Hero Skills. Therefore an individual Buildings draft can be reviewed and queued, but cannot yet become the public Buildings projection.
+
+The branch contains the missing Buildings projection and rollback contract, but the additive migration has not been applied and no live image publish/rollback acceptance has occurred. Admin must remain **Partial** until both happen. Once verified, the readiness evidence can move Buildings publishing to **Implemented**.
+
 ## Truth boundary
 
 Forge does not invent missing building values.
 
-The current published schema does not yet contain every defining effect for every building. Known gaps include:
+The current published schema does not yet contain every defining effect for every building. Remaining data gaps include:
 
 - Academy research effects or unlock detail;
 - Storehouse protected-resource capacity;
 - Infirmary capacity;
-- Embassy Alliance Help count and time reduction;
-- governed catalogue media metadata and image provenance fields.
+- Embassy Alliance Help count and time reduction.
 
-Milestone 1 surfaces all existing canonical values and clearly states when effect data is not present. These gaps move to the governed data-extension milestone rather than being hard-coded into the page.
+The media workflow does not silently fill these gameplay-data gaps.
 
 ## Artwork boundary
 
-The illustrations are first-party Forge presentation assets implemented as accessible inline SVG. They are not copied from community sites, hotlinked from third parties or represented as official game art.
+The fallback illustrations are first-party Forge presentation assets implemented as accessible inline SVG. They are not copied from community sites, hotlinked from third parties or represented as official game art.
 
-Future replacement with in-game screenshots or licensed assets requires:
+Uploaded replacements require appropriate usage permission. Forge records alt text, credit, evidence URL and licence/permission alongside the published image.
 
-- source identity;
-- usage permission or licence;
-- credit and source URL;
-- alt text;
-- immutable media version;
-- editorial review and publication.
+## Remaining release gates
 
-## Next milestones
-
-### Milestone 2 — Canonical companion data extension
-
-- define governed building media and companion-detail fields;
-- add missing building-effect fields to the Buildings contract;
-- prepare a versioned import-ready dataset with field-level provenance and confidence;
-- retain the current 10/587 publication until owner review approves a replacement.
-
-### Milestone 3 — Editorial and media workflow
-
-- align the Buildings editor with the current catalogue/progression contract;
-- add permissioned media selection/upload through the shared media boundary;
-- validate image source, alt text, credit and licence;
-- preserve immutable versions and audit events.
-
-### Milestone 4 — Publication and acceptance
-
-- preflight the replacement dataset;
-- resolve all warnings;
-- publish atomically through the existing Buildings publication service;
-- validate public and admin experiences on desktop and mobile;
+- complete repository validation and protected Preview build;
+- owner review of the Admin upload controls and public fallback behaviour;
+- review the additive migration and server-only RLS boundary;
+- apply the migration only after owner approval;
+- publish one non-sensitive test replacement through draft → review → approve → publish;
+- confirm the public page changes only after publication;
+- roll back to the previous image and confirm the public projection follows;
+- change Buildings readiness from Partial to Implemented only after the live acceptance passes;
 - deploy the exact accepted commit and smoke-test production.
 
 ## Validation
@@ -102,11 +127,14 @@ Dedicated workflow: `.github/workflows/buildings-companion-check.yml`
 
 Required checks:
 
-- Buildings Companion contracts;
+- Buildings Companion and governed media contracts;
 - existing Buildings publication integrity;
 - progression ordering;
+- editorial image validation and fallback behaviour;
+- server-only override/RLS migration structure;
+- atomic publication and rollback structure;
 - lint;
 - TypeScript/Vite production build;
 - protected Vercel Preview;
 - desktop and mobile owner review;
-- no Supabase mutation during Milestone 1.
+- no Supabase mutation before owner approval.
