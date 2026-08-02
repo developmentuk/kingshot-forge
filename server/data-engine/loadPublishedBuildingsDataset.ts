@@ -26,6 +26,10 @@ function isRow(value: unknown): value is Row {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
+function hasField(row: Row, field: string): boolean {
+  return Object.prototype.hasOwnProperty.call(row, field)
+}
+
 function readString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
@@ -88,16 +92,19 @@ function applyEditorialOverride(row: Row, progression: Row[], override?: Editori
   const name = readString(values.name) ?? readString(values.building_name)
   const maxLevel = readNumber(values.maxLevel) ?? readNumber(values.standard_max_level)
   const source = readString(values.source) ?? readString(values.source_url)
-  const note = readString(values.note) ?? readString(values.verification_note)
 
   if (name) nextRow.building_name = name
   if (maxLevel !== null) nextRow.standard_max_level = maxLevel
   if (source) nextRow.source_url = source
-  if (note !== null) nextRow.verification_note = note
+
+  if (hasField(values, 'note') || hasField(values, 'verification_note')) {
+    nextRow.verification_note = readString(values.note) ?? readString(values.verification_note)
+  }
 
   for (const field of MEDIA_FIELDS) {
-    const value = readString(values[field])
-    nextRow[field] = value
+    if (hasField(values, field)) {
+      nextRow[field] = readString(values[field])
+    }
   }
 
   return {
