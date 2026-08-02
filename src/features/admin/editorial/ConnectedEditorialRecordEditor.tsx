@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -51,6 +52,10 @@ interface ConnectedEditorialRecordEditorProps {
   onClose: () => void;
 }
 
+interface LoadStateOptions {
+  blocking?: boolean;
+}
+
 function sanitiseValues(
   values: RecordEditorRecord["values"],
 ): Record<string, unknown> {
@@ -83,10 +88,18 @@ export function ConnectedEditorialRecordEditor({
     null,
   );
 
+  const stateRef = useRef<EditorialRecordState | null>(null);
+  const loadSequenceRef = useRef(0);
+
   const [
     loading,
     setLoading,
   ] = useState(true);
+
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(false);
 
   const [
     runtimeError,
@@ -115,9 +128,20 @@ export function ConnectedEditorialRecordEditor({
   ] = useState<string>();
 
   const loadState = useCallback(
-    async (signal?: AbortSignal) => {
+    async (
+      signal?: AbortSignal,
+      options: LoadStateOptions = {},
+    ) => {
+      const requestId = ++loadSequenceRef.current;
+      const blocking =
+        options.blocking ?? stateRef.current === null;
+
       setRuntimeError(null);
-      setLoading(true);
+      if (blocking) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
 
       try {
         const nextState =
@@ -127,7 +151,14 @@ export function ConnectedEditorialRecordEditor({
             signal,
           );
 
-        if (signal?.aborted) return;
+        if (
+          signal?.aborted ||
+          requestId !== loadSequenceRef.current
+        ) {
+          return;
+        }
+
+        stateRef.current = nextState;
         setState(nextState);
         setCurrentRecord(
           schema.datasetId === "buildings"
@@ -138,6 +169,8 @@ export function ConnectedEditorialRecordEditor({
         );
       } catch (error) {
         if (
+          signal?.aborted ||
+          requestId !== loadSequenceRef.current ||
           error instanceof DOMException &&
           error.name === "AbortError"
         ) {
@@ -150,7 +183,13 @@ export function ConnectedEditorialRecordEditor({
             : "Unable to load editorial state.",
         );
       } finally {
-        if (!signal?.aborted) setLoading(false);
+        if (
+          !signal?.aborted &&
+          requestId === loadSequenceRef.current
+        ) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [
@@ -163,13 +202,18 @@ export function ConnectedEditorialRecordEditor({
     const controller =
       new AbortController();
 
+    stateRef.current = null;
     setCurrentRecord(record);
     setState(null);
     setComparison(undefined);
     setSelectedVersionId(undefined);
     setLoading(true);
+    setRefreshing(false);
 
-    void loadState(controller.signal);
+    void loadState(
+      controller.signal,
+      { blocking: true },
+    );
 
     return () => {
       controller.abort();
@@ -238,7 +282,11 @@ export function ConnectedEditorialRecordEditor({
   const draftIsEditable =
     hasRealDraft ||
     canCreateInitialDraft;
+  const initialLoading =
+    loading && state === null;
   const canReturnToDraft = Boolean(
+    !loading &&
+    !refreshing &&
     state?.head &&
     [
       "in_review",
@@ -252,12 +300,12 @@ export function ConnectedEditorialRecordEditor({
       ? "Create editable draft"
       : "Return to draft";
   const editingDisabled =
-    loading ||
+    initialLoading ||
     Boolean(runtimeError && !state) ||
     !savePermission ||
     !draftIsEditable;
   const editingDisabledMessage =
-    loading
+    initialLoading
       ? "Editorial state is loading."
         : runtimeError && !state
         ? "Editorial state could not be loaded, so saving is disabled. Retry the request below."
@@ -300,7 +348,10 @@ export function ConnectedEditorialRecordEditor({
       values: result.version.values,
     });
 
-    await loadState();
+    await loadState(
+      undefined,
+      { blocking: false },
+    );
 
     return {
       id: nextRecord.id,
@@ -339,7 +390,10 @@ export function ConnectedEditorialRecordEditor({
         },
       );
 
-      await loadState();
+      await loadState(
+        undefined,
+        { blocking: false },
+      );
     } catch (error) {
       setRuntimeError(
         error instanceof Error
@@ -390,7 +444,10 @@ export function ConnectedEditorialRecordEditor({
         expectedVersion: state.head.currentVersion,
         targetVersionId: versionId,
       });
-      await loadState();
+      await loadState(
+        undefined,
+        { blocking: false },
+      );
     } catch (error) {
       setRuntimeError(
         error instanceof Error ? error.message : "Rollback failed.",
@@ -452,7 +509,10 @@ export function ConnectedEditorialRecordEditor({
         },
       );
 
-      await loadState();
+      await loadState(
+        undefined,
+        { blocking: false },
+      );
     } catch (error) {
       setRuntimeError(
         error instanceof Error
@@ -468,7 +528,7 @@ export function ConnectedEditorialRecordEditor({
       schema={schema}
       record={currentRecord}
       disabled={editingDisabled}
-      validationEnabled={!loading && draftIsEditable}
+      validationEnabled={!initialLoading && draftIsEditable}
       disabledMessage={
         editingDisabledMessage
       }
@@ -502,14 +562,20 @@ export function ConnectedEditorialRecordEditor({
               </strong>
               <p>{runtimeError}</p>
               {!state && (
-                <button type="button" onClick={() => void loadState()}>
+                <button type="button" onClick={() => void loadState(undefined, { blocking: true })}>
                   Retry
                 </button>
               )}
             </div>
           )}
 
-          {loading ? (
+          {refreshing && state && (
+            <p className="record-editor-save-message" role="status">
+              Refreshing editorial status…
+            </p>
+          )}
+
+          {initialLoading ? (
             <section className="editorial-admin-card">
               <p className="editorial-admin-empty">
                 Loading editorial history…
