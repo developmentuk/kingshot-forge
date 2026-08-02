@@ -22,7 +22,6 @@ function NavigationGroup({ title, items, onNavigate }: { title: string; items: R
 
 const mobileNavigation: WorkspaceNavItem[] = [
   { label: 'Home', shortLabel: 'Home', icon: '🏠', path: '/' },
-  { label: 'Player Lookup', shortLabel: 'Players', icon: '👤', path: '/player-lookup' },
   { label: 'KvK Tracker', shortLabel: 'KvK', icon: '⚔️', path: '/kvk-tracker' },
   { label: 'Gift Codes', shortLabel: 'Codes', icon: '🎁', path: '/gift-codes' },
   { label: 'My Forge', shortLabel: 'My Forge', icon: '⭐', path: '/my-forge' },
