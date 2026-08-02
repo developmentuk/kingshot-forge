@@ -45,7 +45,8 @@ const contracts = [
   ['hybrid claim client', read('src/services/playerClaimService.ts'), ['/api/player/claim', 'playerId', 'kingdomId', "action: 'search'", "action: 'claim'"]],
   ['hybrid claim UI', read('src/components/HybridPlayerClaimPanel.tsx'), ['Kingshot State', 'kingdomId', 'Player ID and State', 'Check Player ID', 'Claim This Player']],
   ['hybrid claim API', read('api/player/claim.ts'), ['input.kingdomId ?? input.state', "input.action === 'search'", "input.action === 'claim'"]],
-  ['public indexed lookup', read('api/player/indexed-lookup.ts'), ['input.kingdomId ?? input.state', 'searchPublicIndexedPlayer']],
+  ['disabled public lookup API', read('api/player/indexed-lookup.ts'), ['PLAYER_LOOKUP_DISABLED', 'response.status(503)', 'Public Player Lookup is temporarily unavailable']],
+  ['disabled public lookup page', read('src/pages/PlayerLookupPage.tsx'), ['Player Lookup is temporarily unavailable', 'Public search is paused', 'Open Player Passport']],
   ['claim service State boundary', read('server/player-identity/playerClaimService.ts'), ['state_mismatch', 'indexedKingdomId !== kingdomId', 'Number(account.kingdom_id) !== kingdomId']],
   ['legacy player account API', read('api/player/account.ts'), ['kingdomId: input.kingdomId ?? input.state']],
   ['operations API', read('api/operations/users.ts'), ['lookup_player', 'link_player', 'lookupManagedPlayer', 'linkManagedPlayer']],
@@ -62,9 +63,11 @@ for (const [name, content, needles] of contracts) {
 
 const hybridUi = read('src/components/HybridPlayerClaimPanel.tsx')
 const publicLookup = read('src/pages/PlayerLookupPage.tsx')
+const publicApi = read('api/player/indexed-lookup.ts')
 assert.equal(hybridUi.includes('getPlayer'), false)
-assert.equal(publicLookup.includes('getPlayer'), false)
-assert.ok(publicLookup.includes('not a live Century Games lookup'))
+assert.equal(publicLookup.includes('<form'), false)
+assert.equal(publicLookup.includes('Search Forge Index'), false)
+assert.equal(publicApi.includes('searchPublicIndexedPlayer'), false)
 
 const coreWorkflow = read('.github/workflows/vision-integration-check.yml')
 assert.equal(coreWorkflow.includes('Run Art Studio provenance regression'), false)
@@ -75,4 +78,4 @@ const artWorkflow = read('.github/workflows/art-studio-check.yml')
 assert.ok(artWorkflow.includes('Run Art Studio provenance regression'))
 assert.ok(artWorkflow.includes('workflow_dispatch'))
 
-console.log('Player ID and State hybrid claim contract checks passed.')
+console.log('Player ID and State hybrid claim contracts passed with public lookup disabled.')
