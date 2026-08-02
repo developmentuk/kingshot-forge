@@ -17,6 +17,7 @@ export type OcrFallbackInput = {
 }
 
 const ACCOUNT_FIELDS = 'id,user_id,player_id,player_name,kingdom_id,player_level,town_center_level,level_rendered,level_rendered_detailed,level_image,profile_photo,verification_status,verification_method,verified_by,verified_at,last_refreshed_at,is_primary,is_public,created_at,updated_at'
+const RESUBMITTABLE_STATUSES = new Set(['linked', 'rejected'])
 
 function text(value: unknown, label: string, max: number): string {
   if (typeof value !== 'string' || !value.trim() || value.length > max) throw new LinkedPlayerServiceError(422, `${label} is invalid.`)
@@ -105,6 +106,12 @@ export async function saveOcrFallbackAccount(userId: string, input: OcrFallbackI
   const existing = existingResult.data as Record<string, unknown> | null
   if (existing && existing.player_id !== playerId) throw new LinkedPlayerServiceError(409, 'A different primary Kingshot player is already linked.')
   if (existing && Number(existing.kingdom_id) !== kingdomId) throw new LinkedPlayerServiceError(409, 'The screenshot State does not match the existing player claim.')
+  const existingStatus = typeof existing?.verification_status === 'string' ? existing.verification_status : ''
+  if (existing && !RESUBMITTABLE_STATUSES.has(existingStatus)) {
+    throw new LinkedPlayerServiceError(409, existingStatus === 'pending'
+      ? 'A player verification request is already waiting for review.'
+      : 'This player claim already has a protected verification state and cannot be replaced by a screenshot request.')
+  }
 
   const now = new Date().toISOString()
   const payload = {
