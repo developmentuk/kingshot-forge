@@ -79,7 +79,7 @@ function requestKey(request: VercelRequest) {
   return String(value ?? request.socket.remoteAddress ?? 'unknown').split(',')[0]!.trim()
 }
 
-function enforceSameOrigin(request: VercRequest) {
+function enforceSameOrigin(request: VercelRequest) {
   const origin = typeof request.headers.origin === 'string' ? request.headers.origin : ''
   const host = typeof request.headers.host === 'string' ? request.headers.host : ''
   if (!origin || !host) return
