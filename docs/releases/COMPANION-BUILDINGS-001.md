@@ -1,7 +1,8 @@
 # COMPANION-BUILDINGS-001 — Complete Buildings Companion
 
-**Status:** Public companion and governed media implementation candidate  
+**Status:** Public companion and governed media implementation candidate; owner acceptance and migration approval pending  
 **Branch:** `feature/buildings-companion-completion`  
+**Validated head:** `c7dfc13d649aabb1a8c3852ee47cb69ab6650309`  
 **Production:** Unchanged  
 **Supabase:** Read-only inspection only; additive migration prepared but not applied
 
@@ -63,7 +64,7 @@ The Buildings Record Editor now includes:
 
 Alt text is mandatory whenever an image is supplied. Images are stored in the existing public `companion-images` bucket under `buildings/<building-key>/` and remain subject to the bucket's existing authenticated editor policies.
 
-The public page prefers an approved published image. If no image exists or loading fails, it falls back to the original Forge illustration.
+The public page prefers an approved published image. If no image exists or loading fails, it falls back to the original Forge illustration. An editorial override changes or clears only fields explicitly present in that approved version, preserving media supplied by future full-dataset imports.
 
 ## Publication architecture
 
@@ -80,7 +81,7 @@ The proposed atomic queue publication path:
 5. marks the queue item complete;
 6. allows rollback to reapply an older published version to the same projection.
 
-The Data Engine applies only published projection values. Drafts and approved-but-unpublished versions remain private.
+The Data Engine applies only published projection values. Drafts and approved-but-unpublished versions remain private. Before the additive migration is applied, the loader safely ignores the absent overlay relation and continues serving the current source publication.
 
 ## Why Admin currently says “Publishing: Partial”
 
@@ -109,9 +110,25 @@ The fallback illustrations are first-party Forge presentation assets implemented
 
 Uploaded replacements require appropriate usage permission. Forge records alt text, credit, evidence URL and licence/permission alongside the published image.
 
+## Validation
+
+Exact head `c7dfc13d649aabb1a8c3852ee47cb69ab6650309`:
+
+- Buildings Companion validation: passed;
+- full Forge integration gate: passed;
+- Buildings publication integrity: passed;
+- Buildings progression ordering: passed;
+- Content Studio integration: passed;
+- image upload/media contracts: passed;
+- server-only projection and rollback structure: passed;
+- lint: passed;
+- TypeScript/Vite production build: passed;
+- Vercel Preview build: passed.
+
+Preview deployment: `dpl_ABiHHSCYAbnU957L9oqrMbjDP9F4`.
+
 ## Remaining release gates
 
-- complete repository validation and protected Preview build;
 - owner review of the Admin upload controls and public fallback behaviour;
 - review the additive migration and server-only RLS boundary;
 - apply the migration only after owner approval;
@@ -121,20 +138,10 @@ Uploaded replacements require appropriate usage permission. Forge records alt te
 - change Buildings readiness from Partial to Implemented only after the live acceptance passes;
 - deploy the exact accepted commit and smoke-test production.
 
-## Validation
+## Safety
 
-Dedicated workflow: `.github/workflows/buildings-companion-check.yml`
-
-Required checks:
-
-- Buildings Companion and governed media contracts;
-- existing Buildings publication integrity;
-- progression ordering;
-- editorial image validation and fallback behaviour;
-- server-only override/RLS migration structure;
-- atomic publication and rollback structure;
-- lint;
-- TypeScript/Vite production build;
-- protected Vercel Preview;
-- desktop and mobile owner review;
-- no Supabase mutation before owner approval.
+- no production deployment;
+- no Supabase schema or data mutation;
+- no canonical 10/587 publication mutation;
+- no automatic publication of uploaded files;
+- no changes to Player Identity, Art Studio or research branches.
