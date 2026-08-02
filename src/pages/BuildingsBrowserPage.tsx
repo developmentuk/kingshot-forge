@@ -19,6 +19,11 @@ type Building = {
   progression: ProgressionRow[]
   source?: string
   verificationNote?: string
+  imageUrl?: string
+  imageAltText?: string
+  imageCredit?: string
+  imageSourceUrl?: string
+  imageLicense?: string
 }
 
 type EffectMetric = {
@@ -70,12 +75,33 @@ function normalise(records: unknown[]): Building[] {
       progression: [],
       source: text(r.source_url, text(r.source)),
       verificationNote: text(r.verification_note, text(r.note)),
+      imageUrl: text(r.image_url),
+      imageAltText: text(r.image_alt_text),
+      imageCredit: text(r.image_credit),
+      imageSourceUrl: text(r.image_source_url),
+      imageLicense: text(r.image_license),
     }
     if (Array.isArray(r.progression)) current.progression.push(...r.progression.filter((row): row is ProgressionRow => Boolean(row) && typeof row === 'object'))
     else if (r.record_id || r.level_label || r.level || r.base_level) current.progression.push(r)
     map.set(key, current)
   })
   return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function BuildingArtwork({ building, compact = false, decorative = false }: { building: Building; compact?: boolean; decorative?: boolean }) {
+  const [imageFailed, setImageFailed] = useState(false)
+
+  if (building.imageUrl && !imageFailed) {
+    return <img
+      className={compact ? 'building-media-image building-media-image--compact' : 'building-media-image'}
+      src={building.imageUrl}
+      alt={decorative ? '' : building.imageAltText || `${building.name} building`}
+      aria-hidden={decorative ? true : undefined}
+      onError={() => setImageFailed(true)}
+    />
+  }
+
+  return <BuildingIllustration buildingKey={building.key} name={building.name} compact={compact} decorative={decorative} />
 }
 
 function metricValue(metric: EffectMetric, row: ProgressionRow) {
@@ -158,7 +184,7 @@ export default function BuildingsBrowserPage() {
       {visible.map((building) => {
         const metrics = EFFECT_METRICS.filter((metric) => building.progression.some((row) => isPopulated(row[metric.key])))
         return <Link className="building-card" to={`/buildings/${building.key}`} key={building.key}>
-          <div className="building-card__image"><BuildingIllustration buildingKey={building.key} name={building.name} compact decorative /></div>
+          <div className="building-card__image"><BuildingArtwork building={building} compact decorative /></div>
           <div className="building-card__body">
             <span className="building-card__category">{titleCase(building.category)}</span>
             <h2>{building.name}</h2>
@@ -196,7 +222,7 @@ function BuildingDetail({ building, error, loading, metadata }: { building: Buil
     <Link className="buildings-back" to="/buildings">← Buildings directory</Link>
 
     <section className="building-detail-hero">
-      <div className="building-detail-hero__art"><BuildingIllustration buildingKey={building.key} name={building.name} /></div>
+      <div className="building-detail-hero__art"><BuildingArtwork building={building} /></div>
       <div className="building-detail-hero__content">
         <p className="eyebrow">{titleCase(building.category)} building</p>
         <h1>{building.name}</h1>
@@ -215,7 +241,7 @@ function BuildingDetail({ building, error, loading, metadata }: { building: Buil
         <p className="eyebrow">Building purpose</p>
         <h2>What it does</h2>
         <p>{building.description}</p>
-        <p className="building-overview-note">Forge shows only fields present in the current owner-approved publication. Missing effects are not guessed.</p>
+        <p className="building-overview-note">Forge shows only fields present in the current owner-approved Buildings publication. Missing effects are not guessed.</p>
       </article>
       <article>
         <p className="eyebrow">Latest published values</p>
@@ -253,7 +279,20 @@ function BuildingDetail({ building, error, loading, metadata }: { building: Buil
 
     <section className="building-detail-footer">
       <article><p className="eyebrow">Publication summary</p><h2>Coverage</h2><dl><div><dt>Standard records</dt><dd>{formatNumber(standardRows.length)}</dd></div><div><dt>Truegold stages</dt><dd>{formatNumber(truegoldRows.length)}</dd></div><div><dt>Mapped prerequisites</dt><dd>{formatNumber(progression.filter((row) => text(row.requirements_text)).length)}</dd></div><div><dt>Tracked effects</dt><dd>{formatNumber(availableEffects.length)}</dd></div></dl></article>
-      <article><p className="eyebrow">About the artwork</p><h2>Forge illustration</h2><p>The building artwork on this page is an original Kingshot Forge companion illustration. It helps identify the building and is not official Kingshot game art.</p>{metadata?.updated && <p className="building-overview-note">Dataset updated {new Date(metadata.updated).toLocaleDateString('en-GB')}.</p>}</article>
+      <article>
+        <p className="eyebrow">About the artwork</p>
+        <h2>{building.imageUrl ? 'Published building image' : 'Forge illustration'}</h2>
+        {building.imageUrl ? <>
+          <p>This image was approved through the Buildings editorial workflow.</p>
+          <dl>
+            <div><dt>Alt text</dt><dd>{building.imageAltText || 'Not recorded'}</dd></div>
+            <div><dt>Credit</dt><dd>{building.imageCredit || 'Not required'}</dd></div>
+            <div><dt>Licence</dt><dd>{building.imageLicense || 'Not recorded'}</dd></div>
+            {building.imageSourceUrl && <div><dt>Image source</dt><dd><a href={building.imageSourceUrl} target="_blank" rel="noreferrer">Open evidence ↗</a></dd></div>}
+          </dl>
+        </> : <p>The building artwork on this page is an original Kingshot Forge companion illustration. It helps identify the building and is not official Kingshot game art.</p>}
+        {metadata?.updated && <p className="building-overview-note">Dataset updated {new Date(metadata.updated).toLocaleDateString('en-GB')}.</p>}
+      </article>
     </section>
 
     <ForgeConnections dataset="buildings" id={building.key} />
