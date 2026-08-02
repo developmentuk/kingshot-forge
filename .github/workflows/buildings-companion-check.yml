@@ -14,6 +14,7 @@ on:
       - 'src/features/admin/buildingsDatasetAdapter.ts'
       - 'src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx'
       - 'src/features/admin/editorial/EditorialWorkflowPanel.tsx'
+      - 'src/features/admin/editorial/editorialApi.ts'
       - 'src/features/admin/recordEditor/buildingsRecordEditorSchema.ts'
       - 'src/features/admin/recordEditor/CompanionImageField.tsx'
       - 'src/features/admin/recordEditor/CompanionImageField.css'
