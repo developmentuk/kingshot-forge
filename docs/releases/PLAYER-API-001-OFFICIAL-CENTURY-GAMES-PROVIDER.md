@@ -1,80 +1,77 @@
-# PLAYER-API-001 — Official Century Games Player Provider
+# PLAYER-API-001 — Century Games Player Provider Investigation
 
-**Status:** Implemented on feature branch; preview runtime configuration and owner acceptance pending  
+**Status:** BLOCKED — supplied API contract is no longer live  
 **Branch:** `feature/official-player-api-captcha`  
 **Production:** Unchanged
 
 ## Purpose
 
-Replace the unavailable KingShot.net player lookup in player-facing Forge workflows with the public Century Games Kingshot Gift Code Centre player service.
+Investigate whether the Century Games Kingshot Gift Code Centre could replace the unavailable KingShot.net player lookup for Forge player-facing workflows.
 
-## Source assessment
+## Supplied package
 
-The supplied `official-kingshot-player-api-captcha-v2.zip` documents the current request shape:
+The supplied `official-kingshot-player-api-captcha-v2.zip` describes this legacy flow:
 
-- CAPTCHA challenge from `/api/captcha`;
-- player lookup through `/api/player`;
-- `fid`, Unix time in seconds, an MD5 request signature and `captcha_code`;
-- returned Player ID, nickname, Town Center level, State ID and avatar image.
+- `GET /api/captcha`;
+- `POST /api/player`;
+- Player ID, timestamp, MD5 signature and CAPTCHA code;
+- returned nickname, Town Centre level, State ID and avatar.
 
-The ZIP is treated as integration evidence, not proof that Century Games published or endorsed the wrapper itself. The service host is independently constrained to `https://ks-giftcode.centurygame.com`.
+The package is not an official Century Games SDK. It is a third-party wrapper around endpoints that were formerly exposed by the gift-code service.
 
-## Safety decision
+## Forge prototype
 
-The wrapper's automated Tesseract and Playwright CAPTCHA solvers are explicitly excluded. Forge preserves the provider's human-verification boundary:
+A protected preview prototype was built with:
 
-1. Forge requests an official verification image.
-2. The browser displays it to the user.
-3. The user enters the four characters.
-4. Forge submits the signed request server-side.
-5. Forge validates exact Player ID and State.
-6. Forge returns a short-lived signed lookup receipt.
-7. Account linking or revalidation accepts only that receipt, never browser-authored player fields.
+- human CAPTCHA entry only;
+- no Tesseract, Playwright or automated CAPTCHA solving;
+- strict host allowlisting;
+- bounded upstream payloads and timeouts;
+- AES-256-GCM sealed challenge and receipt tokens;
+- exact Player ID and State validation;
+- receipt-only account linking and revalidation;
+- no raw CAPTCHA, provider cookie or player payload persistence.
 
-No CAPTCHA image, answer, provider cookie or raw upstream payload is persisted or logged.
+The prototype passed local, build and integration checks. Those checks proved the Forge implementation boundary, not the continuing availability of the external endpoints.
 
-## Implementation
+## Live acceptance result — 2 August 2026
 
-- `server/player-identity/officialKingshotPlayerProvider.ts`
-  - fixed official host allowlist;
-  - bounded JSON and image handling;
-  - request signing;
-  - cookie continuity inside a signed, short-lived challenge token;
-  - exact Player ID and State validation;
-  - safe avatar URL projection;
-  - tamper-evident short-lived lookup receipts.
-- `api/player/lookup.ts`
-  - same-origin POST contract;
-  - challenge and completion actions;
-  - no-store responses;
-  - best-effort server rate limiting;
-  - safe error codes without player or CAPTCHA logging.
-- Player Lookup and linked-player UI
-  - human CAPTCHA entry;
-  - official service wording;
-  - no OCR or browser automation;
-  - receipt-backed linking and revalidation.
+The configured Vercel preview was tested with an owner-supplied farm/test account.
 
-## Environment
+Observed result:
 
-Required server-only variables:
+- `GET https://ks-giftcode.centurygame.com/api/captcha` returned HTTP `403`;
+- response content type was `application/xml`;
+- response server was `AmazonS3`;
+- no CAPTCHA JSON was returned;
+- changing browser-compatible request headers did not alter the result.
 
-- `KINGSHOT_PLAYER_API_HOST=https://ks-giftcode.centurygame.com`
-- `KINGSHOT_PLAYER_SIGNATURE_SALT`
-- `KINGSHOT_PLAYER_PROVIDER_SECRET` — random, at least 32 characters
+Independent current API-surface evidence records that Century Games removed both backend routes on 21 July 2026:
 
-None of these values belongs in browser variables or source control.
+- `/captcha` removed at 10:59 UTC;
+- `/player` removed at 11:00 UTC.
 
-## Remaining gates
+The old route names remain present in the public frontend bundle, which explains why older wrappers still appear plausible despite the backend routes no longer existing.
 
-- configure the three variables in the protected preview environment;
-- complete one owner-approved lookup using a non-sensitive test/farm Player ID;
-- verify CAPTCHA image rendering on mobile and desktop;
-- verify exact State mismatch and invalid CAPTCHA failures;
-- confirm the official provider's acceptable-use and sustained rate posture;
-- run the complete repository checks and Vercel preview smoke test;
-- do not enable production until those gates pass.
+## Replacement endpoint assessment
 
-## Acceptance redeploy
+The remaining signed `/gift_code` endpoint is a redemption operation. It requires gift-code and kingdom data and can create redemption side effects. It is not a safe read-only replacement for player profile lookup and does not provide the verified nickname, avatar and Town Centre contract required by Forge.
 
-An owner-requested preview redeploy was triggered on 2 August 2026 after the preview environment configuration step. This documentation-only commit exists to produce a fresh Git-linked Vercel preview from the exact `feature/official-player-api-captcha` branch. Production remains unchanged.
+Forge will not use gift-code redemption as an account-probing mechanism.
+
+## Decision
+
+- Do not merge or promote this prototype.
+- Do not continue asking owners to test the retired CAPTCHA/player flow.
+- Preserve the implementation and evidence on the feature branch for research and possible future revival.
+- Resume only when a current, read-only Century Games player-detail contract is independently verified.
+- Continue Forge Vision screenshot verification and other non-retired identity methods separately.
+
+## Safety state
+
+- Production unchanged.
+- Supabase unchanged.
+- No migrations.
+- No production environment promotion.
+- No automated CAPTCHA bypass.
+- No secret material committed.
