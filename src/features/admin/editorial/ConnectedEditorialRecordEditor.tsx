@@ -88,6 +88,8 @@ export function ConnectedEditorialRecordEditor({
     null,
   );
 
+  const recordRef = useRef(record);
+  recordRef.current = record;
   const stateRef = useRef<EditorialRecordState | null>(null);
   const loadSequenceRef = useRef(0);
 
@@ -133,6 +135,7 @@ export function ConnectedEditorialRecordEditor({
       options: LoadStateOptions = {},
     ) => {
       const requestId = ++loadSequenceRef.current;
+      const sourceRecord = recordRef.current;
       const blocking =
         options.blocking ?? stateRef.current === null;
 
@@ -147,7 +150,7 @@ export function ConnectedEditorialRecordEditor({
         const nextState =
           await fetchEditorialRecordState(
             schema.datasetId,
-            record.id,
+            sourceRecord.id,
             signal,
           );
 
@@ -162,10 +165,10 @@ export function ConnectedEditorialRecordEditor({
         setState(nextState);
         setCurrentRecord(
           schema.datasetId === "buildings"
-            ? hydrateBuildingsEditorRecord(record, nextState)
+            ? hydrateBuildingsEditorRecord(sourceRecord, nextState)
             : nextState.currentVersion
-              ? { id: record.id, values: nextState.currentVersion.values }
-              : record,
+              ? { id: sourceRecord.id, values: nextState.currentVersion.values }
+              : sourceRecord,
         );
       } catch (error) {
         if (
@@ -193,7 +196,7 @@ export function ConnectedEditorialRecordEditor({
       }
     },
     [
-      record,
+      record.id,
       schema.datasetId,
     ],
   );
@@ -203,7 +206,7 @@ export function ConnectedEditorialRecordEditor({
       new AbortController();
 
     stateRef.current = null;
-    setCurrentRecord(record);
+    setCurrentRecord(recordRef.current);
     setState(null);
     setComparison(undefined);
     setSelectedVersionId(undefined);
@@ -218,7 +221,7 @@ export function ConnectedEditorialRecordEditor({
     return () => {
       controller.abort();
     };
-  }, [loadState, record]);
+  }, [loadState, record.id]);
 
   const allowedActions = useMemo(() => {
     const actions:
