@@ -25,6 +25,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       action,
       playerId: input.playerId,
       kingdomId: input.kingdomId ?? input.state,
+      lookupReceipt: input.lookupReceipt,
     })
     response.status(200).json({ status: 'success', data })
   } catch (error) {

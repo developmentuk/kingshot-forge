@@ -1,5 +1,9 @@
 import type { KingshotPlayer } from '../../src/types/player.js'
 import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
+import {
+  OfficialKingshotProviderError,
+  verifyOfficialPlayerLookupReceipt,
+} from './officialKingshotPlayerProvider.js'
 
 const ACCOUNT_FIELDS = 'id,user_id,player_id,player_name,kingdom_id,player_level,town_center_level,level_rendered,level_rendered_detailed,level_image,profile_photo,verification_status,verification_method,verified_by,verified_at,last_refreshed_at,is_primary,is_public,created_at,updated_at'
 
@@ -72,6 +76,7 @@ export function createVerifiedPlayerFields(player: KingshotPlayer, userId: strin
     player_name: player.name,
     kingdom_id: player.kingdom,
     player_level: player.level,
+    town_center_level: player.level,
     level_rendered: player.levelRendered || null,
     level_rendered_detailed: player.levelRenderedDetailed || null,
     level_image: player.levelImage,
@@ -135,7 +140,18 @@ function safeAccount(value: unknown) {
   }
 }
 
-export async function linkOrRevalidatePlayerAccount(userId: string, input: { action: 'link' | 'revalidate'; playerId?: unknown; kingdomId?: unknown }) {
+function playerFromReceipt(receipt: unknown, playerId: string, kingdomId: number) {
+  try {
+    return verifyOfficialPlayerLookupReceipt(receipt, playerId, kingdomId)
+  } catch (error) {
+    if (error instanceof OfficialKingshotProviderError) {
+      throw new LinkedPlayerServiceError(error.statusCode, error.message)
+    }
+    throw error
+  }
+}
+
+export async function linkOrRevalidatePlayerAccount(userId: string, input: { action: 'link' | 'revalidate'; playerId?: unknown; kingdomId?: unknown; lookupReceipt?: unknown }) {
   const admin = getSupabaseAdmin()
   const { data: existing, error: existingError } = await admin.from('player_accounts').select('id,player_id,kingdom_id,is_primary,is_public').eq('user_id', userId).eq('is_primary', true).maybeSingle()
   if (existingError) throw existingError
@@ -150,7 +166,7 @@ export async function linkOrRevalidatePlayerAccount(userId: string, input: { act
     : validateKingdomId(input.kingdomId)
   if (existing && existing.player_id !== requestedPlayerId) throw new LinkedPlayerServiceError(409, 'A different primary Kingshot player is already linked.')
 
-  const player = await lookupKingshotPlayer(requestedPlayerId, requestedKingdomId)
+  const player = playerFromReceipt(input.lookupReceipt, requestedPlayerId, requestedKingdomId)
   const verifiedFields = createVerifiedPlayerFields(player, userId)
   const payload = existing
     ? { ...verifiedFields, is_public: existing.is_public, is_primary: true }
