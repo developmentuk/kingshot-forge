@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -122,17 +123,28 @@ export function RoleProvider({
     string | null
   >(null)
 
+  const resolvedUserIdRef = useRef<
+    string | null | undefined
+  >(undefined)
+
   const refreshRole = useCallback(async () => {
+    const currentUserId = user?.id ?? null
+    const shouldBlockForUserChange =
+      resolvedUserIdRef.current !== currentUserId
+
     if (!user) {
       setRole('viewer')
       setRoles(['viewer'])
       setPermissions([])
       setRoleError(null)
+      resolvedUserIdRef.current = null
       setLoadingRole(false)
       return
     }
 
-    setLoadingRole(true)
+    if (shouldBlockForUserChange) {
+      setLoadingRole(true)
+    }
     setRoleError(null)
 
     const { data: accessData, error: accessError } = await supabase.rpc('get_my_forge_access')
@@ -149,6 +161,7 @@ export function RoleProvider({
       setRoleError(
         'Unable to load your Forge permissions.',
       )
+      resolvedUserIdRef.current = currentUserId
       setLoadingRole(false)
       return
     }
@@ -161,6 +174,7 @@ export function RoleProvider({
     setRole(resolvedRole)
     setRoles(resolvedRoles.length > 0 ? resolvedRoles : ['viewer'])
     setPermissions(resolvedPermissions)
+    resolvedUserIdRef.current = currentUserId
     setLoadingRole(false)
   }, [user])
 
