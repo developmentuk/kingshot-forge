@@ -81,7 +81,7 @@ try {
   assert.match(ocrService, /player_verification_events/u)
   assert.match(ocrService, /vision\.player\.verification_requested/u)
   assert.match(ocrService, /reviewState: 'pending'/u)
-  assert.match(ocrService, /already has protected verification assurance/u)
+  assert.match(ocrService, /already has a protected verification state/u)
   assert.doesNotMatch(ocrService, /cancelOwnerScanEvidence/u)
 
   console.log('PASS PLAYER-IDENTITY-002: hybrid claims remain available while misleading public lookup stays disabled')
