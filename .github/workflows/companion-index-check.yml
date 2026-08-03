@@ -6,6 +6,7 @@ on:
     branches:
       - main
     paths:
+      - 'api/admin/search.ts'
       - 'api/data-engine/dataset.ts'
       - 'api/search.ts'
       - 'server/data-engine/loadPublishedCompanionItemsDataset.ts'
