@@ -1,6 +1,6 @@
 import { loadCanonicalHeroSkillsDataset } from '../data-engine/loadCanonicalHeroSkillsDataset.js'
 import { loadDataset } from '../data-engine/runner.js'
-import { DATASET_KEYS, type DatasetKey } from '../../shared/data-engine/datasets.js'
+import { PUBLISHED_DATASET_KEYS, type PublishedDatasetKey } from '../../shared/data-engine/datasets.js'
 import { SearchEngine, SearchProviderRegistry, type SearchProvider, type SearchRecord, type SearchRecordStatus } from '../../shared/search/index.js'
 import { SearchIndexCache } from '../../shared/search/cache.js'
 import { SearchProjectionRefreshService } from '../../shared/search/refresh.js'
@@ -14,7 +14,7 @@ function value(record: Record<string, unknown>, ...keys: string[]): string | nul
   return null
 }
 
-function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | null {
+function toSearchRecord(dataset: PublishedDatasetKey, input: unknown): SearchRecord | null {
   if (!input || typeof input !== 'object') return null
   const record = input as Record<string, unknown>
   const id = value(record, 'id', 'key', 'slug', 'name', 'level', 'day')
@@ -51,12 +51,12 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
   }
 }
 
-function forgeIdForDataset(dataset: DatasetKey, id: string) {
+function forgeIdForDataset(dataset: PublishedDatasetKey, id: string) {
   const namespace = ({ heroes: 'hero', 'hero-skills': 'hero-skill', buildings: 'building', items: 'item', events: 'event', troops: 'troop', gear: 'gear', charm: 'charm', research: 'research', 'war-academy': 'war-academy' } as Record<string, string>)[dataset]
   return namespace ? createForgeId(namespace, id) : null
 }
 
-function createProvider(dataset: DatasetKey): SearchProvider {
+function createProvider(dataset: PublishedDatasetKey): SearchProvider {
   return {
     dataset,
     name: `${dataset} Search Provider`,
@@ -69,7 +69,7 @@ function createProvider(dataset: DatasetKey): SearchProvider {
 
 export function createSearchProviderRegistry(): SearchProviderRegistry {
   const registry = new SearchProviderRegistry()
-  registry.registerMany(DATASET_KEYS.map(createProvider))
+  registry.registerMany(PUBLISHED_DATASET_KEYS.map(createProvider))
   return registry
 }
 
@@ -95,7 +95,7 @@ export async function invalidateSearchIndex(): Promise<void> {
 
 export async function createSearchEngine(datasets?: readonly string[]): Promise<SearchEngine> {
   const registry = createSearchProviderRegistry()
-  const selected = datasets?.length ? datasets : DATASET_KEYS
+  const selected = datasets?.length ? datasets : PUBLISHED_DATASET_KEYS
   const records = (await Promise.all(selected.flatMap((dataset) => {
     const provider = registry.get(dataset)
     return provider ? [provider.load({ now: new Date().toISOString() })] : []
