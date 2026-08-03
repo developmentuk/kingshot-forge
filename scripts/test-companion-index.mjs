@@ -24,6 +24,7 @@ const clientAdapter = readFileSync('src/features/companion/itemData.ts', 'utf8')
 const itemHook = readFileSync('src/features/companion/useCompanionItems.ts', 'utf8')
 const dataApi = readFileSync('api/data-engine/dataset.ts', 'utf8')
 const searchApi = readFileSync('api/search.ts', 'utf8')
+const adminSearchApi = readFileSync('api/admin/search.ts', 'utf8')
 const searchRuntime = readFileSync('server/search/runtime.ts', 'utf8')
 const datasets = readFileSync('shared/data-engine/datasets.ts', 'utf8')
 const styles = readFileSync('src/styles/companionIndex.css', 'utf8')
@@ -77,6 +78,10 @@ assert.match(datasets, /PUBLISHED_DATASET_KEYS[\s\S]*'items'/u)
 assert.doesNotMatch(datasets.match(/export const DATASET_KEYS[\s\S]*?\] as const/u)?.[0] ?? '', /'items'/u)
 assert.match(dataApi, /"items"/u)
 assert.match(searchApi, /PUBLISHED_DATASET_KEYS/u)
+assert.match(adminSearchApi, /import \{ PUBLISHED_DATASET_KEYS \}/u)
+assert.match(adminSearchApi, /\.\.\.PUBLISHED_DATASET_KEYS/u)
+assert.match(adminSearchApi, /!PUBLISHED_DATASET_KEYS\.includes/u)
+assert.doesNotMatch(adminSearchApi, /import \{ DATASET_KEYS \}/u)
 assert.match(searchRuntime, /items: 'item'/u)
 assert.match(searchRuntime, /PUBLISHED_DATASET_KEYS\.map\(createProvider\)/u)
 
@@ -102,5 +107,5 @@ assert.match(styles, /focus-visible/u)
 assert.match(styles, /companion-trust--research_needed/u)
 
 console.log(
-  'Companion Index identity, projection, rights, Search and responsive route contracts passed.',
+  'Companion Index identity, projection, rights, Search refresh and responsive route contracts passed.',
 )
