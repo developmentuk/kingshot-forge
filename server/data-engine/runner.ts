@@ -1,7 +1,7 @@
 import type {
-  DatasetKey,
   DatasetSourceMetadata,
   NormalisedDataset,
+  PublishedDatasetKey,
   SourceFetchResult,
 } from '../../shared/data-engine/types.js'
 
@@ -17,7 +17,7 @@ import { loadPublishedBuildingsDataset } from './loadPublishedBuildingsDataset.j
 import { loadPublishedCompanionItemsDataset } from './loadPublishedCompanionItemsDataset.js'
 
 export interface DatasetPreviewResult {
-  dataset: DatasetKey
+  dataset: PublishedDatasetKey
   sourceUrl: string
   fetchedAt: string
   httpStatus: number
@@ -27,7 +27,7 @@ export interface DatasetPreviewResult {
   recordKeys: string[]
 }
 export interface DatasetLoadResult {
-  dataset: DatasetKey
+  dataset: PublishedDatasetKey
   sourceUrl: string
   fetchedAt: string
   httpStatus: number
@@ -46,7 +46,7 @@ function companionItemRecordKey(record: unknown): string | null {
 }
 
 export async function previewDataset(
-  key: DatasetKey,
+  key: PublishedDatasetKey,
 ): Promise<DatasetPreviewResult> {
   if (key === 'items') {
     const loaded = await loadPublishedCompanionItemsDataset()
@@ -117,7 +117,7 @@ export async function previewDataset(
 }
 
 export async function loadDataset(
-  key: DatasetKey,
+  key: PublishedDatasetKey,
 ): Promise<DatasetLoadResult> {
   if (key === 'items') {
     return loadPublishedCompanionItemsDataset()
