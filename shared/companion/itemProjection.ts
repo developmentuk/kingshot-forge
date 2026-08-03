@@ -31,6 +31,7 @@ export type CompanionItemRecord = {
   forge_id: string
   name: string
   aliases: readonly string[]
+  search_aliases: readonly string[]
   category: string
   category_label: string
   summary: string
@@ -111,6 +112,7 @@ function item(input: {
   key: string
   name: string
   aliases?: readonly string[]
+  searchAliases?: readonly string[]
   category: string
   categoryLabel: string
   summary: string
@@ -132,6 +134,7 @@ function item(input: {
     forge_id: forgeId,
     name: input.name,
     aliases: input.aliases ?? [],
+    search_aliases: input.searchAliases ?? [],
     category: input.category,
     category_label: input.categoryLabel,
     summary: input.summary,
@@ -164,6 +167,7 @@ const CORE_COMPANION_ITEM_PROJECTION: readonly CompanionItemRecord[] = [
   item({
     key: 'mithril',
     name: 'Mithril',
+    searchAliases: ['mythril'],
     category: 'hero_gear_material',
     categoryLabel: 'Hero Gear material',
     summary:
@@ -518,6 +522,7 @@ function generatedMediaItem(
     forge_id: forgeId,
     name: media.canonical_name,
     aliases: [],
+    search_aliases: [],
     category: media.media_role === 'compact_icon' ? 'resource_icon' : 'unclassified_item',
     category_label: media.media_role === 'compact_icon' ? 'Compact resource icon' : 'Item artwork',
     summary: `Approved ${media.media_role === 'compact_icon' ? 'compact icon' : 'full artwork'} is available. Gameplay meaning, acquisition and strategic guidance require editorial research.`,

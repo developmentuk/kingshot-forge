@@ -29,7 +29,10 @@ function toSearchRecord(dataset: PublishedDatasetKey, input: unknown): SearchRec
   const rawStatus = value(record, 'status')
   const status: SearchRecordStatus = rawStatus && STATUS_VALUES.has(rawStatus as SearchRecordStatus) ? rawStatus as SearchRecordStatus : 'published'
   const forge_id = forgeIdForDataset(dataset, id)
-  const aliases = stringList(record.aliases)
+  const aliases = [...new Set([
+    ...stringList(record.aliases),
+    ...stringList(record.search_aliases),
+  ])]
   const relationships = Array.isArray(record.relationships) ? record.relationships.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object')).flatMap((item) => {
     const targetId = value(item, 'targetId', 'target_id', 'id')
     const targetDataset = value(item, 'targetDataset', 'target_dataset', 'dataset')

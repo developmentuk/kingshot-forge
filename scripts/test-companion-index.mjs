@@ -9,6 +9,7 @@ import { COMPANION_MEDIA_MANIFEST } from '../shared/companion/generatedMediaMani
 import {
   loadPublishedCompanionItemsDataset,
 } from '../server/data-engine/loadPublishedCompanionItemsDataset.ts'
+import { createSearchEngine } from '../server/search/runtime.ts'
 import {
   buildPublicRoute,
   entityTypeRegistry,
@@ -51,6 +52,10 @@ assert.ok(COMPANION_MEDIA_MANIFEST.every((asset) => asset.rights_status === 'own
 assert.equal(COMPANION_MEDIA_MANIFEST.find((asset) => asset.original_archive_entry.endsWith('/mythril.webp'))?.canonical_item_key, 'mithril')
 assert.equal(COMPANION_MEDIA_MANIFEST.some((asset) => asset.canonical_item_key === 'mythril'), false)
 assert.equal(COMPANION_ITEM_PROJECTION.some((item) => item.forge_id === 'item.mythril'), false)
+const mithril = COMPANION_ITEM_PROJECTION.find((item) => item.forge_id === 'item.mithril')
+assert.ok(mithril)
+assert.deepEqual(mithril.aliases, [])
+assert.deepEqual(mithril.search_aliases, ['mythril'])
 
 const intakeByKey = new Map(intake.assets.map((asset) => [
   asset.entity_key.replace(/^item:/u, ''),
@@ -106,6 +111,12 @@ assert.equal(loaded.records.length, 75)
 assert.equal(loaded.metadata?.provenance?.recordCount, 75)
 assert.match(loaded.payloadHash, /^[a-f0-9]{64}$/u)
 
+const itemSearch = await createSearchEngine(['items'])
+assert.deepEqual(
+  itemSearch.query({ text: 'mythril' }).results.map(({ record }) => record.forge_id),
+  ['item.mithril'],
+)
+
 assert.match(datasets, /PUBLISHED_DATASET_KEYS[\s\S]*'items'/u)
 assert.doesNotMatch(datasets.match(/export const DATASET_KEYS[\s\S]*?\] as const/u)?.[0] ?? '', /'items'/u)
 assert.match(dataApi, /"items"/u)
@@ -117,7 +128,8 @@ assert.doesNotMatch(adminSearchApi, /import \{ DATASET_KEYS \}/u)
 assert.match(searchRuntime, /items: 'item'/u)
 assert.match(searchRuntime, /PUBLISHED_DATASET_KEYS\.map\(createProvider\)/u)
 assert.match(searchRuntime, /keywords:[\s\S]*\.\.\.aliases[\s\S]*trust_label/u)
-assert.match(searchRuntime, /const aliases = stringList\(record\.aliases\)/u)
+assert.match(searchRuntime, /stringList\(record\.aliases\)/u)
+assert.match(searchRuntime, /stringList\(record\.search_aliases\)/u)
 
 assert.match(app, /path="companion" element=\{<CompanionIndexPage/u)
 assert.match(app, /path="companion\/items\/:itemKey" element=\{<CompanionItemPage/u)
