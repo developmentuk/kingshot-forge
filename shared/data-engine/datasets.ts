@@ -7,6 +7,7 @@ export const DATASET_KEYS = [
   'charm',
   'troops',
   'buildings',
+  'items',
   'truegold',
   'war-academy',
   'vip',
