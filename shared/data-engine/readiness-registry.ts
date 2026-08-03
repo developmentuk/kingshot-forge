@@ -23,7 +23,6 @@ export type DatasetDomain =
   | 'progression'
   | 'events'
   | 'editorial'
-  | 'companion'
 
 export type DatasetReadinessDefinition = {
   key: DatasetKey
@@ -31,7 +30,7 @@ export type DatasetReadinessDefinition = {
   domain: DatasetDomain
   description: string
   canonical: boolean
-  importMode: 'data-engine' | 'source-staging' | 'published-projection'
+  importMode: 'data-engine' | 'source-staging'
   capabilities: readonly CapabilityReadiness[]
 }
 
@@ -61,7 +60,6 @@ const DATASET_NAMES: Record<DatasetKey, string> = {
   charm: 'Chief Charms',
   troops: 'Troops',
   buildings: 'Buildings',
-  items: 'Companion Items',
   truegold: 'Truegold',
   'war-academy': 'War Academy',
   vip: 'VIP',
@@ -79,7 +77,6 @@ const DATASET_DOMAINS: Record<DatasetKey, DatasetDomain> = {
   charm: 'progression',
   troops: 'progression',
   buildings: 'progression',
-  items: 'companion',
   truegold: 'progression',
   'war-academy': 'progression',
   vip: 'progression',
@@ -103,37 +100,10 @@ const ADMIN_CAPABILITY_EVIDENCE: Partial<
   verification: 'shared/data-engine/verification-registry.ts',
 }
 
-function itemCapabilityStatus(
-  capability: ReadinessCapability,
-): ReadinessStatus | null {
-  switch (capability) {
-    case 'browser':
-    case 'viewer':
-    case 'search':
-    case 'filters':
-    case 'public-api':
-    case 'public-pages':
-    case 'mobile':
-      return 'implemented'
-    case 'editor':
-    case 'validation':
-    case 'publishing':
-    case 'version-history':
-      return 'missing'
-    default:
-      return null
-  }
-}
-
 function adminCapabilityStatus(
   key: DatasetKey,
   capability: ReadinessCapability,
 ): ReadinessStatus | null {
-  if (key === 'items') {
-    const itemStatus = itemCapabilityStatus(capability)
-    if (itemStatus) return itemStatus
-  }
-
   switch (capability) {
     case 'browser':
     case 'viewer':
@@ -176,26 +146,6 @@ function adminCapabilityStatus(
   }
 }
 
-function itemEvidence(
-  capability: ReadinessCapability,
-): string | undefined {
-  switch (capability) {
-    case 'browser':
-    case 'viewer':
-      return 'src/features/admin/itemsDatasetAdapter.ts'
-    case 'search':
-      return 'server/search/runtime.ts'
-    case 'filters':
-    case 'public-pages':
-    case 'mobile':
-      return 'src/pages/CompanionIndexPage.tsx'
-    case 'public-api':
-      return 'api/data-engine/dataset.ts'
-    default:
-      return undefined
-  }
-}
-
 function createCapabilities(key: DatasetKey): readonly CapabilityReadiness[] {
   const usesDataEngine = (IMPORTABLE_DATASET_KEYS as readonly DatasetKey[]).includes(key)
 
@@ -207,18 +157,6 @@ function createCapabilities(key: DatasetKey): readonly CapabilityReadiness[] {
           status: 'implemented',
           evidence: 'server/data-engine/registry.ts',
           note: 'Registered Data Engine importer.',
-        }
-      }
-
-      if (key === 'items') {
-        return {
-          capability,
-          status: 'implemented',
-          evidence: 'server/data-engine/loadPublishedCompanionItemsDataset.ts',
-          note:
-            capability === 'import'
-              ? 'The item catalogue is intentionally non-importable and is exposed through a governed published projection.'
-              : 'The published Companion item projection is registered with the shared Data Engine and Admin browser.',
         }
       }
 
@@ -238,35 +176,25 @@ function createCapabilities(key: DatasetKey): readonly CapabilityReadiness[] {
     if (adminStatus) {
       const buildingsPublishingAccepted =
         key === 'buildings' && capability === 'publishing'
-      const itemDataset = key === 'items'
-      const evidence = itemDataset
-        ? itemEvidence(capability)
-        : buildingsPublishingAccepted
-          ? 'docs/releases/COMPANION-BUILDINGS-001.md'
-          : ADMIN_CAPABILITY_EVIDENCE[capability]
 
       return {
         capability,
         status: adminStatus,
-        evidence,
+        evidence: buildingsPublishingAccepted
+          ? 'docs/releases/COMPANION-BUILDINGS-001.md'
+          : ADMIN_CAPABILITY_EVIDENCE[capability],
         note:
           buildingsPublishingAccepted
             ? 'Live draft, review, approval, publication, rollback and restoration acceptance passed against the governed Buildings projection.'
-            : itemDataset && adminStatus === 'implemented'
-              ? 'Implemented by the text-only Companion Index foundation and protected by dedicated regression coverage.'
-              : itemDataset && capability === 'publishing'
-                ? 'Text records are projected from the governed intake, but the shared item editor, media publication and atomic rollback workflow are not implemented.'
-                : itemDataset && adminStatus === 'missing'
-                  ? `The ${capability} capability is deliberately unavailable until the governed item editorial workflow is built.`
-                  : adminStatus === 'implemented'
-                    ? 'Verified in the shared Admin dataset experience.'
-                    : adminStatus === 'partial' && capability === 'publishing'
-                      ? 'The atomic publication contract exists, but live publish, rollback and restoration acceptance remains incomplete for this dataset.'
-                      : capability === 'verification'
-                        ? 'Derived from current Verification Centre evidence. Live RLS, migration and publication checks remain blocked or not run.'
-                        : capability === 'filters'
-                          ? 'Search and sorting are available; dataset-specific filters are not implemented.'
-                          : `The ${capability} capability is not implemented for this dataset.`,
+            : adminStatus === 'implemented'
+              ? 'Verified in the shared Admin dataset experience.'
+              : adminStatus === 'partial' && capability === 'publishing'
+                ? 'The atomic publication contract exists, but live publish, rollback and restoration acceptance remains incomplete for this dataset.'
+                : capability === 'verification'
+                  ? 'Derived from current Verification Centre evidence. Live RLS, migration and publication checks remain blocked or not run.'
+                  : capability === 'filters'
+                    ? 'Search and sorting are available; dataset-specific filters are not implemented.'
+                    : `The ${capability} capability is not implemented for this dataset.`,
       }
     }
 
@@ -285,11 +213,7 @@ export const DATASET_READINESS_REGISTRY: readonly DatasetReadinessDefinition[] =
     domain: DATASET_DOMAINS[key],
     description: `${DATASET_NAMES[key]} canonical dataset and editorial capabilities.`,
     canonical: true,
-    importMode: key === 'hero-skills'
-      ? 'source-staging'
-      : key === 'items'
-        ? 'published-projection'
-        : 'data-engine',
+    importMode: key === 'hero-skills' ? 'source-staging' : 'data-engine',
     capabilities: createCapabilities(key),
   }))
 
