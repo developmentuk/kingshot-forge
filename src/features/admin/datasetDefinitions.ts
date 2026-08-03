@@ -72,6 +72,21 @@ const registrations: AdminDatasetRegistration[] = [
     admin: { order: 20 },
   },
   {
+    id: "items",
+    version: 1,
+    title: "Companion Items",
+    singularTitle: "Companion Item",
+    description:
+      "Published text-only item identities, trust states and governed relationship targets.",
+    category: "game-data",
+    route: "/admin/data/items",
+    idField: "key",
+    titleField: "name",
+    fields: [],
+    capabilities: getDatasetCapabilityFlags("items"),
+    admin: { order: 25 },
+  },
+  {
     id: "gear",
     version: 1,
     title: "Governor Gear",
