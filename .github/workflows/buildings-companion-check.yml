@@ -25,15 +25,18 @@ on:
       - 'src/features/admin/recordEditor/RecordEditorForm.tsx'
       - 'src/features/admin/recordEditor/RecordEditorPanel.tsx'
       - 'src/platform/editorial/services/EditorialWorkflowService.ts'
+      - 'src/platform/persistence/supabase/SupabaseEditorialRepository.ts'
       - 'server/data-engine/loadPublishedBuildingsDataset.ts'
       - 'shared/data-engine/readiness-registry.ts'
       - 'shared/data-pipeline/buildingsContract.ts'
       - 'shared/data-pipeline/buildingsProgressionOrdering.ts'
       - 'supabase/migrations/20260802193000_buildings_editorial_media_projection.sql'
       - 'supabase/migrations/20260803131500_building_media_permission_guard.sql'
+      - 'supabase/migrations/20260803141000_editorial_atomic_rollback_concurrency.sql'
       - 'scripts/test-buildings-companion.mjs'
       - 'scripts/test-building-media-permission.mjs'
       - 'scripts/test-building-planner.mjs'
+      - 'scripts/test-editorial-atomic-rollback.mjs'
       - 'docs/releases/COMPANION-BUILDINGS-001.md'
       - 'package.json'
       - 'package-lock.json'
@@ -71,6 +74,9 @@ jobs:
 
       - name: Validate building media permission guard
         run: node scripts/test-building-media-permission.mjs
+
+      - name: Validate atomic editorial rollback
+        run: node scripts/test-editorial-atomic-rollback.mjs
 
       - name: Validate Building Planner contracts
         run: node scripts/test-building-planner.mjs
