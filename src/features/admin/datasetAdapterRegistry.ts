@@ -27,6 +27,10 @@ import {
 } from "./heroSkillsDatasetAdapter";
 
 import {
+  itemsDatasetAdapter,
+} from "./itemsDatasetAdapter";
+
+import {
   coreDatasetAdapters,
 } from "./coreDatasetAdapters";
 
@@ -45,6 +49,7 @@ const registeredAdapters: DatasetAdapter[] = [
   heroSkillsDatasetAdapter,
   eventsDatasetAdapter,
   buildingsDatasetAdapter,
+  itemsDatasetAdapter,
   ...coreDatasetAdapters,
 ];
 
