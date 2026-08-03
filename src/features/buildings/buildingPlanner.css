@@ -1,0 +1,407 @@
+.building-planner {
+  border: 1px solid #3a4657;
+  border-radius: 1.25rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(231, 171, 55, .11), transparent 24rem),
+    linear-gradient(145deg, #121b27, #0c131d);
+  color: #f7f2e8;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, .2);
+}
+
+.building-planner--embedded {
+  margin: 1rem 0;
+}
+
+.building-planner--empty {
+  color: #aeb9c7;
+}
+
+.building-planner__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 9rem;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.1rem;
+}
+
+.building-planner--embedded .building-planner__header {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.building-planner__header h2 {
+  margin: .25rem 0 .45rem;
+  font-size: clamp(1.55rem, 4vw, 2.35rem);
+}
+
+.building-planner__header p:not(.eyebrow) {
+  max-width: 48rem;
+  margin: 0;
+  color: #aebac8;
+  font-size: .84rem;
+  line-height: 1.55;
+}
+
+.building-planner__building-art {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid #405069;
+  border-radius: .85rem;
+  background: #09111b;
+}
+
+.building-planner__controls {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .75rem;
+  margin-bottom: 1rem;
+}
+
+.building-planner--embedded .building-planner__controls {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.building-planner__controls label {
+  display: grid;
+  gap: .4rem;
+  min-width: 0;
+  color: #95a5b7;
+  font-size: .68rem;
+  font-weight: 750;
+}
+
+.building-planner__controls select,
+.building-planner__controls input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #465970;
+  border-radius: .7rem;
+  padding: .72rem .75rem;
+  background: #09111a;
+  color: #f7f2e8;
+  font: inherit;
+  font-size: .78rem;
+}
+
+.building-planner__controls select:focus,
+.building-planner__controls input:focus {
+  outline: 2px solid #e6ab38;
+  outline-offset: 2px;
+}
+
+.building-planner__number-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border: 1px solid #465970;
+  border-radius: .7rem;
+  background: #09111a;
+}
+
+.building-planner__number-input input {
+  border: 0;
+  background: transparent;
+  outline: none;
+}
+
+.building-planner__number-input b {
+  padding-right: .75rem;
+  color: #e7b650;
+  font-size: .75rem;
+}
+
+.building-planner__journey {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  gap: .75rem;
+  align-items: center;
+  border: 1px solid #35455a;
+  border-radius: .85rem;
+  padding: .85rem 1rem;
+  background: rgba(8, 14, 22, .48);
+}
+
+.building-planner__journey > div:not(.building-planner__step-count) {
+  display: grid;
+  gap: .2rem;
+}
+
+.building-planner__journey span {
+  color: #8797a9;
+  font-size: .64rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.building-planner__journey strong {
+  color: #f7f2e8;
+  font-size: .86rem;
+}
+
+.building-planner__journey i {
+  color: #e6ab38;
+  font-style: normal;
+}
+
+.building-planner__step-count {
+  display: flex;
+  align-items: baseline;
+  gap: .4rem;
+  border-left: 1px solid #35455a;
+  padding-left: 1rem;
+}
+
+.building-planner__step-count strong {
+  color: #ffe0a0;
+  font-size: 1.2rem;
+}
+
+.building-planner__results {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(17rem, .65fr);
+  gap: .9rem;
+  margin-top: .9rem;
+}
+
+.building-planner__results > section {
+  min-width: 0;
+  border: 1px solid #35455a;
+  border-radius: .9rem;
+  padding: .95rem;
+  background: rgba(8, 14, 22, .35);
+}
+
+.building-planner__results h3 {
+  margin: 0 0 .75rem;
+  font-size: .92rem;
+}
+
+.building-planner__resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.building-planner-resource {
+  display: grid;
+  gap: .28rem;
+  border: 1px solid #33445a;
+  border-radius: .7rem;
+  padding: .7rem;
+  background: #0c151f;
+}
+
+.building-planner-resource span {
+  color: #8495a8;
+  font-size: .63rem;
+}
+
+.building-planner-resource strong {
+  color: #e8edf3;
+  font-size: .86rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.building-planner-resource.is-premium {
+  border-color: #796327;
+  background: rgba(100, 75, 17, .18);
+}
+
+.building-planner-resource.is-premium strong {
+  color: #ffe09a;
+}
+
+.building-planner-resource.is-tempered {
+  border-color: #704d82;
+  background: rgba(86, 47, 105, .18);
+}
+
+.building-planner-resource.is-tempered strong {
+  color: #e7bdf6;
+}
+
+.building-planner__summary-list {
+  display: grid;
+  gap: .55rem;
+  margin: 0;
+}
+
+.building-planner__summary-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+  border-bottom: 1px solid #29384a;
+  padding-bottom: .52rem;
+}
+
+.building-planner__summary-list dt {
+  color: #8f9faf;
+  font-size: .68rem;
+}
+
+.building-planner__summary-list dd {
+  margin: 0;
+  color: #f7f2e8;
+  font-size: .76rem;
+  font-weight: 750;
+  text-align: right;
+}
+
+.building-planner__result-note,
+.building-planner__footer p {
+  margin: .72rem 0 0;
+  color: #8595a7;
+  font-size: .67rem;
+  line-height: 1.5;
+}
+
+.building-planner__warning {
+  margin: .7rem 0 0;
+  border: 1px solid #705722;
+  border-radius: .65rem;
+  padding: .65rem;
+  background: rgba(95, 68, 14, .17);
+  color: #dac18a;
+  font-size: .68rem;
+  line-height: 1.45;
+}
+
+.building-planner__maximum {
+  margin: 0;
+  border: 1px solid #405069;
+  border-radius: .8rem;
+  padding: .85rem;
+  color: #aebac8;
+}
+
+.building-planner__breakdown {
+  margin-top: .9rem;
+  border: 1px solid #35455a;
+  border-radius: .85rem;
+  overflow: hidden;
+}
+
+.building-planner__breakdown summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: .8rem .9rem;
+  background: #0d1722;
+  color: #e7edf4;
+  cursor: pointer;
+  font-size: .77rem;
+  font-weight: 750;
+}
+
+.building-planner__breakdown summary small {
+  color: #e6ab38;
+  font-size: .65rem;
+}
+
+.building-planner__table-scroll {
+  overflow-x: auto;
+}
+
+.building-planner__breakdown table {
+  width: 100%;
+  min-width: 940px;
+  border-collapse: collapse;
+  font-size: .68rem;
+}
+
+.building-planner__breakdown th,
+.building-planner__breakdown td {
+  border-top: 1px solid #263547;
+  padding: .65rem;
+  color: #c7d1dc;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.building-planner__breakdown th {
+  color: #f3eee5;
+}
+
+.building-planner__breakdown td:last-child {
+  min-width: 12rem;
+  color: #9eacbb;
+  white-space: normal;
+}
+
+.building-planner__breakdown tr.is-truegold {
+  background: rgba(122, 90, 21, .09);
+}
+
+.building-planner__breakdown tr.is-transition {
+  background: rgba(65, 108, 138, .08);
+}
+
+.building-planner__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: .9rem;
+}
+
+.building-planner__footer p {
+  max-width: 44rem;
+  margin: 0;
+}
+
+@media (max-width: 1060px) {
+  .building-planner__controls,
+  .building-planner--embedded .building-planner__controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .building-planner__results {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .building-planner {
+    border-radius: 1rem;
+  }
+
+  .building-planner__header,
+  .building-planner__controls,
+  .building-planner--embedded .building-planner__controls,
+  .building-planner__journey {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .building-planner__building-art {
+    display: none;
+  }
+
+  .building-planner__journey i {
+    transform: rotate(90deg);
+    justify-self: start;
+  }
+
+  .building-planner__step-count {
+    border-top: 1px solid #35455a;
+    border-left: 0;
+    padding-top: .7rem;
+    padding-left: 0;
+  }
+
+  .building-planner__resource-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .building-planner__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .building-planner__footer .button {
+    text-align: center;
+  }
+}
