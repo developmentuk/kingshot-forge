@@ -24,6 +24,7 @@ const SUPPORTED_DATASETS = new Set<DatasetKey>([
   "charm",
   "troops",
   "buildings",
+  "items",
   "truegold",
   "war-academy",
   "vip",
