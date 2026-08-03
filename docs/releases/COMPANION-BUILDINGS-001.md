@@ -1,21 +1,19 @@
 # COMPANION-BUILDINGS-001 — Complete Buildings Companion
 
-**Status:** Rollback acceptance failed at the live projection boundary; atomic rollback correction pending validation and owner-approved migration  
+**Status:** Live publication, rollback and restoration accepted; merge and production deployment pending  
 **Branch:** `feature/buildings-companion-completion`  
 **Production application:** Unchanged  
-**Supabase:** Buildings editorial projection and media-permission guard applied; checked rollback migration not yet applied
+**Supabase:** Buildings projection, media-permission guard and checked atomic rollback migrations applied
 
 ## Player outcome
 
-The Buildings section becomes a complete, image-led Kingshot Companion experience rather than a plain progression table.
+The Buildings section is an image-led Kingshot Companion experience rather than a plain progression table.
 
-Players can browse every published Forge building, understand what it does, see the fields that are actually present in the owner-approved publication, switch between standard and Truegold progression, review source and verification context, and use the experience on desktop or mobile.
-
-Approved editors can upload or replace a building image in Admin. A replacement is not public merely because its file was uploaded: it must be saved to an editorial draft, reviewed, approved and published before the public Data Engine projection consumes it.
+Players can browse every published Forge building, understand its purpose, review published progression, switch between standard and Truegold stages, inspect source and verification context, and use the Building Planner from either the directory or a building detail page.
 
 ## Canonical baseline
 
-The current owner-approved full-dataset publication remains version 1 and contains:
+The owner-approved full-dataset publication remains version 1 and contains:
 
 - 10 building catalogue records;
 - 587 building progression records;
@@ -23,206 +21,208 @@ The current owner-approved full-dataset publication remains version 1 and contai
 - mapped prerequisites;
 - power where published;
 - Truegold and Tempered Truegold where published;
-- building-specific fields including hero level caps, training capacity, training speed, rally capacity, troop deployment and reinforcement capacity.
+- building-specific effects where present.
 
-The public page reads only the current published Buildings projection through the Data Engine. It does not expose drafts or staged import records.
+The companion and calculator consume the same published Buildings projection. Forge does not maintain a second calculator copy of canonical progression data.
 
-## Public companion completion
+## Player Companion completion
 
 Included:
 
-- original Forge illustration for each of the 10 published buildings;
-- explicit disclosure that artwork is original Forge companion artwork, not official Kingshot art;
-- image-led directory cards with category, purpose, max level, progression count and Truegold status;
-- search across building name, category and purpose;
-- category filter;
-- richer detail hero with purpose, publication facts and verification date;
-- dynamic key-effect summary using only fields present in the published projection;
-- Building Planner powered by the same published projection;
-- separate Standard/transition and Truegold progression views;
-- separate Truegold and Tempered Truegold columns and calculator totals;
-- dynamic building-specific progression columns;
-- raw/base resource warning;
-- source link, verification note and publication coverage;
+- accessible Forge fallback illustration for each published building;
+- approved published imagery where available;
+- image-led Buildings compendium;
+- search by name, category and purpose;
+- category filtering;
+- canonical building detail routes;
+- Building Planner links and embedded calculator;
+- standard, transition, Truegold and Tempered Truegold progression;
+- resource, time, prerequisite and known-power summaries;
+- source, verification and trust context;
 - loading, error and empty states;
-- responsive desktop, tablet and phone layouts;
-- regression validation for artwork, effect coverage, publication boundary and responsive structure.
+- responsive desktop, tablet and phone layouts.
 
-## Governed building media
+## Admin Companion completion
 
 The Buildings Record Editor includes:
 
-- building image upload, replacement and removal;
-- WebP, PNG and JPEG support;
-- 2 MB maximum file size;
-- recommended 1600 × 900 and minimum 800 × 450 dimensions;
-- immutable object paths for replacement files;
+- governed first-draft creation;
+- editing from a published record through a new immutable draft;
+- draft → review → approve → publish workflow;
+- image upload, replacement and removal;
+- immutable replacement object paths;
 - image alt text;
-- image credit;
-- image source/evidence URL;
-- licence, ownership or permission statement.
+- image credit and source evidence;
+- mandatory licence, ownership or permission statement;
+- immutable version history;
+- rollback preview and governed rollback;
+- atomic dataset-specific projection updates.
 
-Alt text and a licence/ownership/permission basis are mandatory whenever an image is supplied. Images are stored in the existing public `companion-images` bucket under `buildings/<building-key>/` and remain subject to the bucket's existing authenticated editor policies.
+Uploaded files do not become public merely because they exist in storage. Public values change only after the editorial workflow completes.
 
-The public page prefers an approved published image. If no image exists or loading fails, it falls back to the original Forge illustration. An editorial override changes or clears only fields explicitly present in that approved version, preserving media supplied by future full-dataset imports.
+## Governed media boundary
+
+Building images support WebP, PNG and JPEG, with a 2 MB maximum file size, recommended 1600 × 900 dimensions and minimum 800 × 450 dimensions.
+
+Alt text and a licence, ownership or permission basis are mandatory whenever an image is supplied. The database enforces the permission rule on future Buildings projection writes.
+
+The current Academy image carries the owner-supplied statement:
+
+`Owner-declared public domain; freely available for reuse`
+
+This is owner-supplied provenance and is not represented as an independent legal determination by Forge.
 
 ## Publication architecture
 
-The existing full-dataset Buildings publisher remains the immutable source of the 10 catalogue and 587 progression records.
+The immutable full-dataset Buildings publication remains the canonical source of catalogue and progression data.
 
-The additive, server-only `building_editorial_overrides` projection stores the latest approved Buildings editorial values together with their published version, actor and timestamp. The immutable source publication and its historical publication records are not rewritten.
+The server-only `building_editorial_overrides` projection stores approved Buildings editorial values and media together with their published version, actor and timestamp.
 
-The atomic queue publication path:
+Publication atomically:
 
-1. verifies the queued version still matches the approved Buildings editorial head;
-2. writes a new immutable published editorial version;
-3. upserts the server-only Buildings projection;
+1. verifies the queued approved version;
+2. creates a new immutable published version;
+3. updates the Buildings projection;
 4. records the audit event;
-5. marks the queue item complete.
+5. completes the publication queue item.
 
-Rollback must provide the same atomic guarantee: the immutable rollback version, editorial head, audit event and dataset-specific public projection must all change in one transaction.
+Rollback atomically:
 
-## Live publication evidence
+1. locks and verifies the current editorial head version;
+2. creates a new immutable published rollback version;
+3. updates the editorial head;
+4. reapplies the selected historical values to the Buildings projection;
+5. records the rollback audit event.
 
-Connected Supabase evidence confirms:
+Only the server role can execute the checked rollback function.
 
-- the Buildings editorial projection migration is applied;
-- the Buildings publisher and dataset-aware rollback functions exist;
-- Academy completed an initial draft → review → approve → publish cycle on 2 August 2026;
-- migration `20260803131500_building_media_permission_guard.sql` was approved and applied on 3 August 2026;
-- the guard preserves existing historical rows but blocks future image projection writes without a permission basis;
-- the owner supplied the media basis: `Owner-declared public domain; freely available for reuse`;
-- Academy completed a second immutable draft → review → approve → publish sequence;
-- Academy Version 10 was published with the image, alt text and owner-supplied public-domain basis;
-- the second publication queue item completed on its first attempt;
-- the canonical 10/587 full-dataset publication remains unchanged.
+## Live acceptance history
 
-## Controlled rollback acceptance — failed
+### Permission-complete publication
 
-The owner initiated a governed Admin rollback from Academy Version 10 to original Version 1 on 3 August 2026.
+On 3 August 2026:
 
-The following parts succeeded:
+- migration `20260803131500_building_media_permission_guard.sql` was owner-approved and applied;
+- Academy completed a permission-complete draft → review → approve → publish cycle;
+- Academy Version 10 published the uploaded image, alt text and owner-declared public-domain statement;
+- the publication queue completed on its first attempt;
+- the canonical 10/587 full-dataset publication remained unchanged.
 
-- immutable Academy Version 11 was created;
-- the editorial head advanced to Version 11 with status `published`;
-- Version 11 contains the original Version 1 values and no uploaded image;
-- an immutable `rolled_back` audit event records Version 10 → Version 1.
+### Initial rollback failure
 
-The live projection did not change:
+The first Admin rollback created immutable Academy Version 11 and its audit event, but the generic repository path bypassed the Buildings projection wrapper. The editorial head moved while `building_editorial_overrides` remained on Version 10.
 
-- `building_editorial_overrides` remained on Version 10;
-- the public projection therefore continued to carry the uploaded Academy image and permission statement;
-- the fallback Forge illustration was not restored.
+The failure was preserved as acceptance evidence and was not silently patched.
 
-This is a release-blocking atomicity failure. The editorial head/history and public projection must never disagree after a successful rollback response.
+### Atomic rollback correction
 
-## Root cause
+The correction includes:
 
-The Admin rollback action used `EditorialWorkflowService.rollback`, which committed the new version through `SupabaseEditorialRepository.commitVersion`.
+- repository routing through `rollback_editorial_version_checked(...)`;
+- rollback target resolution from immutable audit metadata;
+- row locking and expected-version concurrency validation;
+- invocation of the existing dataset-aware rollback wrapper;
+- service-role-only execution;
+- dedicated atomic rollback regression coverage.
 
-That repository always invoked the generic `commit_editorial_version` RPC. The generic transaction correctly wrote Version 11, the editorial head and audit event, but it bypassed the dataset-aware `rollback_editorial_version` wrapper that updates `building_editorial_overrides`.
+Migration `20260803141000_editorial_atomic_rollback_concurrency.sql` was owner-approved and applied. Supabase recorded it as `20260803143301_editorial_atomic_rollback_concurrency`.
 
-The database's Buildings rollback wrapper was not defective; the server repository routed around it.
+### Successful rollback
 
-## Atomic rollback correction
+The owner repeated the rollback through the corrected Preview:
 
-The candidate now includes:
+- Academy Version 12 was created;
+- the editorial head and live Buildings projection both advanced to Version 12;
+- both referenced immutable version ID `aa39dfa9-d057-4223-95fc-379cb87027db`;
+- the uploaded image and permission fields were removed;
+- the rollback audit correctly recorded Version 11 → original Version 1 values.
 
-- `SupabaseEditorialRepository` routing rollback commits through a dedicated atomic rollback RPC;
-- rollback target resolution from immutable `rolledBackToVersionId` audit metadata;
-- additive migration `20260803141000_editorial_atomic_rollback_concurrency.sql`;
-- server-only `rollback_editorial_version_checked(...)`;
-- a row lock and expected-version concurrency check before invoking the existing dataset-aware rollback wrapper;
-- preservation of the generic commit path for non-rollback editorial actions;
-- dedicated regression coverage proving that Buildings rollback reaches `apply_building_editorial_override`.
+### Successful restoration
 
-The new migration has not been applied. It requires explicit owner approval after the candidate passes validation.
+The owner restored permission-complete Version 10 through the same corrected path:
+
+- Academy Version 13 was created;
+- the editorial head and live Buildings projection both advanced to Version 13;
+- both reference immutable version ID `9b976404-a105-4449-90f6-078e0600392e`;
+- the uploaded image returned;
+- alt text returned;
+- the owner-declared public-domain statement returned;
+- the rollback audit correctly recorded Version 12 → Version 10 values.
 
 ## Current live state
 
-Until recovery is completed:
+- Academy editorial head: Version 13, published;
+- Academy Buildings projection: Version 13, published;
+- head and projection version IDs match;
+- governed image, alt text and usage basis are present;
+- immutable Versions 1–13 are preserved;
+- the failed Version 11 acceptance attempt remains auditable;
+- canonical Buildings publication remains 10 catalogue and 587 progression records.
 
-- Academy editorial head: Version 11, published, no image;
-- Academy immutable history: Versions 1–11 preserved;
-- Academy live editorial projection: Version 10, uploaded image present;
-- canonical Buildings publication: unchanged at 10 catalogue and 587 progression records.
+## Admin readiness decision
 
-Do not restore Academy or perform another rollback from an older Preview while this split state exists.
+Buildings **Publishing** is now `Implemented`.
 
-## Why Admin still says “Publishing: Partial”
+The status is supported by live evidence for:
 
-The Buildings publication path is verified, but rollback is not yet atomic in the deployed Preview. Admin must remain **Partial** until the corrected live rollback-and-restore cycle passes.
+- draft creation;
+- review and approval;
+- publication queue execution;
+- public projection update;
+- immutable history;
+- rollback;
+- restoration;
+- optimistic concurrency;
+- media permission enforcement.
 
-Buildings may move to **Implemented** only after:
-
-- applying the owner-approved checked rollback migration;
-- deploying a Preview containing the corrected repository routing;
-- rolling Academy back to original Version 1 again;
-- confirming editorial head and live projection advance together and the Forge illustration returns;
-- restoring permission-complete Version 10 through the same corrected rollback path;
-- confirming the approved image and permission statement return;
-- verifying immutable versions, audit events and projection versions after both operations;
-- completing final owner desktop and phone visual acceptance.
+This decision applies to the Buildings publishing capability. Other Companion datasets remain independently assessed and must not inherit this status without their own live acceptance evidence.
 
 ## Truth boundary
 
 Forge does not invent missing building values.
 
-The current published schema does not yet contain every defining effect for every building. Remaining data gaps include:
+Current known data gaps include:
 
-- Academy research effects or unlock detail;
+- Academy research effects or unlock details;
 - Storehouse protected-resource capacity;
 - Infirmary capacity;
 - Embassy Alliance Help count and time reduction.
 
-The media workflow does not silently fill these gameplay-data gaps.
-
-## Artwork boundary
-
-The fallback illustrations are first-party Forge presentation assets implemented as accessible inline SVG. They are not copied from community sites, hotlinked from third parties or represented as official game art.
-
-Uploaded replacements require a recorded usage basis. The current Academy image is recorded as owner-declared public-domain material. This is an owner-supplied provenance statement and has not been independently verified by Forge.
+Those gaps remain research and dataset work; they are not silently filled by the media or calculator layers.
 
 ## Validation
 
-The last implementation baseline before rollback correction passed:
+The atomic rollback candidate passed:
 
 - Buildings Companion validation;
-- full Forge integration gate;
+- atomic rollback regression;
+- building media permission regression;
+- Building Planner contracts;
 - Buildings publication integrity;
 - Buildings progression ordering;
-- Content Studio integration;
-- image upload/media contracts;
-- building media permission regression;
+- full Forge/Vision integration gate;
 - lint;
 - TypeScript/Vite production build;
 - Vercel Preview build.
 
-The atomic rollback correction must pass the same gates plus the new atomic rollback regression before another live acceptance attempt.
+A final exact-head validation is required after updating readiness and this release record.
 
 ## Remaining release gates
 
-- complete exact-head validation of the atomic rollback candidate;
-- obtain owner approval for migration `20260803141000_editorial_atomic_rollback_concurrency.sql`;
-- apply and verify the checked rollback function;
-- deploy the corrected Preview;
-- repeat rollback to original Academy Version 1;
-- verify the Forge illustration returns publicly and projection/head versions agree;
-- restore permission-complete Academy Version 10;
-- verify the approved image and usage basis return publicly;
-- verify immutable versions and rollback audit evidence;
-- change Buildings readiness from Partial to Implemented only after live acceptance passes;
-- complete owner desktop and phone visual acceptance;
-- merge the exact accepted commit;
-- deploy and smoke-test production.
+- pass exact-head Buildings and full Forge integration validation after readiness completion;
+- complete final owner review of the accepted candidate;
+- mark PR #32 ready for review;
+- merge the exact accepted commit only after owner release approval;
+- verify the production deployment;
+- smoke-test Buildings directory, Academy detail, Building Planner and Admin history in production;
+- inspect production runtime logs.
 
 ## Safety
 
-- production application remains unchanged;
+- production application remains unchanged until merge;
 - canonical 10/587 publication remains unchanged;
 - no automatic publication of uploaded files;
-- the failed rollback is preserved as immutable acceptance evidence;
-- the stale Version 10 projection is not being silently patched;
-- the checked rollback migration is committed but not applied;
-- no restoration will be attempted until the atomic correction is validated and approved;
+- no direct mutation of immutable history;
+- the original rollback failure remains preserved as evidence;
+- the current live projection is internally consistent at Version 13;
 - no changes to Player Identity, Art Studio or research branches.
