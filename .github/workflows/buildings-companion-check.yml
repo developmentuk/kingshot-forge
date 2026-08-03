@@ -30,7 +30,9 @@ on:
       - 'shared/data-pipeline/buildingsContract.ts'
       - 'shared/data-pipeline/buildingsProgressionOrdering.ts'
       - 'supabase/migrations/20260802193000_buildings_editorial_media_projection.sql'
+      - 'supabase/migrations/20260803131500_building_media_permission_guard.sql'
       - 'scripts/test-buildings-companion.mjs'
+      - 'scripts/test-building-media-permission.mjs'
       - 'scripts/test-building-planner.mjs'
       - 'docs/releases/COMPANION-BUILDINGS-001.md'
       - 'package.json'
@@ -66,6 +68,9 @@ jobs:
 
       - name: Validate Buildings companion contracts
         run: node scripts/test-buildings-companion.mjs
+
+      - name: Validate building media permission guard
+        run: node scripts/test-building-media-permission.mjs
 
       - name: Validate Building Planner contracts
         run: node scripts/test-building-planner.mjs
