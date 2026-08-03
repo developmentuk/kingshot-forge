@@ -7,16 +7,17 @@ const manifest = JSON.parse(readFileSync(
   'docs/companion/assets/ITEM-MEDIA-MANIFEST-2026-08-03.json',
   'utf8',
 ))
+const generatorSource = readFileSync('scripts/generate-companion-media-manifest.ps1', 'utf8')
 
 const expectedArchives = {
   'items.zip': {
-    path: process.env.KS_ITEMS_ARCHIVE ?? 'C:/Users/clark/Downloads/items.zip',
+    path: process.env.KS_ITEMS_ARCHIVE,
     sha256: '7ad7c36474089a683501292ebd849689bb41aa6f9daec14357d0d5984439e233',
     count: 59,
     role: 'full_artwork',
   },
   'icons.zip': {
-    path: process.env.KS_ICONS_ARCHIVE ?? 'C:/Users/clark/Downloads/icons.zip',
+    path: process.env.KS_ICONS_ARCHIVE,
     sha256: 'cab698d9d984d4ebb1413b0e27a14e8ac0d297a6d2c8a2d958dc6061c543e26e',
     count: 7,
     role: 'compact_icon',
@@ -46,10 +47,15 @@ assert.equal(manifest.total_asset_count, 66)
 assert.equal(manifest.assets.length, 66)
 assert.equal(new Set(manifest.assets.map((asset) => asset.source_sha256)).size, 66)
 assert.equal(manifest.rights_basis, 'owner_declared_creative_commons')
+assert.doesNotMatch(generatorSource, /[A-Z]:[\\/]Users[\\/]|Downloads|kingshot-forge-companion/iu)
+assert.match(generatorSource, /Parameter\(Mandatory = \$true\)/u)
+assert.match(generatorSource, /\$PSCommandPath/u)
 
 for (const [archiveName, expected] of Object.entries(expectedArchives)) {
-  assert.ok(existsSync(expected.path), `${archiveName} is missing`)
-  assert.equal(sha256(readFileSync(expected.path)), expected.sha256, `${archiveName} checksum`)
+  if (expected.path) {
+    assert.ok(existsSync(expected.path), `${archiveName} is missing`)
+    assert.equal(sha256(readFileSync(expected.path)), expected.sha256, `${archiveName} checksum`)
+  }
   assert.equal(manifest.assets.filter((asset) => asset.source_archive === archiveName).length, expected.count)
   assert.ok(manifest.assets.filter((asset) => asset.source_archive === archiveName)
     .every((asset) => asset.media_role === expected.role))

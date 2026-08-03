@@ -1,12 +1,40 @@
+<#
+.SYNOPSIS
+Regenerates the governed Companion media manifest from explicitly supplied archives.
+
+.DESCRIPTION
+The repository root and all output locations are resolved from this script's
+location. Source ZIP archives remain external intake evidence and are never
+searched for or copied into the repository.
+
+.PARAMETER ItemsArchive
+Path to the verified 59-file full-artwork items.zip archive.
+
+.PARAMETER IconsArchive
+Path to the verified 7-file compact-icon icons.zip archive.
+
+.EXAMPLE
+pwsh ./scripts/generate-companion-media-manifest.ps1 `
+  -ItemsArchive /secure/intake/items.zip `
+  -IconsArchive /secure/intake/icons.zip
+#>
 param(
-  [string]$ItemsArchive = 'C:\Users\clark\Downloads\items.zip',
-  [string]$IconsArchive = 'C:\Users\clark\Downloads\icons.zip',
-  [string]$PublishedRoot = 'C:\Users\clark\Projects\kingshot-forge-companion\public\media\companion',
-  [string]$JsonOutput = 'C:\Users\clark\Projects\kingshot-forge-companion\docs\companion\assets\ITEM-MEDIA-MANIFEST-2026-08-03.json',
-  [string]$TsOutput = 'C:\Users\clark\Projects\kingshot-forge-companion\shared\companion\generatedMediaManifest.ts'
+  [Parameter(Mandatory = $true)]
+  [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
+  [string]$ItemsArchive,
+
+  [Parameter(Mandatory = $true)]
+  [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
+  [string]$IconsArchive
 )
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+$ScriptDirectory = Split-Path -Parent $PSCommandPath
+$RepositoryRoot = (Resolve-Path (Join-Path $ScriptDirectory '..')).Path
+$PublishedRoot = Join-Path $RepositoryRoot 'public/media/companion'
+$JsonOutput = Join-Path $RepositoryRoot 'docs/companion/assets/ITEM-MEDIA-MANIFEST-2026-08-03.json'
+$TsOutput = Join-Path $RepositoryRoot 'shared/companion/generatedMediaManifest.ts'
 
 function Convert-ToSlug([string]$value) {
   $slug = $value.ToLowerInvariant() -replace '[^a-z0-9]+', '-'
