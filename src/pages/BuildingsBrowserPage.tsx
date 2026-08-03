@@ -1,132 +1,106 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import BuildingIllustration from '../components/buildings/BuildingIllustration'
+import BuildingArtwork from '../components/buildings/BuildingArtwork'
 import { fetchDataset, type DatasetSourceMetadata } from '../features/admin/dataEngineApi'
+import BuildingPlanner from '../features/buildings/BuildingPlanner'
+import {
+  BUILDING_EFFECT_METRICS,
+  isPopulatedNumber,
+  normaliseBuildings,
+  numberValue,
+  textValue,
+  titleCase,
+  type BuildingCompanionRecord,
+  type BuildingEffectMetric,
+  type BuildingProgressionRow,
+} from '../features/buildings/buildingData'
 import { ForgeConnections } from '../features/search/SearchExperience'
 import { formatDuration, formatNumber, formatPercent } from '../utils/formatters'
-import { getBuildingProgressionLabel, sortBuildingProgression } from '../../shared/data-pipeline/buildingsProgressionOrdering'
+import {
+  getBuildingProgressionLabel,
+  sortBuildingProgression,
+} from '../../shared/data-pipeline/buildingsProgressionOrdering'
 import '../styles/buildingsBrowser.css'
 import '../styles/buildingsProgressionPolish.css'
 
-type ProgressionRow = Record<string, unknown>
-type Building = {
-  key: string
-  name: string
-  category: string
-  description: string
-  maxLevel: number | null
-  truegold: boolean
-  progression: ProgressionRow[]
-  source?: string
-  verificationNote?: string
-  imageUrl?: string
-  imageAltText?: string
-  imageCredit?: string
-  imageSourceUrl?: string
-  imageLicense?: string
-}
-
-type EffectMetric = {
-  key: string
-  label: string
-  shortLabel: string
-  format?: 'number' | 'percent' | 'seconds'
-}
-
 type PhaseFilter = 'standard' | 'truegold'
 
-const EFFECT_METRICS: EffectMetric[] = [
-  { key: 'max_hero_level', label: 'Maximum hero level', shortLabel: 'Hero level cap' },
-  { key: 'training_capacity', label: 'Training capacity', shortLabel: 'Training capacity' },
-  { key: 'training_speed_percent', label: 'Training speed', shortLabel: 'Training speed', format: 'percent' },
-  { key: 'rally_capacity', label: 'Rally capacity', shortLabel: 'Rally capacity' },
-  { key: 'troop_deploy_capacity', label: 'Troop deployment capacity', shortLabel: 'Troop deployment' },
-  { key: 'reinforcement_capacity', label: 'Reinforcement capacity', shortLabel: 'Reinforcement capacity' },
-  { key: 'ally_help_count', label: 'Alliance Help count', shortLabel: 'Alliance Helps' },
-  { key: 'ally_help_seconds', label: 'Time reduced per Alliance Help', shortLabel: 'Help time reduction', format: 'seconds' },
-  { key: 'protected_resource_capacity', label: 'Protected resource capacity', shortLabel: 'Protected resources' },
-  { key: 'infirmary_capacity', label: 'Infirmary capacity', shortLabel: 'Infirmary capacity' },
-]
-
-const text = (value: unknown, fallback = '') => typeof value === 'string' ? value : fallback
-const number = (value: unknown) => {
-  if (value === null || value === undefined || value === '') return null
-  const parsed = typeof value === 'number' ? value : Number(value)
-  return Number.isFinite(parsed) ? parsed : null
-}
-const isPopulated = (value: unknown) => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))
-const titleCase = (value: string) => value.replace(/(^|[-_\s])\w/g, (match) => match.toUpperCase()).replace(/[-_]/g, ' ')
-
-function normalise(records: unknown[]): Building[] {
-  const map = new Map<string, Building>()
-  records.forEach((raw) => {
-    if (!raw || typeof raw !== 'object') return
-    const r = raw as Record<string, unknown>
-    const key = text(r.building_key, text(r.key))
-    const name = text(r.building_name, text(r.name))
-    if (!key || !name) return
-    const current = map.get(key) ?? {
-      key,
-      name,
-      category: text(r.category, 'Buildings'),
-      description: text(r.description, 'Verified building progression and upgrade effects.'),
-      maxLevel: number(r.standard_max_level ?? r.max_level),
-      truegold: r.truegold_supported === true || r.truegold === true,
-      progression: [],
-      source: text(r.source_url, text(r.source)),
-      verificationNote: text(r.verification_note, text(r.note)),
-      imageUrl: text(r.image_url),
-      imageAltText: text(r.image_alt_text),
-      imageCredit: text(r.image_credit),
-      imageSourceUrl: text(r.image_source_url),
-      imageLicense: text(r.image_license),
-    }
-    if (Array.isArray(r.progression)) current.progression.push(...r.progression.filter((row): row is ProgressionRow => Boolean(row) && typeof row === 'object'))
-    else if (r.record_id || r.level_label || r.level || r.base_level) current.progression.push(r)
-    map.set(key, current)
-  })
-  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
-}
-
-function BuildingArtwork({ building, compact = false, decorative = false }: { building: Building; compact?: boolean; decorative?: boolean }) {
-  const [imageFailed, setImageFailed] = useState(false)
-
-  if (building.imageUrl && !imageFailed) {
-    return <img
-      className={compact ? 'building-media-image building-media-image--compact' : 'building-media-image'}
-      src={building.imageUrl}
-      alt={decorative ? '' : building.imageAltText || `${building.name} building`}
-      aria-hidden={decorative ? true : undefined}
-      onError={() => setImageFailed(true)}
-    />
-  }
-
-  return <BuildingIllustration buildingKey={building.key} name={building.name} compact={compact} decorative={decorative} />
-}
-
-function metricValue(metric: EffectMetric, row: ProgressionRow) {
+function metricValue(
+  metric: BuildingEffectMetric,
+  row: BuildingProgressionRow,
+): string {
   const value = row[metric.key]
-  if (!isPopulated(value)) return '—'
+  if (!isPopulatedNumber(value)) return '—'
   if (metric.format === 'percent') return formatPercent(value)
   if (metric.format === 'seconds') return formatDuration(value)
   return formatNumber(value)
 }
 
-function latestMetricValue(metric: EffectMetric, progression: ProgressionRow[]) {
+function latestMetricValue(
+  metric: BuildingEffectMetric,
+  progression: BuildingProgressionRow[],
+): string {
   for (let index = progression.length - 1; index >= 0; index -= 1) {
-    if (isPopulated(progression[index]?.[metric.key])) return metricValue(metric, progression[index]!)
+    const row = progression[index]
+    if (row && isPopulatedNumber(row[metric.key])) return metricValue(metric, row)
   }
   return '—'
 }
 
-function latestVerifiedDate(progression: ProgressionRow[]) {
-  const dates = progression.map((row) => text(row.verified_on)).filter(Boolean).sort()
-  return dates.length ? dates[dates.length - 1] : ''
+function latestVerifiedDate(progression: BuildingProgressionRow[]): string {
+  const dates = progression
+    .map((row) => textValue(row.verified_on))
+    .filter(Boolean)
+    .sort()
+  return dates.at(-1) ?? ''
+}
+
+function BuildingDirectoryCard({ building }: { building: BuildingCompanionRecord }) {
+  const progression = sortBuildingProgression(building.progression)
+  const effectMetrics = BUILDING_EFFECT_METRICS.filter((metric) =>
+    progression.some((row) => isPopulatedNumber(row[metric.key])),
+  )
+  const truegoldRows = progression.filter((row) => row.progression_phase === 'truegold')
+  const transitionRows = progression.filter((row) => row.progression_phase === 'pre_truegold')
+
+  return <article className="building-compendium-card">
+    <Link className="building-compendium-card__art" to={`/buildings/${building.key}`} aria-label={`Open ${building.name}`}>
+      <BuildingArtwork building={building} compact decorative />
+    </Link>
+
+    <div className="building-compendium-card__content">
+      <div className="building-compendium-card__heading">
+        <div>
+          <span>{titleCase(building.category)}</span>
+          <h2><Link to={`/buildings/${building.key}`}>{building.name}</Link></h2>
+        </div>
+        {building.truegold && <em>Truegold</em>}
+      </div>
+
+      <p>{building.description}</p>
+
+      <dl className="building-compendium-card__facts">
+        <div><dt>Standard max</dt><dd>{formatNumber(building.maxLevel)}</dd></div>
+        <div><dt>Transition steps</dt><dd>{formatNumber(transitionRows.length)}</dd></div>
+        <div><dt>Truegold stages</dt><dd>{formatNumber(truegoldRows.length)}</dd></div>
+      </dl>
+
+      {effectMetrics.length > 0 && <p className="building-compendium-card__effects">
+        <strong>Tracked effects:</strong> {effectMetrics.slice(0, 3).map((metric) => metric.shortLabel).join(' · ')}
+        {effectMetrics.length > 3 ? ` · +${effectMetrics.length - 3} more` : ''}
+      </p>}
+
+      <div className="building-compendium-card__actions">
+        <Link className="button button--secondary" to={`/buildings/${building.key}`}>View details</Link>
+        <Link className="button button--primary" to={`/calculators/buildings?building=${building.key}`}>Plan upgrades</Link>
+      </div>
+    </div>
+  </article>
 }
 
 export default function BuildingsBrowserPage() {
   const { buildingKey } = useParams<{ buildingKey?: string }>()
-  const [buildings, setBuildings] = useState<Building[]>([])
+  const [buildings, setBuildings] = useState<BuildingCompanionRecord[]>([])
   const [metadata, setMetadata] = useState<DatasetSourceMetadata | null>(null)
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
@@ -135,10 +109,11 @@ export default function BuildingsBrowserPage() {
 
   useEffect(() => {
     const controller = new AbortController()
+
     setLoading(true)
     fetchDataset('buildings', controller.signal)
       .then((result) => {
-        setBuildings(normalise(result.records))
+        setBuildings(normaliseBuildings(result.records))
         setMetadata(result.metadata)
         setError('')
       })
@@ -147,152 +122,230 @@ export default function BuildingsBrowserPage() {
         setError(value instanceof Error ? value.message : 'Buildings are temporarily unavailable.')
       })
       .finally(() => setLoading(false))
+
     return () => controller.abort()
   }, [])
 
-  const categories = useMemo(() => [...new Set(buildings.map((building) => building.category))].sort(), [buildings])
-  const visible = useMemo(() => buildings.filter((building) => {
-    const matchesQuery = `${building.name} ${building.category} ${building.description}`.toLowerCase().includes(query.toLowerCase())
-    return matchesQuery && (category === 'all' || building.category === category)
-  }), [buildings, query, category])
-  const current = buildingKey ? buildings.find((building) => building.key === buildingKey) : null
+  const categories = useMemo(
+    () => [...new Set(buildings.map((building) => building.category))].sort(),
+    [buildings],
+  )
+  const visible = useMemo(
+    () => buildings.filter((building) => {
+      const matchesQuery = `${building.name} ${building.category} ${building.description}`
+        .toLowerCase()
+        .includes(query.trim().toLowerCase())
+      return matchesQuery && (category === 'all' || building.category === category)
+    }),
+    [buildings, category, query],
+  )
+  const current = buildingKey
+    ? buildings.find((building) => building.key === buildingKey)
+    : null
 
-  if (buildingKey) return <BuildingDetail key={current?.key ?? buildingKey} building={current} error={error} loading={loading} metadata={metadata} />
+  if (buildingKey) {
+    return <BuildingDetail
+      key={current?.key ?? buildingKey}
+      building={current}
+      buildings={buildings}
+      error={error}
+      loading={loading}
+      metadata={metadata}
+    />
+  }
 
   return <main className="buildings-browser">
-    <section className="buildings-hero">
+    <header className="buildings-compendium-hero">
       <div>
         <p className="eyebrow">Kingshot Companion · published data</p>
-        <h1>Buildings</h1>
-        <p>Explore every published Forge building with its role, upgrade requirements, resource costs, Truegold stages, power and building-specific effects.</p>
+        <h1>Buildings compendium</h1>
+        <p>Understand each building, plan upgrades and inspect the owner-approved progression behind every total.</p>
       </div>
-      <div className="buildings-hero__summary" aria-label="Buildings dataset summary">
-        <span><strong>{formatNumber(buildings.length || null)}</strong> buildings</span>
-        <span><strong>{formatNumber(buildings.reduce((total, building) => total + building.progression.length, 0) || null)}</strong> progression records</span>
-        <span><strong>Published</strong> owner-approved data</span>
+      <div className="buildings-compendium-hero__actions">
+        <Link className="button button--primary" to="/calculators/buildings">Open Building Planner</Link>
+        <span>{formatNumber(buildings.length || null)} buildings · {formatNumber(buildings.reduce((total, building) => total + building.progression.length, 0) || null)} published rows</span>
       </div>
-      <div className="buildings-filters">
-        <label><span>Search buildings</span><input aria-label="Search buildings" placeholder="Search by name, category or purpose" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-        <label><span>Category</span><select value={category} onChange={(event) => setCategory(event.target.value)}><option value="all">All categories</option>{categories.map((value) => <option value={value} key={value}>{titleCase(value)}</option>)}</select></label>
+    </header>
+
+    <section className="buildings-compendium-controls" aria-label="Filter Buildings directory">
+      <label>
+        <span>Search</span>
+        <input
+          aria-label="Search buildings"
+          placeholder="Search by building, purpose or category"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </label>
+      <div className="buildings-category-chips" aria-label="Building categories">
+        <button type="button" className={category === 'all' ? 'is-active' : undefined} onClick={() => setCategory('all')}>All</button>
+        {categories.map((value) => <button type="button" className={category === value ? 'is-active' : undefined} onClick={() => setCategory(value)} key={value}>{titleCase(value)}</button>)}
       </div>
     </section>
 
     {error && <p className="buildings-state buildings-state--error">{error}</p>}
     {loading && <p className="buildings-state">Loading published Buildings…</p>}
 
-    {!loading && !error && <section className="building-directory" aria-label="Published Kingshot buildings">
-      {visible.map((building) => {
-        const metrics = EFFECT_METRICS.filter((metric) => building.progression.some((row) => isPopulated(row[metric.key])))
-        return <Link className="building-card" to={`/buildings/${building.key}`} key={building.key}>
-          <div className="building-card__image"><BuildingArtwork building={building} compact decorative /></div>
-          <div className="building-card__body">
-            <span className="building-card__category">{titleCase(building.category)}</span>
-            <h2>{building.name}</h2>
-            <p>{building.description}</p>
-            {metrics.length > 0 && <div className="building-card__effects" aria-label={`${building.name} tracked effects`}><span>{metrics.slice(0, 2).map((metric) => metric.shortLabel).join(' · ')}</span>{metrics.length > 2 && <small>+{metrics.length - 2} more</small>}</div>}
-            <footer><span><strong>{formatNumber(building.progression.length || null)}</strong> records</span><span><strong>{formatNumber(building.maxLevel)}</strong> max level</span><em>{building.truegold ? 'Truegold' : 'Standard'}</em></footer>
-          </div>
-        </Link>
-      })}
+    {!loading && !error && <section className="building-compendium-list" aria-label="Published Kingshot buildings">
+      {visible.map((building) => <BuildingDirectoryCard building={building} key={building.key} />)}
     </section>}
 
     {!loading && !error && visible.length === 0 && <p className="buildings-state">No published building matches those filters.</p>}
-    {metadata?.updated && <p className="buildings-dataset-note">Published dataset updated {new Date(metadata.updated).toLocaleDateString('en-GB')}. Resource costs are raw base values before player, alliance or kingdom bonuses.</p>}
+
+    {metadata?.updated && <p className="buildings-dataset-note">Published dataset updated {new Date(metadata.updated).toLocaleDateString('en-GB')}. Resource costs and times are raw published values before bonuses entered in the planner.</p>}
   </main>
 }
 
-function BuildingDetail({ building, error, loading, metadata }: { building: Building | null | undefined; error: string; loading: boolean; metadata: DatasetSourceMetadata | null }) {
+function BuildingDetail({
+  building,
+  buildings,
+  error,
+  loading,
+  metadata,
+}: {
+  building: BuildingCompanionRecord | null | undefined
+  buildings: BuildingCompanionRecord[]
+  error: string
+  loading: boolean
+  metadata: DatasetSourceMetadata | null
+}) {
   const [phase, setPhase] = useState<PhaseFilter>('standard')
-  if (loading) return <main className="buildings-browser"><p className="buildings-state">Loading published building details…</p></main>
-  if (!building) return <main className="buildings-browser"><p className="buildings-state">{error || 'Building not found in the published projection.'}</p><Link className="buildings-back" to="/buildings">← Back to Buildings</Link></main>
+
+  if (loading) {
+    return <main className="buildings-browser"><p className="buildings-state">Loading published building details…</p></main>
+  }
+
+  if (!building) {
+    return <main className="buildings-browser">
+      <p className="buildings-state">{error || 'Building not found in the published projection.'}</p>
+      <Link className="buildings-back" to="/buildings">← Back to Buildings</Link>
+    </main>
+  }
 
   const progression = sortBuildingProgression(building.progression)
   const standardRows = progression.filter((row) => row.progression_phase !== 'truegold')
   const truegoldRows = progression.filter((row) => row.progression_phase === 'truegold')
-  const baseState = standardRows.filter((row) => number(row.base_level) === 0)
+  const transitionRows = progression.filter((row) => row.progression_phase === 'pre_truegold')
+  const baseState = standardRows.filter((row) => numberValue(row.base_level) === 0)
   const upgradeRows = progression.filter((row) => !baseState.includes(row))
-  const availableEffects = EFFECT_METRICS.filter((metric) => progression.some((row) => isPopulated(row[metric.key])))
-  const activeRows = phase === 'truegold' && truegoldRows.length ? truegoldRows : standardRows
-  const activeEffects = availableEffects.filter((metric) => activeRows.some((row) => isPopulated(row[metric.key])))
-  const showTruegold = activeRows.some((row) => isPopulated(row.truegold))
-  const showTemperedTruegold = activeRows.some((row) => isPopulated(row.tempered_truegold))
+  const availableEffects = BUILDING_EFFECT_METRICS.filter((metric) =>
+    progression.some((row) => isPopulatedNumber(row[metric.key])),
+  )
+  const activeRows = phase === 'truegold' && truegoldRows.length > 0
+    ? truegoldRows
+    : standardRows
+  const activeEffects = availableEffects.filter((metric) =>
+    activeRows.some((row) => isPopulatedNumber(row[metric.key])),
+  )
+  const showTruegold = activeRows.some((row) => isPopulatedNumber(row.truegold))
+  const showTemperedTruegold = activeRows.some((row) => isPopulatedNumber(row.tempered_truegold))
   const verifiedDate = latestVerifiedDate(progression)
 
   return <main className="buildings-browser">
-    <Link className="buildings-back" to="/buildings">← Buildings directory</Link>
+    <Link className="buildings-back" to="/buildings">← Buildings compendium</Link>
 
-    <section className="building-detail-hero">
-      <div className="building-detail-hero__art"><BuildingArtwork building={building} /></div>
-      <div className="building-detail-hero__content">
+    <header className="building-profile-hero">
+      <div className="building-profile-hero__art"><BuildingArtwork building={building} /></div>
+      <div className="building-profile-hero__content">
         <p className="eyebrow">{titleCase(building.category)} building</p>
         <h1>{building.name}</h1>
         <p>{building.description}</p>
-        <div className="building-facts">
-          <span><strong>{formatNumber(building.maxLevel)}</strong> standard max level</span>
-          <span><strong>{building.truegold ? 'Supported' : 'Not supported'}</strong> Truegold</span>
-          <span><strong>{formatNumber(progression.length)}</strong> published records</span>
-          <span><strong>{verifiedDate ? new Date(verifiedDate).toLocaleDateString('en-GB') : 'Published'}</strong> last verified</span>
+        <div className="building-profile-hero__facts">
+          <span><strong>{formatNumber(building.maxLevel)}</strong> standard max</span>
+          <span><strong>{formatNumber(transitionRows.length)}</strong> transition steps</span>
+          <span><strong>{formatNumber(truegoldRows.length)}</strong> Truegold stages</span>
+        </div>
+        <div className="building-profile-hero__actions">
+          <a className="button button--primary" href="#upgrade-planner">Plan this upgrade</a>
+          <a className="button button--secondary" href="#progression">View progression</a>
         </div>
       </div>
-    </section>
+    </header>
 
-    <section className="building-overview-grid">
+    <nav className="building-profile-nav" aria-label={`${building.name} page sections`}>
+      <a href="#overview">Overview</a>
+      <a href="#upgrade-planner">Calculator</a>
+      <a href="#progression">Progression</a>
+      <a href="#sources">Sources</a>
+    </nav>
+
+    <section className="building-profile-overview" id="overview">
       <article>
-        <p className="eyebrow">Building purpose</p>
-        <h2>What it does</h2>
-        <p>{building.description}</p>
-        <p className="building-overview-note">Forge shows only fields present in the current owner-approved Buildings publication. Missing effects are not guessed.</p>
+        <p className="eyebrow">At a glance</p>
+        <h2>Building effects</h2>
+        {availableEffects.length > 0
+          ? <dl className="building-effects-list">{availableEffects.map((metric) => <div key={metric.key}><dt>{metric.shortLabel}</dt><dd>{latestMetricValue(metric, progression)}</dd></div>)}</dl>
+          : <p className="building-overview-note">No building-specific effect values are present in the current publication. Upgrade costs, time and Prerequisites remain available.</p>}
       </article>
+
       <article>
-        <p className="eyebrow">Latest published values</p>
-        <h2>Key effects</h2>
-        {availableEffects.length > 0 ? <dl className="building-effects-list">{availableEffects.map((metric) => <div key={metric.key}><dt>{metric.shortLabel}</dt><dd>{latestMetricValue(metric, progression)}</dd></div>)}</dl> : <p className="building-overview-note">No building-specific effect values are present in the current publication. Costs, time and prerequisites remain available below.</p>}
-      </article>
-      <article>
-        <p className="eyebrow">Trust and provenance</p>
-        <h2>Data quality</h2>
-        <dl className="building-source-list">
-          <div><dt>Status</dt><dd>Published and owner approved</dd></div>
-          <div><dt>Verified</dt><dd>{verifiedDate ? new Date(verifiedDate).toLocaleDateString('en-GB') : 'See source record'}</dd></div>
-          <div><dt>Source</dt><dd>{building.source ? <a href={building.source} target="_blank" rel="noreferrer">Open source reference ↗</a> : 'Recorded in publication'}</dd></div>
+        <p className="eyebrow">Progression coverage</p>
+        <h2>What Forge holds</h2>
+        <dl className="building-effects-list">
+          <div><dt>Published upgrade rows</dt><dd>{formatNumber(upgradeRows.length)}</dd></div>
+          <div><dt>Standard and transition</dt><dd>{formatNumber(standardRows.length)}</dd></div>
+          <div><dt>Truegold stages</dt><dd>{formatNumber(truegoldRows.length)}</dd></div>
+          <div><dt>Mapped Prerequisites</dt><dd>{formatNumber(progression.filter((row) => textValue(row.requirements_text)).length)}</dd></div>
         </dl>
-        {building.verificationNote && <p className="building-overview-note">{building.verificationNote}</p>}
       </article>
     </section>
 
-    <section className="building-progression-panel">
+    <BuildingPlanner buildings={buildings} initialBuildingKey={building.key} embedded />
+
+    <section className="building-progression-panel" id="progression">
       <div className="building-section-heading">
-        <div><p className="eyebrow">Published progression</p><h2>Upgrade prerequisites and effects</h2></div>
+        <div><p className="eyebrow">Published Progression</p><h2>Level-by-level reference</h2></div>
         <span className="building-row-summary">{formatNumber(upgradeRows.length)} upgrade rows</span>
       </div>
 
+      <p className="building-progression-intro">Use the calculator above for totals. This reference table shows the exact published values and Prerequisites behind each step.</p>
+
       {truegoldRows.length > 0 && <div className="building-phase-tabs" role="tablist" aria-label="Progression phase">
-        <button type="button" role="tab" aria-selected={phase === 'standard'} className={phase === 'standard' ? 'is-active' : undefined} onClick={() => setPhase('standard')}>Standard levels <span>{formatNumber(standardRows.length)}</span></button>
+        <button type="button" role="tab" aria-selected={phase === 'standard'} className={phase === 'standard' ? 'is-active' : undefined} onClick={() => setPhase('standard')}>Standard & transition <span>{formatNumber(standardRows.length)}</span></button>
         <button type="button" role="tab" aria-selected={phase === 'truegold'} className={phase === 'truegold' ? 'is-active' : undefined} onClick={() => setPhase('truegold')}>Truegold stages <span>{formatNumber(truegoldRows.length)}</span></button>
       </div>}
 
-      <div className="building-cost-warning"><strong>Raw base values:</strong> resource costs and times do not include personal, alliance or kingdom bonuses.</div>
+      <div className="building-cost-warning"><strong>Raw base values:</strong> use the planner to apply your construction speed and basic-resource reduction.</div>
 
-      {activeRows.length ? <div className="building-table-scroll"><table className="building-progression-table"><caption className="sr-only">{building.name} {phase} published progression</caption><thead><tr><th scope="col">Level / Stage</th><th scope="col">Bread</th><th scope="col">Wood</th><th scope="col">Stone</th><th scope="col">Iron</th>{showTruegold && <th scope="col">Truegold</th>}{showTemperedTruegold && <th scope="col">Tempered Truegold</th>}<th scope="col">Time</th><th scope="col">Power</th>{activeEffects.map((metric) => <th scope="col" key={metric.key}>{metric.label}</th>)}<th scope="col">Prerequisites</th></tr></thead><tbody>{activeRows.map((row, index) => <tr id={`row-${index + 1}`} key={text(row.record_id, String(index))} className={row.progression_phase === 'truegold' ? 'is-truegold' : baseState.includes(row) ? 'is-base-state' : undefined}><th scope="row"><span className="building-row-label">{getBuildingProgressionLabel(row)}</span>{row.progression_phase === 'truegold' && <small>Truegold stage</small>}{baseState.includes(row) && <small>Base state</small>}</th><td data-label="Bread">{formatNumber(row.bread)}</td><td data-label="Wood">{formatNumber(row.wood)}</td><td data-label="Stone">{formatNumber(row.stone)}</td><td data-label="Iron">{formatNumber(row.iron)}</td>{showTruegold && <td data-label="Truegold">{formatNumber(row.truegold)}</td>}{showTemperedTruegold && <td data-label="Tempered Truegold">{formatNumber(row.tempered_truegold)}</td>}<td data-label="Time">{row.upgrade_time_display ? text(row.upgrade_time_display) : formatDuration(row.upgrade_time_seconds)}</td><td data-label="Power">{formatNumber(row.power)}</td>{activeEffects.map((metric) => <td data-label={metric.label} key={metric.key}>{metricValue(metric, row)}</td>)}<td data-label="Prerequisites">{text(row.requirements_text, '—')}</td></tr>)}</tbody></table></div> : <p className="buildings-state">Progression is not available in the published projection.</p>}
-      <p className="building-readonly-note">This table is a read-only view of the current owner-approved Buildings publication. It does not consume drafts or staged import data.</p>
+      {activeRows.length > 0
+        ? <div className="building-table-scroll"><table className="building-progression-table">
+          <caption className="sr-only">{building.name} {phase} published Progression</caption>
+          <thead><tr><th scope="col">Level / Stage</th><th scope="col">Bread</th><th scope="col">Wood</th><th scope="col">Stone</th><th scope="col">Iron</th>{showTruegold && <th scope="col">Truegold</th>}{showTemperedTruegold && <th scope="col">Tempered Truegold</th>}<th scope="col">Time</th><th scope="col">Power</th>{activeEffects.map((metric) => <th scope="col" key={metric.key}>{metric.label}</th>)}<th scope="col">Prerequisites</th></tr></thead>
+          <tbody>{activeRows.map((row, index) => <tr id={`row-${index + 1}`} key={textValue(row.record_id, String(index))} className={row.progression_phase === 'truegold' ? 'is-truegold' : row.progression_phase === 'pre_truegold' ? 'is-transition' : baseState.includes(row) ? 'is-base-state' : undefined}>
+            <th scope="row"><span className="building-row-label">{getBuildingProgressionLabel(row)}</span>{row.progression_phase === 'truegold' && <small>Truegold stage</small>}{row.progression_phase === 'pre_truegold' && <small>Transition step</small>}{baseState.includes(row) && <small>Base state</small>}</th>
+            <td data-label="Bread">{formatNumber(row.bread)}</td>
+            <td data-label="Wood">{formatNumber(row.wood)}</td>
+            <td data-label="Stone">{formatNumber(row.stone)}</td>
+            <td data-label="Iron">{formatNumber(row.iron)}</td>
+            {showTruegold && <td data-label="Truegold">{formatNumber(row.truegold)}</td>}
+            {showTemperedTruegold && <td data-label="Tempered Truegold">{formatNumber(row.tempered_truegold)}</td>}
+            <td data-label="Time">{row.upgrade_time_display ? textValue(row.upgrade_time_display) : formatDuration(row.upgrade_time_seconds)}</td>
+            <td data-label="Power">{formatNumber(row.power)}</td>
+            {activeEffects.map((metric) => <td data-label={metric.label} key={metric.key}>{metricValue(metric, row)}</td>)}
+            <td data-label="Prerequisites">{textValue(row.requirements_text, '—')}</td>
+          </tr>)}</tbody>
+        </table></div>
+        : <p className="buildings-state">Progression is not available in the published projection.</p>}
     </section>
 
-    <section className="building-detail-footer">
-      <article><p className="eyebrow">Publication summary</p><h2>Coverage</h2><dl><div><dt>Standard records</dt><dd>{formatNumber(standardRows.length)}</dd></div><div><dt>Truegold stages</dt><dd>{formatNumber(truegoldRows.length)}</dd></div><div><dt>Mapped prerequisites</dt><dd>{formatNumber(progression.filter((row) => text(row.requirements_text)).length)}</dd></div><div><dt>Tracked effects</dt><dd>{formatNumber(availableEffects.length)}</dd></div></dl></article>
-      <article>
-        <p className="eyebrow">About the artwork</p>
-        <h2>{building.imageUrl ? 'Published building image' : 'Forge illustration'}</h2>
-        {building.imageUrl ? <>
-          <p>This image was approved through the Buildings editorial workflow.</p>
-          <dl>
-            <div><dt>Alt text</dt><dd>{building.imageAltText || 'Not recorded'}</dd></div>
-            <div><dt>Credit</dt><dd>{building.imageCredit || 'Not required'}</dd></div>
-            <div><dt>Licence</dt><dd>{building.imageLicense || 'Not recorded'}</dd></div>
-            {building.imageSourceUrl && <div><dt>Image source</dt><dd><a href={building.imageSourceUrl} target="_blank" rel="noreferrer">Open evidence ↗</a></dd></div>}
-          </dl>
-        </> : <p>The building artwork on this page is an original Kingshot Forge companion illustration. It helps identify the building and is not official Kingshot game art.</p>}
+    <section className="building-profile-sources" id="sources">
+      <div>
+        <p className="eyebrow">Trust and provenance</p>
+        <h2>Published source record</h2>
+        <dl>
+          <div><dt>Status</dt><dd>Published and owner approved</dd></div>
+          <div><dt>Last verified</dt><dd>{verifiedDate ? new Date(verifiedDate).toLocaleDateString('en-GB') : 'See source record'}</dd></div>
+          <div><dt>Data source</dt><dd>{building.source ? <a href={building.source} target="_blank" rel="noreferrer">Open source reference ↗</a> : 'Recorded in publication'}</dd></div>
+          {building.imageUrl && <div><dt>Image credit</dt><dd>{building.imageCredit || 'Not required'}</dd></div>}
+          {building.imageUrl && <div><dt>Image permission</dt><dd>{building.imageLicense || 'Not recorded'}</dd></div>}
+        </dl>
+      </div>
+      <div>
+        <p className="eyebrow">Publication notes</p>
+        <h2>Data boundaries</h2>
+        <p>{building.verificationNote || 'Forge displays only values present in the current owner-approved publication. Missing effects are not guessed.'}</p>
         {metadata?.updated && <p className="building-overview-note">Dataset updated {new Date(metadata.updated).toLocaleDateString('en-GB')}.</p>}
-      </article>
+      </div>
     </section>
 
     <ForgeConnections dataset="buildings" id={building.key} />
