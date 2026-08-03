@@ -6,15 +6,19 @@ on:
     branches:
       - main
     paths:
+      - 'src/App.tsx'
+      - 'src/navigation/workspaceRegistry.ts'
       - 'src/pages/BuildingsBrowserPage.tsx'
+      - 'src/pages/BuildingCalculatorsPage.tsx'
       - 'src/components/buildings/**'
+      - 'src/features/buildings/**'
       - 'src/styles/buildingsBrowser.css'
       - 'src/styles/buildingsProgressionPolish.css'
+      - 'src/styles/buildingCalculatorsPage.css'
       - 'src/context/RoleContext.tsx'
       - 'src/features/admin/buildingsDatasetAdapter.ts'
       - 'src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx'
       - 'src/features/admin/editorial/EditorialWorkflowPanel.tsx'
-      - 'src/features/admin/editorial/editorialApi.ts'
       - 'src/features/admin/recordEditor/buildingsRecordEditorSchema.ts'
       - 'src/features/admin/recordEditor/CompanionImageField.tsx'
       - 'src/features/admin/recordEditor/CompanionImageField.css'
@@ -24,8 +28,10 @@ on:
       - 'server/data-engine/loadPublishedBuildingsDataset.ts'
       - 'shared/data-engine/readiness-registry.ts'
       - 'shared/data-pipeline/buildingsContract.ts'
+      - 'shared/data-pipeline/buildingsProgressionOrdering.ts'
       - 'supabase/migrations/20260802193000_buildings_editorial_media_projection.sql'
       - 'scripts/test-buildings-companion.mjs'
+      - 'scripts/test-building-planner.mjs'
       - 'docs/releases/COMPANION-BUILDINGS-001.md'
       - 'package.json'
       - 'package-lock.json'
@@ -60,6 +66,9 @@ jobs:
 
       - name: Validate Buildings companion contracts
         run: node scripts/test-buildings-companion.mjs
+
+      - name: Validate Building Planner contracts
+        run: node scripts/test-building-planner.mjs
 
       - name: Test published Buildings integrity
         run: npm run test:buildings-publication
