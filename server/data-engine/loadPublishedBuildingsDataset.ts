@@ -44,7 +44,6 @@ function isMissingOverrideRelation(error: { code?: string; message?: string } | 
   if (!error) return false
   return error.code === '42P01'
     || error.code === 'PGRST205'
-    || /building_editorial_overrides/u.test(error.message ?? '')
 }
 
 function applyCostOverrides(progression: Row[], values: Row): Row[] {
@@ -74,6 +73,7 @@ function applyCostOverrides(progression: Row[], values: Row): Row[] {
       iron: readNumber(cost[4]),
       truegold: readNumber(cost[5]),
       upgrade_time_seconds: readNumber(cost[6]),
+      upgrade_time_display: null,
     }
   })
 }

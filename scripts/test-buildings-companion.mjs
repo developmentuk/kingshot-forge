@@ -41,7 +41,10 @@ assert.match(illustration, /original Kingshot Forge companion illustration/u)
 assert.match(illustration, /role=\{decorative \? undefined : 'img'\}/u)
 assert.match(illustration, /aria-hidden=\{decorative \? true : undefined\}/u)
 assert.match(artwork, /building\.imageUrl && !imageFailed/u)
-assert.match(artwork, /onError=\{\(\) => setImageFailed\(true\)\}/u)
+assert.match(artwork, /const imageIdentity = building\.imageUrl/u)
+assert.match(artwork, /`\$\{building\.key\}:\$\{building\.imageUrl\}`/u)
+assert.match(artwork, /failedImageIdentity === imageIdentity/u)
+assert.match(artwork, /onError=\{\(\) => setFailedImageIdentity\(imageIdentity\)\}/u)
 assert.match(artwork, /<BuildingIllustration/u, 'Approved imagery must fall back to the Forge illustration')
 
 for (const field of [
@@ -132,9 +135,22 @@ assert.match(loader, /eq\('is_current', true\)/u)
 assert.match(loader, /building_editorial_overrides/u)
 assert.match(loader, /applyEditorialOverride/u)
 assert.match(loader, /applyCostOverrides/u)
+assert.match(loader, /upgrade_time_seconds: readNumber\(cost\[6\]\),\s*upgrade_time_display: null/u)
 assert.match(loader, /editorialOverrideCount/u)
 assert.match(loader, /isMissingOverrideRelation/u)
 assert.match(loader, /sortBuildingProgression/u)
+
+const missingRelationFunction = loader.match(
+  /function isMissingOverrideRelation[\s\S]*?\n\}/u,
+)?.[0]
+assert.ok(missingRelationFunction, 'Missing-relation classifier is not defined')
+assert.match(missingRelationFunction, /error\.code === '42P01'/u)
+assert.match(missingRelationFunction, /error\.code === 'PGRST205'/u)
+assert.doesNotMatch(
+  missingRelationFunction,
+  /error\.message/u,
+  'Only explicit missing-relation codes may suppress editorial override failures',
+)
 
 for (const token of [
   'building_editorial_overrides',
@@ -153,4 +169,4 @@ assert.match(readiness, /return key === 'buildings'\s*\? 'implemented'\s*:\s*'pa
 assert.match(readiness, /Live draft, review, approval, publication, rollback and restoration acceptance passed/u)
 assert.doesNotMatch(readiness, /live transaction remain unverified/u)
 
-console.log('Buildings Companion redesign, governed media, editorial workflow and implemented publication contracts passed.')
+console.log('Buildings Companion redesign, governed media, release review and implemented publication contracts passed.')
