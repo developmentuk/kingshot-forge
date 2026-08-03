@@ -1,0 +1,119 @@
+# Kingshot Forge Companion Index
+
+Status: canonical platform direction approved by the project owner on 2026-08-03.
+
+## Purpose
+
+The Companion Index is the connected reference layer for Kingshot Forge. It is not a loose collection of guides and it must not duplicate the same item, building, hero, event or calculator data in multiple places.
+
+Every indexed Kingshot entity receives:
+
+- one canonical Forge identity and URL;
+- a governed name, aliases, category and description;
+- reusable media with provenance;
+- structured relationships to other entities;
+- links to the calculators, guides, events and progression systems that consume it;
+- source, verification and confidence metadata;
+- clear handling of unknown or unpublished values.
+
+The long-term index covers items, resources, currencies, buildings, heroes, pets, troops, gear, charms, events, game modes, research, features, shops, packs and progression systems.
+
+## Canonical routes
+
+- `/companion` — searchable Companion Index.
+- `/companion/items/:itemKey` — canonical item or resource page.
+- `/buildings/:buildingKey` — canonical building page.
+- `/companion/heroes/:heroId` — canonical hero page.
+- Future entity families follow the same stable pattern rather than creating one-off route structures.
+
+## Entity relationship model
+
+Relationships are typed and reusable. Initial relationship types are:
+
+- `used_by` — the entity consumes the item or resource;
+- `used_for` — the item is spent on an activity or progression system;
+- `required_by_calculator` — a calculator uses the item as an input or output;
+- `awarded_by` — an event, shop, mission or feature can provide the item;
+- `scores_in` — spending or earning the item produces event points;
+- `unlocks_at` — the entity or system becomes available at a milestone;
+- `upgrades_to` — progression or conversion relationship;
+- `related_to` — meaningful reference relationship where a stronger type is not yet verified.
+
+Relationships must point to canonical Forge entity IDs, not display labels.
+
+## Media governance
+
+Each image has one canonical asset record containing:
+
+- stable asset key and intended repository path;
+- original filename, dimensions, format and SHA-256 checksum;
+- accessible alt text;
+- source and contributor provenance;
+- rights/reuse status;
+- editorial review state;
+- all entities that use it.
+
+Images must be reused from the canonical asset record. Pages and calculators must not copy, rename or hotlink alternate versions.
+
+Owner-supplied game artwork is recorded as `owner_supplied_unverified_rights` until its source and reuse basis are documented. Forge must not describe an asset as official merely because it depicts an in-game item.
+
+## First governed item collection
+
+The owner supplied ten Kingshot item images on 2026-08-03. Their intake metadata and relationships are recorded in `docs/companion/assets/ITEM-ASSET-INTAKE-2026-08-03.json`.
+
+The first collection is:
+
+1. Mithril
+2. Governor Stamina
+3. Forgehammer
+4. Gilded Threads
+5. Satin
+6. Charm Guide
+7. Charm Design
+8. Artisan's Vision
+9. Truegold
+10. Tempered Truegold
+
+### Confirmed relationship groups
+
+- Truegold and Tempered Truegold connect to Buildings, Truegold-supported building pages and the Building Planner.
+- Satin, Gilded Threads and Artisan's Vision connect to Governor Gear progression and its future calculator.
+- Charm Guide and Charm Design connect to Governor Charm progression and its future calculator.
+- Forgehammer and Mithril connect to Hero Gear progression, relevant event scoring and the future Hero Gear calculator.
+- Governor Stamina connects to stamina-consuming activities, Cesare's Fury guidance and the Storehouse relationship.
+
+## Page contract
+
+A canonical item page should include, where verified:
+
+- item image and canonical name;
+- item category and aliases;
+- what the item is used for;
+- how it is obtained;
+- when players should save or spend it;
+- event-scoring relationships;
+- calculators that use it;
+- related buildings, heroes, gear, charms, shops and events;
+- current source and verification state;
+- links to the relevant published Forge datasets.
+
+A page must not invent drop rates, pack values, unlock dates, costs or strategy claims. Unsupported sections remain visibly unavailable or carry a research-needed state.
+
+## Data ownership
+
+The Companion Index is a projection over canonical Forge datasets and FRKS research. It must not become a second editable copy of Buildings, Heroes, Governor Gear, Governor Charms, Truegold or event data.
+
+Where a relationship can be derived from a published dataset, the projection should derive it automatically. Editorial overrides are reserved for descriptions, aliases, media, source notes and relationships that cannot be derived safely.
+
+## Delivery sequence
+
+1. Complete the Buildings page and Building Planner acceptance.
+2. Publish the ten owner-supplied assets through the governed media pipeline.
+3. Link Truegold and Tempered Truegold into the Building Planner and building detail pages.
+4. Build the Companion Index and canonical item page template.
+5. Connect Governor Gear, Governor Charm and Hero Gear datasets and calculators.
+6. Expand entity families without changing the canonical identity and relationship contract.
+
+## Trust boundary
+
+The item names and intended relationships in the first collection are supported by the supplied filenames, existing Forge datasets and cited research. The image source and reuse rights have not yet been independently verified and remain explicitly recorded as such.
