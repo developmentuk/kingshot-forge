@@ -14,6 +14,12 @@ function value(record: Record<string, unknown>, ...keys: string[]): string | nul
   return null
 }
 
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean)
+    : []
+}
+
 function toSearchRecord(dataset: PublishedDatasetKey, input: unknown): SearchRecord | null {
   if (!input || typeof input !== 'object') return null
   const record = input as Record<string, unknown>
@@ -23,6 +29,7 @@ function toSearchRecord(dataset: PublishedDatasetKey, input: unknown): SearchRec
   const rawStatus = value(record, 'status')
   const status: SearchRecordStatus = rawStatus && STATUS_VALUES.has(rawStatus as SearchRecordStatus) ? rawStatus as SearchRecordStatus : 'published'
   const forge_id = forgeIdForDataset(dataset, id)
+  const aliases = stringList(record.aliases)
   const relationships = Array.isArray(record.relationships) ? record.relationships.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object')).flatMap((item) => {
     const targetId = value(item, 'targetId', 'target_id', 'id')
     const targetDataset = value(item, 'targetDataset', 'target_dataset', 'dataset')
@@ -34,14 +41,14 @@ function toSearchRecord(dataset: PublishedDatasetKey, input: unknown): SearchRec
     id, forge_id, dataset, title,
     subtitle: value(record, 'subtitle', 'role', 'category_label', 'category'),
     summary: value(record, 'summary', 'description', 'best_use'),
-    keywords: [value(record, 'name'), value(record, 'slug'), value(record, 'role'), value(record, 'troop_type'), value(record, 'trust_label')].filter((item): item is string => Boolean(item)),
-    tags: Array.isArray(record.tags) ? record.tags.filter((item): item is string => typeof item === 'string') : [],
+    keywords: [value(record, 'name'), value(record, 'slug'), value(record, 'role'), value(record, 'troop_type'), ...aliases, value(record, 'trust_label')].filter((item): item is string => Boolean(item)),
+    tags: stringList(record.tags),
     image: value(record, 'image', 'image_url', 'imageUrl'), status,
     published_at: status === 'published' || status === 'approved' ? value(record, 'published_at', 'publishedAt', 'source_updated_at') ?? new Date(0).toISOString() : null,
     permissions: { visibility: value(record, 'visibility') === 'internal' ? 'internal' : 'public' },
     relationships, canonical_url: value(record, 'canonical_url', 'canonicalUrl', 'url'),
     search_weight: typeof record.search_weight === 'number' ? record.search_weight : 0,
-    aliases: Array.isArray(record.aliases) ? record.aliases.filter((item): item is string => typeof item === 'string') : [],
+    aliases,
     source_version_id: value(record, 'source_version_id', 'sourceVersionId'),
     source_publication_id: value(record, 'source_publication_id', 'sourcePublicationId'),
     verified_at: value(record, 'verified_at', 'verifiedAt'),
