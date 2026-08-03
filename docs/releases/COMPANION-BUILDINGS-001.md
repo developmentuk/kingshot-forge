@@ -128,11 +128,11 @@ The media workflow does not silently fill these gameplay-data gaps.
 
 The fallback illustrations are first-party Forge presentation assets implemented as accessible inline SVG. They are not copied from community sites, hotlinked from third parties or represented as official game art.
 
-Uploaded replacements require a recorded usage basis. The current Academy image is recorded as owner-declared public-domain material. This is an owner-supplied provenance statement rather than an independent legal determination.
+Uploaded replacements require a recorded usage basis. The current Academy image is recorded as owner-declared public-domain material. This is an owner-supplied provenance statement and has not been independently verified by Forge.
 
 ## Validation
 
-Exact candidate head `39e93591716edd7c73f29cb0f9e47b82d9449fe6` passed:
+Exact implementation head `39e93591716edd7c73f29cb0f9e47b82d9449fe6` passed:
 
 - Buildings Companion validation;
 - full Forge integration gate;
@@ -145,6 +145,8 @@ Exact candidate head `39e93591716edd7c73f29cb0f9e47b82d9449fe6` passed:
 - lint;
 - TypeScript/Vite production build;
 - Vercel Preview build.
+
+Subsequent commits update release evidence only and must pass the same checks before merge.
 
 ## Remaining release gates
 
