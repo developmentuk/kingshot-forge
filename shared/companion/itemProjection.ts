@@ -113,10 +113,15 @@ function item(input: {
   relationships: readonly CompanionItemRelationship[]
   tags: readonly string[]
 }): CompanionItemRecord {
+  const forgeId = createForgeId('item', input.key)
+  if (!forgeId) {
+    throw new Error(`Invalid Companion item key: ${input.key}`)
+  }
+
   return {
     id: input.key,
     key: input.key,
-    forge_id: createForgeId('item', input.key),
+    forge_id: forgeId,
     name: input.name,
     aliases: input.aliases ?? [],
     category: input.category,
