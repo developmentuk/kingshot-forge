@@ -1,9 +1,9 @@
 # COMPANION-BUILDINGS-001 — Complete Buildings Companion
 
-**Status:** Public companion and governed media implementation candidate; owner acceptance and migration approval pending  
+**Status:** Public companion implemented; owner visual acceptance and controlled rollback acceptance pending  
 **Branch:** `feature/buildings-companion-completion`  
-**Production:** Unchanged  
-**Supabase:** Read-only inspection only; additive migration prepared but not applied
+**Production application:** Unchanged  
+**Supabase:** Buildings editorial projection migration applied; one Academy image publication completed; rollback not yet accepted
 
 ## Player outcome
 
@@ -49,7 +49,7 @@ Included:
 
 ## Governed building media
 
-The Buildings Record Editor now includes:
+The Buildings Record Editor includes:
 
 - building image upload, replacement and removal;
 - WebP, PNG and JPEG support;
@@ -59,9 +59,11 @@ The Buildings Record Editor now includes:
 - image alt text;
 - image credit;
 - image source/evidence URL;
-- licence or permission statement.
+- licence, ownership or permission statement.
 
-Alt text is mandatory whenever an image is supplied. Images are stored in the existing public `companion-images` bucket under `buildings/<building-key>/` and remain subject to the bucket's existing authenticated editor policies.
+Alt text and a licence, ownership or permission statement are mandatory whenever an uploaded image is supplied. Image credit remains conditional because original Forge assets and some permission arrangements do not require attribution.
+
+Images are stored in the existing public `companion-images` bucket under `buildings/<building-key>/` and remain subject to the bucket's authenticated editor policies.
 
 The public page prefers an approved published image. If no image exists or loading fails, it falls back to the original Forge illustration. An editorial override changes or clears only fields explicitly present in that approved version, preserving media supplied by future full-dataset imports.
 
@@ -69,9 +71,9 @@ The public page prefers an approved published image. If no image exists or loadi
 
 The existing full-dataset Buildings publisher remains the immutable source of the 10 catalogue and 587 progression records.
 
-A new additive, server-only `building_editorial_overrides` projection is proposed for Record Editor publications. It stores only the latest approved Buildings editorial values together with their published version, actor and timestamp. The immutable source publication and its historical publication records are not rewritten.
+The server-only `building_editorial_overrides` projection stores only the latest approved Buildings editorial values together with their published version, actor and timestamp. The immutable source publication and its historical publication records are not rewritten.
 
-The proposed atomic queue publication path:
+The atomic queue publication path:
 
 1. verifies the queued version still matches the approved Buildings editorial head;
 2. writes a new immutable published editorial version;
@@ -80,15 +82,36 @@ The proposed atomic queue publication path:
 5. marks the queue item complete;
 6. allows rollback to reapply an older published version to the same projection.
 
-The Data Engine applies only published projection values. Drafts and approved-but-unpublished versions remain private. Before the additive migration is applied, the loader safely ignores the absent overlay relation and continues serving the current source publication.
+The Data Engine applies only published projection values. Drafts and approved-but-unpublished versions remain private.
 
-## Why Admin currently says “Publishing: Partial”
+## Live acceptance evidence
 
-This is a real readiness distinction, not missing building statistics.
+Read-only reconciliation on 3 August 2026 confirmed:
 
-Forge already has a complete atomic **full-dataset** Buildings publication workflow. However, the currently deployed shared Record Editor publisher supports live canonical projection only for Heroes and Hero Skills. Therefore an individual Buildings draft can be reviewed and queued, but cannot yet become the public Buildings projection.
+- `building_editorial_overrides` exists with server-side publisher and rollback functions;
+- the canonical full-dataset publication remains version 1;
+- the canonical publication still contains 10 Buildings and 587 progression rows;
+- Academy has immutable editorial versions 1–6;
+- Academy version 6 was published successfully on 2 August 2026;
+- its publication queue item completed successfully after two attempts;
+- the published Academy projection contains an uploaded image and alt text;
+- no rollback audit event has yet been recorded;
+- the accepted Academy image version does not yet contain image credit or a licence/permission statement.
 
-The branch contains the missing Buildings projection and rollback contract, but the additive migration has not been applied and no live image publish/rollback acceptance has occurred. Admin must remain **Partial** until both happen. Once verified, the readiness evidence can move Buildings publishing to **Implemented**.
+The missing licence/permission statement is treated as a real completion defect. The candidate now rejects future building-image drafts without this metadata and includes an additive database constraint for future projection writes. Existing immutable history remains readable.
+
+## Why Admin still says “Publishing: Partial”
+
+This is now a narrow evidence distinction rather than an unimplemented publisher.
+
+A live Buildings image publication has succeeded through draft → review → approve → publish, proving the projection and queue publication path. Publishing remains **Partial** because:
+
+- controlled rollback and restoration have not been accepted;
+- the current Academy image publication predates the mandatory permission guard;
+- the additive permission constraint has not yet been applied;
+- owner desktop and mobile acceptance remains incomplete.
+
+Buildings publishing moves to **Implemented** only after the permission-complete publication and rollback cycle both pass.
 
 ## Truth boundary
 
@@ -107,13 +130,14 @@ The media workflow does not silently fill these gameplay-data gaps.
 
 The fallback illustrations are first-party Forge presentation assets implemented as accessible inline SVG. They are not copied from community sites, hotlinked from third parties or represented as official game art.
 
-Uploaded replacements require appropriate usage permission. Forge records alt text, credit, evidence URL and licence/permission alongside the published image.
+Uploaded replacements require an appropriate usage basis. Forge records alt text, optional credit, optional evidence URL and mandatory licence/ownership/permission metadata alongside the published image.
 
 ## Validation
 
 The current PR head must pass:
 
 - Buildings Companion validation;
+- building media permission regression;
 - full Forge integration gate;
 - Buildings publication integrity;
 - Buildings progression ordering;
@@ -128,19 +152,21 @@ The exact validated commit and Preview deployment are recorded in PR #32.
 
 ## Remaining release gates
 
-- owner review of the Admin upload controls and public fallback behaviour;
-- review the additive migration and server-only RLS boundary;
-- apply the migration only after owner approval;
-- publish one non-sensitive test replacement through draft → review → approve → publish;
-- confirm the public page changes only after publication;
-- roll back to the previous image and confirm the public projection follows;
+- owner review of the public Buildings directory, detail pages and Building Planner on desktop and phone;
+- owner approval to apply `20260803131500_building_media_permission_guard.sql`;
+- create a new Academy draft from the current public version and record the real image licence/ownership/permission basis;
+- review, approve and publish that permission-complete version;
+- confirm the public Data Engine projection contains the permission-complete version;
+- roll back Academy to the original version 1 and confirm the public page returns to the Forge illustration;
+- restore the permission-complete Academy version and confirm the approved image returns;
+- verify immutable versions, queue state and audit events after both operations;
 - change Buildings readiness from Partial to Implemented only after the live acceptance passes;
-- deploy the exact accepted commit and smoke-test production.
+- merge the exact accepted commit, deploy and smoke-test production.
 
 ## Safety
 
-- no production deployment;
-- no Supabase schema or data mutation;
-- no canonical 10/587 publication mutation;
-- no automatic publication of uploaded files;
-- no changes to Player Identity, Art Studio or research branches.
+- this reconciliation introduced no new Supabase mutation;
+- the permission guard is committed but not applied;
+- the canonical 10/587 publication remains unchanged;
+- no automatic publication of uploaded files occurs;
+- no changes were made to Player Identity, Art Studio or research branches.
