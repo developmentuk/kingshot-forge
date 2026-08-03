@@ -4,7 +4,7 @@ import { entityTypeRegistry, buildPublicRoute } from '../shared/entity-identity/
 import { EntityResolver, createCatalogAdapter } from '../server/entity-identity/resolver.ts'
 import { createLegacyIndex, translateLegacyIdentifier } from '../server/entity-identity/legacy.ts'
 
-for (const value of ['hero.amadeus', 'building.town-center', 'hero-skill.amadeus.royal-command', 'troop.infantry.tg6']) assert.equal(isValidForgeId(value), true)
+for (const value of ['hero.amadeus', 'building.town-center', 'item.truegold', 'hero-skill.amadeus.royal-command', 'troop.infantry.tg6']) assert.equal(isValidForgeId(value), true)
 for (const value of ['Building.Town Center', '/buildings/town-center', 'town-center', '00000000-0000-4000-8000-000000000000', '.town-center', 'building.', 'building..town-center', 'building.town_center', 'building.town/center']) assert.equal(isValidForgeId(value), false, value)
 assert.equal(parseForgeId(' Hero.Amadeus ')?.forgeId, 'hero.amadeus')
 assert.equal(createForgeId('hero', 'amadeus'), 'hero.amadeus')
@@ -12,8 +12,9 @@ assert.equal(namespaceOf('hero.amadeus'), 'hero')
 assert.equal(localKeyOf('hero-skill.amadeus.royal-command'), 'amadeus.royal-command')
 assert.equal(forgeIdsEqual('hero.amadeus', 'hero.amadeus'), true)
 assert.equal(buildPublicRoute('building.town-center'), '/buildings/town-center')
+assert.equal(buildPublicRoute('item.truegold'), '/companion/items/truegold')
 assert.equal(buildPublicRoute('event.bear-hunt'), null)
-assert.equal(entityTypeRegistry.listEnabled().length, 22)
+assert.equal(entityTypeRegistry.listEnabled().length, 23)
 
 const resolver = new EntityResolver()
 resolver.register(createCatalogAdapter('building', [{ forgeId: 'building.town-center', canonicalRecordId: 'tc-1', displayName: 'Town Center', slug: 'town-center', route: '/buildings/town-center', lifecycle: 'published' }, { forgeId: 'building.barracks', canonicalRecordId: 'b-1', displayName: 'Barracks', slug: 'barracks', route: '/buildings/barracks', lifecycle: 'draft' }]))
