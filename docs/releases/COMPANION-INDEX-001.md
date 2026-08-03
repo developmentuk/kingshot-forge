@@ -120,7 +120,13 @@ The candidate uses repository-controlled static WebP publication with immutable 
 
 The existing persisted item-only Search refresh remains untouched: run `search-refresh-1785782191921`, `2026-08-03T18:36:31.954952Z`, index version 6, 10/10 projections, zero mismatches and zero orphan relationships. No expanded Search refresh has been executed. Owner visual acceptance for the original ten-item foundation is recorded as passed; remaining acceptance is visual review of the expanded catalogue and explicit approval for a future expanded Search mutation.
 
-Validation evidence includes `scripts/test-companion-media.mjs`, the updated Companion Index gate, Search, Search persistence/API/experience, entity identity, Buildings publication and production build. The Windows-only Buildings admin projection assertion remains stale against the current source contract and is recorded as a pre-existing test blocker. Admin item browsing, editing, approval, publication and rollback remain incomplete by design.
+Validation evidence includes `scripts/test-companion-media.mjs`, the updated Companion Index gate, Search, Search persistence/API/experience, entity identity, Buildings publication and production build. Exact final-candidate results are recorded in PR #37. Admin item browsing, editing, approval, publication and rollback remain incomplete by design.
+
+## Visual acceptance readiness cleanup
+
+The manifest generator now resolves the repository root from its own script location, writes only to governed repository-relative outputs and requires both source archive paths as explicit parameters. It never searches Downloads or another workstation directory. The companion media integrity test accepts optional `KS_ITEMS_ARCHIVE` and `KS_ICONS_ARCHIVE` inputs for source-archive verification without embedding a username or machine path.
+
+Deterministic regeneration with the verified archives preserved the manifest and generated TypeScript byte-for-byte. Expanded visual acceptance remains pending under `docs/releases/evidence/COMPANION-INDEX-001-VISUAL-ACCEPTANCE.md`; no visual result is claimed by this cleanup.
 
 ## Admin boundary
 
