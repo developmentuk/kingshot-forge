@@ -89,6 +89,7 @@ function validateBuildingsRecord(
   const costs = record.values.costs;
   const imageUrl = record.values.image_url;
   const imageAltText = record.values.image_alt_text;
+  const imageLicense = record.values.image_license;
 
   if (!isNonEmptyString(key)) {
     errors.key = "Building key is required.";
@@ -114,6 +115,14 @@ function validateBuildingsRecord(
   ) {
     errors.image_alt_text =
       "Alt text is required when a building image is supplied.";
+  }
+
+  if (
+    isNonEmptyString(imageUrl) &&
+    !isNonEmptyString(imageLicense)
+  ) {
+    errors.image_license =
+      "Image licence or permission is required when a building image is supplied.";
   }
 
   const costsError = validateUpgradeCosts(costs);
@@ -293,8 +302,8 @@ RecordEditorSchema = {
       type: "text",
       section: "media",
       order: 50,
-      description: "Examples: Original Forge asset, owner supplied, used with permission, or the applicable licence.",
-      placeholder: "Owner supplied for Kingshot Forge",
+      description: "Required when an image is supplied. Record the applicable licence, ownership or explicit permission basis.",
+      placeholder: "Original Forge asset, owner supplied, or used with permission",
       validation: {
         maxLength: 200,
       },
