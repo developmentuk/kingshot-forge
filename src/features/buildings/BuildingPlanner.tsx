@@ -91,6 +91,7 @@ export default function BuildingPlanner({
   const isAtMaximum = availableTargets.length === 0
 
   function changeCurrentPosition(nextId: string) {
+    if (!model) return
     setCurrentPositionId(nextId)
     setTargetPositionId(nextTargetPositionId(model, nextId))
   }
