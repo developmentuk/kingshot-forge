@@ -35,7 +35,7 @@ Promise<DatasetLoadResult> {
       dataset: 'items',
       title: 'Published Companion Items',
       description:
-        'Text-only canonical item projection derived from the governed Companion intake. Artwork remains withheld pending source and reuse verification.',
+        'Canonical Companion item projection with checksum-backed owner-approved preview media and explicit research-needed states for unsupported gameplay facts.',
       canonical:
         'docs/companion/assets/ITEM-ASSET-INTAKE-2026-08-03.json',
       updated: '2026-08-03',
@@ -43,9 +43,9 @@ Promise<DatasetLoadResult> {
       provenance: {
         intakeId: 'COMPANION-ITEM-ASSET-2026-08-03',
         sourceType: 'owner-supplied governed intake',
-        publicationState: 'published-text-only',
-        mediaState: 'withheld-pending-rights',
-        rightsStatus: 'owner_supplied_unverified_rights',
+        publicationState: 'published-preview-candidate',
+        mediaState: 'role-specific-static-webp',
+        rightsBasis: 'owner_declared_creative_commons',
         recordCount: records.length,
       },
     },

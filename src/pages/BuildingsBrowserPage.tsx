@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import BuildingArtwork from '../components/buildings/BuildingArtwork'
 import { fetchDataset, type DatasetSourceMetadata } from '../features/admin/dataEngineApi'
-import BuildingPlanner from '../features/buildings/BuildingPlanner'
+import BuildingPlanner from '../features/buildings/BuildingPlanner.tsx'
 import {
   BUILDING_EFFECT_METRICS,
   isPopulatedNumber,

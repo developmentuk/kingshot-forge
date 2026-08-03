@@ -1,6 +1,6 @@
-# COMPANION-INDEX-001 — Canonical Item Index Foundation
+# COMPANION-INDEX-001 — Canonical Item Index Foundation and Media Expansion Candidate
 
-**Status:** First text-only Player and Search foundation candidate; validation pending  
+**Status:** Ten-item text-only foundation accepted; 66-asset media/catalogue expansion candidate under owner review
 **Branch:** `feature/companion-index-foundation`  
 **Base:** `020ba32f8b36184b879f8acfee3245664a0a43b2`  
 **Production:** Unchanged  
@@ -111,6 +111,16 @@ This slice does not commit, upload, copy, hotlink or publish those binaries. Eve
 - a visible explanation that the image is withheld pending source and reuse verification.
 
 Checksums and planned filenames in the intake are evidence records, not publication permission.
+
+## Media expansion candidate — 2026-08-03
+
+The owner supplied and approved two archives: `items.zip` (`7ad7c36474089a683501292ebd849689bb41aa6f9daec14357d0d5984439e233`) and `icons.zip` (`cab698d9d984d4ebb1413b0e27a14e8ac0d297a6d2c8a2d958dc6061c543e26e`). The generated manifest records 59 full artworks, seven compact icons and 66 total transparent WebPs, including source and published checksums, dimensions, byte lengths, original entry names, canonical paths, alt text and publication state.
+
+The candidate uses repository-controlled static WebP publication with immutable role-specific paths. It records the rights basis exactly as `owner_declared_creative_commons`; Forge does not claim independent licence, artist, source, ownership or official-status verification. The existing ten-item projection is preserved, with `mythril` normalised to `item.mithril` and no `item.mythril` identity. The expanded projection currently contains 75 canonical item records: the accepted ten plus 58 new full-artwork identities and seven compact-icon identities.
+
+The existing persisted item-only Search refresh remains untouched: run `search-refresh-1785782191921`, `2026-08-03T18:36:31.954952Z`, index version 6, 10/10 projections, zero mismatches and zero orphan relationships. No expanded Search refresh has been executed. Owner visual acceptance for the original ten-item foundation is recorded as passed; remaining acceptance is visual review of the expanded catalogue and explicit approval for a future expanded Search mutation.
+
+Validation evidence includes `scripts/test-companion-media.mjs`, the updated Companion Index gate, Search, Search persistence/API/experience, entity identity, Buildings publication and production build. The Windows-only Buildings admin projection assertion remains stale against the current source contract and is recorded as a pre-existing test blocker. Admin item browsing, editing, approval, publication and rollback remain incomplete by design.
 
 ## Admin boundary
 

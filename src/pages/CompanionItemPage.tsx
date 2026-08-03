@@ -4,6 +4,7 @@ import {
   relationshipTypeLabel,
 } from '../features/companion/itemData'
 import { useCompanionItems } from '../features/companion/useCompanionItems'
+import CompanionItemMedia from '../features/companion/CompanionItemMedia'
 import '../styles/companionIndex.css'
 
 function formatDate(value: string): string {
@@ -67,12 +68,17 @@ export default function CompanionItemPage() {
       </nav>
 
       <section className="companion-item-hero">
-        <div className="companion-item-hero__media" aria-label="Item media status">
-          <span aria-hidden="true">◇</span>
-          <strong>Image withheld</strong>
+        <div className="companion-item-hero__media" aria-label="Item media">
+          <CompanionItemMedia
+            imageUrl={item.imageUrl}
+            alt={item.imageAltText || `${item.name} item artwork`}
+            role={item.mediaRole}
+          />
+          <strong>{item.mediaRole ? 'Approved preview media' : 'Media unavailable'}</strong>
           <p>
-            The owner-supplied WebP is not published while its original source
-            and reuse basis remain unverified.
+            {item.mediaRole
+              ? 'Owner-declared Creative Commons media is published with checksum-backed intake evidence.'
+              : 'No approved media is mapped to this canonical item in the current intake.'}
           </p>
         </div>
         <div className="companion-item-hero__content">

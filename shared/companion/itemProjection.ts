@@ -1,4 +1,5 @@
 import { createForgeId } from '../entity-identity/forgeId.js'
+import { COMPANION_MEDIA_MANIFEST } from './generatedMediaManifest.js'
 
 export type CompanionItemTrustState =
   | 'verified'
@@ -39,12 +40,17 @@ export type CompanionItemRecord = {
   source_name: string
   source_reference: string
   source_updated_at: string
-  rights_status: 'owner_supplied_unverified_rights'
+  rights_status: 'owner_supplied_unverified_rights' | 'owner_declared_creative_commons'
   rights_note: string
-  media_state: 'withheld_pending_rights'
-  image_url: null
+  media_state: 'withheld_pending_rights' | 'published_preview_candidate'
+  image_url: string | null
   image_alt_text: string
   planned_media_path: string
+  media_role: 'full_artwork' | 'compact_icon' | null
+  media_sha256: string | null
+  media_width: number | null
+  media_height: number | null
+  media_byte_length: number | null
   relationships: readonly []
   companion_relationships: readonly CompanionItemRelationship[]
   status: 'published'
@@ -60,6 +66,8 @@ const SOURCE_REFERENCE =
 const SOURCE_UPDATED_AT = '2026-08-03T00:00:00.000Z'
 const RIGHTS_NOTE =
   'Owner-supplied artwork is withheld until its original extraction source and reuse basis are documented.'
+const PUBLISHED_RIGHTS_NOTE =
+  'The project owner declared the supplied artwork Creative Commons and approved publication. Forge has not independently verified the exact licence variant, original artist, original website, source URL, official ownership or endorsement.'
 
 function trust(
   state: CompanionItemTrustState,
@@ -138,6 +146,11 @@ function item(input: {
     image_url: null,
     image_alt_text: input.imageAltText,
     planned_media_path: input.plannedMediaPath,
+    media_role: null,
+    media_sha256: null,
+    media_width: null,
+    media_height: null,
+    media_byte_length: null,
     relationships: [],
     companion_relationships: input.relationships,
     status: 'published',
@@ -147,7 +160,7 @@ function item(input: {
   }
 }
 
-export const COMPANION_ITEM_PROJECTION: readonly CompanionItemRecord[] = [
+const CORE_COMPANION_ITEM_PROJECTION: readonly CompanionItemRecord[] = [
   item({
     key: 'mithril',
     name: 'Mithril',
@@ -469,6 +482,84 @@ export const COMPANION_ITEM_PROJECTION: readonly CompanionItemRecord[] = [
     ],
     tags: ['buildings', 'tempered-truegold', 'material'],
   }),
+]
+
+function applyMedia(
+  record: CompanionItemRecord,
+  media: (typeof COMPANION_MEDIA_MANIFEST)[number] | undefined,
+): CompanionItemRecord {
+  if (!media) return record
+
+  return {
+    ...record,
+    rights_status: 'owner_declared_creative_commons',
+    rights_note: PUBLISHED_RIGHTS_NOTE,
+    media_state: 'published_preview_candidate',
+    image_url: media.immutable_media_path,
+    image_alt_text: record.image_alt_text || media.alt_text,
+    planned_media_path: media.immutable_media_path,
+    media_role: media.media_role,
+    media_sha256: media.source_sha256,
+    media_width: media.width,
+    media_height: media.height,
+    media_byte_length: media.byte_length,
+  }
+}
+
+function generatedMediaItem(
+  media: (typeof COMPANION_MEDIA_MANIFEST)[number],
+): CompanionItemRecord {
+  const forgeId = createForgeId('item', media.canonical_item_key)
+  if (!forgeId) throw new Error(`Invalid media item key: ${media.canonical_item_key}`)
+
+  return {
+    id: media.canonical_item_key,
+    key: media.canonical_item_key,
+    forge_id: forgeId,
+    name: media.canonical_name,
+    aliases: [],
+    category: media.media_role === 'compact_icon' ? 'resource_icon' : 'unclassified_item',
+    category_label: media.media_role === 'compact_icon' ? 'Compact resource icon' : 'Item artwork',
+    summary: `Approved ${media.media_role === 'compact_icon' ? 'compact icon' : 'full artwork'} is available. Gameplay meaning, acquisition and strategic guidance require editorial research.`,
+    trust_state: 'research_needed',
+    trust_label: 'Research needed',
+    verification_note: 'The asset identity is mapped from the supplied archive entry. Gameplay facts are not inferred from the artwork.',
+    source_name: 'Owner-supplied Companion media intake',
+    source_reference: 'docs/companion/assets/ITEM-MEDIA-MANIFEST-2026-08-03.json',
+    source_updated_at: SOURCE_UPDATED_AT,
+    rights_status: 'owner_declared_creative_commons',
+    rights_note: PUBLISHED_RIGHTS_NOTE,
+    media_state: 'published_preview_candidate',
+    image_url: media.immutable_media_path,
+    image_alt_text: media.alt_text,
+    planned_media_path: media.immutable_media_path,
+    media_role: media.media_role,
+    media_sha256: media.source_sha256,
+    media_width: media.width,
+    media_height: media.height,
+    media_byte_length: media.byte_length,
+    relationships: [],
+    companion_relationships: [],
+    status: 'published',
+    canonical_url: `/companion/items/${encodeURIComponent(media.canonical_item_key)}`,
+    tags: [media.media_role],
+    search_weight: 10,
+    confidence: 'experimental',
+    confidence_label: 'Media identity mapped; gameplay research needed',
+  }
+}
+
+const coreKeys = new Set(CORE_COMPANION_ITEM_PROJECTION.map((record) => record.key))
+const generatedItems = COMPANION_MEDIA_MANIFEST
+  .filter((media) => !coreKeys.has(media.canonical_item_key))
+  .map(generatedMediaItem)
+
+export const COMPANION_ITEM_PROJECTION: readonly CompanionItemRecord[] = [
+  ...CORE_COMPANION_ITEM_PROJECTION.map((record) => applyMedia(
+    record,
+    COMPANION_MEDIA_MANIFEST.find((media) => media.canonical_item_key === record.key),
+  )),
+  ...generatedItems,
 ]
 
 export function getCompanionItem(

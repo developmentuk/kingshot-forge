@@ -25,6 +25,10 @@ export type CompanionItemViewRecord = {
   imageUrl: string | null
   imageAltText: string
   plannedMediaPath: string
+  mediaRole: 'full_artwork' | 'compact_icon' | null
+  mediaSha256: string | null
+  mediaWidth: number | null
+  mediaHeight: number | null
   relationships: CompanionItemRelationship[]
   canonicalUrl: string
   tags: string[]
@@ -55,6 +59,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+function mediaRole(value: unknown): CompanionItemViewRecord['mediaRole'] {
+  return value === 'full_artwork' || value === 'compact_icon' ? value : null
 }
 
 function list(value: unknown): string[] {
@@ -137,6 +145,10 @@ export function normaliseCompanionItems(
       imageUrl: text(candidate.image_url) || null,
       imageAltText: text(candidate.image_alt_text),
       plannedMediaPath: text(candidate.planned_media_path),
+      mediaRole: mediaRole(candidate.media_role),
+      mediaSha256: text(candidate.media_sha256) || null,
+      mediaWidth: typeof candidate.media_width === 'number' ? candidate.media_width : null,
+      mediaHeight: typeof candidate.media_height === 'number' ? candidate.media_height : null,
       relationships: relationships(candidate.companion_relationships),
       canonicalUrl: text(candidate.canonical_url)
         || `/companion/items/${encodeURIComponent(key)}`,

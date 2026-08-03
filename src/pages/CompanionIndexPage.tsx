@@ -5,6 +5,7 @@ import {
   companionCategoryLabel,
 } from '../features/companion/itemData'
 import { useCompanionItems } from '../features/companion/useCompanionItems'
+import CompanionItemMedia from '../features/companion/CompanionItemMedia'
 import '../styles/companionIndex.css'
 
 function formatDate(value: string | null): string {
@@ -82,7 +83,7 @@ export default function CompanionIndexPage() {
           </div>
           <div>
             <dt>Media status</dt>
-            <dd>Withheld pending rights review</dd>
+            <dd>Checksum-backed preview media</dd>
           </div>
           <div>
             <dt>Projection updated</dt>
@@ -130,8 +131,8 @@ export default function CompanionIndexPage() {
             <h2 id="companion-items-title">Items and resources</h2>
           </div>
           <p>
-            Text records are published. Owner-supplied images remain withheld
-            until their original source and reuse basis are documented.
+            Approved preview media is checksum-backed. Gameplay facts remain
+            explicitly research-needed where the intake does not support them.
           </p>
         </div>
 
@@ -203,9 +204,13 @@ export default function CompanionIndexPage() {
                     to={item.canonicalUrl}
                     className="companion-item-card"
                   >
-                    <div className="companion-item-card__media" aria-hidden="true">
-                      <span>◇</span>
-                      <small>Image withheld</small>
+                    <div className="companion-item-card__media">
+                      <CompanionItemMedia
+                        imageUrl={item.imageUrl}
+                        alt={item.imageAltText || `${item.name} item artwork`}
+                        role={item.mediaRole}
+                        compact={item.mediaRole === 'compact_icon'}
+                      />
                     </div>
                     <div className="companion-item-card__body">
                       <div className="companion-item-card__meta">

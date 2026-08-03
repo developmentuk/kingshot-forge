@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { fetchDataset } from '../features/admin/dataEngineApi'
-import BuildingPlanner from '../features/buildings/BuildingPlanner'
+import BuildingPlanner from '../features/buildings/BuildingPlanner.tsx'
 import {
   normaliseBuildings,
   type BuildingCompanionRecord,
