@@ -30,6 +30,9 @@ interface RecordEditorPanelProps {
   isOpen?: boolean;
   disabled?: boolean;
   disabledMessage?: string;
+  disabledActionLabel?: string;
+  disabledActionBusy?: boolean;
+  onDisabledAction?: () => void | Promise<void>;
   onClose: () => void;
   onSave?: (
     record: RecordEditorRecord,
@@ -48,6 +51,9 @@ export function RecordEditorPanel({
   isOpen = true,
   disabled = false,
   disabledMessage,
+  disabledActionLabel,
+  disabledActionBusy = false,
+  onDisabledAction,
   onClose,
   onSave,
   supplementalContent,
@@ -289,6 +295,24 @@ export function RecordEditorPanel({
           >
             <strong>Editing unavailable</strong>
             <p>{disabledMessage}</p>
+            {disabledActionLabel &&
+              onDisabledAction && (
+                <button
+                  type="button"
+                  className="record-editor-button record-editor-button--primary"
+                  disabled={
+                    isSaving ||
+                    disabledActionBusy
+                  }
+                  onClick={() => {
+                    void onDisabledAction();
+                  }}
+                >
+                  {disabledActionBusy
+                    ? "Working…"
+                    : disabledActionLabel}
+                </button>
+              )}
           </div>
         )}
 

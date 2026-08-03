@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -51,6 +52,10 @@ interface ConnectedEditorialRecordEditorProps {
   onClose: () => void;
 }
 
+interface LoadStateOptions {
+  blocking?: boolean;
+}
+
 function sanitiseValues(
   values: RecordEditorRecord["values"],
 ): Record<string, unknown> {
@@ -83,10 +88,20 @@ export function ConnectedEditorialRecordEditor({
     null,
   );
 
+  const recordRef = useRef(record);
+  recordRef.current = record;
+  const stateRef = useRef<EditorialRecordState | null>(null);
+  const loadSequenceRef = useRef(0);
+
   const [
     loading,
     setLoading,
   ] = useState(true);
+
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(false);
 
   const [
     runtimeError,
@@ -115,29 +130,50 @@ export function ConnectedEditorialRecordEditor({
   ] = useState<string>();
 
   const loadState = useCallback(
-    async (signal?: AbortSignal) => {
+    async (
+      signal?: AbortSignal,
+      options: LoadStateOptions = {},
+    ) => {
+      const requestId = ++loadSequenceRef.current;
+      const sourceRecord = recordRef.current;
+      const blocking =
+        options.blocking ?? stateRef.current === null;
+
       setRuntimeError(null);
-      setLoading(true);
+      if (blocking) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
 
       try {
         const nextState =
           await fetchEditorialRecordState(
             schema.datasetId,
-            record.id,
+            sourceRecord.id,
             signal,
           );
 
-        if (signal?.aborted) return;
+        if (
+          signal?.aborted ||
+          requestId !== loadSequenceRef.current
+        ) {
+          return;
+        }
+
+        stateRef.current = nextState;
         setState(nextState);
         setCurrentRecord(
           schema.datasetId === "buildings"
-            ? hydrateBuildingsEditorRecord(record, nextState)
+            ? hydrateBuildingsEditorRecord(sourceRecord, nextState)
             : nextState.currentVersion
-              ? { id: record.id, values: nextState.currentVersion.values }
-              : record,
+              ? { id: sourceRecord.id, values: nextState.currentVersion.values }
+              : sourceRecord,
         );
       } catch (error) {
         if (
+          signal?.aborted ||
+          requestId !== loadSequenceRef.current ||
           error instanceof DOMException &&
           error.name === "AbortError"
         ) {
@@ -150,11 +186,17 @@ export function ConnectedEditorialRecordEditor({
             : "Unable to load editorial state.",
         );
       } finally {
-        if (!signal?.aborted) setLoading(false);
+        if (
+          !signal?.aborted &&
+          requestId === loadSequenceRef.current
+        ) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [
-      record,
+      record.id,
       schema.datasetId,
     ],
   );
@@ -163,18 +205,23 @@ export function ConnectedEditorialRecordEditor({
     const controller =
       new AbortController();
 
-    setCurrentRecord(record);
+    stateRef.current = null;
+    setCurrentRecord(recordRef.current);
     setState(null);
     setComparison(undefined);
     setSelectedVersionId(undefined);
     setLoading(true);
+    setRefreshing(false);
 
-    void loadState(controller.signal);
+    void loadState(
+      controller.signal,
+      { blocking: true },
+    );
 
     return () => {
       controller.abort();
     };
-  }, [loadState, record]);
+  }, [loadState, record.id]);
 
   const allowedActions = useMemo(() => {
     const actions:
@@ -231,24 +278,53 @@ export function ConnectedEditorialRecordEditor({
     schema.datasetId === "buildings"
       ? isRealBuildingsDraft(state)
       : Boolean(state?.head && state.head.status === "draft" && state.currentVersion);
-  const draftIsEditable = hasRealDraft;
+  const canCreateInitialDraft =
+    !state?.head &&
+    mode !== "review" &&
+    savePermission;
+  const draftIsEditable =
+    hasRealDraft ||
+    canCreateInitialDraft;
+  const initialLoading =
+    loading && state === null;
+  const canReturnToDraft = Boolean(
+    !loading &&
+    !refreshing &&
+    state?.head &&
+    [
+      "in_review",
+      "approved",
+      "published",
+    ].includes(state.head.status) &&
+    allowedActions.includes("return_to_draft"),
+  );
+  const redraftActionLabel =
+    state?.head?.status === "published"
+      ? "Create editable draft"
+      : "Return to draft";
   const editingDisabled =
-    loading ||
+    initialLoading ||
     Boolean(runtimeError && !state) ||
     !savePermission ||
     !draftIsEditable;
   const editingDisabledMessage =
-    loading
+    initialLoading
       ? "Editorial state is loading."
         : runtimeError && !state
         ? "Editorial state could not be loaded, so saving is disabled. Retry the request below."
         : !savePermission
           ? "Your role can view this record but cannot save editorial drafts."
+          : state?.head?.status === "published"
+            ? canReturnToDraft
+              ? "This is the live published version. Create an editable draft before changing values. The current public version remains live until the replacement is approved and published."
+              : "This is the live published version. Your role cannot create an editable draft from it."
           : !state?.head
-            ? "This published record has no active draft. Return it to draft before editing."
-          : !draftIsEditable
-            ? `This record is ${state?.head?.status.replaceAll("_", " ")}. Return it to draft before editing values.`
-            : undefined;
+            ? undefined
+            : !draftIsEditable
+              ? canReturnToDraft
+                ? `This record is ${state.head.status.replaceAll("_", " ")}. Return it to draft before editing values.`
+                : `This record is ${state.head.status.replaceAll("_", " ")}. Your role cannot return it to draft.`
+              : undefined;
 
   async function saveDraft(
     nextRecord: RecordEditorRecord,
@@ -275,7 +351,10 @@ export function ConnectedEditorialRecordEditor({
       values: result.version.values,
     });
 
-    await loadState();
+    await loadState(
+      undefined,
+      { blocking: false },
+    );
 
     return {
       id: nextRecord.id,
@@ -314,7 +393,10 @@ export function ConnectedEditorialRecordEditor({
         },
       );
 
-      await loadState();
+      await loadState(
+        undefined,
+        { blocking: false },
+      );
     } catch (error) {
       setRuntimeError(
         error instanceof Error
@@ -365,7 +447,10 @@ export function ConnectedEditorialRecordEditor({
         expectedVersion: state.head.currentVersion,
         targetVersionId: versionId,
       });
-      await loadState();
+      await loadState(
+        undefined,
+        { blocking: false },
+      );
     } catch (error) {
       setRuntimeError(
         error instanceof Error ? error.message : "Rollback failed.",
@@ -427,7 +512,10 @@ export function ConnectedEditorialRecordEditor({
         },
       );
 
-      await loadState();
+      await loadState(
+        undefined,
+        { blocking: false },
+      );
     } catch (error) {
       setRuntimeError(
         error instanceof Error
@@ -443,9 +531,25 @@ export function ConnectedEditorialRecordEditor({
       schema={schema}
       record={currentRecord}
       disabled={editingDisabled}
-      validationEnabled={!loading && hasRealDraft}
+      validationEnabled={!initialLoading && draftIsEditable}
       disabledMessage={
         editingDisabledMessage
+      }
+      disabledActionLabel={
+        canReturnToDraft
+          ? redraftActionLabel
+          : undefined
+      }
+      disabledActionBusy={
+        busyAction === "return_to_draft"
+      }
+      onDisabledAction={
+        canReturnToDraft
+          ? () =>
+              runWorkflowAction(
+                "return_to_draft",
+              )
+          : undefined
       }
       onClose={onClose}
       onSave={saveDraft}
@@ -461,14 +565,20 @@ export function ConnectedEditorialRecordEditor({
               </strong>
               <p>{runtimeError}</p>
               {!state && (
-                <button type="button" onClick={() => void loadState()}>
+                <button type="button" onClick={() => void loadState(undefined, { blocking: true })}>
                   Retry
                 </button>
               )}
             </div>
           )}
 
-          {loading ? (
+          {refreshing && state && (
+            <p className="record-editor-save-message" role="status">
+              Refreshing editorial status…
+            </p>
+          )}
+
+          {initialLoading ? (
             <section className="editorial-admin-card">
               <p className="editorial-admin-empty">
                 Loading editorial history…
@@ -536,7 +646,7 @@ export function ConnectedEditorialRecordEditor({
           ) : (
             <section className="editorial-admin-card">
               <p className="editorial-admin-empty">
-                This published record has no active draft. Return it to draft before editing.
+                No editorial draft exists yet. Edit the fields above and save changes to create the first draft.
               </p>
             </section>
           )}

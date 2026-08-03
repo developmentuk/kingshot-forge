@@ -64,6 +64,31 @@ function createBuildingEditorRecord(
           record.standard_max_level,
         ),
 
+      image_url:
+        readStringValue(
+          record.image_url,
+        ) ?? "",
+
+      image_alt_text:
+        readStringValue(
+          record.image_alt_text,
+        ) ?? "",
+
+      image_credit:
+        readStringValue(
+          record.image_credit,
+        ) ?? "",
+
+      image_source_url:
+        readStringValue(
+          record.image_source_url,
+        ) ?? "",
+
+      image_license:
+        readStringValue(
+          record.image_license,
+        ) ?? "",
+
       source:
         readStringValue(
           record.source_url,

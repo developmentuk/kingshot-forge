@@ -129,13 +129,19 @@ export function RecordEditorForm({
     const value = record.values[field.key];
     const error =
       validation.errorsByField[field.key];
-
-    if (
+    const isHeroPortrait =
       schema.datasetId === "heroes" &&
-      field.key === "portrait_url"
-    ) {
+      field.key === "portrait_url";
+    const isBuildingImage =
+      schema.datasetId === "buildings" &&
+      field.key === "image_url";
+
+    if (isHeroPortrait || isBuildingImage) {
       const inputId =
         `record-editor-field-${field.key}`;
+      const kind = isBuildingImage
+        ? "building"
+        : "hero";
 
       return (
         <div
@@ -152,7 +158,14 @@ export function RecordEditorForm({
         >
           <div className="record-editor-special-field-heading">
             <div>
-              <span>Hero portrait</span>
+              <span>
+                {isBuildingImage
+                  ? "Building image"
+                  : "Hero portrait"}
+              </span>
+              {field.description && (
+                <p>{field.description}</p>
+              )}
             </div>
           </div>
 
@@ -160,6 +173,7 @@ export function RecordEditorForm({
             id={inputId}
             value={value}
             record={record}
+            kind={kind}
             disabled={isFormDisabled}
             describedBy={
               error

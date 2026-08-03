@@ -40,6 +40,28 @@ function requireData<T>(
   return data;
 }
 
+function readRollbackTargetVersionId(
+  auditEvent: EditorialAuditEvent,
+): string | null {
+  if (auditEvent.action !== "rolled_back") {
+    return null;
+  }
+
+  const targetVersionId =
+    auditEvent.metadata?.rolledBackToVersionId;
+
+  if (
+    typeof targetVersionId !== "string" ||
+    targetVersionId.trim().length === 0
+  ) {
+    throw new Error(
+      "Atomic editorial rollback requires the target version ID in immutable audit metadata.",
+    );
+  }
+
+  return targetVersionId.trim();
+}
+
 export class SupabaseEditorialRepository
 implements EditorialRepository {
   private readonly client: SupabaseClient;
@@ -138,6 +160,44 @@ implements EditorialRepository {
     auditEvent: EditorialAuditEvent,
     expectedVersion: number | null,
   ): Promise<void> {
+    const rollbackTargetVersionId =
+      readRollbackTargetVersionId(auditEvent);
+
+    if (rollbackTargetVersionId) {
+      if (
+        expectedVersion === null ||
+        !Number.isInteger(expectedVersion) ||
+        expectedVersion < 1
+      ) {
+        throw new Error(
+          "Atomic editorial rollback requires a positive expected version.",
+        );
+      }
+
+      const { data, error } = await this.client.rpc(
+        "rollback_editorial_version_checked",
+        {
+          p_dataset_id: head.datasetId,
+          p_record_id: head.recordId,
+          p_target_version_id:
+            rollbackTargetVersionId,
+          p_actor_id: auditEvent.actorId,
+          p_expected_version: expectedVersion,
+          p_published_version_id: version.id,
+          p_audit_event_id: auditEvent.id,
+          p_occurred_at: auditEvent.occurredAt,
+          p_note: auditEvent.note ?? null,
+        },
+      );
+
+      requireData(
+        data,
+        error,
+        "Atomic editorial rollback",
+      );
+      return;
+    }
+
     const { data, error } = await this.client.rpc(
       "commit_editorial_version",
       {

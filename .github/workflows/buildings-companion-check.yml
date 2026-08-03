@@ -1,0 +1,94 @@
+name: Buildings Companion validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/App.tsx'
+      - 'src/navigation/workspaceRegistry.ts'
+      - 'src/pages/BuildingsBrowserPage.tsx'
+      - 'src/pages/BuildingCalculatorsPage.tsx'
+      - 'src/components/buildings/**'
+      - 'src/features/buildings/**'
+      - 'src/styles/buildingsBrowser.css'
+      - 'src/styles/buildingsProgressionPolish.css'
+      - 'src/styles/buildingCalculatorsPage.css'
+      - 'src/context/RoleContext.tsx'
+      - 'src/features/admin/buildingsDatasetAdapter.ts'
+      - 'src/features/admin/editorial/ConnectedEditorialRecordEditor.tsx'
+      - 'src/features/admin/editorial/EditorialWorkflowPanel.tsx'
+      - 'src/features/admin/recordEditor/buildingsRecordEditorSchema.ts'
+      - 'src/features/admin/recordEditor/CompanionImageField.tsx'
+      - 'src/features/admin/recordEditor/CompanionImageField.css'
+      - 'src/features/admin/recordEditor/RecordEditorForm.tsx'
+      - 'src/features/admin/recordEditor/RecordEditorPanel.tsx'
+      - 'src/platform/editorial/services/EditorialWorkflowService.ts'
+      - 'src/platform/persistence/supabase/SupabaseEditorialRepository.ts'
+      - 'server/data-engine/loadPublishedBuildingsDataset.ts'
+      - 'shared/data-engine/readiness-registry.ts'
+      - 'shared/data-pipeline/buildingsContract.ts'
+      - 'shared/data-pipeline/buildingsProgressionOrdering.ts'
+      - 'supabase/migrations/20260802193000_buildings_editorial_media_projection.sql'
+      - 'supabase/migrations/20260803131500_building_media_permission_guard.sql'
+      - 'supabase/migrations/20260803141000_editorial_atomic_rollback_concurrency.sql'
+      - 'scripts/test-buildings-companion.mjs'
+      - 'scripts/test-building-media-permission.mjs'
+      - 'scripts/test-building-planner.mjs'
+      - 'scripts/test-editorial-atomic-rollback.mjs'
+      - 'docs/releases/COMPANION-BUILDINGS-001.md'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: buildings-companion-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Complete Buildings companion validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate Buildings companion contracts
+        run: node scripts/test-buildings-companion.mjs
+
+      - name: Validate building media permission guard
+        run: node scripts/test-building-media-permission.mjs
+
+      - name: Validate atomic editorial rollback
+        run: node scripts/test-editorial-atomic-rollback.mjs
+
+      - name: Validate Building Planner contracts
+        run: node scripts/test-building-planner.mjs
+
+      - name: Test published Buildings integrity
+        run: npm run test:buildings-publication
+
+      - name: Test Buildings progression ordering
+        run: npm run test:buildings-progression-ordering
+
+      - name: Lint candidate
+        run: npm run lint
+
+      - name: Build candidate
+        run: npm run build

@@ -53,10 +53,30 @@ const statusActions: Record<
     "reject",
     "approve",
   ],
-  approved: ["publish"],
-  published: ["archive"],
+  approved: [
+    "return_to_draft",
+    "publish",
+  ],
+  published: [
+    "return_to_draft",
+    "archive",
+  ],
   archived: ["restore"],
 };
+
+function getActionLabel(
+  action: EditorialWorkflowAction,
+  status: DatasetPublicationStatus,
+): string {
+  if (
+    action === "return_to_draft" &&
+    status === "published"
+  ) {
+    return "Create editable draft";
+  }
+
+  return actionLabels[action];
+}
 
 function formatDate(
   value: string | undefined,
@@ -89,6 +109,9 @@ export function EditorialWorkflowPanel({
         ? allowedActions.includes(action)
         : true,
     );
+  const canCreateEditableDraft =
+    status === "published" &&
+    availableActions.includes("return_to_draft");
 
   return (
     <section className="editorial-admin-card">
@@ -122,6 +145,11 @@ export function EditorialWorkflowPanel({
 
       {availableActions.length > 0 ? (
         <>
+          {canCreateEditableDraft && (
+            <p className="editorial-admin-empty">
+              Create a new draft from the live version to make changes. The current public version remains live until the replacement is approved and published.
+            </p>
+          )}
           <label className="editorial-review-note">
             Reviewer comment
             <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add context, evidence or approval rationale. It is stored in immutable audit history." rows={3} />
@@ -147,7 +175,7 @@ export function EditorialWorkflowPanel({
             >
               {busyAction === action
                 ? "Working…"
-                : actionLabels[action]}
+                : getActionLabel(action, status)}
             </button>
           ))}
           </div>

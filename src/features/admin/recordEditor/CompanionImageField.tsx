@@ -14,22 +14,47 @@ import type {
 
 import "./CompanionImageField.css";
 
+type CompanionImageKind = "hero" | "building";
+
 interface CompanionImageFieldProps {
   id: string;
   value: RecordEditorValue;
   record: RecordEditorRecord;
+  kind?: CompanionImageKind;
   disabled?: boolean;
   describedBy?: string;
   onChange: (value: RecordEditorValue) => void;
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
-const MIN_IMAGE_SIZE = 800;
 const ALLOWED_TYPES = new Set([
   "image/webp",
   "image/png",
   "image/jpeg",
 ]);
+
+const IMAGE_CONFIG = {
+  hero: {
+    folder: "heroes",
+    filePrefix: "portrait",
+    noun: "portrait",
+    previewAlt: "Current hero portrait preview",
+    placeholder: "⚔️",
+    minimumWidth: 800,
+    minimumHeight: 800,
+    recommendation: "Recommended 1200 × 1200 px. Minimum 800 × 800 px.",
+  },
+  building: {
+    folder: "buildings",
+    filePrefix: "companion-image",
+    noun: "building image",
+    previewAlt: "Current building image preview",
+    placeholder: "🏰",
+    minimumWidth: 800,
+    minimumHeight: 450,
+    recommendation: "Recommended 1600 × 900 px. Minimum 800 × 450 px.",
+  },
+} as const;
 
 function sanitisePathPart(value: string): string {
   return value
@@ -76,7 +101,7 @@ async function readImageSize(
   try {
     const image = new Image();
 
-    const dimensions = await new Promise<{
+    return await new Promise<{
       width: number;
       height: number;
     }>((resolve, reject) => {
@@ -97,8 +122,6 @@ async function readImageSize(
 
       image.src = objectUrl;
     });
-
-    return dimensions;
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
@@ -108,6 +131,7 @@ export function CompanionImageField({
   id,
   value,
   record,
+  kind = "hero",
   disabled = false,
   describedBy,
   onChange,
@@ -119,6 +143,7 @@ export function CompanionImageField({
   const [uploadMessage, setUploadMessage] =
     useState<string | null>(null);
 
+  const config = IMAGE_CONFIG[kind];
   const imageUrl =
     typeof value === "string" ? value : "";
 
@@ -156,24 +181,27 @@ export function CompanionImageField({
         await readImageSize(file);
 
       if (
-        width < MIN_IMAGE_SIZE ||
-        height < MIN_IMAGE_SIZE
+        width < config.minimumWidth ||
+        height < config.minimumHeight
       ) {
         throw new Error(
-          `The image is ${width} × ${height} px. Use at least 800 × 800 px.`,
+          `The image is ${width} × ${height} px. Use at least ${config.minimumWidth} × ${config.minimumHeight} px.`,
         );
       }
 
       const recordSlug = sanitisePathPart(
         String(
-          record.values.slug ?? record.id,
+          record.values.slug ??
+          record.values.key ??
+          record.values.building_key ??
+          record.id,
         ),
       );
       const extension = getExtension(file);
       const objectPath = [
-        "heroes",
+        config.folder,
         recordSlug,
-        `portrait-${Date.now()}.${extension}`,
+        `${config.filePrefix}-${Date.now()}.${extension}`,
       ].join("/");
 
       const { error } = await supabase.storage
@@ -196,7 +224,7 @@ export function CompanionImageField({
 
       onChange(data.publicUrl);
       setUploadMessage(
-        `Uploaded ${width} × ${height} px. Save the draft to attach it to this hero.`,
+        `Uploaded ${width} × ${height} px. Save the draft to attach it to this ${kind}.`,
       );
     } catch (error) {
       setUploadError(
@@ -210,15 +238,19 @@ export function CompanionImageField({
   }
 
   return (
-    <div className="record-editor-image-field">
+    <div
+      className={`record-editor-image-field record-editor-image-field--${kind}`}
+    >
       <div className="record-editor-image-field__preview">
         {imageUrl ? (
           <img
             src={imageUrl}
-            alt="Current hero portrait preview"
+            alt={config.previewAlt}
           />
         ) : (
-          <span aria-hidden="true">⚔️</span>
+          <span aria-hidden="true">
+            {config.placeholder}
+          </span>
         )}
       </div>
 
@@ -231,8 +263,8 @@ export function CompanionImageField({
           {isUploading
             ? "Uploading…"
             : imageUrl
-              ? "Replace portrait"
-              : "Upload portrait"}
+              ? `Replace ${config.noun}`
+              : `Upload ${config.noun}`}
         </label>
 
         <input
@@ -258,14 +290,15 @@ export function CompanionImageField({
               onChange("");
             }}
           >
-            Remove portrait
+            Remove {config.noun}
           </button>
         )}
       </div>
 
       <p className="record-editor-image-field__requirements">
-        Recommended 1200 × 1200 px. Minimum 800 × 800 px.
+        {config.recommendation}{" "}
         WebP preferred; PNG and JPEG supported. Maximum 2 MB.
+        Replacements use immutable file paths so published history remains recoverable.
       </p>
 
       {uploadMessage && (

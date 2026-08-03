@@ -2,7 +2,7 @@ import fs from 'node:fs'
 
 const required = [
   ['src/features/admin/ForgeContentStudioPage.tsx', ['Editorial workflow', 'Relationship impact', 'Dataset dependencies', 'Search index', 'Knowledge graph', 'Editorial timeline']],
-  ['src/pages/BuildingsBrowserPage.tsx', ['Buildings directory', 'Truegold', 'Progression', 'Prerequisites', 'Forge Connections']],
+  ['src/pages/BuildingsBrowserPage.tsx', ['Buildings directory', 'Truegold', 'Progression', 'Prerequisites', 'ForgeConnections']],
   ['api/data-studio/overview.ts', ['forge_import_runs', 'publication_queue', 'relationshipImpact', 'dependencyGraph']],
   ['api/data-studio/buildings.ts', ["request.method === 'GET'", "state: blockingErrors > 0 ? 'validation_failed' : 'review_required'", 'forge_import_records']],
   ['src/features/admin/EditorialImportManagerPage.tsx', ['Import-run detail', 'Eight unresolved prerequisite warnings', 'Record-level preview', 'Publication is blocked']],

@@ -54,7 +54,7 @@ const transitions = {
     action: 'submitted_for_review',
   },
   returnToDraft: {
-    from: ['in_review'],
+    from: ['in_review', 'approved', 'published'],
     to: 'draft',
     action: 'returned_to_draft',
   },

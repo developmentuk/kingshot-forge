@@ -127,9 +127,13 @@ function adminCapabilityStatus(
         : 'missing'
 
     case 'publishing':
-      return DATASET_CAPABILITY_REGISTRY[key].publishing
-        ? 'partial'
-        : 'missing'
+      if (!DATASET_CAPABILITY_REGISTRY[key].publishing) {
+        return 'missing'
+      }
+
+      return key === 'buildings'
+        ? 'implemented'
+        : 'partial'
 
     case 'filters':
       return 'missing'
@@ -170,20 +174,27 @@ function createCapabilities(key: DatasetKey): readonly CapabilityReadiness[] {
     )
 
     if (adminStatus) {
+      const buildingsPublishingAccepted =
+        key === 'buildings' && capability === 'publishing'
+
       return {
         capability,
         status: adminStatus,
-        evidence: ADMIN_CAPABILITY_EVIDENCE[capability],
+        evidence: buildingsPublishingAccepted
+          ? 'docs/releases/COMPANION-BUILDINGS-001.md'
+          : ADMIN_CAPABILITY_EVIDENCE[capability],
         note:
-          adminStatus === 'implemented'
-            ? 'Verified in the shared Admin dataset experience.'
-            : adminStatus === 'partial' && capability === 'publishing'
-              ? 'The atomic publication contract is implemented locally but its unapplied migration and live transaction remain unverified.'
-            : capability === 'verification'
-              ? 'Derived from current Verification Centre evidence. Live RLS, migration and publication checks remain blocked or not run.'
-            : capability === 'filters'
-              ? 'Search and sorting are available; dataset-specific filters are not implemented.'
-              : `The ${capability} capability is not implemented for this dataset.`,
+          buildingsPublishingAccepted
+            ? 'Live draft, review, approval, publication, rollback and restoration acceptance passed against the governed Buildings projection.'
+            : adminStatus === 'implemented'
+              ? 'Verified in the shared Admin dataset experience.'
+              : adminStatus === 'partial' && capability === 'publishing'
+                ? 'The atomic publication contract exists, but live publish, rollback and restoration acceptance remains incomplete for this dataset.'
+                : capability === 'verification'
+                  ? 'Derived from current Verification Centre evidence. Live RLS, migration and publication checks remain blocked or not run.'
+                  : capability === 'filters'
+                    ? 'Search and sorting are available; dataset-specific filters are not implemented.'
+                    : `The ${capability} capability is not implemented for this dataset.`,
       }
     }
 

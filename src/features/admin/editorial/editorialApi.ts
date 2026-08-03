@@ -77,9 +77,11 @@ async function request<T>(
 
   const response = await fetch(url, {
     ...init,
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      "Cache-Control": "no-store",
       ...init.headers,
     },
   });
@@ -119,6 +121,7 @@ export function fetchEditorialRecordState(
   const query = new URLSearchParams({
     datasetId,
     recordId,
+    cacheBust: Date.now().toString(),
   });
 
   return request<EditorialRecordState>(
