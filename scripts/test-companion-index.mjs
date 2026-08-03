@@ -84,6 +84,8 @@ assert.match(adminSearchApi, /!PUBLISHED_DATASET_KEYS\.includes/u)
 assert.doesNotMatch(adminSearchApi, /import \{ DATASET_KEYS \}/u)
 assert.match(searchRuntime, /items: 'item'/u)
 assert.match(searchRuntime, /PUBLISHED_DATASET_KEYS\.map\(createProvider\)/u)
+assert.match(searchRuntime, /keywords:[\s\S]*\.\.\.aliases[\s\S]*trust_label/u)
+assert.match(searchRuntime, /const aliases = stringList\(record\.aliases\)/u)
 
 assert.match(app, /path="companion" element=\{<CompanionIndexPage/u)
 assert.match(app, /path="companion\/items\/:itemKey" element=\{<CompanionItemPage/u)
@@ -107,5 +109,5 @@ assert.match(styles, /focus-visible/u)
 assert.match(styles, /companion-trust--research_needed/u)
 
 console.log(
-  'Companion Index identity, projection, rights, Search refresh and responsive route contracts passed.',
+  'Companion Index identity, projection, rights, persisted aliases, Search refresh and responsive route contracts passed.',
 )
