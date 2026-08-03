@@ -15,7 +15,12 @@ export default function BuildingArtwork({
   decorative = false,
   className = '',
 }: BuildingArtworkProps) {
-  const [imageFailed, setImageFailed] = useState(false)
+  const imageIdentity = building.imageUrl
+    ? `${building.key}:${building.imageUrl}`
+    : null
+  const [failedImageIdentity, setFailedImageIdentity] = useState<string | null>(null)
+  const imageFailed = imageIdentity !== null
+    && failedImageIdentity === imageIdentity
 
   if (building.imageUrl && !imageFailed) {
     const imageClassName = [
@@ -30,7 +35,7 @@ export default function BuildingArtwork({
       src={building.imageUrl}
       alt={decorative ? '' : building.imageAltText || `${building.name} building`}
       aria-hidden={decorative ? true : undefined}
-      onError={() => setImageFailed(true)}
+      onError={() => setFailedImageIdentity(imageIdentity)}
     />
   }
 
