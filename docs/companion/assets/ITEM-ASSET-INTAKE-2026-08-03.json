@@ -1,0 +1,229 @@
+{
+  "schema_version": "1.0.0",
+  "intake_id": "COMPANION-ITEM-ASSET-2026-08-03",
+  "recorded_on": "2026-08-03",
+  "recorded_by": "Aegis",
+  "supplied_by": "project_owner",
+  "publication_state": "intake_staged",
+  "rights_status": "owner_supplied_unverified_rights",
+  "rights_note": "The project owner supplied these images as Kingshot item artwork. Forge has not independently verified the original extraction source, ownership or reuse basis. Do not label them official until provenance is documented.",
+  "asset_policy": {
+    "canonical_directory": "public/media/companion/items",
+    "reuse_rule": "One canonical asset per item; pages and calculators reference the canonical asset key.",
+    "hotlinking": false,
+    "checksum_algorithm": "sha256"
+  },
+  "assets": [
+    {
+      "asset_key": "item.mithril",
+      "entity_key": "item:mithril",
+      "canonical_name": "Mithril",
+      "original_filename": "mithril.webp",
+      "planned_path": "/media/companion/items/mithril.webp",
+      "format": "webp",
+      "width": 300,
+      "height": 289,
+      "sha256": "fda70855e5b5213f965553aa6fdc1434079594a32abc902e7956c87fbcfa67d1",
+      "alt_text": "Mithril crystal item icon",
+      "category": "hero_gear_material",
+      "relationship_targets": [
+        "system:hero-gear",
+        "calculator:hero-gear",
+        "event:kingdom-of-power-preparation"
+      ],
+      "relationship_notes": "Used in high-level Hero Gear progression and appears in Kingdom of Power preparation scoring records.",
+      "content_state": "confirmed_relationships_partial_description"
+    },
+    {
+      "asset_key": "item.governor-stamina",
+      "entity_key": "item:governor-stamina",
+      "canonical_name": "Governor Stamina",
+      "original_filename": "GovernorStamina.webp",
+      "planned_path": "/media/companion/items/governor-stamina.webp",
+      "format": "webp",
+      "width": 295,
+      "height": 300,
+      "sha256": "e5580d92b542f0b382bf93e8a3843d80df3ea3c1c9af32cd97e4582d208d74ee",
+      "alt_text": "Governor Stamina meat item icon",
+      "category": "consumable",
+      "relationship_targets": [
+        "building:storehouse",
+        "event:cesares-fury",
+        "system:world-activities"
+      ],
+      "relationship_notes": "Restores or represents stamina used for marches, rallies and other stamina-consuming activities; connected to Storehouse recovery and Cesare's Fury planning.",
+      "content_state": "confirmed_relationships_research_required_for_complete_sources"
+    },
+    {
+      "asset_key": "item.forgehammer",
+      "entity_key": "item:forgehammer",
+      "canonical_name": "Forgehammer",
+      "aliases": ["Forge Hammer", "Hero Gear Forgehammer"],
+      "original_filename": "Forgehammer.webp",
+      "planned_path": "/media/companion/items/forgehammer.webp",
+      "format": "webp",
+      "width": 300,
+      "height": 280,
+      "sha256": "c52fcb68fa5966e5f6dba4e746cbfaa0564fdd1eae860abbaf32d95e7e675be0",
+      "alt_text": "Forgehammer item icon",
+      "category": "hero_gear_material",
+      "relationship_targets": [
+        "system:hero-gear",
+        "calculator:hero-gear",
+        "event:kingdom-of-power-preparation"
+      ],
+      "relationship_notes": "Used by Hero Gear progression and recorded as a scored material in Kingdom of Power preparation.",
+      "content_state": "confirmed_relationships_partial_description"
+    },
+    {
+      "asset_key": "item.gilded-threads",
+      "entity_key": "item:gilded-threads",
+      "canonical_name": "Gilded Threads",
+      "original_filename": "GildedThreads.webp",
+      "planned_path": "/media/companion/items/gilded-threads.webp",
+      "format": "webp",
+      "width": 300,
+      "height": 292,
+      "sha256": "c60154939511ce014ba3c5a1c0b9fff4a1617f9d6db6816e5bab9a72628ece3f",
+      "alt_text": "Gilded Threads spool item icon",
+      "category": "governor_gear_material",
+      "relationship_targets": [
+        "system:governor-gear",
+        "calculator:governor-gear",
+        "dataset:gear"
+      ],
+      "relationship_notes": "One of the published Governor Gear upgrade materials.",
+      "content_state": "confirmed_from_published_dataset"
+    },
+    {
+      "asset_key": "item.satin",
+      "entity_key": "item:satin",
+      "canonical_name": "Satin",
+      "original_filename": "Satin.webp",
+      "planned_path": "/media/companion/items/satin.webp",
+      "format": "webp",
+      "width": 300,
+      "height": 296,
+      "sha256": "55cfcc0fa71b36a0904f94c64a4bc08f2948321b408def62802493ceb40e0ad6",
+      "alt_text": "Satin fabric roll item icon",
+      "category": "governor_gear_material",
+      "relationship_targets": [
+        "system:governor-gear",
+        "calculator:governor-gear",
+        "dataset:gear"
+      ],
+      "relationship_notes": "One of the published Governor Gear upgrade materials.",
+      "content_state": "confirmed_from_published_dataset"
+    },
+    {
+      "asset_key": "item.charm-guide",
+      "entity_key": "item:charm-guide",
+      "canonical_name": "Charm Guide",
+      "original_filename": "CharmGuide.webp",
+      "planned_path": "/media/companion/items/charm-guide.webp",
+      "format": "webp",
+      "width": 300,
+      "height": 290,
+      "sha256": "7f2379f52a1cda58629d012c9c347cbdd154de71ac79a7a45588db1f81777cec",
+      "alt_text": "Charm Guide book item icon",
+      "category": "governor_charm_material",
+      "relationship_targets": [
+        "system:governor-charms",
+        "calculator:governor-charms",
+        "dataset:charm"
+      ],
+      "relationship_notes": "Published Governor Charm upgrade material with per-level requirements in the Charm dataset.",
+      "content_state": "confirmed_from_published_dataset"
+    },
+    {
+      "asset_key": "item.charm-design",
+      "entity_key": "item:charm-design",
+      "canonical_name": "Charm Design",
+      "original_filename": "CharmDesign.webp",
+      "planned_path": "/media/companion/items/charm-design.webp",
+      "format": "webp",
+      "width": 300,
+      "height": 286,
+      "sha256": "2e96fdc2d2a8037f5cfae493916d2f99cdc064d7c3fd620e9441ebdf9b193858",
+      "alt_text": "Charm Design document item icon",
+      "category": "governor_charm_material",
+      "relationship_targets": [
+        "system:governor-charms",
+        "calculator:governor-charms",
+        "dataset:charm"
+      ],
+      "relationship_notes": "Published Governor Charm upgrade material with per-level requirements in the Charm dataset.",
+      "content_state": "confirmed_from_published_dataset"
+    },
+    {
+      "asset_key": "item.artisans-vision",
+      "entity_key": "item:artisans-vision",
+      "canonical_name": "Artisan's Vision",
+      "original_filename": "ArtisansVision.webp",
+      "planned_path": "/media/companion/items/artisans-vision.webp",
+      "format": "webp",
+      "width": 493,
+      "height": 506,
+      "sha256": "66329dddc5b471043f6e58133316eeaca6baa087ac7f7455495d13ae38e7e133",
+      "alt_text": "Artisan's Vision scroll item icon",
+      "category": "governor_gear_material",
+      "relationship_targets": [
+        "system:governor-gear",
+        "calculator:governor-gear",
+        "dataset:gear"
+      ],
+      "relationship_notes": "Governor Gear material introduced in the published progression from Blue two-star upgrades onward.",
+      "content_state": "confirmed_from_published_dataset"
+    },
+    {
+      "asset_key": "item.truegold",
+      "entity_key": "item:truegold",
+      "canonical_name": "Truegold",
+      "aliases": ["True Gold"],
+      "original_filename": "truegold.webp",
+      "planned_path": "/media/companion/items/truegold.webp",
+      "format": "webp",
+      "width": 291,
+      "height": 300,
+      "sha256": "39138a50cded1b570a9ddf73df4387caea6124ad66442d95e523eeaa7ce54ec0",
+      "alt_text": "Truegold block item icon",
+      "category": "building_upgrade_material",
+      "relationship_targets": [
+        "system:building-progression",
+        "calculator:building-planner",
+        "dataset:buildings",
+        "dataset:truegold"
+      ],
+      "relationship_notes": "Used for post-Level-30 Truegold building stages and must be linked throughout the Building Planner and Truegold-supported building pages.",
+      "content_state": "confirmed_from_published_dataset"
+    },
+    {
+      "asset_key": "item.tempered-truegold",
+      "entity_key": "item:tempered-truegold",
+      "canonical_name": "Tempered Truegold",
+      "original_filename": "tempered-truegold.webp",
+      "planned_path": "/media/companion/items/tempered-truegold.webp",
+      "format": "webp",
+      "width": 600,
+      "height": 600,
+      "sha256": "78d0590ab8fffa44f5c51d1c6a19dee989f12e8e72d6130b48494323de363cdc",
+      "alt_text": "Tempered Truegold crystal item icon",
+      "category": "building_upgrade_material",
+      "relationship_targets": [
+        "system:building-progression",
+        "calculator:building-planner",
+        "dataset:buildings",
+        "dataset:truegold"
+      ],
+      "relationship_notes": "Additional premium building material required in later Truegold progression and must remain separate from ordinary Truegold totals.",
+      "content_state": "confirmed_from_published_dataset"
+    }
+  ],
+  "required_next_actions": [
+    "Publish the original WebP binaries to the governed media path after source and reuse review.",
+    "Create one canonical item page per entity key.",
+    "Link Truegold and Tempered Truegold to Building Planner outputs first.",
+    "Build Governor Gear, Governor Charm and Hero Gear calculators from their canonical datasets.",
+    "Add the item entities to global Forge search and relationship projections."
+  ]
+}
