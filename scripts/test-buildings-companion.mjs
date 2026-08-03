@@ -141,7 +141,7 @@ assert.match(loader, /isMissingOverrideRelation/u)
 assert.match(loader, /sortBuildingProgression/u)
 
 const missingRelationFunction = loader.match(
-  /function isMissingOverrideRelation[\s\S]*?\n}/u,
+  /function isMissingOverrideRelation[\s\S]*?\n\}/u,
 )?.[0]
 assert.ok(missingRelationFunction, 'Missing-relation classifier is not defined')
 assert.match(missingRelationFunction, /error\.code === '42P01'/u)
