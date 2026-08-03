@@ -7,7 +7,6 @@ export const DATASET_KEYS = [
   'charm',
   'troops',
   'buildings',
-  'items',
   'truegold',
   'war-academy',
   'vip',
@@ -17,6 +16,14 @@ export const DATASET_KEYS = [
 ] as const
 
 export type DatasetKey = (typeof DATASET_KEYS)[number]
+
+export const PUBLISHED_DATASET_KEYS = [
+  ...DATASET_KEYS,
+  'items',
+] as const
+
+export type PublishedDatasetKey =
+  (typeof PUBLISHED_DATASET_KEYS)[number]
 
 export const IMPORTABLE_DATASET_KEYS = [
   'heroes',
@@ -39,6 +46,12 @@ export type ImportableDatasetKey =
 
 export function isDatasetKey(value: string): value is DatasetKey {
   return (DATASET_KEYS as readonly string[]).includes(value)
+}
+
+export function isPublishedDatasetKey(
+  value: string,
+): value is PublishedDatasetKey {
+  return (PUBLISHED_DATASET_KEYS as readonly string[]).includes(value)
 }
 
 export function isImportableDatasetKey(
