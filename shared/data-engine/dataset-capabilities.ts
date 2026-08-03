@@ -63,6 +63,10 @@ export const DATASET_CAPABILITY_REGISTRY: Readonly<
     versionHistory: true,
     rollback: true,
   },
+  items: {
+    ...browseOnlyCapabilities,
+    importing: false,
+  },
   truegold: browseOnlyCapabilities,
   'war-academy': browseOnlyCapabilities,
   vip: browseOnlyCapabilities,
