@@ -1,9 +1,9 @@
 # COMPANION-BUILDINGS-001 — Complete Buildings Companion
 
-**Status:** Public companion and governed media implementation candidate; controlled rollback acceptance and final owner visual acceptance pending  
+**Status:** Rollback acceptance failed at the live projection boundary; atomic rollback correction pending validation and owner-approved migration  
 **Branch:** `feature/buildings-companion-completion`  
 **Production application:** Unchanged  
-**Supabase:** Buildings editorial projection and media-permission guard applied
+**Supabase:** Buildings editorial projection and media-permission guard applied; checked rollback migration not yet applied
 
 ## Player outcome
 
@@ -78,38 +78,91 @@ The atomic queue publication path:
 2. writes a new immutable published editorial version;
 3. upserts the server-only Buildings projection;
 4. records the audit event;
-5. marks the queue item complete;
-6. allows rollback to reapply an older published version to the same projection.
+5. marks the queue item complete.
 
-The Data Engine applies only published projection values. Drafts and approved-but-unpublished versions remain private.
+Rollback must provide the same atomic guarantee: the immutable rollback version, editorial head, audit event and dataset-specific public projection must all change in one transaction.
 
-## Live acceptance evidence
+## Live publication evidence
 
 Connected Supabase evidence confirms:
 
 - the Buildings editorial projection migration is applied;
-- the Buildings publisher and rollback functions exist;
+- the Buildings publisher and dataset-aware rollback functions exist;
 - Academy completed an initial draft → review → approve → publish cycle on 2 August 2026;
 - migration `20260803131500_building_media_permission_guard.sql` was approved and applied on 3 August 2026;
 - the guard preserves existing historical rows but blocks future image projection writes without a permission basis;
 - the owner supplied the media basis: `Owner-declared public domain; freely available for reuse`;
 - Academy completed a second immutable draft → review → approve → publish sequence;
-- Academy Version 10 is published with the image, alt text and the owner-supplied public-domain basis;
+- Academy Version 10 was published with the image, alt text and owner-supplied public-domain basis;
 - the second publication queue item completed on its first attempt;
 - the canonical 10/587 full-dataset publication remains unchanged.
 
+## Controlled rollback acceptance — failed
+
+The owner initiated a governed Admin rollback from Academy Version 10 to original Version 1 on 3 August 2026.
+
+The following parts succeeded:
+
+- immutable Academy Version 11 was created;
+- the editorial head advanced to Version 11 with status `published`;
+- Version 11 contains the original Version 1 values and no uploaded image;
+- an immutable `rolled_back` audit event records Version 10 → Version 1.
+
+The live projection did not change:
+
+- `building_editorial_overrides` remained on Version 10;
+- the public projection therefore continued to carry the uploaded Academy image and permission statement;
+- the fallback Forge illustration was not restored.
+
+This is a release-blocking atomicity failure. The editorial head/history and public projection must never disagree after a successful rollback response.
+
+## Root cause
+
+The Admin rollback action used `EditorialWorkflowService.rollback`, which committed the new version through `SupabaseEditorialRepository.commitVersion`.
+
+That repository always invoked the generic `commit_editorial_version` RPC. The generic transaction correctly wrote Version 11, the editorial head and audit event, but it bypassed the dataset-aware `rollback_editorial_version` wrapper that updates `building_editorial_overrides`.
+
+The database's Buildings rollback wrapper was not defective; the server repository routed around it.
+
+## Atomic rollback correction
+
+The candidate now includes:
+
+- `SupabaseEditorialRepository` routing rollback commits through a dedicated atomic rollback RPC;
+- rollback target resolution from immutable `rolledBackToVersionId` audit metadata;
+- additive migration `20260803141000_editorial_atomic_rollback_concurrency.sql`;
+- server-only `rollback_editorial_version_checked(...)`;
+- a row lock and expected-version concurrency check before invoking the existing dataset-aware rollback wrapper;
+- preservation of the generic commit path for non-rollback editorial actions;
+- dedicated regression coverage proving that Buildings rollback reaches `apply_building_editorial_override`.
+
+The new migration has not been applied. It requires explicit owner approval after the candidate passes validation.
+
+## Current live state
+
+Until recovery is completed:
+
+- Academy editorial head: Version 11, published, no image;
+- Academy immutable history: Versions 1–11 preserved;
+- Academy live editorial projection: Version 10, uploaded image present;
+- canonical Buildings publication: unchanged at 10 catalogue and 587 progression records.
+
+Do not restore Academy or perform another rollback from an older Preview while this split state exists.
+
 ## Why Admin still says “Publishing: Partial”
 
-The Buildings live publication path is now verified. Admin remains **Partial** only because the rollback-and-restore acceptance has not yet been completed through the governed Admin workflow and final desktop/phone acceptance remains outstanding.
+The Buildings publication path is verified, but rollback is not yet atomic in the deployed Preview. Admin must remain **Partial** until the corrected live rollback-and-restore cycle passes.
 
 Buildings may move to **Implemented** only after:
 
-- rolling Academy back to original Version 1;
-- confirming the public page falls back to the Forge illustration;
-- restoring the permission-complete Version 10;
-- confirming the approved image returns;
-- verifying immutable rollback audit and version evidence;
-- completing final owner visual acceptance.
+- applying the owner-approved checked rollback migration;
+- deploying a Preview containing the corrected repository routing;
+- rolling Academy back to original Version 1 again;
+- confirming editorial head and live projection advance together and the Forge illustration returns;
+- restoring permission-complete Version 10 through the same corrected rollback path;
+- confirming the approved image and permission statement return;
+- verifying immutable versions, audit events and projection versions after both operations;
+- completing final owner desktop and phone visual acceptance.
 
 ## Truth boundary
 
@@ -132,7 +185,7 @@ Uploaded replacements require a recorded usage basis. The current Academy image 
 
 ## Validation
 
-Exact implementation head `39e93591716edd7c73f29cb0f9e47b82d9449fe6` passed:
+The last implementation baseline before rollback correction passed:
 
 - Buildings Companion validation;
 - full Forge integration gate;
@@ -141,21 +194,24 @@ Exact implementation head `39e93591716edd7c73f29cb0f9e47b82d9449fe6` passed:
 - Content Studio integration;
 - image upload/media contracts;
 - building media permission regression;
-- server-only projection and rollback structure;
 - lint;
 - TypeScript/Vite production build;
 - Vercel Preview build.
 
-Subsequent commits update release evidence only and must pass the same checks before merge.
+The atomic rollback correction must pass the same gates plus the new atomic rollback regression before another live acceptance attempt.
 
 ## Remaining release gates
 
-- complete rollback to original Academy Version 1 through Forge Admin;
-- confirm the Forge illustration returns publicly;
+- complete exact-head validation of the atomic rollback candidate;
+- obtain owner approval for migration `20260803141000_editorial_atomic_rollback_concurrency.sql`;
+- apply and verify the checked rollback function;
+- deploy the corrected Preview;
+- repeat rollback to original Academy Version 1;
+- verify the Forge illustration returns publicly and projection/head versions agree;
 - restore permission-complete Academy Version 10;
-- confirm the approved image returns publicly;
-- verify queue, immutable versions and rollback audit evidence;
-- change Buildings readiness from Partial to Implemented only after the live acceptance passes;
+- verify the approved image and usage basis return publicly;
+- verify immutable versions and rollback audit evidence;
+- change Buildings readiness from Partial to Implemented only after live acceptance passes;
 - complete owner desktop and phone visual acceptance;
 - merge the exact accepted commit;
 - deploy and smoke-test production.
@@ -165,6 +221,8 @@ Subsequent commits update release evidence only and must pass the same checks be
 - production application remains unchanged;
 - canonical 10/587 publication remains unchanged;
 - no automatic publication of uploaded files;
-- direct database rollback was blocked by the platform safety layer and was not bypassed;
-- rollback acceptance must be completed through the governed Forge Admin UI;
+- the failed rollback is preserved as immutable acceptance evidence;
+- the stale Version 10 projection is not being silently patched;
+- the checked rollback migration is committed but not applied;
+- no restoration will be attempted until the atomic correction is validated and approved;
 - no changes to Player Identity, Art Studio or research branches.
