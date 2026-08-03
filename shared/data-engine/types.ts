@@ -1,7 +1,9 @@
 import type { DatasetKey } from './datasets.js'
 
-export type { DatasetKey } from './datasets.js'
-
+export type {
+  DatasetKey,
+  PublishedDatasetKey,
+} from './datasets.js'
 
 export type ImportTrigger =
   | 'manual'
