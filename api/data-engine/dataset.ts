@@ -4,7 +4,7 @@ import type {
 } from "@vercel/node";
 
 import type {
-  DatasetKey,
+  PublishedDatasetKey,
 } from "../../shared/data-engine/types.js";
 
 import {
@@ -15,7 +15,7 @@ import {
   loadCanonicalHeroSkillsDataset,
 } from "../../server/data-engine/loadCanonicalHeroSkillsDataset.js";
 
-const SUPPORTED_DATASETS = new Set<DatasetKey>([
+const SUPPORTED_DATASETS = new Set<PublishedDatasetKey>([
   "heroes",
   "hero-skills",
   "hero-xp",
@@ -35,16 +35,16 @@ const SUPPORTED_DATASETS = new Set<DatasetKey>([
 
 function readDatasetKey(
   value: string | string[] | undefined,
-): DatasetKey | null {
+): PublishedDatasetKey | null {
   if (typeof value !== "string") {
     return null;
   }
 
-  if (!SUPPORTED_DATASETS.has(value as DatasetKey)) {
+  if (!SUPPORTED_DATASETS.has(value as PublishedDatasetKey)) {
     return null;
   }
 
-  return value as DatasetKey;
+  return value as PublishedDatasetKey;
 }
 
 export default async function handler(
