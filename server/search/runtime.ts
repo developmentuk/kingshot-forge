@@ -32,12 +32,12 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
   }) : []
   return {
     id, forge_id, dataset, title,
-    subtitle: value(record, 'subtitle', 'role', 'category'),
+    subtitle: value(record, 'subtitle', 'role', 'category_label', 'category'),
     summary: value(record, 'summary', 'description', 'best_use'),
-    keywords: [value(record, 'name'), value(record, 'slug'), value(record, 'role'), value(record, 'troop_type')].filter((item): item is string => Boolean(item)),
+    keywords: [value(record, 'name'), value(record, 'slug'), value(record, 'role'), value(record, 'troop_type'), value(record, 'trust_label')].filter((item): item is string => Boolean(item)),
     tags: Array.isArray(record.tags) ? record.tags.filter((item): item is string => typeof item === 'string') : [],
     image: value(record, 'image', 'image_url', 'imageUrl'), status,
-    published_at: status === 'published' || status === 'approved' ? value(record, 'published_at', 'publishedAt') ?? new Date(0).toISOString() : null,
+    published_at: status === 'published' || status === 'approved' ? value(record, 'published_at', 'publishedAt', 'source_updated_at') ?? new Date(0).toISOString() : null,
     permissions: { visibility: value(record, 'visibility') === 'internal' ? 'internal' : 'public' },
     relationships, canonical_url: value(record, 'canonical_url', 'canonicalUrl', 'url'),
     search_weight: typeof record.search_weight === 'number' ? record.search_weight : 0,
@@ -52,7 +52,7 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
 }
 
 function forgeIdForDataset(dataset: DatasetKey, id: string) {
-  const namespace = ({ heroes: 'hero', 'hero-skills': 'hero-skill', buildings: 'building', events: 'event', troops: 'troop', gear: 'gear', charm: 'charm', research: 'research', 'war-academy': 'war-academy' } as Record<string, string>)[dataset]
+  const namespace = ({ heroes: 'hero', 'hero-skills': 'hero-skill', buildings: 'building', items: 'item', events: 'event', troops: 'troop', gear: 'gear', charm: 'charm', research: 'research', 'war-academy': 'war-academy' } as Record<string, string>)[dataset]
   return namespace ? createForgeId(namespace, id) : null
 }
 
@@ -104,4 +104,3 @@ export async function createSearchEngine(datasets?: readonly string[]): Promise<
   engine.index(records)
   return engine
 }
-
