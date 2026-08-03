@@ -69,6 +69,7 @@ import { EditorialOperationsPage } from "./features/admin/editorial/EditorialOpe
 import { AnalyticsPage } from "./features/admin/AnalyticsPage";
 import { ForgeContentStudioPage } from "./features/admin/ForgeContentStudioPage";
 import BuildingsBrowserPage from "./pages/BuildingsBrowserPage";
+import BuildingCalculatorsPage from "./pages/BuildingCalculatorsPage";
 import WorkspaceRoute from "./components/WorkspaceRoute";
 import WorkspaceHomePage from "./pages/WorkspaceHomePage";
 import OperationsStatusPage from "./pages/OperationsStatusPage";
@@ -113,6 +114,7 @@ function App() {
         <Route path="buildings" element={<BuildingsBrowserPage />} />
         <Route path="buildings/:buildingKey" element={<BuildingsBrowserPage />} />
         <Route path="buildings/:buildingKey/progression" element={<BuildingsBrowserPage />} />
+        <Route path="calculators/buildings" element={<BuildingCalculatorsPage />} />
         <Route path="transfer-profile" element={<TransferProfilePage />} />
         <Route path="my-forge/transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />
