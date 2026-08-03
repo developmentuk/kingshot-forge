@@ -149,7 +149,8 @@ for (const token of [
   assert.match(migration, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'u'), `Building media publication migration is missing ${token}`)
 }
 assert.doesNotMatch(migration, /grant .* authenticated/iu)
-assert.match(readiness, /return DATASET_CAPABILITY_REGISTRY\[key\]\.publishing\s*\? 'partial'/u)
-assert.match(readiness, /live transaction remain unverified/u)
+assert.match(readiness, /return key === 'buildings'\s*\? 'implemented'\s*:\s*'partial'/u)
+assert.match(readiness, /Live draft, review, approval, publication, rollback and restoration acceptance passed/u)
+assert.doesNotMatch(readiness, /live transaction remain unverified/u)
 
-console.log('Buildings Companion redesign, governed media, editorial workflow and publication contracts passed.')
+console.log('Buildings Companion redesign, governed media, editorial workflow and implemented publication contracts passed.')
