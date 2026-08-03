@@ -43,6 +43,7 @@ const playerGroups = [
     { label: 'Settings', shortLabel: 'Settings', icon: '⚙️', path: '/settings' },
   ] },
   { title: 'Kingshot companion', items: [
+    { label: 'Companion Index', shortLabel: 'Companion', icon: '🧭', path: '/companion' },
     { label: 'Buildings', shortLabel: 'Buildings', icon: '🏛️', path: '/buildings' },
     { label: 'Building Planner', shortLabel: 'Planner', icon: '🧮', path: '/calculators/buildings' },
     { label: 'Hero Companion', shortLabel: 'Heroes', icon: '🦸', path: '/companion/heroes' },
