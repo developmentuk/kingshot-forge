@@ -1,10 +1,10 @@
 # COMPANION-INDEX-001 — Canonical Item Index Foundation and Media Publication
 
-**Status:** Owner-accepted 75-item media catalogue; persisted `items` Search projection published at index v7; Admin item management incomplete
-**Branch:** `feature/companion-index-foundation`  
-**Base:** `020ba32f8b36184b879f8acfee3245664a0a43b2`  
-**Production:** Unchanged  
-**Supabase:** One authorised `items`-only Search refresh; no unrelated mutation
+**Status:** Live in production; 75-item media catalogue and persisted Search v7 accepted; Admin item management incomplete
+**Feature branch:** `feature/companion-index-foundation`
+**Merged main:** `8a64afb9a8f76d1eaf370c5725602ca9a03eee1d`
+**Production:** `dpl_6jo3pUrbcaYPihyFNR99VFYdY55H` — READY at `https://ksforge.app/`
+**Supabase:** One authorised historical `items`-only Search refresh; no release refresh or projection mutation
 
 ## Player outcome
 
@@ -200,18 +200,50 @@ Local validation completed after the accepted Search publication and before the 
 
 The complete `npm run check` gate passed in 180.5 seconds. The exact final commit SHA and exact-head remote workflow results are recorded in PR #37 after commit creation and push; a commit cannot contain its own resulting SHA.
 
-## Remaining release gates
+## Release gate disposition
 
-- preserve the dedicated Companion Index and full Forge/Vision exact-head results on the final evidence commit;
-- preserve the accepted protected Preview evidence and the 75-record Data Engine/Search results;
-- merge only after explicit owner approval;
-- deploy and smoke-test production;
-- keep media and Admin publishing readiness incomplete until their separate governed acceptance passes.
+- Dedicated Companion Index and full Forge/Vision exact-head results passed on the final feature SHA.
+- The accepted protected Preview and 75-record Data Engine/Search evidence remain preserved.
+- The exact owner-authorised feature SHA merged through PR #37.
+- The automatic production deployment reached READY and passed production smoke testing.
+- Admin item publishing readiness remains incomplete until its separate governed acceptance passes.
+
+## Production release closeout — 2026-08-04
+
+PR #37 was marked ready for its final reviewed head at `2026-08-04T12:19:42Z`. The validated feature SHA was `4e3e752ea590f060ca2091168996829165531b6c`. GitHub merged it with the normal merge-commit method at `2026-08-04T12:22:48Z`, producing `8a64afb9a8f76d1eaf370c5725602ca9a03eee1d` as the resulting `main` SHA.
+
+Vercel created the normal production deployment from that exact merge commit at `2026-08-04T12:22:52.743Z`. Deployment `dpl_6jo3pUrbcaYPihyFNR99VFYdY55H` reached READY and `ksforge.app` resolved to it. The build completed without a release-blocking error; Vite retained its existing chunk-size advisory. Successful production Data Engine and Search requests proved that the required server environment resolved without exposing any value.
+
+Production smoke evidence confirmed:
+
+- the homepage, primary Player navigation, Buildings compendium and global Search loaded without a page alert;
+- `/companion` exposed exactly 75 item cards, 66 published images and nine honest no-media fallbacks;
+- all 66 lazy-loaded governed images completed without a failed image;
+- local item search and the Resource Icon category filter returned the expected one and seven records respectively;
+- the global Search dataset selector exposed Items and `mythril` navigated to canonical Mithril;
+- Mithril, Transfer Pass, Governor Gear Materials Chest, Pet Advancement Materials Custom Chest, Bread, Arena Token, Pan's Emblem, Advanced Teleporter, Epic Conquest Skill Book, Gen 5 Custom Hero Widget Chest and Artisan's Vision resolved at their canonical routes;
+- full artwork, compact icons, metadata, long-title containment, breadcrumbs and the honest no-media state rendered correctly;
+- persisted production Search returned the exact accepted results for `Mithril`, `mythril`, Transfer Pass, Governor Gear Materials Chest, Pet Advancement Materials Custom Chest, Bread, Arena Token, `teleporter`, `emblem`, `skill book` and `hero widget chest`;
+- the breadcrumb returned an item page to the Companion Index.
+
+The attached browser no longer held an authenticated Forge session and correctly presented Sign in. The released Companion and public Search surfaces remained fully testable. A live mobile viewport override was not available in that browser. Mobile release confidence is therefore the owner-accepted protected-preview evidence at approximately 320px, 375px, 390px and 430px plus the final exact-head responsive contracts; no CSS or governed media binary changed after that visual acceptance.
+
+The post-deployment SELECT-only Search audit found index v7, 634 total projections, 75 unique item records, 66 governed item media paths, nine null-media records, one `item.mithril`, zero `item.mythril`, zero relationships, zero orphans and zero refresh errors. All 13 dataset projection fingerprints remained byte-for-byte equal to the pre-release baseline. The refresh-run count remained seven; `search-refresh-1785795347195` remained the latest run and historical `search-refresh-1785782191921` remained unchanged. No Search refresh, invalidation, retry or rebuild occurred.
+
+The first production Search request performed the designed cache warm in `SearchIndexCache.ensureReady()` and updated only `search_index_metadata.cache_built_at` to `2026-08-04T12:25:09.589Z`. This was an automatic operational metadata write, not a refresh or canonical/projection mutation. No corrective database write was attempted.
+
+Vercel runtime evidence contained no fatal or 5xx response. Node 24 emitted inherited `[DEP0169] url.parse()` deprecation warnings for successful 200 Data Engine/Search requests, which Vercel classified at error level. This is retained as non-blocking dependency/platform debt. The dependency audit also retained three high advisories already present on `main`: one React Router RSC-mode advisory, while Forge does not use RSC mode, and two SheetJS advisories on the pre-existing Admin workbook path with no available fix. PR #37 changed no dependency file.
+
+No release tag or GitHub Release was created. The correct version is ambiguous because `v1.1.0` is already named by the unfinished Entity Identity workstream, the package remains `1.0.0`, and recent production merges after `v1.0.2` are untagged. A release owner should decide the next consolidated semantic version rather than assigning one in this workstream.
+
+Issues #33 and #34 remain open. Admin item browsing, editing, media replacement, approval, atomic publication and rollback remain deferred to `COMPANION-ADMIN-001`.
 
 ## Safety
 
-- production application remains unchanged;
-- Supabase received exactly one dataset-scoped Search mutation for `["items"]`: run `search-refresh-1785795347195`;
+- production serves the exact merge commit recorded in this closeout;
+- the only dataset-scoped Search publication remains historical run `search-refresh-1785795347195` for `["items"]`;
+- the release performed no refresh, invalidation, retry, rebuild or projection mutation;
+- first-use Search cache warm updated only the operational `cache_built_at` timestamp;
 - no migration is included;
 - no runtime secret, authentication token or local log is committed;
 - no canonical Buildings, Hero or other dataset is mutated;
