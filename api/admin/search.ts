@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '../../server/database/supabaseAdmin.js'
 import { canManageSearch, resolveSearchPermissionContext, SearchSimulationError } from '../../server/search/admin.js'
 import { getSearchIndexCache, getSearchRefreshService, invalidateSearchIndex } from '../../server/search/runtime.js'
 import { getSearchProjectionRepository } from '../../server/search/repository.js'
-import { DATASET_KEYS } from '../../shared/data-engine/datasets.js'
+import { PUBLISHED_DATASET_KEYS } from '../../shared/data-engine/datasets.js'
 import { buildSearchOperationalDiagnostics } from '../../shared/search/index.js'
 import { parseQuery, SearchRequestError } from '../search.js'
 
@@ -38,8 +38,8 @@ async function handleMutation(request: VercelRequest, response: VercelResponse, 
   if (body.action === 'invalidate') { await invalidateSearchIndex(); response.status(200).json({ status: 'success', data: { invalidated: true, actorId: actor.userId } }); return }
   if (body.action !== 'refresh') { response.status(400).json({ status: 'error', error: { code: 'INVALID_ACTION', message: 'Supported actions are refresh and invalidate.' } }); return }
   const mode = body.mode === 'full' || body.mode === 'dataset' || body.mode === 'record' || body.mode === 'relationships' ? body.mode : null
-  const datasets = Array.isArray(body.datasets) ? body.datasets.filter((dataset): dataset is string => typeof dataset === 'string') : [...DATASET_KEYS]
-  if (!mode || datasets.some((dataset) => !DATASET_KEYS.includes(dataset as typeof DATASET_KEYS[number]))) { response.status(400).json({ status: 'error', error: { code: 'INVALID_REFRESH', message: 'Refresh mode or dataset selection is invalid.' } }); return }
+  const datasets = Array.isArray(body.datasets) ? body.datasets.filter((dataset): dataset is string => typeof dataset === 'string') : [...PUBLISHED_DATASET_KEYS]
+  if (!mode || datasets.some((dataset) => !PUBLISHED_DATASET_KEYS.includes(dataset as typeof PUBLISHED_DATASET_KEYS[number]))) { response.status(400).json({ status: 'error', error: { code: 'INVALID_REFRESH', message: 'Refresh mode or dataset selection is invalid.' } }); return }
   if (mode === 'full' && body.confirm !== true) { response.status(400).json({ status: 'error', error: { code: 'CONFIRMATION_REQUIRED', message: 'Full rebuild requires explicit confirmation.' } }); return }
   const run = await getSearchRefreshService().refresh(mode, datasets)
   await invalidateSearchIndex()
@@ -51,4 +51,3 @@ async function loadRolePermissions(role: ForgeActorRole): Promise<readonly strin
   if (error) throw new Error(error.message)
   return (data ?? []).map((item) => String(item.permission_key))
 }
-

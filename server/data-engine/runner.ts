@@ -1,7 +1,7 @@
 import type {
-  DatasetKey,
   DatasetSourceMetadata,
   NormalisedDataset,
+  PublishedDatasetKey,
   SourceFetchResult,
 } from '../../shared/data-engine/types.js'
 
@@ -14,9 +14,10 @@ import {
 } from './registry.js'
 
 import { loadPublishedBuildingsDataset } from './loadPublishedBuildingsDataset.js'
+import { loadPublishedCompanionItemsDataset } from './loadPublishedCompanionItemsDataset.js'
 
 export interface DatasetPreviewResult {
-  dataset: DatasetKey
+  dataset: PublishedDatasetKey
   sourceUrl: string
   fetchedAt: string
   httpStatus: number
@@ -26,7 +27,7 @@ export interface DatasetPreviewResult {
   recordKeys: string[]
 }
 export interface DatasetLoadResult {
-  dataset: DatasetKey
+  dataset: PublishedDatasetKey
   sourceUrl: string
   fetchedAt: string
   httpStatus: number
@@ -35,9 +36,36 @@ export interface DatasetLoadResult {
   recordCount: number
   records: unknown[]
 }
+
+function companionItemRecordKey(record: unknown): string | null {
+  if (!record || typeof record !== 'object') return null
+  const value = (record as Record<string, unknown>).key
+  return typeof value === 'string' && value.trim()
+    ? value.trim()
+    : null
+}
+
 export async function previewDataset(
-  key: DatasetKey,
+  key: PublishedDatasetKey,
 ): Promise<DatasetPreviewResult> {
+  if (key === 'items') {
+    const loaded = await loadPublishedCompanionItemsDataset()
+    const recordKeys = loaded.records
+      .map(companionItemRecordKey)
+      .filter((recordKey): recordKey is string => Boolean(recordKey))
+
+    return {
+      dataset: loaded.dataset,
+      sourceUrl: loaded.sourceUrl,
+      fetchedAt: loaded.fetchedAt,
+      httpStatus: loaded.httpStatus,
+      payloadHash: loaded.payloadHash,
+      metadata: loaded.metadata,
+      recordCount: loaded.recordCount,
+      recordKeys,
+    }
+  }
+
   const importer =
     getDatasetImporter(key)
 
@@ -89,8 +117,12 @@ export async function previewDataset(
 }
 
 export async function loadDataset(
-  key: DatasetKey,
+  key: PublishedDatasetKey,
 ): Promise<DatasetLoadResult> {
+  if (key === 'items') {
+    return loadPublishedCompanionItemsDataset()
+  }
+
   if (key === 'buildings' && process.env.SUPABASE_URL && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
     return loadPublishedBuildingsDataset()
   }

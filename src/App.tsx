@@ -43,6 +43,8 @@ import PublicPlayerProgressionPage from "./pages/PublicPlayerProgressionPage";
 import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
 import HeroCollectionPage from "./pages/HeroCollectionPage";
 import HeroCompanionPage from "./pages/HeroCompanionPage";
+import CompanionIndexPage from "./pages/CompanionIndexPage";
+import CompanionItemPage from "./pages/CompanionItemPage";
 import SearchPage from "./features/search/SearchPage";
 
 import { DataEngineDiagnosticsPage } from "./pages/admin/DataEngineDiagnosticsPage";
@@ -111,6 +113,8 @@ function App() {
         <Route path="roadmap" element={<RoadmapPage />} />
         <Route path="release-notes" element={<ReleaseNotesPage />} />
         <Route path="search" element={<SearchPage />} />
+        <Route path="companion" element={<CompanionIndexPage />} />
+        <Route path="companion/items/:itemKey" element={<CompanionItemPage />} />
         <Route path="buildings" element={<BuildingsBrowserPage />} />
         <Route path="buildings/:buildingKey" element={<BuildingsBrowserPage />} />
         <Route path="buildings/:buildingKey/progression" element={<BuildingsBrowserPage />} />

@@ -1,0 +1,89 @@
+name: Companion Index validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'api/admin/search.ts'
+      - 'api/data-engine/dataset.ts'
+      - 'api/search.ts'
+      - 'server/data-engine/loadPublishedCompanionItemsDataset.ts'
+      - 'server/data-engine/runner.ts'
+      - 'server/search/runtime.ts'
+      - 'shared/companion/**'
+      - 'shared/data-engine/datasets.ts'
+      - 'shared/data-engine/types.ts'
+      - 'shared/entity-identity/registry.ts'
+      - 'public/media/companion/**'
+      - 'src/App.tsx'
+      - 'src/features/admin/dataEngineApi.ts'
+      - 'src/features/companion/**'
+      - 'src/features/search/SearchExperience.tsx'
+      - 'src/navigation/workspaceRegistry.ts'
+      - 'src/pages/CompanionIndexPage.tsx'
+      - 'src/pages/CompanionItemPage.tsx'
+      - 'src/styles/companionIndex.css'
+      - 'scripts/generate-companion-media-manifest.ps1'
+      - 'scripts/test-companion-index.mjs'
+      - 'scripts/test-companion-media.mjs'
+      - 'scripts/test-search-experience.mjs'
+      - 'docs/companion/**'
+      - 'docs/releases/COMPANION-INDEX-001.md'
+      - '.github/workflows/companion-index-check.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: companion-index-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Complete Companion Index foundation validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate Companion Index projection and routes
+        run: node --import tsx scripts/test-companion-index.mjs
+
+      - name: Validate Companion media integrity
+        run: node scripts/test-companion-media.mjs
+
+      - name: Validate entity identity foundation
+        run: npm run test:entity-identity
+
+      - name: Validate Search engine
+        run: npm run test:search
+
+      - name: Validate Search API
+        run: npm run test:search-api
+
+      - name: Validate Search experience
+        run: npm run test:search-experience
+
+      - name: Validate workspace navigation
+        run: npm run test:workspaces
+
+      - name: Lint candidate
+        run: npm run lint
+
+      - name: Build candidate
+        run: npm run build

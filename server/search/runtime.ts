@@ -1,6 +1,6 @@
 import { loadCanonicalHeroSkillsDataset } from '../data-engine/loadCanonicalHeroSkillsDataset.js'
 import { loadDataset } from '../data-engine/runner.js'
-import { DATASET_KEYS, type DatasetKey } from '../../shared/data-engine/datasets.js'
+import { PUBLISHED_DATASET_KEYS, type PublishedDatasetKey } from '../../shared/data-engine/datasets.js'
 import { SearchEngine, SearchProviderRegistry, type SearchProvider, type SearchRecord, type SearchRecordStatus } from '../../shared/search/index.js'
 import { SearchIndexCache } from '../../shared/search/cache.js'
 import { SearchProjectionRefreshService } from '../../shared/search/refresh.js'
@@ -14,7 +14,13 @@ function value(record: Record<string, unknown>, ...keys: string[]): string | nul
   return null
 }
 
-function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | null {
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean)
+    : []
+}
+
+function toSearchRecord(dataset: PublishedDatasetKey, input: unknown): SearchRecord | null {
   if (!input || typeof input !== 'object') return null
   const record = input as Record<string, unknown>
   const id = value(record, 'id', 'key', 'slug', 'name', 'level', 'day')
@@ -23,6 +29,10 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
   const rawStatus = value(record, 'status')
   const status: SearchRecordStatus = rawStatus && STATUS_VALUES.has(rawStatus as SearchRecordStatus) ? rawStatus as SearchRecordStatus : 'published'
   const forge_id = forgeIdForDataset(dataset, id)
+  const aliases = [...new Set([
+    ...stringList(record.aliases),
+    ...stringList(record.search_aliases),
+  ])]
   const relationships = Array.isArray(record.relationships) ? record.relationships.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object')).flatMap((item) => {
     const targetId = value(item, 'targetId', 'target_id', 'id')
     const targetDataset = value(item, 'targetDataset', 'target_dataset', 'dataset')
@@ -32,16 +42,16 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
   }) : []
   return {
     id, forge_id, dataset, title,
-    subtitle: value(record, 'subtitle', 'role', 'category'),
+    subtitle: value(record, 'subtitle', 'role', 'category_label', 'category'),
     summary: value(record, 'summary', 'description', 'best_use'),
-    keywords: [value(record, 'name'), value(record, 'slug'), value(record, 'role'), value(record, 'troop_type')].filter((item): item is string => Boolean(item)),
-    tags: Array.isArray(record.tags) ? record.tags.filter((item): item is string => typeof item === 'string') : [],
+    keywords: [value(record, 'name'), value(record, 'slug'), value(record, 'role'), value(record, 'troop_type'), ...aliases, value(record, 'trust_label')].filter((item): item is string => Boolean(item)),
+    tags: stringList(record.tags),
     image: value(record, 'image', 'image_url', 'imageUrl'), status,
-    published_at: status === 'published' || status === 'approved' ? value(record, 'published_at', 'publishedAt') ?? new Date(0).toISOString() : null,
+    published_at: status === 'published' || status === 'approved' ? value(record, 'published_at', 'publishedAt', 'source_updated_at') ?? new Date(0).toISOString() : null,
     permissions: { visibility: value(record, 'visibility') === 'internal' ? 'internal' : 'public' },
     relationships, canonical_url: value(record, 'canonical_url', 'canonicalUrl', 'url'),
     search_weight: typeof record.search_weight === 'number' ? record.search_weight : 0,
-    aliases: Array.isArray(record.aliases) ? record.aliases.filter((item): item is string => typeof item === 'string') : [],
+    aliases,
     source_version_id: value(record, 'source_version_id', 'sourceVersionId'),
     source_publication_id: value(record, 'source_publication_id', 'sourcePublicationId'),
     verified_at: value(record, 'verified_at', 'verifiedAt'),
@@ -51,12 +61,12 @@ function toSearchRecord(dataset: DatasetKey, input: unknown): SearchRecord | nul
   }
 }
 
-function forgeIdForDataset(dataset: DatasetKey, id: string) {
-  const namespace = ({ heroes: 'hero', 'hero-skills': 'hero-skill', buildings: 'building', events: 'event', troops: 'troop', gear: 'gear', charm: 'charm', research: 'research', 'war-academy': 'war-academy' } as Record<string, string>)[dataset]
+function forgeIdForDataset(dataset: PublishedDatasetKey, id: string) {
+  const namespace = ({ heroes: 'hero', 'hero-skills': 'hero-skill', buildings: 'building', items: 'item', events: 'event', troops: 'troop', gear: 'gear', charm: 'charm', research: 'research', 'war-academy': 'war-academy' } as Record<string, string>)[dataset]
   return namespace ? createForgeId(namespace, id) : null
 }
 
-function createProvider(dataset: DatasetKey): SearchProvider {
+function createProvider(dataset: PublishedDatasetKey): SearchProvider {
   return {
     dataset,
     name: `${dataset} Search Provider`,
@@ -69,7 +79,7 @@ function createProvider(dataset: DatasetKey): SearchProvider {
 
 export function createSearchProviderRegistry(): SearchProviderRegistry {
   const registry = new SearchProviderRegistry()
-  registry.registerMany(DATASET_KEYS.map(createProvider))
+  registry.registerMany(PUBLISHED_DATASET_KEYS.map(createProvider))
   return registry
 }
 
@@ -95,7 +105,7 @@ export async function invalidateSearchIndex(): Promise<void> {
 
 export async function createSearchEngine(datasets?: readonly string[]): Promise<SearchEngine> {
   const registry = createSearchProviderRegistry()
-  const selected = datasets?.length ? datasets : DATASET_KEYS
+  const selected = datasets?.length ? datasets : PUBLISHED_DATASET_KEYS
   const records = (await Promise.all(selected.flatMap((dataset) => {
     const provider = registry.get(dataset)
     return provider ? [provider.load({ now: new Date().toISOString() })] : []
@@ -104,4 +114,3 @@ export async function createSearchEngine(datasets?: readonly string[]): Promise<
   engine.index(records)
   return engine
 }
-

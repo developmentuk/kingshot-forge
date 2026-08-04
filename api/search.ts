@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getSearchIndexCache } from '../server/search/runtime.js'
-import { DATASET_KEYS } from '../shared/data-engine/datasets.js'
+import { PUBLISHED_DATASET_KEYS } from '../shared/data-engine/datasets.js'
 import type { SearchQuery } from '../shared/search/index.js'
 
 const MAX_QUERY_LENGTH = 200
@@ -17,7 +17,7 @@ export function parseQuery(request: VercelRequest): SearchQuery {
   const text = typeof request.query.q === 'string' ? request.query.q.trim() : undefined
   if (text && text.length > MAX_QUERY_LENGTH) throw new SearchRequestError('query_too_long', 'Search queries must be 200 characters or fewer.')
   const datasets = list(request.query.dataset)
-  if (datasets?.some((dataset) => !DATASET_KEYS.includes(dataset as typeof DATASET_KEYS[number]))) throw new SearchRequestError('invalid_dataset', 'One or more dataset filters are invalid.')
+  if (datasets?.some((dataset) => !PUBLISHED_DATASET_KEYS.includes(dataset as typeof PUBLISHED_DATASET_KEYS[number]))) throw new SearchRequestError('invalid_dataset', 'One or more dataset filters are invalid.')
   const limitRaw = typeof request.query.limit === 'string' ? request.query.limit : undefined
   const limit = limitRaw ? Number(limitRaw) : 50
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_RESULTS) throw new SearchRequestError('invalid_limit', 'Result limits must be an integer from 1 to 100.')
@@ -47,4 +47,3 @@ export default async function handler(request: VercelRequest, response: VercelRe
     response.status(503).json({ status: 'error', error: { code: 'SEARCH_UNAVAILABLE', message: 'Search is temporarily unavailable.' } })
   }
 }
-

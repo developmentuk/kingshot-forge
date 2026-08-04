@@ -4,6 +4,7 @@ import { parseForgeId } from './forgeId.js'
 const ENTITY_TYPE_ROWS = [
   ['building', 'building', 'building', 'public.buildings', 'editorial_status=published and published_version is not null', '/buildings/:slug', 'search.building', 'entity.building.read', 'entity.building.write', false, false, true, true, 'hide'],
   ['building_progression', 'building-progression', 'building-progression', 'public.building_progression', 'parent building is published', '/buildings/:parent/progression', 'search.building-progression', 'entity.building.read', 'entity.building.write', false, false, true, true, 'hide'],
+  ['item', 'item', 'item', 'forge://companion/items', 'published text-only Companion projection', '/companion/items/:slug', 'search.item', 'entity.item.read', 'entity.item.write', true, true, true, false, 'hide'],
   ['hero', 'hero', 'hero', 'public.heroes', 'published projection only', '/companion/heroes/:slug', 'search.hero', 'entity.hero.read', 'entity.hero.write', true, false, true, false, 'hide'],
   ['hero_skill', 'hero-skill', 'hero-skill', 'public.published_hero_skills', 'published projection only', '/companion/heroes/:hero/skills', 'search.hero-skill', 'entity.hero.read', 'entity.hero.write', true, false, true, false, 'hide'],
   ['hero_gear', 'hero-gear', 'hero-gear', 'public.hero_gear', 'published projection only', '/companion/heroes/:hero/gear', 'search.hero-gear', 'entity.hero.read', 'entity.hero.write', true, false, true, false, 'hide'],

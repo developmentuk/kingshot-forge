@@ -1,9 +1,10 @@
 import type {
-  DatasetKey,
+  PublishedDatasetKey,
 } from "../../../shared/data-engine/datasets";
 
 export type {
   DatasetKey,
+  PublishedDatasetKey,
 } from "../../../shared/data-engine/datasets";
 
 export interface DatasetSourceMetadata {
@@ -19,7 +20,7 @@ export interface DatasetSourceMetadata {
 }
 
 export interface DatasetLoadResult {
-  dataset: DatasetKey;
+  dataset: PublishedDatasetKey;
   sourceUrl: string;
   fetchedAt: string;
   httpStatus: number;
@@ -59,7 +60,7 @@ function isDatasetResponse(
 }
 
 export async function fetchDataset(
-  dataset: DatasetKey,
+  dataset: PublishedDatasetKey,
   signal?: AbortSignal,
 ): Promise<DatasetLoadResult> {
   const endpoint =
