@@ -78,7 +78,7 @@ const publishedOnlyItemsCapabilities = {
   editing: false,
   importing: false,
   publishing: false,
-  search: false,
+  search: true,
   validation: false,
   versionHistory: false,
   archive: false,

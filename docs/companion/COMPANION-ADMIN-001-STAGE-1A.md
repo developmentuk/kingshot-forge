@@ -18,7 +18,7 @@ The Admin adapter consumes the published Item Data Engine result from `server/da
 - rights, governed media state/role/path/checksum/dimensions and planned media path;
 - governed Companion relationships and the unchanged Player route.
 
-Category, trust state, media state and media role filters are available alongside the existing text search, sorting, pagination, loading, error and empty states. The generic record panel is retained as a partial viewer; no Item editor or mutation control is enabled.
+Category, trust state, media state and media role filters are available alongside client-side text search over the loaded browser rows, sorting, pagination, loading, error and empty states. This Admin browser search is separate from persisted global Search publication. The generic record panel is retained as a partial viewer; no Item editor or mutation control is enabled.
 
 ## Evidence and invariants
 
@@ -26,15 +26,17 @@ Category, trust state, media state and media role filters are available alongsid
 - 66 records have published governed media: 59 full artwork and 7 compact icons.
 - 9 records have no published media and no media role.
 - `item.mithril` appears exactly once; `item.mythril` is absent; `mythril` remains Search-only.
+- Admin browser text search is implemented through the shared `DatasetTable`, the Items adapter's browser rows and the focused Stage 1A contract.
 - `relationships` remains empty in the Data Engine result. The browser displays only the published Companion relationship summary.
-- Player routes remain `/companion/items/:key`; Search v7 and Player source ownership are unchanged.
+- Player routes remain `/companion/items/:key`; persisted global Search publication and Search v7 remain unchanged.
 - Focused contracts are in `scripts/test-companion-admin-stage-1a.mjs`.
+- The focused Stage 1A contract is included in the canonical `npm run check` chain.
 
 ## Explicitly not delivered
 
 Stage 1A makes no Supabase migration, SQL, Storage, Search, publication, production, feature-flag, permission, PR or merge change. It does not add Item schema, import, drafts, review, approval, publication, rollback, relationship authoring or media authoring.
 
-The Items readiness registry is intentionally Partial: the browser, adapter and filters are implemented; the generic viewer and responsive contract are partial; import, Item editor, validation, publishing, version history, Search, verification and related authoring capabilities remain missing or outside this stage.
+The Items readiness registry is intentionally Partial: the browser, adapter, client-side browser search and filters are implemented; the generic viewer and responsive contract are partial; import, Item editor, validation, publishing, version history, persisted global Search publication, verification and related authoring capabilities remain missing or outside this stage.
 
 ## Stage 2 blockers
 

@@ -110,6 +110,7 @@ const ITEM_ADMIN_CAPABILITY_EVIDENCE: Partial<
   browser: 'scripts/test-companion-admin-stage-1a.mjs',
   viewer: 'src/features/admin/DatasetRecordPanel.tsx',
   filters: 'src/features/admin/itemsDatasetAdapter.ts',
+  search: 'src/features/admin/DatasetTable.tsx; src/features/admin/itemsDatasetAdapter.ts; scripts/test-companion-admin-stage-1a.mjs',
   'public-api': 'api/data-engine/dataset.ts',
   'public-pages': 'docs/releases/COMPANION-INDEX-001.md',
   mobile: 'scripts/test-companion-admin-stage-1a.mjs',
@@ -122,6 +123,7 @@ function itemAdminCapabilityStatus(
     case 'adapter':
     case 'browser':
     case 'filters':
+    case 'search':
     case 'public-api':
     case 'public-pages':
       return 'implemented'
@@ -133,7 +135,6 @@ function itemAdminCapabilityStatus(
     case 'validation':
     case 'publishing':
     case 'version-history':
-    case 'search':
     case 'verification':
       return 'missing'
     default:
@@ -246,7 +247,9 @@ function createCapabilities(key: PublishedDatasetKey): readonly CapabilityReadin
         note:
           buildingsPublishingAccepted
             ? 'Live draft, review, approval, publication, rollback and restoration acceptance passed against the governed Buildings projection.'
-            : adminStatus === 'implemented'
+              : key === 'items' && capability === 'search'
+                ? 'Client-side text search over loaded published Item rows; this does not publish or mutate global Search projections.'
+              : adminStatus === 'implemented'
               ? 'Verified in the shared Admin dataset experience.'
               : key === 'items' && capability === 'viewer'
                 ? 'A generic record panel is available, but a complete Item viewer is outside Stage 1A.'
