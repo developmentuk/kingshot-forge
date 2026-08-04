@@ -1,5 +1,6 @@
 import {
   isDatasetKey,
+  type PublishedDatasetKey,
   type DatasetKey,
 } from './datasets.js'
 
@@ -71,6 +72,27 @@ export const DATASET_CAPABILITY_REGISTRY: Readonly<
   kvk: browseOnlyCapabilities,
 }
 
+const publishedOnlyItemsCapabilities = {
+  browsing: true,
+  creation: false,
+  editing: false,
+  importing: false,
+  publishing: false,
+  search: false,
+  validation: false,
+  versionHistory: false,
+  archive: false,
+  restore: false,
+  rollback: false,
+} as const satisfies RegisteredDatasetCapabilities
+
+export const PUBLISHED_DATASET_CAPABILITY_REGISTRY: Readonly<
+  Record<PublishedDatasetKey, RegisteredDatasetCapabilities>
+> = {
+  ...DATASET_CAPABILITY_REGISTRY,
+  items: publishedOnlyItemsCapabilities,
+}
+
 export function getRegisteredDatasetCapabilities(
   datasetId: string,
 ): RegisteredDatasetCapabilities | undefined {
@@ -99,6 +121,29 @@ export function getDatasetCapabilityFlags(
 ) {
   const capabilities =
     DATASET_CAPABILITY_REGISTRY[datasetId]
+
+  return {
+    browsing: capabilities.browsing,
+    creation: capabilities.creation,
+    editing: capabilities.editing,
+    importing: capabilities.importing,
+    publishing: capabilities.publishing,
+    search: capabilities.search,
+    versionHistory: capabilities.versionHistory,
+  }
+}
+
+export function getPublishedDatasetCapabilities(
+  datasetId: PublishedDatasetKey,
+): RegisteredDatasetCapabilities {
+  return PUBLISHED_DATASET_CAPABILITY_REGISTRY[datasetId]
+}
+
+export function getPublishedDatasetCapabilityFlags(
+  datasetId: PublishedDatasetKey,
+) {
+  const capabilities =
+    getPublishedDatasetCapabilities(datasetId)
 
   return {
     browsing: capabilities.browsing,

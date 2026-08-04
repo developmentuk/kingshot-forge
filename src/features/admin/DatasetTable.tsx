@@ -8,6 +8,7 @@ import type {
 } from "react";
 
 import type {
+  DatasetBrowserFilter,
   DatasetCellValue,
   DatasetTableColumn,
   DatasetTableRow,
@@ -29,6 +30,7 @@ interface SortState {
 interface DatasetTableProps {
   columns: DatasetTableColumn[];
   rows: DatasetTableRow[];
+  filters?: DatasetBrowserFilter[];
 
   searchPlaceholder?: string;
   pageSize?: number;
@@ -126,6 +128,7 @@ function renderCellValue(
 export function DatasetTable({
   columns,
   rows,
+  filters = [],
   searchPlaceholder =
     "Search records...",
   pageSize = 10,
@@ -153,6 +156,8 @@ export function DatasetTable({
     setCurrentPage,
   ] = useState(1);
 
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
+
   const processedRows = useMemo(
     () => {
       const normalisedSearchTerm =
@@ -162,6 +167,15 @@ export function DatasetTable({
 
       const filteredRows =
         rows.filter((row) => {
+          const matchesFilters = filters.every((filter) => {
+            const selectedValue = selectedFilters[filter.key];
+            return !selectedValue || String(row.values[filter.key] ?? "") === selectedValue;
+          });
+
+          if (!matchesFilters) {
+            return false;
+          }
+
           if (
             !normalisedSearchTerm
           ) {
@@ -211,6 +225,8 @@ export function DatasetTable({
       rows,
       searchTerm,
       sortState,
+      filters,
+      selectedFilters,
     ],
   );
 
@@ -302,6 +318,32 @@ export function DatasetTable({
             }
           />
         </label>
+
+        {filters.map((filter) => (
+          <label
+            key={filter.key}
+            className="dataset-table-filter"
+          >
+            <span>{filter.label}</span>
+            <select
+              value={selectedFilters[filter.key] ?? ""}
+              onChange={(event) => {
+                setSelectedFilters((current) => ({
+                  ...current,
+                  [filter.key]: event.target.value,
+                }));
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">All</option>
+              {filter.options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
 
         <p className="dataset-table-count">
           {processedRows.length}{" "}
@@ -460,20 +502,21 @@ export function DatasetTable({
                   <p>
                     {rows.length === 0
                       ? emptyMessage
-                      : "No records match your search."}
+                      : "No records match the current search or filters."}
                   </p>
 
                   {rows.length > 0 &&
-                    searchTerm && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setCurrentPage(1);
-                      }}
-                    >
-                      Clear search
-                    </button>
+                    (searchTerm || Object.values(selectedFilters).some(Boolean)) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchTerm("");
+                          setSelectedFilters({});
+                          setCurrentPage(1);
+                        }}
+                      >
+                        Clear search and filters
+                      </button>
                   )}
                 </td>
               </tr>

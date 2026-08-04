@@ -1,6 +1,6 @@
 import type {
   DatasetLoadResult,
-  DatasetKey,
+  PublishedDatasetKey,
 } from "./dataEngineApi";
 
 import type {
@@ -14,7 +14,7 @@ import type {
 } from "./recordEditor/recordEditorSchema";
 
 export interface DatasetAdapter {
-  datasetId: DatasetKey;
+  datasetId: PublishedDatasetKey;
 
   createBrowserDefinition(
     result: DatasetLoadResult,

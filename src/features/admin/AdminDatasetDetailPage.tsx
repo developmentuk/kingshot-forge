@@ -43,8 +43,8 @@ import {
 } from "./dataEngineApi";
 
 import type {
-  DatasetKey,
   DatasetLoadResult,
+  PublishedDatasetKey,
 } from "./dataEngineApi";
 
 import type {
@@ -271,7 +271,7 @@ export function AdminDatasetDetailPage() {
     setDatasetLoading(true);
 
     fetchDataset(
-      datasetId as DatasetKey,
+      datasetId as PublishedDatasetKey,
       controller.signal,
     )
       .then((result) => {
@@ -485,11 +485,13 @@ export function AdminDatasetDetailPage() {
                   : "browse-only"
               }`}
             >
-              {dataset.capabilities.editing
-                ? "Editor implemented"
-                : dataset.capabilities.browsing
-                  ? "Browse only"
-                  : "Browser unavailable"}
+              {dataset.id === "items"
+                ? "Partial — browser only"
+                : dataset.capabilities.editing
+                  ? "Editor implemented"
+                  : dataset.capabilities.browsing
+                    ? "Browse only"
+                    : "Browser unavailable"}
             </span>
           </div>
           <p className="admin-page__intro">
@@ -661,6 +663,9 @@ export function AdminDatasetDetailPage() {
               }
               rows={
                 liveBrowserDefinition.rows
+              }
+              filters={
+                liveBrowserDefinition.filters
               }
               searchPlaceholder={`Search ${dataset.name.toLowerCase()}...`}
               pageSize={10}
