@@ -11,6 +11,7 @@ for (const marker of ['fetch(`/api/search?', 'Accept: \'application/json\'', 're
 assert.match(layout, /SearchExperience/)
 assert.match(layout, /ctrlKey \|\| event\.metaKey/)
 assert.match(app, /path="search"/)
+assert.match(experience, /items: 'Items'/, 'Search dataset selector must expose the published item catalogue')
 const styles = await readFile('src/features/search/search.css', 'utf8')
 for (const marker of ['position:fixed', 'z-index:1000', 'backdrop-filter', 'overscroll-behavior:contain', 'max-height:calc(100vh']) {
   assert.ok(styles.includes(marker), `Search presentation missing ${marker}`)

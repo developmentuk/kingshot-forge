@@ -16,14 +16,19 @@ on:
       - 'shared/data-engine/datasets.ts'
       - 'shared/data-engine/types.ts'
       - 'shared/entity-identity/registry.ts'
+      - 'public/media/companion/**'
       - 'src/App.tsx'
       - 'src/features/admin/dataEngineApi.ts'
       - 'src/features/companion/**'
+      - 'src/features/search/SearchExperience.tsx'
       - 'src/navigation/workspaceRegistry.ts'
       - 'src/pages/CompanionIndexPage.tsx'
       - 'src/pages/CompanionItemPage.tsx'
       - 'src/styles/companionIndex.css'
+      - 'scripts/generate-companion-media-manifest.ps1'
       - 'scripts/test-companion-index.mjs'
+      - 'scripts/test-companion-media.mjs'
+      - 'scripts/test-search-experience.mjs'
       - 'docs/companion/**'
       - 'docs/releases/COMPANION-INDEX-001.md'
       - '.github/workflows/companion-index-check.yml'
@@ -58,6 +63,9 @@ jobs:
 
       - name: Validate Companion Index projection and routes
         run: node --import tsx scripts/test-companion-index.mjs
+
+      - name: Validate Companion media integrity
+        run: node scripts/test-companion-media.mjs
 
       - name: Validate entity identity foundation
         run: npm run test:entity-identity

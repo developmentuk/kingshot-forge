@@ -30,7 +30,7 @@ const RECENT_KEY = 'forge.search.recent'
 const PINNED_KEY = 'forge.search.pinned'
 const DATASET_LABELS: Record<string, string> = {
   heroes: 'Heroes', 'hero-skills': 'Hero Skills', gear: 'Gear', charm: 'Charms', troops: 'Troops',
-  buildings: 'Buildings', events: 'Events', vip: 'VIP', 'war-academy': 'Research', masters: 'Guides', kvk: 'KvK',
+  buildings: 'Buildings', items: 'Items', events: 'Events', vip: 'VIP', 'war-academy': 'Research', masters: 'Guides', kvk: 'KvK',
 }
 
 function readList(key: string): string[] {

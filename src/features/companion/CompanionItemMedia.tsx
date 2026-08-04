@@ -13,10 +13,11 @@ export default function CompanionItemMedia({
   role,
   compact = false,
 }: CompanionItemMediaProps) {
-  const [failed, setFailed] = useState(false)
-  const canRender = Boolean(imageUrl && role && (!compact || role === 'compact_icon'))
+  const [failedSource, setFailedSource] = useState<string | null>(null)
+  const mediaSource = imageUrl && role ? `${imageUrl}|${role}|${compact ? 'compact' : 'full'}` : null
+  const canRender = Boolean(mediaSource && (!compact || role === 'compact_icon'))
 
-  if (canRender && !failed) {
+  if (canRender && failedSource !== mediaSource) {
     return (
       <img
         className={`companion-item-media companion-item-media--${role}${compact ? ' companion-item-media--compact' : ''}`}
@@ -26,7 +27,7 @@ export default function CompanionItemMedia({
         height={compact ? 72 : 300}
         loading="lazy"
         decoding="async"
-        onError={() => setFailed(true)}
+        onError={() => setFailedSource(mediaSource)}
       />
     )
   }
