@@ -250,3 +250,13 @@ Issues #33 and #34 remain open. Admin item browsing, editing, media replacement,
 - no unrelated Search projection was touched and no full rebuild was run;
 - existing 14-dataset Admin capability and verification registries remain unchanged;
 - no unrelated Player Identity, Vision, Art Studio or Operations workstream is modified.
+
+## COMPANION-ADMIN-001 Stage 1A environmental gate — 2026-08-05
+
+The Stage 1A Items Admin browser foundation is present on the production line, but Stage 1A is not accepted. Its current status is **environmentally blocked solely by the external Kingshot player provider** (`PLAYER_API_UNAVAILABLE`). The implementation itself and the PLAYER-RESILIENCE-001 correction are not failing, and Stage 2 remains gated.
+
+PLAYER-RESILIENCE-001 closure is recorded through PR #40, merged with commit `1c8145f2b6dcebb60478aa6a2c8136517cbbc151` and deployed automatically as Vercel deployment `dpl_5H4MnbyAb5g56GSJcWHqwTnQmF1h` (`READY`). The deployment serves `https://ksforge.app/` and `https://kingshot-forge.vercel.app/`.
+
+The bounded production resilience smoke passed: authenticated `/admin/datasets` loaded with zero `/api/player/account` requests; authenticated `/admin/data/items` loaded the canonical 75-record Items dataset with zero player-account requests; `/companion/items/mithril` loaded with zero player-account requests; `/my-forge` made one legitimate player-account request and received HTTP 503 with `PLAYER_API_UNAVAILABLE`; authentication remained valid; and browser console diagnostics were clean. Automated tests provide the cooldown-duration evidence, and no repeated production player lookups were performed.
+
+No source, Supabase, Storage, Search, users, roles, permissions, environment variables or production-data mutation was made to clear the block. The next authorised recovery check is limited to one bounded, non-mutating player-dependent application request. A successful provider response is required before rerunning the complete authenticated Stage 1A acceptance. Until then, do not rerun the Stage 1A suite and do not open Stage 2.
