@@ -84,6 +84,7 @@ import MyContributorApplicationPage from "./pages/MyContributorApplicationPage";
 import ContributorApplicationsPage from "./features/operations/ContributorApplicationsPage";
 import ContributorApplicationDetailPage from "./features/operations/ContributorApplicationDetailPage";
 import ArtStudioAcceptancePage from "./features/art-studio/ArtStudioAcceptancePage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 
 const developmentAcceptanceRoute = import.meta.env.DEV
   ? <Route path="art-studio/acceptance" element={<ArtStudioAcceptancePage />} />
@@ -92,6 +93,7 @@ const developmentAcceptanceRoute = import.meta.env.DEV
 function App() {
   return (
     <Routes>
+      <Route path="auth/callback" element={<AuthCallbackPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="name-studio" element={<NameStudioPage />} />

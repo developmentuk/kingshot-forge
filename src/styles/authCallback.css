@@ -1,0 +1,5 @@
+.auth-callback { min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; background: var(--forge-ink, #101522); color: white; }
+.auth-callback__card { width: min(100%, 32rem); padding: 2rem; border: 1px solid rgb(255 255 255 / 16%); border-radius: 1rem; background: rgb(255 255 255 / 8%); box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 24%); }
+.auth-callback__spinner { display: block; width: 1.5rem; height: 1.5rem; margin-top: 1.5rem; border: 3px solid rgb(255 255 255 / 25%); border-top-color: currentColor; border-radius: 50%; animation: auth-callback-spin .8s linear infinite; }
+.auth-callback__actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+@keyframes auth-callback-spin { to { transform: rotate(360deg); } }
