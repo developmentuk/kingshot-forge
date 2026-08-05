@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
+import { captureServerException } from '../../server/observability/sentry.js'
 import { LinkedPlayerServiceError, linkOrRevalidatePlayerAccount } from '../../server/player-identity/linkedPlayerService.js'
 
 function body(request: VercelRequest) {
@@ -16,8 +17,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
     fail(response, 405, 'Method not allowed.')
     return
   }
+
+  let actorUserId: string | undefined
+
   try {
     const actor = await requireForgeActor(request)
+    actorUserId = actor.userId
     const input = body(request)
     const action = input.action === 'revalidate' ? 'revalidate' : input.action === 'link' ? 'link' : null
     if (!action) { fail(response, 400, 'A valid player action is required.'); return }
@@ -32,7 +37,14 @@ export default async function handler(request: VercelRequest, response: VercelRe
       fail(response, error.statusCode, error.message)
       return
     }
+
     console.error('[player-account]', { method: request.method, name: error instanceof Error ? error.name : 'UnknownError' })
+    await captureServerException(error, {
+      route: '/api/player/account',
+      method: request.method,
+      statusCode: 500,
+      actorUserId,
+    })
     fail(response, 500, 'The player verification service is temporarily unavailable.')
   }
 }
