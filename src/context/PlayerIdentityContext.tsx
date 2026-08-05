@@ -30,6 +30,7 @@ type PlayerIdentityContextValue = {
   playerAccount: PlayerAccount | null
   loadingPlayerAccount: boolean
   playerIdentityError: string | null
+  playerIdentityRefreshWarning: string | null
   refreshPlayerIdentity: (reason?: PlayerIdentityRefreshReason) => Promise<void>
 }
 
@@ -56,18 +57,21 @@ export function PlayerIdentityProvider({
     useState(true)
   const [playerIdentityError, setPlayerIdentityError] =
     useState<string | null>(null)
+  const [playerIdentityRefreshWarning, setPlayerIdentityRefreshWarning] =
+    useState<string | null>(null)
 
-  const loadPlayerIdentity = useCallback(async (preserveError = false) => {
-    if (isVisionAcceptanceRoute) return
+  const loadPlayerIdentity = useCallback(async (): Promise<PlayerAccount | null> => {
+    if (isVisionAcceptanceRoute) return null
     if (!user) {
       setPlayerAccount(null)
       setPlayerIdentityError(null)
+      setPlayerIdentityRefreshWarning(null)
       setLoadingPlayerAccount(false)
-      return
+      return null
     }
 
     setLoadingPlayerAccount(true)
-    if (!preserveError) setPlayerIdentityError(null)
+    setPlayerIdentityError(null)
 
     const { data, error } = await supabase
       .from('player_accounts')
@@ -109,48 +113,59 @@ export function PlayerIdentityProvider({
         'Your linked player could not be loaded. Please try again.',
       )
       setLoadingPlayerAccount(false)
-      return
+      return null
     }
 
     const account = data ? { ...(data as PlayerAccount), town_center_level: normalizeTownCenterLevel((data as PlayerAccount).town_center_level, (data as PlayerAccount).level_rendered_detailed, (data as PlayerAccount).level_rendered) } : null
     setPlayerAccount(account)
+    if (!account) setPlayerIdentityRefreshWarning(null)
 
     setLoadingPlayerAccount(false)
+    return account
   }, [isVisionAcceptanceRoute, user])
 
-  const refreshPlayerIdentity = useCallback(async (reason: PlayerIdentityRefreshReason = 'manual') => {
+  const refreshPlayerIdentity = useCallback(async (reason: PlayerIdentityRefreshReason = 'manual', knownAccount?: PlayerAccount | null) => {
     if (isVisionAcceptanceRoute) return
-    if (!user || !session?.access_token) return loadPlayerIdentity()
+    if (!user || !session?.access_token) {
+      await loadPlayerIdentity()
+      return
+    }
+    const accountBeforeRefresh = knownAccount ?? await loadPlayerIdentity()
+    if (!accountBeforeRefresh) return
     let attempted: boolean
     try {
       attempted = await refreshCoordinator.run(user.id, reason, async () => {
         setLoadingPlayerAccount(true)
         setPlayerIdentityError(null)
+        setPlayerIdentityRefreshWarning(null)
         const response = await fetch('/api/player/account', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'revalidate' }) })
-        const payload = await response.json().catch(() => null) as { status?: string; message?: string } | null
+        const payload = await response.json().catch(() => null) as { status?: string; code?: string; message?: string } | null
+        if (payload?.status === 'success' && payload.code === 'NO_LINKED_PLAYER') return
         if (!response.ok || payload?.status !== 'success') {
           const error = new Error(payload?.message ?? 'Player data could not be refreshed.') as PlayerIdentityRefreshFailure
           error.statusCode = response.status
+          error.code = payload?.code
           throw error
         }
         refreshAttemptAt.set(user.id, Date.now())
       })
     } catch (caught) {
-      await loadPlayerIdentity(true)
-      setPlayerIdentityError(caught instanceof Error ? `Cached player data is being used. ${caught.message}` : 'Cached player data is being used while refresh is unavailable.')
+      const accountAfterFailure = await loadPlayerIdentity()
+      if (!accountAfterFailure) return
+      setPlayerIdentityRefreshWarning(caught instanceof Error ? `Cached player data is being used. ${caught.message}` : 'Cached player data is being used while refresh is unavailable.')
       return
     }
 
     if (!attempted) {
-      await loadPlayerIdentity(true)
+      await loadPlayerIdentity()
       return
     }
 
     try {
-      await loadPlayerIdentity(true)
-      setPlayerIdentityError(null)
+      const refreshedAccount = await loadPlayerIdentity()
+      if (refreshedAccount) setPlayerIdentityRefreshWarning(null)
     } catch (caught) {
-      setPlayerIdentityError(caught instanceof Error ? caught.message : 'Your linked player could not be loaded. Please try again.')
+      setPlayerIdentityRefreshWarning(caught instanceof Error ? caught.message : 'Your linked player could not be refreshed.')
     }
   }, [isVisionAcceptanceRoute, loadPlayerIdentity, session?.access_token, user])
 
@@ -161,17 +176,17 @@ export function PlayerIdentityProvider({
 
     let cancelled = false
     async function establish() {
-      if (!user) { await loadPlayerIdentity(); return }
-      const lastRefresh = Date.parse(playerAccount?.last_refreshed_at ?? '')
+      const account = await loadPlayerIdentity()
+      if (!user || !account || cancelled) return
+      const lastRefresh = Date.parse(account.last_refreshed_at ?? '')
       const throttled = Date.now() - (refreshAttemptAt.get(user.id) ?? 0) < REFRESH_THROTTLE_MS
       const stale = !Number.isFinite(lastRefresh) || Date.now() - lastRefresh > REFRESH_STALE_MS
-      const shouldRefresh = canAutoRefresh && session?.access_token && (stale || !refreshAttemptAt.has(user.id)) && !throttled
-      if (!cancelled && shouldRefresh) await refreshPlayerIdentity('automatic')
-      else if (!cancelled) await loadPlayerIdentity(refreshCoordinator.isCoolingDown(user.id))
+      const shouldRefresh = canAutoRefresh && session?.access_token && (stale || !refreshAttemptAt.has(user.id)) && !throttled && refreshCoordinator.shouldAttempt(user.id, 'automatic')
+      if (!cancelled && shouldRefresh) await refreshPlayerIdentity('automatic', account)
     }
     void establish()
     return () => { cancelled = true }
-  }, [authLoading, canAutoRefresh, isVisionAcceptanceRoute, loadPlayerIdentity, playerAccount?.last_refreshed_at, refreshPlayerIdentity, session?.access_token, user])
+  }, [authLoading, canAutoRefresh, isVisionAcceptanceRoute, loadPlayerIdentity, refreshPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
     if (isVisionAcceptanceRoute || !session?.access_token || !user) return
@@ -203,6 +218,7 @@ export function PlayerIdentityProvider({
         playerAccount: isVisionAcceptanceRoute ? null : playerAccount,
         loadingPlayerAccount: isVisionAcceptanceRoute ? false : loadingPlayerAccount,
         playerIdentityError: isVisionAcceptanceRoute ? null : playerIdentityError,
+        playerIdentityRefreshWarning: isVisionAcceptanceRoute ? null : playerIdentityRefreshWarning,
         refreshPlayerIdentity: isVisionAcceptanceRoute ? async () => {} : refreshPlayerIdentity,
       }),
       [
@@ -210,6 +226,7 @@ export function PlayerIdentityProvider({
         playerAccount,
         loadingPlayerAccount,
         playerIdentityError,
+        playerIdentityRefreshWarning,
         refreshPlayerIdentity,
       ],
     )

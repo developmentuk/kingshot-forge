@@ -4,6 +4,7 @@ export type PlayerIdentityRefreshReason = 'automatic' | 'manual'
 
 export type PlayerIdentityRefreshFailure = Error & {
   statusCode?: number
+  code?: string
 }
 
 export function isPlayerIdentityAutoRefreshRoute(pathname: string) {

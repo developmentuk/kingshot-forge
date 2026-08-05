@@ -2245,6 +2245,11 @@
   background: rgba(207, 75, 75, 0.1);
 }
 
+.linked-player-message--warning {
+  color: #f6d99b;
+  background: rgba(222, 170, 70, 0.12);
+}
+
 .linked-player-panel--signed-out {
   display: flex;
   align-items: center;

@@ -13,6 +13,7 @@ export function PrivatePlayerIdentityPage() {
     playerAccount,
     loadingPlayerAccount,
     playerIdentityError,
+    playerIdentityRefreshWarning,
     refreshPlayerIdentity,
   } = usePlayerIdentity()
 
@@ -139,6 +140,21 @@ export function PrivatePlayerIdentityPage() {
   return (
     <PlayerIdentityPageFrame>
       <IdentitySummary playerAccount={playerAccount} />
+      {playerIdentityRefreshWarning && (
+        <section className="player-identity__notice" role="status">
+          <div>
+            <p className="player-identity__eyebrow">Refresh notice</p>
+            <p>{playerIdentityRefreshWarning}</p>
+          </div>
+          <button
+            className="player-identity__button player-identity__button--secondary"
+            type="button"
+            onClick={() => void refreshPlayerIdentity()}
+          >
+            Retry refresh
+          </button>
+        </section>
+      )}
       <ForgeProgressPanel />
       <LinkedPlayerPanel />
 

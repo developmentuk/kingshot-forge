@@ -31,7 +31,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
       playerId: input.playerId,
       kingdomId: input.kingdomId ?? input.state,
     })
-    response.status(200).json({ status: 'success', data })
+    response.status(200).json(data === null
+      ? { status: 'success', code: 'NO_LINKED_PLAYER', data: null }
+      : { status: 'success', data })
   } catch (error) {
     if (error instanceof ForgeAuthenticationError || error instanceof LinkedPlayerServiceError) {
       fail(response, error.statusCode, error.message)
