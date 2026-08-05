@@ -7,10 +7,11 @@ import {
 
 import {
   getDatasetCapabilityFlags,
+  getPublishedDatasetCapabilityFlags,
 } from "../../../shared/data-engine/dataset-capabilities";
 
 import type {
-  DatasetKey,
+  PublishedDatasetKey,
 } from "./dataEngineApi";
 
 export interface AdminDatasetMetadata {
@@ -19,11 +20,25 @@ export interface AdminDatasetMetadata {
 
 export interface AdminDatasetRegistration
   extends DatasetDefinition {
-  id: DatasetKey;
+  id: PublishedDatasetKey;
   admin: AdminDatasetMetadata;
 }
 
 const registrations: AdminDatasetRegistration[] = [
+  {
+    id: "items",
+    version: 1,
+    title: "Companion Items",
+    singularTitle: "Companion Item",
+    description: "Read-only view of the published Companion Item projection.",
+    category: "content",
+    route: "/admin/data/items",
+    idField: "key",
+    titleField: "name",
+    fields: [],
+    capabilities: getPublishedDatasetCapabilityFlags("items"),
+    admin: { order: 5 },
+  },
   {
     id: "heroes",
     version: 1,

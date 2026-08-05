@@ -155,11 +155,13 @@ export function AdminDatasetsPage() {
                       : "browse-only"
                   }`}
                 >
-                  {dataset.capabilities.editing
-                    ? "Editor implemented"
-                    : dataset.capabilities.browsing
-                      ? "Browse only"
-                      : "Browser unavailable"}
+                  {dataset.id === "items"
+                    ? "Partial — browser only"
+                    : dataset.capabilities.editing
+                      ? "Editor implemented"
+                      : dataset.capabilities.browsing
+                        ? "Browse only"
+                        : "Browser unavailable"}
                 </span>
               </div>
 
@@ -202,11 +204,13 @@ export function AdminDatasetsPage() {
                 to={dataset.route}
                 className="admin-dataset-card__link"
               >
-                {dataset.capabilities.editing
-                  ? "Manage dataset"
-                  : dataset.capabilities.browsing
-                    ? "Browse dataset"
-                    : "View readiness"}
+                {dataset.id === "items"
+                  ? "Browse dataset"
+                  : dataset.capabilities.editing
+                    ? "Manage dataset"
+                    : dataset.capabilities.browsing
+                      ? "Browse dataset"
+                      : "View readiness"}
               </Link>
             </article>
           );

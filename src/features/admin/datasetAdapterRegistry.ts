@@ -1,8 +1,9 @@
 import type {
-  DatasetKey,
+  PublishedDatasetKey,
 } from "./dataEngineApi";
 
 import {
+  getPublishedDatasetCapabilities,
   requireRegisteredDatasetCapabilities,
 } from "../../../shared/data-engine/dataset-capabilities";
 
@@ -27,6 +28,10 @@ import {
 } from "./heroSkillsDatasetAdapter";
 
 import {
+  itemsDatasetAdapter,
+} from "./itemsDatasetAdapter";
+
+import {
   coreDatasetAdapters,
 } from "./coreDatasetAdapters";
 
@@ -41,6 +46,7 @@ import {
 } from "./recordEditor/recordEditorSchemaRegistry";
 
 const registeredAdapters: DatasetAdapter[] = [
+  itemsDatasetAdapter,
   heroesDatasetAdapter,
   heroSkillsDatasetAdapter,
   eventsDatasetAdapter,
@@ -49,7 +55,7 @@ const registeredAdapters: DatasetAdapter[] = [
 ];
 
 const datasetAdapters = new Map<
-  DatasetKey,
+  PublishedDatasetKey,
   DatasetAdapter
 >();
 
@@ -92,9 +98,11 @@ for (const adapter of registeredAdapters) {
 
 for (const registration of listAdminDatasetRegistrations()) {
   const sharedCapabilities =
-    requireRegisteredDatasetCapabilities(
-      registration.id,
-    );
+    registration.id === "items"
+      ? getPublishedDatasetCapabilities(registration.id)
+      : requireRegisteredDatasetCapabilities(
+          registration.id,
+        );
   const adapter = datasetAdapters.get(registration.id);
   const editorSchema =
     getRecordEditorSchema(registration.id);
@@ -186,7 +194,7 @@ export function getDatasetAdapter(
   }
 
   return datasetAdapters.get(
-    datasetId as DatasetKey,
+    datasetId as PublishedDatasetKey,
   );
 }
 
@@ -196,13 +204,13 @@ export function hasDatasetAdapter(
   return (
     hasAdminDatasetRegistration(datasetId) &&
     datasetAdapters.has(
-      datasetId as DatasetKey,
+      datasetId as PublishedDatasetKey,
     )
   );
 }
 
 export function listDatasetAdapters():
-DatasetKey[] {
+PublishedDatasetKey[] {
   return [
     ...datasetAdapters.keys(),
   ].sort(

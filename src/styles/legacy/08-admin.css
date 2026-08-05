@@ -538,6 +538,35 @@
   color: #667487;
 }
 
+.dataset-table-filter {
+  display: grid;
+  min-width: 150px;
+  gap: 0.35rem;
+}
+
+.dataset-table-filter span {
+  color: #d8dee7;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.dataset-table-filter select {
+  min-height: 38px;
+  border: 1px solid #344255;
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  color: #f7f2e8;
+  background: #0a111a;
+  font: inherit;
+  font-size: 0.76rem;
+}
+
+.dataset-table-filter select:focus-visible,
+.dataset-table-search input:focus-visible {
+  outline: 2px solid #f0bd57;
+  outline-offset: 2px;
+}
+
 .dataset-table th {
   position: sticky;
   z-index: 2;
@@ -1313,6 +1342,10 @@
 
   .dataset-table-panel {
     border-radius: 0.9rem;
+  }
+
+  .dataset-table-filter {
+    min-width: min(100%, 220px);
   }
 
   .dataset-table-scroll {

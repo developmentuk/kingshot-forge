@@ -106,6 +106,8 @@ function toAdminDatasetDefinition(
     sourceDescription:
       readiness.importMode === "source-staging"
         ? "Governed source-staging projection"
+        : readiness.importMode === "published-projection"
+          ? "Published-only Companion Item projection"
         : "Data Engine import source",
     capabilities,
     readiness,
@@ -117,7 +119,7 @@ function toAdminDatasetDefinition(
 
 export const adminDatasets: AdminDatasetDefinition[] =
   adminDatasetService
-    .list({ category: "game-data" })
+    .list()
     .map(
       (definition) =>
         toAdminDatasetDefinition(
