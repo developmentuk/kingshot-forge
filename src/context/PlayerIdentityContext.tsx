@@ -12,17 +12,25 @@ import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PlayerAccount } from '../types/playerAccount'
 import { normalizeTownCenterLevel } from '../services/playerProgressionService'
+import {
+  isPlayerIdentityAutoRefreshRoute,
+  PlayerIdentityRefreshCoordinator,
+  type PlayerIdentityRefreshFailure,
+  type PlayerIdentityRefreshReason,
+} from './playerIdentityRefreshPolicy'
 
 const REFRESH_STALE_MS = 30 * 60 * 1000
 const REFRESH_THROTTLE_MS = 5 * 60 * 1000
-const refreshInFlight = new Map<string, Promise<void>>()
 const refreshAttemptAt = new Map<string, number>()
+// refreshInFlight is coordinated by PlayerIdentityRefreshCoordinator so the
+// existing same-user deduplication contract remains explicit at this boundary.
+const refreshCoordinator = new PlayerIdentityRefreshCoordinator()
 
 type PlayerIdentityContextValue = {
   playerAccount: PlayerAccount | null
   loadingPlayerAccount: boolean
   playerIdentityError: string | null
-  refreshPlayerIdentity: () => Promise<void>
+  refreshPlayerIdentity: (reason?: PlayerIdentityRefreshReason) => Promise<void>
 }
 
 const PlayerIdentityContext = createContext<
@@ -39,6 +47,7 @@ export function PlayerIdentityProvider({
   const { user, session, loading: authLoading } = useAuth()
   const { pathname } = useLocation()
   const isVisionAcceptanceRoute = pathname === '/admin/vision/account-linking-acceptance'
+  const canAutoRefresh = isPlayerIdentityAutoRefreshRoute(pathname)
 
   const [playerAccount, setPlayerAccount] =
     useState<PlayerAccount | null>(null)
@@ -48,7 +57,7 @@ export function PlayerIdentityProvider({
   const [playerIdentityError, setPlayerIdentityError] =
     useState<string | null>(null)
 
-  const loadPlayerIdentity = useCallback(async () => {
+  const loadPlayerIdentity = useCallback(async (preserveError = false) => {
     if (isVisionAcceptanceRoute) return
     if (!user) {
       setPlayerAccount(null)
@@ -58,7 +67,7 @@ export function PlayerIdentityProvider({
     }
 
     setLoadingPlayerAccount(true)
-    setPlayerIdentityError(null)
+    if (!preserveError) setPlayerIdentityError(null)
 
     const { data, error } = await supabase
       .from('player_accounts')
@@ -109,27 +118,40 @@ export function PlayerIdentityProvider({
     setLoadingPlayerAccount(false)
   }, [isVisionAcceptanceRoute, user])
 
-  const refreshPlayerIdentity = useCallback(async () => {
+  const refreshPlayerIdentity = useCallback(async (reason: PlayerIdentityRefreshReason = 'manual') => {
     if (isVisionAcceptanceRoute) return
     if (!user || !session?.access_token) return loadPlayerIdentity()
-    const existing = refreshInFlight.get(user.id)
-    if (existing) return existing
-    const request = (async () => {
-      setLoadingPlayerAccount(true)
-      setPlayerIdentityError(null)
-      try {
+    let attempted: boolean
+    try {
+      attempted = await refreshCoordinator.run(user.id, reason, async () => {
+        setLoadingPlayerAccount(true)
+        setPlayerIdentityError(null)
         const response = await fetch('/api/player/account', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'revalidate' }) })
         const payload = await response.json().catch(() => null) as { status?: string; message?: string } | null
-        if (!response.ok || payload?.status !== 'success') throw new Error(payload?.message ?? 'Player data could not be refreshed.')
+        if (!response.ok || payload?.status !== 'success') {
+          const error = new Error(payload?.message ?? 'Player data could not be refreshed.') as PlayerIdentityRefreshFailure
+          error.statusCode = response.status
+          throw error
+        }
         refreshAttemptAt.set(user.id, Date.now())
-      } catch (caught) {
-        setPlayerIdentityError(caught instanceof Error ? `Cached player data is being used. ${caught.message}` : 'Cached player data is being used while refresh is unavailable.')
-      } finally {
-        await loadPlayerIdentity()
-      }
-    })().finally(() => refreshInFlight.delete(user.id))
-    refreshInFlight.set(user.id, request)
-    return request
+      })
+    } catch (caught) {
+      await loadPlayerIdentity(true)
+      setPlayerIdentityError(caught instanceof Error ? `Cached player data is being used. ${caught.message}` : 'Cached player data is being used while refresh is unavailable.')
+      return
+    }
+
+    if (!attempted) {
+      await loadPlayerIdentity(true)
+      return
+    }
+
+    try {
+      await loadPlayerIdentity(true)
+      setPlayerIdentityError(null)
+    } catch (caught) {
+      setPlayerIdentityError(caught instanceof Error ? caught.message : 'Your linked player could not be loaded. Please try again.')
+    }
   }, [isVisionAcceptanceRoute, loadPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
@@ -143,12 +165,13 @@ export function PlayerIdentityProvider({
       const lastRefresh = Date.parse(playerAccount?.last_refreshed_at ?? '')
       const throttled = Date.now() - (refreshAttemptAt.get(user.id) ?? 0) < REFRESH_THROTTLE_MS
       const stale = !Number.isFinite(lastRefresh) || Date.now() - lastRefresh > REFRESH_STALE_MS
-      if (!cancelled && session?.access_token && (stale || !refreshAttemptAt.has(user.id)) && !throttled) await refreshPlayerIdentity()
-      else if (!cancelled) await loadPlayerIdentity()
+      const shouldRefresh = canAutoRefresh && session?.access_token && (stale || !refreshAttemptAt.has(user.id)) && !throttled
+      if (!cancelled && shouldRefresh) await refreshPlayerIdentity('automatic')
+      else if (!cancelled) await loadPlayerIdentity(refreshCoordinator.isCoolingDown(user.id))
     }
     void establish()
     return () => { cancelled = true }
-  }, [authLoading, isVisionAcceptanceRoute, loadPlayerIdentity, playerAccount?.last_refreshed_at, refreshPlayerIdentity, session?.access_token, user])
+  }, [authLoading, canAutoRefresh, isVisionAcceptanceRoute, loadPlayerIdentity, playerAccount?.last_refreshed_at, refreshPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
     if (isVisionAcceptanceRoute || !session?.access_token || !user) return
@@ -158,7 +181,7 @@ export function PlayerIdentityProvider({
   useEffect(() => {
     if (isVisionAcceptanceRoute) return
     function handlePlayerUpdate() {
-      void refreshPlayerIdentity()
+      void refreshPlayerIdentity('manual')
     }
 
     window.addEventListener(
