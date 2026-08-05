@@ -1,0 +1,44 @@
+name: Sentry observability validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'api/player/account.ts'
+      - 'server/observability/**'
+      - 'shared/observability/**'
+      - 'src/observability/**'
+      - 'src/components/ForgeErrorBoundary.tsx'
+      - 'src/components/SentryUserRuntime.tsx'
+      - 'src/main.tsx'
+      - 'src/styles/observability.css'
+      - 'vite.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/test-sentry-observability.mjs'
+      - 'docs/releases/SENTRY-OBSERVABILITY-001.md'
+      - '.github/workflows/sentry-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Sentry privacy, build and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run test:observability
+      - run: npm run validate:nodenext
+      - run: npm run lint
+      - run: npm run build
