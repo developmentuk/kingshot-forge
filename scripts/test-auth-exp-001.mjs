@@ -6,15 +6,25 @@ import { resolveAuthError } from '../src/auth/authErrors.ts'
 
 const accepted = [
   ['/my-forge', '/my-forge'],
+  ['/settings?tab=security', '/settings?tab=security'],
+  ['/companion/items/example#details', '/companion/items/example#details'],
   ['/my-forge?tab=security#sessions', '/my-forge?tab=security#sessions'],
   ['/search?q=hero%20skills', '/search?q=hero%20skills'],
+  ['/name-studio?value=%E2%9C%A8', '/name-studio?value=%E2%9C%A8'],
+  ['/my-forge#https://attacker.example', '/my-forge#https://attacker.example'],
 ]
 for (const [input, expected] of accepted) assert.equal(resolveInternalDestination(input).destination, expected)
 
 const rejected = [
-  '//evil.example/path', 'https://evil.example', 'javascript:alert(1)', 'data:text/html,x',
-  '/\\evil.example', '/%2F%2Fevil.example', '/%252F%252Fevil.example', '/bad%2', '/foo\u0000bar',
-  `/foo?returnTo=${encodeURIComponent('https://evil.example')}`, 'x'.repeat(2049),
+  '//attacker.example', '///attacker.example', 'https://attacker.example', 'http://attacker.example',
+  'javascript:alert(1)', 'data:text/html,test', '\\attacker.example', '/\\attacker.example',
+  '/%2F%2Fattacker.example', '/%252F%252Fattacker.example', '/%2f%5cattacker.example',
+  '/bad%2', '/foo\u0000bar', '/foo\rbar', '/foo\nbar', '/foo\tbar', '/foo\u0085bar',
+  `/foo?next=${encodeURIComponent('https://attacker.example')}`,
+  `/foo?redirect=${encodeURIComponent('//attacker.example')}`,
+  `/foo?returnTo=${encodeURIComponent('/%2F%2Fattacker.example')}`,
+  `/foo?continue=${encodeURIComponent('javascript:alert(1)')}`,
+  'x'.repeat(2049),
 ]
 for (const input of rejected) assert.equal(resolveInternalDestination(input).destination, '/my-forge', `expected rejection: ${input}`)
 

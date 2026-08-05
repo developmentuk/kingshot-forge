@@ -1,5 +1,5 @@
 const MAX_DESTINATION_LENGTH = 2048
-const REDIRECT_PARAMETER = /(redirect|return|next|destination|callback)/i
+const REDIRECT_PARAMETER = /(redirect|return|next|destination|callback|continue)/i
 
 export const DEFAULT_AUTH_DESTINATION = '/my-forge'
 
