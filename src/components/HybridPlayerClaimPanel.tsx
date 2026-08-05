@@ -62,6 +62,7 @@ function HybridPlayerClaimPanel() {
     loadingPlayerAccount: loadingAccount,
     refreshPlayerIdentity,
     playerIdentityError,
+    playerIdentityRefreshWarning,
   } = usePlayerIdentity()
 
   const [playerId, setPlayerId] = useState('')
@@ -270,6 +271,12 @@ function HybridPlayerClaimPanel() {
 
   return (
     <section className="linked-player-panel">
+      {playerIdentityRefreshWarning && (
+        <div className="linked-player-message linked-player-message--warning" role="status">
+          <p>{playerIdentityRefreshWarning}</p>
+          <button type="button" className="button button--secondary" onClick={() => void refreshPlayerIdentity()}>Retry refresh</button>
+        </div>
+      )}
       <div className="linked-player-panel__heading">
         <div>
           <p className="eyebrow">Hybrid player identity</p>
