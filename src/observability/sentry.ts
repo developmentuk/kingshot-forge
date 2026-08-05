@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/react'
 import {
   sanitizeBreadcrumb,
   sanitizeSentryEvent,
-} from './redaction'
+} from '../../shared/observability/redaction'
 
 let initialized = false
 
