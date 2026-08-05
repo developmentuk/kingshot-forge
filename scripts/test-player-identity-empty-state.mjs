@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+
+const read = (path) => readFile(path, 'utf8')
+const context = await read('src/context/PlayerIdentityContext.tsx')
+const passport = await read('src/features/player-identity/PrivatePlayerIdentityPage.tsx')
+const claims = await read('src/components/HybridPlayerClaimPanel.tsx')
+const screenshot = await read('src/components/ScreenshotLinkingPanel.tsx')
+const service = await read('server/player-identity/linkedPlayerService.ts')
+const api = await read('api/player/account.ts')
+
+assert.match(context, /playerIdentityRefreshWarning/)
+assert.match(context, /const account = await loadPlayerIdentity\(\)/)
+assert.match(context, /if \(!user \|\| !account \|\| cancelled\) return/)
+assert.match(context, /refreshCoordinator\.shouldAttempt\(user\.id, 'automatic'\)/)
+assert.match(context, /payload\.code === 'NO_LINKED_PLAYER'/)
+assert.match(context, /setPlayerIdentityRefreshWarning\(/)
+
+assert.match(passport, /playerIdentityRefreshWarning/)
+assert.match(passport, /role="status"/)
+assert.match(passport, /Retry refresh/)
+assert.match(claims, /playerIdentityRefreshWarning/)
+assert.match(claims, /role="status"/)
+assert.match(claims, /Kingshot Player ID/)
+assert.match(claims, /Kingshot State/)
+assert.match(claims, /ScreenshotLinkingPanel/)
+assert.match(screenshot, /Choose screenshot/)
+assert.match(service, /if \(input\.action === 'revalidate' && !existing\) return null/)
+assert.match(api, /code: 'NO_LINKED_PLAYER'/)
+assert.doesNotMatch(passport, /if \(playerIdentityRefreshWarning\) \{[\s\S]*return \(/)
+assert.doesNotMatch(claims, /if \(playerIdentityRefreshWarning\) \{[\s\S]*return \(/)
+
+console.log('Player Identity empty-account and refresh-warning UI contracts passed.')

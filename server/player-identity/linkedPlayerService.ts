@@ -140,7 +140,7 @@ export async function linkOrRevalidatePlayerAccount(userId: string, input: { act
   const { data: existing, error: existingError } = await admin.from('player_accounts').select('id,player_id,kingdom_id,is_primary,is_public').eq('user_id', userId).eq('is_primary', true).maybeSingle()
   if (existingError) throw existingError
 
-  if (input.action === 'revalidate' && !existing) throw new LinkedPlayerServiceError(404, 'No linked Kingshot player requires revalidation.')
+  if (input.action === 'revalidate' && !existing) return null
 
   const requestedPlayerId = input.action === 'revalidate'
     ? validatePlayerId(existing?.player_id)
