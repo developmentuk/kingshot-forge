@@ -1,6 +1,6 @@
 # COMPANION-ADMIN-001 Stage 1A — Items Admin Browser Foundation
 
-Status: **Partial — browser foundation only**
+Status: **Partial — browser foundation only; environmental acceptance blocked**
 
 Starting point: `origin/main` at `60209e0aea98e75d472b4d0a2bfe49a7cac85fbd`
 
@@ -41,3 +41,18 @@ The Items readiness registry is intentionally Partial: the browser, adapter, cli
 ## Stage 2 blockers
 
 Before any Item authoring or publication work, the project needs an approved Item schema and governance boundary, explicit rights/media policy, server-side mutation contracts, role/permission decisions using existing permissions, audit/version/publication semantics, and owner acceptance of the Admin browser and mobile experience.
+
+## Environmental acceptance gate — 2026-08-05
+
+Stage 1A acceptance remains blocked solely by the external Kingshot player provider. The Companion Admin implementation and the deployed player-resilience correction are not failing.
+
+PLAYER-RESILIENCE-001 was completed through PR #40 and merged canonically. The production merge and deployment evidence is:
+
+- merge commit and production SHA: `1c8145f2b6dcebb60478aa6a2c8136517cbbc151`;
+- production deployment: `dpl_5H4MnbyAb5g56GSJcWHqwTnQmF1h`;
+- deployment status: `READY`;
+- production aliases: `https://ksforge.app/` and `https://kingshot-forge.vercel.app/`.
+
+The resilience production smoke passed: `/admin/datasets`, `/admin/data/items` and `/companion/items/mithril` made zero automatic `/api/player/account` requests; `/admin/data/items` loaded 75 canonical records; `/my-forge` made one legitimate player-account request; authentication remained valid; and the browser console remained clean. The player lookup returned HTTP 503 with `PLAYER_API_UNAVAILABLE`. Cooldown suppression remains supported by the automated resilience tests; no repeated production provider probing was performed.
+
+The current recovery gate is one bounded, non-mutating player-dependent application request. If the result remains HTTP 503 or `PLAYER_API_UNAVAILABLE`, retain this environmental block and stop. If the provider succeeds, rerun the complete authenticated Stage 1A acceptance against the current READY production deployment, record the exact SHA/deployment and zero-mutation evidence, and only then consider Stage 1A accepted. Stage 2 remains closed until that formal acceptance.
