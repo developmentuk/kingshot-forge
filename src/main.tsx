@@ -9,24 +9,33 @@ import { RoleProvider } from './context/RoleContext'
 import { PlayerIdentityProvider } from './context/PlayerIdentityContext'
 import { FavouritesProvider } from './context/FavouritesContext'
 import AnalyticsRuntime from './components/AnalyticsRuntime'
+import ForgeErrorBoundary from './components/ForgeErrorBoundary'
+import SentryUserRuntime from './components/SentryUserRuntime'
+import { initSentry } from './observability/sentry'
 
 import './index.css'
 import './styles/kingshot-chat-calibration.css'
 import './styles/kingshot-art-renderer.css'
+import './styles/observability.css'
+
+initSentry()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <AnalyticsRuntime />
-        <RoleProvider>
-          <PlayerIdentityProvider>
-            <FavouritesProvider>
-              <App />
-            </FavouritesProvider>
-          </PlayerIdentityProvider>
-        </RoleProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <ForgeErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <AnalyticsRuntime />
+          <SentryUserRuntime />
+          <RoleProvider>
+            <PlayerIdentityProvider>
+              <FavouritesProvider>
+                <App />
+              </FavouritesProvider>
+            </PlayerIdentityProvider>
+          </RoleProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ForgeErrorBoundary>
   </StrictMode>,
 )
