@@ -49,7 +49,7 @@ export function redactHeaders(value: unknown) {
   return redacted
 }
 
-export function sanitizeSentryEvent<T extends Record<string, unknown>>(event: T): T {
+export function sanitizeSentryEvent<T extends object>(event: T): T {
   const sanitized = { ...event } as Record<string, unknown>
 
   if (isRecord(sanitized.request)) {
@@ -73,10 +73,9 @@ export function sanitizeSentryEvent<T extends Record<string, unknown>>(event: T)
   return sanitized as T
 }
 
-export function sanitizeBreadcrumb<T extends Record<string, unknown>>(breadcrumb: T): T {
-  return {
-    ...breadcrumb,
-    data: redactValue(breadcrumb.data),
-    message: redactUrl(breadcrumb.message),
-  }
+export function sanitizeBreadcrumb<T extends object>(breadcrumb: T): T {
+  const sanitized = { ...breadcrumb } as Record<string, unknown>
+  sanitized.data = redactValue(sanitized.data)
+  sanitized.message = redactUrl(sanitized.message)
+  return sanitized as T
 }
