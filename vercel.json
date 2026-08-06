@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build && node scripts/emit-island-route-lockfile.mjs",
   "functions": {
     "api/player/link-ocr.ts": {
       "maxDuration": 60,
