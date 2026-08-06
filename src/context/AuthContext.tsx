@@ -11,7 +11,7 @@ import type {
   Session,
   User,
 } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { beginOAuthAuthentication, getCurrentForgeSession, observeForgeAuthState, signOutForgeUser } from '../services/authService'
 import { track } from '../platform/analytics/analytics'
 
 type AuthContextValue = {
@@ -45,7 +45,7 @@ export function AuthProvider({
       const {
         data: { session: currentSession },
         error,
-      } = await supabase.auth.getSession()
+      } = await getCurrentForgeSession()
 
       if (!isMounted) {
         return
@@ -66,7 +66,7 @@ export function AuthProvider({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
+    } = observeForgeAuthState(
       (
         _event: AuthChangeEvent,
         nextSession: Session | null,
@@ -89,29 +89,14 @@ export function AuthProvider({
   }, [])
 
   async function signInWithGoogle() {
-    const redirectTo =
-      `${window.location.origin}${window.location.pathname}`
-
-    const { error } =
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-        },
-      })
-
-    if (error) {
-      throw error
-    }
+    await beginOAuthAuthentication(
+      'google',
+      `${window.location.pathname}${window.location.search}${window.location.hash}`,
+    )
   }
 
   async function signOut() {
-    const { error } =
-      await supabase.auth.signOut()
-
-    if (error) {
-      throw error
-    }
+    await signOutForgeUser()
   }
 
   const value = useMemo<AuthContextValue>(
