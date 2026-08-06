@@ -24,10 +24,14 @@ type IslandRouteMapProps = Readonly<{
   onStatusChange?: (message: string) => void
 }>
 
-const mapBounds: LeafletBoundsExpression = [[0, 0], [ISLAND_MAP_BOUNDS.height, ISLAND_MAP_BOUNDS.width]]
+const ISLAND_PROJECTED_BOUNDS: LeafletBoundsExpression = [[0, 0], [ISLAND_MAP_BOUNDS.height, ISLAND_MAP_BOUNDS.width * 2]]
+// Temporary decorative artwork only; route coordinates remain authoritative at 0–60.
+const ISLAND_BACKGROUND_BOUNDS: LeafletBoundsExpression = [[0, 0], [60, 120]]
 
-function toLeafletPoint(point: Readonly<{ x: number; y: number }>): LeafletLatLngExpression {
-  return [point.y, point.x]
+function projectIslandPoint(point: Readonly<{ x: number; y: number }>): LeafletLatLngExpression {
+  const projectedX = point.x - point.y + ISLAND_MAP_BOUNDS.width
+  const projectedY = (point.x + point.y) * 0.5
+  return [projectedY, projectedX]
 }
 
 function routePlacements(plan: IslandRoutePlan, currentRound: number, showFullRoute: boolean) {
@@ -37,7 +41,15 @@ function routePlacements(plan: IslandRoutePlan, currentRound: number, showFullRo
 }
 
 function addGrid(api: LeafletApi, map: LeafletMap): void {
-  api.rectangle(mapBounds, {
+  const projectedCorners: ReadonlyArray<LeafletLatLngExpression> = [
+    projectIslandPoint({ x: 0, y: 0 }),
+    projectIslandPoint({ x: ISLAND_MAP_BOUNDS.width, y: 0 }),
+    projectIslandPoint({ x: ISLAND_MAP_BOUNDS.width, y: ISLAND_MAP_BOUNDS.height }),
+    projectIslandPoint({ x: 0, y: ISLAND_MAP_BOUNDS.height }),
+    projectIslandPoint({ x: 0, y: 0 }),
+  ]
+
+  api.polyline(projectedCorners, {
     className: 'island-route-map__border',
     fill: false,
     interactive: false,
@@ -52,13 +64,19 @@ function addGrid(api: LeafletApi, map: LeafletMap): void {
       weight: major ? 1.25 : 0.7,
     }
 
-    api.polyline([[0, coordinate], [ISLAND_MAP_BOUNDS.height, coordinate]], options).addTo(map)
-    api.polyline([[coordinate, 0], [coordinate, ISLAND_MAP_BOUNDS.width]], options).addTo(map)
+    api.polyline([
+      projectIslandPoint({ x: coordinate, y: 0 }),
+      projectIslandPoint({ x: coordinate, y: ISLAND_MAP_BOUNDS.height }),
+    ], options).addTo(map)
+    api.polyline([
+      projectIslandPoint({ x: 0, y: coordinate }),
+      projectIslandPoint({ x: ISLAND_MAP_BOUNDS.width, y: coordinate }),
+    ], options).addTo(map)
   }
 }
 
 function addRouteLine(api: LeafletApi, map: LeafletMap, placement: IslandRoutePlacement): void {
-  api.polyline([toLeafletPoint(placement.from), toLeafletPoint(placement.chest)], {
+  api.polyline([projectIslandPoint(placement.from), projectIslandPoint(placement.chest)], {
     className: `island-route-map__path island-route-map__path--reservoir-${placement.reservoir}`,
     interactive: false,
     weight: 3,
@@ -104,11 +122,11 @@ export default function IslandRouteMap({
           maxZoom: 3,
           zoomControl: true,
           attributionControl: false,
-          maxBounds: mapBounds,
+          maxBounds: ISLAND_PROJECTED_BOUNDS,
           maxBoundsViscosity: 0.8,
         })
 
-        api.imageOverlay(islandBackgroundUrl, mapBounds, {
+        api.imageOverlay(islandBackgroundUrl, ISLAND_BACKGROUND_BOUNDS, {
           interactive: false,
         }).addTo(map)
         addGrid(api, map)
@@ -120,7 +138,7 @@ export default function IslandRouteMap({
           iconSize: [34, 34],
           iconAnchor: [17, 17],
         })
-        api.marker(toLeafletPoint(ISLAND_HQ), { icon: hqIcon, keyboard: true })
+        api.marker(projectIslandPoint(ISLAND_HQ), { icon: hqIcon, keyboard: true })
           .addTo(map)
           .bindTooltip?.('HQ Centre · route origin', { direction: 'top' })
 
@@ -144,7 +162,7 @@ export default function IslandRouteMap({
             iconAnchor: [17, 17],
           })
 
-          const marker = api.marker(toLeafletPoint(chest), { icon, keyboard: true })
+          const marker = api.marker(projectIslandPoint(chest), { icon, keyboard: true })
           marker.addTo(map)
           marker.bindTooltip?.(`${chest.label} · round ${round} · X ${chest.x}, Y ${chest.y}`, {
             direction: 'top',
@@ -152,7 +170,7 @@ export default function IslandRouteMap({
           marker.on?.('click', () => onSelectRound(round))
         }
 
-        map.fitBounds(api.latLngBounds(mapBounds), { padding: [18, 18] })
+        map.fitBounds(api.latLngBounds(ISLAND_PROJECTED_BOUNDS), { padding: [8, 8] })
         onStatusChange?.('Interactive Island map ready.')
       })
       .catch((error: unknown) => {
