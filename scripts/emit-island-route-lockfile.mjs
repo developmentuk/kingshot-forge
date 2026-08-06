@@ -9,7 +9,7 @@ const compressed = brotliCompressSync(lockfile, {
   },
 })
 const encoded = compressed.toString('base64')
-const chunkSize = 12000
+const chunkSize = 3500
 const chunkCount = Math.ceil(encoded.length / chunkSize)
 const digest = createHash('sha256').update(lockfile).digest('hex')
 
