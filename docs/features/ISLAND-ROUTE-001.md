@@ -41,7 +41,7 @@ The module owns:
 
 - coordinate data and provenance;
 - deterministic route calculation;
-- Leaflet loading and map rendering;
+- Leaflet map rendering;
 - player controls and local progress;
 - responsive module styles.
 
@@ -146,21 +146,13 @@ Expected result:
 
 ## Leaflet integration
 
-The map uses Leaflet `1.9.4` with `CRS.Simple`.
+The map uses the pinned npm package `leaflet@1.9.4` with `CRS.Simple`.
 
-The module loads the official hosted assets from `unpkg.com` using the integrity values published on Leaflet's official download page. The loader:
+Leaflet is installed through the canonical package manifest and lockfile, bundled by Vite at build time and shipped as trusted static application code. Forge does not load Leaflet JavaScript from a browser CDN or remote runtime module. This follows ADR-014's static-composition and supply-chain boundary.
 
-- pins the exact version;
-- verifies CSS and JavaScript with Subresource Integrity;
-- uses anonymous CORS mode;
-- caches one load promise;
-- times out safely;
-- removes a failed script before retry;
-- reports an accessible failure message.
+`leafletLoader.ts` is a narrow local adapter that exposes only the Leaflet surface used by this feature. Leaflet remains presentation only: the route engine and coordinate dataset do not depend on it and remain fully testable without a browser map.
 
-Leaflet is presentation only. The route engine and coordinate dataset do not depend on Leaflet and remain fully testable without a browser map.
-
-The accessible complete route list remains available when Leaflet, the CDN or JavaScript map initialisation fails.
+The complete semantic route list remains available when map initialisation fails or interactive rendering is unavailable.
 
 ## Persistence and privacy
 
@@ -218,7 +210,6 @@ The test is included in `npm run check`.
 - The result is a placement tree, not a turn-by-turn character path.
 - Two-reservoir mode optimises each parallel round greedily; it is deterministic but is not claimed to be a proven global optimum for all possible two-builder schedules.
 - Local progress does not synchronise across devices.
-- A third-party CDN is required for the enhanced interactive map; the route controls and accessible list remain available without it.
 
 ## Release gates
 
@@ -229,7 +220,7 @@ Before merge or production promotion:
 3. `npm run build` passes.
 4. Full `npm run check` passes or any unrelated environmental blocker is recorded honestly.
 5. Preview is tested at phone and desktop widths.
-6. Leaflet success and blocked-CDN fallback are both tested.
+6. Map success and forced map-initialisation failure are both tested.
 7. All 55 markers and both route modes are visually inspected.
 8. Product Owner confirms the coordinate interpretation and player wording.
 9. Exact-head Preview acceptance is recorded.
@@ -246,4 +237,5 @@ This implementation introduces:
 - no Companion Admin change;
 - no production deployment;
 - no paid infrastructure;
-- no copied third-party map artwork.
+- no copied third-party map artwork;
+- no runtime-loaded remote JavaScript.
