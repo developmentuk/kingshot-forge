@@ -1,8 +1,8 @@
 # AUTH-EXP-001 — Phase 2A Authentication Foundation
 
-Status: implementation candidate for owner review  
+Status: released
 Scope: PKCE, callback and redirect-security foundation only  
-Production configuration: unchanged
+Production configuration: production Site URL and exact callback enabled; existing redirect entries retained
 
 ## Architecture
 
@@ -30,16 +30,18 @@ After build, type-check, lint and focused tests pass, deploy only the exact isol
 
 No production session should be signed out or mutated during this work.
 
-## Production sequencing dependency
+## Production rollout record
 
-Production Site URL and redirect allow-list changes are explicitly deferred. Once Preview is accepted:
+Phase 2A production rollout completed after Preview acceptance and a read-only configuration preflight:
 
-1. Deploy callback-compatible code to production while retaining any old redirect destinations needed by the current build.
-2. Change the Site URL to `https://ksforge.app/` in a controlled owner-authorised operation.
-3. Add the exact production `/auth/callback` entry.
-4. Verify Google PKCE acceptance and the existing production user/profile/role flow.
-5. Remove obsolete and broad wildcard entries only after acceptance.
-6. Retain rollback destinations until the rollback window closes.
+1. PR #44 merged with a guarded merge commit on 2026-08-06.
+2. Resulting main commit: `db9fcdf9060db7ee57c60640732e06e7a513f283`.
+3. Production deployment: `dpl_Emre7Mme31yZWUkCLnCRZW4tpp2V`, READY, sourced from that main commit.
+4. Supabase Auth URL configuration changed only in `site_url` and `uri_allow_list`: the Site URL changed to `https://ksforge.app/` and one exact `https://ksforge.app/auth/callback` entry was appended. Fourteen prior redirects were preserved; no redirect was removed.
+5. Google remained enabled. Email/password, other providers, identity linking and unrelated Auth settings were not changed.
+6. Production callback, cancellation, malformed-input, redirect-security, session-restoration, responsive and accessibility acceptance passed.
+7. The exact completed exchange was not live-instrumented before the exchange; source architecture and focused no-double-exchange tests remain the exact-once evidence, and no competing exchange was observed during post-auth navigation.
+8. Obsolete and broad wildcard entries remain intentionally. Cleanup is deferred to a separately authorised hardening phase.
 
 ## Rollback
 
@@ -47,8 +49,8 @@ Rollback is a code deployment to the last accepted build, with the old redirect 
 
 ## Free-plan and operational limitations
 
-Supabase plan limits, provider configuration, redirect allow-list state, email/password policy and owner-authenticated Preview access remain external acceptance dependencies. This implementation does not claim production provider configuration or authenticated Preview acceptance. Email/password and connected-account work remain separate future phases.
+Supabase plan limits, provider configuration, redirect allow-list state and email/password policy remain external operational dependencies. The production configuration and approved secondary OAuth acceptance are recorded above. Email/password and connected-account work remain separate future phases.
 
 ## Validation record
 
-The implementation branch must record the exact starting `origin/main` SHA, changed files, focused tests, type-check, lint and build results, Preview deployment and acceptance evidence if a Preview is authorised and created. Merge, production deployment, Supabase dashboard mutation and production configuration changes remain outside Phase 2A authority.
+The accepted AUTH head was `f18dd3cccd28a4c13bd6673161ca26a60893a869`, based on `12b9f14011280c7d54e94962a69520dc3ddd625a`. Focused AUTH, Player Identity, Player Identity resilience, player-state-linking, Forge Vision/OCR, TypeScript, lint, build and full `npm run check` gates passed. The accepted Preview was `dpl_HKDGvma4Eo5BmnqHC4MqaErr3jYj`; the production deployment is recorded above. No callback secret, provider identifier, credential, token or user information is recorded here.
