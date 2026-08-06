@@ -2,6 +2,7 @@
 
 - **Status:** Proposed
 - **Date:** 5 August 2026
+- **Updated:** 6 August 2026 following `AUTH-EXP-001` Phase 2A production release
 - **Decision owner:** Clark
 - **Engineering partner:** Aegis
 - **Related workstreams:** `MOD-DOC-001`, `MOD-FOUND-001`, `AUTH-EXP-001`
@@ -94,22 +95,37 @@ Own specialist processing or provider operations such as:
 
 Authentication is a protected platform-core capability, not an installable product application.
 
-`AUTH-EXP-001` Phase 1B currently owns verification of:
+`AUTH-EXP-001` Phase 2A is released and establishes the accepted production foundation:
 
-- the live OAuth flow classification;
-- PKCE versus implicit behaviour;
-- callback and return-destination design;
+- explicit Supabase PKCE configuration;
+- route-owned callback exchange at `/auth/callback`;
+- callback URL scrubbing;
+- same-origin internal redirect validation;
+- safe callback success, cancellation and failure states;
+- provider-neutral authentication service boundaries;
+- production Google OAuth;
+- session restoration after redirect and refresh;
+- production Site URL `https://ksforge.app/`;
+- production callback `https://ksforge.app/auth/callback`.
+
+The canonical Phase 2A closeout baseline is `065b34e6079bed2f40e44105ef7184c13c8067c6`. The associated Vercel production deployment is `dpl_Ca2dAnBNLsgtQff3d8bGuvyRraLE`, which reported READY. The rollback baseline is `12b9f14011280c7d54e94962a69520dc3ddd625a`.
+
+The completed OAuth exchange was not instrumented before it occurred, so exact-once live request counting remains an explicitly recorded evidence limitation. The route-owned exchange design, focused no-double-exchange tests and absence of an observed competing exchange remain the accepted evidence.
+
+ADR-014 consumes this accepted Auth contract. It does not reopen or redesign PKCE, callback ownership, redirect validation, session restoration or provider-neutral service behaviour.
+
+`MOD-FOUND-001` must not modify:
+
+- the Supabase Auth client configuration;
+- `/auth/callback` exchange ownership;
+- Auth URL scrubbing or redirect validation;
+- provider settings or secrets;
 - Supabase Auth configuration;
-- SMTP and Auth email readiness;
-- provider readiness;
-- identity-linking behaviour;
-- duplicate-account and metadata risks.
+- identity-linking or duplicate-account recovery behaviour.
 
-ADR-014 does not decide or alter those matters.
+Product modules will consume the accepted authentication/access facade and capability contract. They will not implement provider-specific login behaviour or depend directly on provider subject identifiers.
 
-No modular implementation may modify the Supabase client, Auth context, callback behaviour, provider settings, Auth configuration or identity-linking path until the Phase 1B evidence report and explicit owner gate are complete.
-
-Product modules will consume an accepted authentication/access facade and capability contract. They will not implement provider-specific login behaviour or depend directly on provider subject identifiers.
+Email/password, additional providers, connected-account linking, redirect-list cleanup and later authentication phases remain separately authorised workstreams.
 
 ## Persistence decision
 
@@ -210,8 +226,8 @@ Rejected because it would split canonical authority and multiply Auth, RLS, migr
 
 ## Implementation order
 
-1. Approve documentation and architecture decision.
-2. Complete `AUTH-EXP-001` Phase 1B and record the accepted Auth contract.
+1. Approve and merge the modular architecture documentation.
+2. Consume the released `AUTH-EXP-001` Phase 2A contract without modifying it.
 3. Deliver `MOD-FOUND-001` as contract and registry scaffolding only.
 4. Prove static registration with the low-risk `app.reference` module.
 5. Pilot a substantial product boundary with Companion after its active gates stabilise.
