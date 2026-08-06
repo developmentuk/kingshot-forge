@@ -27,6 +27,8 @@ The module is intentionally isolated under `src/features/island-route-optimizer/
 - Owner screenshot review showed the reference map is isometric/diamond-shaped; the display now uses a display-only isometric projection for the grid, markers and route lines.
 - Subtle Forge coordinate grid and readable vector route layers above the board instead of copied game-map artwork.
 - Responsive board framing after owner screenshot review: desktop empty ocean reduced, mobile clipping addressed, and the board refits after map-container resize.
+- Owner-provided Oasis Island header image added to the page, with a tag-ready content panel for future relationship linking.
+- Page wording simplified into shorter, plain-English guidance for route use, progress saving and board limitations.
 - Map markers, route lines, current-round state, collected state and tooltips.
 - Device-local progress persistence via `localStorage` only.
 - Accessible complete route list fallback.
@@ -49,6 +51,9 @@ The initial viewport fits the projected board with 14px desktop padding and
 6px mobile padding, while a small buffered view bound permits limited panning
 without forcing the map into a larger ocean rectangle. Final visual acceptance
 is still required on both desktop and mobile.
+The header image and content panel are presentation-only; route logic,
+coordinate data, persistence and the accessible route fallback remain
+unchanged.
 
 ## Data status
 
