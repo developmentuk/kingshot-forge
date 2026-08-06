@@ -24,11 +24,18 @@ type IslandRouteMapProps = Readonly<{
 }>
 
 const ISLAND_PROJECTED_BOUNDS: LeafletBoundsExpression = [[0, 0], [ISLAND_MAP_BOUNDS.height, ISLAND_MAP_BOUNDS.width * 2]]
+const ISLAND_VIEW_BOUNDS: LeafletBoundsExpression = [[-8, -12], [ISLAND_MAP_BOUNDS.height + 8, (ISLAND_MAP_BOUNDS.width * 2) + 12]]
 
 function projectIslandPoint(point: Readonly<{ x: number; y: number }>): LeafletLatLngExpression {
   const projectedX = point.x - point.y + ISLAND_MAP_BOUNDS.width
   const projectedY = (point.x + point.y) * 0.5
   return [projectedY, projectedX]
+}
+
+function fitIslandBoard(map: LeafletMap, api: LeafletApi, element: HTMLElement): void {
+  const padding = element.clientWidth < 640 ? [6, 6] : [14, 14]
+  map.invalidateSize({ pan: false })
+  map.fitBounds(api.latLngBounds(ISLAND_PROJECTED_BOUNDS), { padding })
 }
 
 function routePlacements(plan: IslandRoutePlan, currentRound: number, showFullRoute: boolean) {
@@ -116,6 +123,7 @@ export default function IslandRouteMap({
 
     let disposed = false
     let map: LeafletMap | undefined
+    let resizeObserver: ResizeObserver | undefined
 
     onStatusChange?.('Loading the interactive Island map…')
 
@@ -125,11 +133,12 @@ export default function IslandRouteMap({
 
         map = api.map(element, {
           crs: api.CRS.Simple,
-          minZoom: -1,
+          minZoom: -2,
           maxZoom: 3,
+          zoomSnap: 0,
           zoomControl: true,
           attributionControl: false,
-          maxBounds: ISLAND_PROJECTED_BOUNDS,
+          maxBounds: ISLAND_VIEW_BOUNDS,
           maxBoundsViscosity: 0.8,
         })
 
@@ -174,7 +183,14 @@ export default function IslandRouteMap({
           marker.on?.('click', () => onSelectRound(round))
         }
 
-        map.fitBounds(api.latLngBounds(ISLAND_PROJECTED_BOUNDS), { padding: [8, 8] })
+        const refitBoard = () => {
+          if (disposed || !map) return
+          fitIslandBoard(map, api, element)
+        }
+
+        resizeObserver = new ResizeObserver(() => requestAnimationFrame(refitBoard))
+        resizeObserver.observe(element)
+        requestAnimationFrame(refitBoard)
         onStatusChange?.('Interactive Island map ready.')
       })
       .catch((error: unknown) => {
@@ -184,6 +200,7 @@ export default function IslandRouteMap({
 
     return () => {
       disposed = true
+      resizeObserver?.disconnect()
       map?.remove()
       element.replaceChildren()
     }

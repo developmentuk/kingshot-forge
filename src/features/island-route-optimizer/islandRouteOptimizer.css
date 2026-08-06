@@ -199,8 +199,8 @@
 
 .island-route-map {
   width: 100%;
-  height: clamp(420px, 62vw, 720px);
-  min-height: 420px;
+  height: clamp(520px, 44vw, 580px);
+  min-height: 520px;
   margin-top: .8rem;
   overflow: hidden;
   border: 1px solid #554f72;
@@ -387,7 +387,7 @@
   .island-route-segmented { display: grid; grid-template-columns: 1fr 1fr; }
   .island-route-summary { gap: 1px; }
   .island-route-summary article { min-height: 78px; padding: .7rem; }
-  .island-route-map { height: 68vh; min-height: 390px; }
+  .island-route-map { height: clamp(520px, 110vw, 680px); min-height: 520px; }
   .island-route-map-card__heading { align-items: flex-start; flex-direction: column; }
   .island-route-source-note { align-items: stretch; flex-direction: column; }
   .island-route-source-note .button { justify-content: center; }

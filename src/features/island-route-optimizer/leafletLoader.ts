@@ -9,6 +9,7 @@ export type LeafletLayer = Readonly<{
 
 export type LeafletMap = Readonly<{
   fitBounds: (bounds: LeafletBoundsExpression, options?: Readonly<Record<string, unknown>>) => void
+  invalidateSize: (options?: Readonly<Record<string, unknown>>) => void
   remove: () => void
 }>
 
