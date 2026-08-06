@@ -1,10 +1,11 @@
 # Kingshot Forge Modular Platform Working Plan
 
 **Programme:** Forge Modular Platform  
-**Current phase:** Documentation, audit and implementation gating  
+**Current phase:** Architecture review and foundation readiness  
 **Canonical repository:** `developmentuk/kingshot-forge`  
 **Architecture decision:** `ADR-014`  
-**Audit:** `docs/audits/PLATFORM-MODULARITY-AUDIT-2026-08-05.md`
+**Audit:** `docs/audits/PLATFORM-MODULARITY-AUDIT-2026-08-05.md`  
+**Current canonical baseline:** `065b34e6079bed2f40e44105ef7184c13c8067c6`
 
 ## Programme objective
 
@@ -30,7 +31,7 @@ The programme does not initially deliver:
 - separate Supabase projects for each application;
 - independent public deployments for every UI module;
 - broad source movement solely for visual directory tidiness;
-- authentication redesign outside `AUTH-EXP-001`;
+- authentication redesign outside authorised Auth workstreams;
 - database adviser remediation bundled into structural moves.
 
 ## Workstream sequence
@@ -56,30 +57,44 @@ Gate:
 
 ### AUTH-EXP-001 coordination gate
 
-`AUTH-EXP-001 — Forge Authentication Expansion` remains an independent, protected workstream.
+**Status:** Closed on 6 August 2026 through the released Phase 2A production foundation.
 
-Before modular implementation begins, its Phase 1B report must record:
+The accepted Auth contract now provides:
 
-- the verified live flow classification;
-- canonical callback and redirect posture;
-- provider and SMTP readiness;
-- identity-linking readiness;
-- required repository and database changes;
-- explicit go/no-go for its Phase 2.
+- explicit PKCE configuration;
+- route-owned callback exchange at `/auth/callback`;
+- URL scrubbing and safe callback states;
+- same-origin internal redirect validation;
+- provider-neutral authentication boundaries;
+- production Google OAuth;
+- session restoration after redirect and refresh;
+- production Site URL `https://ksforge.app/`;
+- production callback `https://ksforge.app/auth/callback`.
 
-Modularisation must then consume the accepted auth contract. It must not independently choose OAuth flow, callback design, provider metadata mapping, account linking or session policy.
+Canonical Auth closeout:
 
-The following remain protected until the Auth owner gate completes:
+- `origin/main`: `065b34e6079bed2f40e44105ef7184c13c8067c6`;
+- production deployment: `dpl_Ca2dAnBNLsgtQff3d8bGuvyRraLE` — READY;
+- rollback baseline: `12b9f14011280c7d54e94962a69520dc3ddd625a`.
 
-- `src/lib/supabase.ts`;
-- `src/context/AuthContext.tsx`;
-- future callback routes;
+The exact completed OAuth exchange was not instrumented before it occurred. This exact-once live-counting limitation is accepted and remains recorded in the release and FRKS evidence. Modularisation must preserve, not reinterpret, that evidence boundary.
+
+`MOD-FOUND-001` may now begin after ADR-014 and the modular documentation are accepted. It must consume the existing Auth facade and must not independently choose or alter OAuth flow, callback design, redirect validation, provider metadata mapping, account linking or session policy.
+
+The following remain protected unless a separately authorised Auth workstream owns them:
+
+- `src/lib/supabase.ts` and the explicit PKCE client configuration;
+- Auth context and provider-neutral Auth services;
+- `/auth/callback` and route-owned code exchange;
+- callback URL scrubbing and redirect validation;
 - Supabase Auth settings;
 - provider console settings and secrets;
 - `handle_new_user()` behaviour;
 - identity linking and duplicate-account recovery.
 
 ### MOD-FOUND-001 — Module contract and registry foundation
+
+**Status:** Ready to begin after MOD-DOC-001 owner acceptance.
 
 **Purpose:** Establish enforceable module boundaries without moving product implementation.
 
@@ -104,7 +119,7 @@ Scope:
 Explicit exclusions:
 
 - no feature directory moves;
-- no auth edits;
+- no Auth edits;
 - no Supabase migration;
 - no route changes;
 - no deployment topology changes;
@@ -227,7 +242,7 @@ Rules:
 - do not publish private Forge packages to a public registry;
 - preserve one lockfile and one release line;
 - introduce package boundaries only where a public contract exists;
-- do not move Auth implementation until `AUTH-EXP-001` is accepted and a stable facade exists.
+- consume the released Auth facade without moving or redesigning its implementation.
 
 ### MOD-SVC-001 — Operational service isolation
 
@@ -278,7 +293,7 @@ May own:
 
 Must not own:
 
-- authentication source or configuration;
+- authentication source, callback or configuration;
 - Art Studio and Render Engine internals;
 - Forge Vision internals;
 - Player provider adapters;
@@ -341,7 +356,7 @@ A module cannot be accepted if rollback requires deleting user or canonical data
 |---|---|
 | Modularisation becomes a rewrite | Contract-first, no-move foundation sprint |
 | Active branch collisions | Protected ownership map and exact-base audit |
-| Auth behaviour changes accidentally | `AUTH-EXP-001` freeze and facade-only dependency |
+| Auth behaviour changes accidentally | Released Phase 2A facade is protected and consumed unchanged |
 | Duplicate canonical data | One Supabase project and platform-owned publication |
 | Routes or permissions drift | Single module definition plus parity tests |
 | CI remains expensive | Affected-module gate plus full release gate |
@@ -352,7 +367,7 @@ A module cannot be accepted if rollback requires deleting user or canonical data
 
 ## First authorised implementation prompt
 
-After the documentation and Auth gates are accepted, the next Codex workstream should be:
+After MOD-DOC-001 is accepted, the next Codex workstream should be:
 
 ```text
 Continue Kingshot Forge.
@@ -360,27 +375,90 @@ Continue Kingshot Forge.
 Workstream:
 MOD-FOUND-001 — Forge Module Contract and Registry Foundation
 
-Canonical base:
+Repository:
+developmentuk/kingshot-forge
+
+Canonical starting baseline:
 latest clean origin/main
+
+Minimum accepted baseline at authorisation:
+065b34e6079bed2f40e44105ef7184c13c8067c6
+
+Production:
+https://ksforge.app/
+
+Supabase project:
+hrvdhjscwitqpwjhnjkm
 
 Begin in read-only mode.
 
-Read:
-- docs/AEGIS.md
-- docs/AEGIS-MODULAR-PLATFORM-ADDENDUM.md
-- docs/FORGE_BLUEPRINT.md
-- docs/FORGE-BLUEPRINT-MODULAR-PLATFORM-ADDENDUM.md
-- docs/ADR/ADR-014-modular-platform-architecture.md
-- docs/audits/PLATFORM-MODULARITY-AUDIT-2026-08-05.md
-- docs/architecture/FORGE-MODULE-CATALOGUE.md
-- docs/plans/MODULAR-PLATFORM-WORKING-PLAN.md
-- the final AUTH-EXP-001 Phase 1B evidence report
+Before changing anything:
 
-Do not modify Auth, Supabase configuration, Art Studio, Render Engine, Forge Vision, Player provider or active Companion implementation paths.
+1. Read `docs/AEGIS.md`.
+2. Read `docs/AEGIS-MODULAR-PLATFORM-ADDENDUM.md`.
+3. Read `docs/FORGE_BLUEPRINT.md`.
+4. Read `docs/FORGE-BLUEPRINT-MODULAR-PLATFORM-ADDENDUM.md`.
+5. Read `docs/ADR/ADR-014-modular-platform-architecture.md`.
+6. Read `docs/audits/PLATFORM-MODULARITY-AUDIT-2026-08-05.md`.
+7. Read `docs/architecture/FORGE-MODULE-CATALOGUE.md`.
+8. Read `docs/plans/MODULAR-PLATFORM-WORKING-PLAN.md`.
+9. Read `docs/releases/AUTH-EXP-001-PHASE-2A.md`.
+10. Read `docs/research/FRKS-AUTH-EXP-001.md`.
+11. Inspect current branches, pull requests and worktrees.
+12. Confirm the exact current `origin/main` SHA and do not use a stale local checkout.
 
-Phase 1 is contract and registry scaffolding only. Preserve all routes, permissions, navigation and production behaviour. Do not move feature implementation, create migrations, split deployments or introduce runtime plugins.
+Accepted Auth contract:
 
-Stop after the read-only collision audit and proposed exact file ownership map. Await explicit implementation authorisation.
+- explicit PKCE configuration;
+- route-owned callback exchange at `/auth/callback`;
+- callback URL scrubbing;
+- same-origin redirect validation;
+- provider-neutral Auth services;
+- production Site URL `https://ksforge.app/`;
+- exact production callback `https://ksforge.app/auth/callback`.
+
+The exact-once live request count was not instrumented before the completed production exchange. Preserve this recorded evidence limitation; do not reopen or overstate it.
+
+Phase 1 objective:
+
+Perform a read-only collision and dependency audit for `MOD-FOUND-001` and propose the exact implementation file ownership map.
+
+Do not modify:
+
+- Auth client, Auth context, Auth services or `/auth/callback`;
+- Supabase Auth or database configuration;
+- Art Studio or Render Engine implementation;
+- Forge Vision implementation;
+- Player provider adapters;
+- active Companion implementation;
+- migrations, deployments, production data or user accounts;
+- unrelated `.codex/` content.
+
+The proposed foundation may include only:
+
+- a typed module contract;
+- a trusted static registry;
+- registry validation;
+- dependency-boundary checks;
+- route/navigation/permission parity checks;
+- focused module validation commands;
+- the smallest shell composition seam needed later.
+
+Do not move feature implementation, alter routes or permissions, create migrations, split deployments, introduce runtime plugins or redesign user-facing pages.
+
+Return:
+
+1. exact baseline and repository state;
+2. active collision and protected-path assessment;
+3. current composition and dependency findings;
+4. proposed module contract shape;
+5. proposed registry location;
+6. exact files to create or modify;
+7. validation and rollback plan;
+8. security risks;
+9. explicit go/no-go recommendation for implementation.
+
+Stop after the read-only report. Await explicit implementation authorisation.
 ```
 
 ## Programme completion condition
