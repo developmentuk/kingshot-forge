@@ -10,6 +10,11 @@ import {
   buildIslandRoutePlan,
   manhattanDistance,
 } from '../src/features/island-route-optimizer/routeEngine.ts'
+import {
+  createIslandRouteProgressState,
+  islandRouteProgressKey,
+  mergeIslandRouteProgress,
+} from '../src/features/island-route-optimizer/islandRouteProgress.ts'
 
 const validation = validateIslandRouteDataset()
 assert.equal(validation.valid, true, validation.errors.join('\n'))
@@ -60,6 +65,40 @@ assert.ok(double.rounds.every((round) => new Set(round.placements.map((placement
 
 assert.deepEqual(buildIslandRoutePlan('single'), single)
 assert.deepEqual(buildIslandRoutePlan('double'), double)
+
+assert.equal(islandRouteProgressKey('single'), 'oasis-island:single:v1')
+assert.equal(islandRouteProgressKey('double'), 'oasis-island:double:v1')
+
+const localProgress = createIslandRouteProgressState({
+  completedChestIds: ['chest-002', 'chest-001', 'chest-002'],
+  currentRound: 4,
+  mode: 'single',
+  updatedAt: '2026-08-06T12:00:00.000Z',
+})
+const remoteProgress = createIslandRouteProgressState({
+  completedChestIds: ['chest-003'],
+  currentRound: 2,
+  mode: 'single',
+  updatedAt: '2026-08-06T12:01:00.000Z',
+})
+const localWins = mergeIslandRouteProgress(localProgress, remoteProgress, '2026-08-06T12:02:00.000Z')
+assert.deepEqual(localWins.completedChestIds, ['chest-001', 'chest-002', 'chest-003'])
+assert.equal(localWins.currentRound, 4)
+assert.equal(localWins.updatedAt, '2026-08-06T12:02:00.000Z')
+
+const remoteWinsRound = mergeIslandRouteProgress(
+  createIslandRouteProgressState({ completedChestIds: ['chest-001'], currentRound: 9, mode: 'double', updatedAt: 'local' }),
+  createIslandRouteProgressState({ completedChestIds: ['chest-001', 'chest-002'], currentRound: 3, mode: 'double', updatedAt: 'remote' }),
+  'merged',
+)
+assert.deepEqual(remoteWinsRound.completedChestIds, ['chest-001', 'chest-002'])
+assert.equal(remoteWinsRound.currentRound, 3)
+
+const migration = await readFile(new URL('../supabase/migrations/20260806120000_user_tool_progress.sql', import.meta.url), 'utf8')
+assert.match(migration, /create table if not exists public\.user_tool_progress/)
+assert.match(migration, /alter table public\.user_tool_progress enable row level security/)
+assert.match(migration, /create policy user_tool_progress_select_owner/)
+assert.match(migration, /create policy user_tool_progress_update_owner/)
 
 const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
 const navigationSource = await readFile(new URL('../src/navigation/workspaceRegistry.ts', import.meta.url), 'utf8')

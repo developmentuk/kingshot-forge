@@ -156,13 +156,12 @@ The complete semantic route list remains available when map initialisation fails
 
 ## Persistence and privacy
 
-Completed chest IDs are stored in browser `localStorage` under a versioned Forge key.
+Completed chest IDs are stored in browser `localStorage` under a versioned Forge key. When a player is signed in, the same minimal progress is also synchronised to the owner-scoped `public.user_tool_progress` record for the Island Route tool and selected mode. Signed-out progress remains browser-only.
 
 The module does not:
 
 - require sign-in;
-- create or change a Supabase record;
-- send route progress to Forge APIs;
+- expose progress to another account;
 - store Player ID, identity, alliance or kingdom information;
 - mutate canonical Kingshot datasets.
 
@@ -199,6 +198,7 @@ The focused test verifies:
 - no duplicate placements;
 - every connection starts from a point cleared before the round;
 - deterministic repeated output;
+- progress keys, merge rules and migration owner policies;
 - public route and navigation registration.
 
 The test is included in `npm run check`.
@@ -209,7 +209,7 @@ The test is included in `npm run check`.
 - Manhattan distance does not model obstacles, terrain, construction duration or movement animation.
 - The result is a placement tree, not a turn-by-turn character path.
 - Two-reservoir mode optimises each parallel round greedily; it is deterministic but is not claimed to be a proven global optimum for all possible two-builder schedules.
-- Local progress does not synchronise across devices.
+- Account sync depends on the repository migration being applied and the authenticated Supabase session being available; local browser progress remains the fallback.
 
 ## Release gates
 
@@ -224,14 +224,14 @@ Before merge or production promotion:
 7. All 55 markers and both route modes are visually inspected.
 8. Product Owner confirms the coordinate interpretation and player wording.
 9. Exact-head Preview acceptance is recorded.
-10. Merge, production deployment and smoke testing occur only after explicit owner approval.
+10. Migration application, merge, production deployment and smoke testing occur only after explicit owner approval.
 
 ## Safety record
 
 This implementation introduces:
 
-- no migration;
-- no Supabase write;
+- one repository migration with owner-scoped RLS; migration not applied in this task;
+- no production Supabase write;
 - no Auth or provider change;
 - no Player Identity change;
 - no Companion Admin change;

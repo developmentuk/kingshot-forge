@@ -203,6 +203,13 @@
 .island-route-summary strong { color: #fff1b8; font-size: clamp(1.25rem, 3vw, 1.8rem); }
 .island-route-summary span { color: #b9b3d4; font-size: .78rem; }
 
+.island-route-sync-status {
+  margin: -.35rem 0 1rem;
+  color: #b9eee9;
+  font-size: .8rem;
+  font-weight: 700;
+}
+
 .island-route-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(300px, .75fr);

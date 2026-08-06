@@ -29,6 +29,7 @@ The module is intentionally isolated under `src/features/island-route-optimizer/
 - Responsive board framing after owner screenshot review: desktop empty ocean reduced, mobile clipping addressed, and the board refits after map-container resize.
 - Owner-provided Oasis Island header image added to the page, with a tag-ready content panel for future relationship linking.
 - Page wording simplified into shorter, plain-English guidance for route use, progress saving and board limitations.
+- Logged-in progress sync added through the owner-scoped `user_tool_progress` table; signed-out users remain browser-only.
 - Map markers, route lines, current-round state, collected state and tooltips.
 - Device-local progress persistence via `localStorage` only.
 - Accessible complete route list fallback.
@@ -54,6 +55,9 @@ is still required on both desktop and mobile.
 The header image and content panel are presentation-only; route logic,
 coordinate data, persistence and the accessible route fallback remain
 unchanged.
+ISLAND-ROUTE-001G adds the repository migration and RLS policies for minimal
+account progress. The migration has not been applied to production; owner
+release approval is still required.
 
 ## Data status
 

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import oasisIslandHeaderUrl from '../../assets/island-route/oasis-island-header.png'
 import IslandRouteMap from './IslandRouteMap.tsx'
 import {
@@ -12,6 +13,14 @@ import {
   describeRoutePlacement,
   type IslandRouteMode,
 } from './routeEngine.ts'
+import {
+  createIslandRouteProgressState,
+  mergeIslandRouteProgress,
+} from './islandRouteProgress.ts'
+import {
+  loadIslandRouteProgress,
+  saveIslandRouteProgress,
+} from './islandRouteProgressService.ts'
 import './islandRouteOptimizer.css'
 
 const STORAGE_KEY = 'forge:island-route-optimizer:collected:v1'
@@ -40,6 +49,7 @@ function loadCollectedChestIds(): Set<string> {
 }
 
 export default function IslandRouteOptimizerPage() {
+  const { user, loading: authLoading } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const mode = parseMode(searchParams.get('mode'))
   const plan = useMemo(() => buildIslandRoutePlan(mode), [mode])
@@ -47,6 +57,9 @@ export default function IslandRouteOptimizerPage() {
   const [collectedChestIds, setCollectedChestIds] = useState<Set<string>>(loadCollectedChestIds)
   const [showFullRoute, setShowFullRoute] = useState(false)
   const [mapStatus, setMapStatus] = useState('Preparing the interactive Island map…')
+  const [progressSyncStatus, setProgressSyncStatus] = useState<'signed-out' | 'syncing' | 'synced' | 'error'>('signed-out')
+  const [syncedAccountKey, setSyncedAccountKey] = useState<string | null>(null)
+  const syncAttemptRef = useRef<string | null>(null)
   const datasetValidation = useMemo(() => validateIslandRouteDataset(), [])
 
   const selectedRound = plan.rounds[currentRound - 1]
@@ -72,6 +85,77 @@ export default function IslandRouteOptimizerPage() {
     setSearchParams({ mode: nextMode, round: '1' }, { replace: true })
     setShowFullRoute(false)
   }, [setSearchParams])
+
+  useEffect(() => {
+    if (authLoading) return undefined
+    if (!user) {
+      syncAttemptRef.current = null
+      setSyncedAccountKey(null)
+      setProgressSyncStatus('signed-out')
+      return undefined
+    }
+
+    const accountUserId = user.id
+    const accountKey = `${accountUserId}:${mode}`
+    if (syncAttemptRef.current === accountKey) return undefined
+    syncAttemptRef.current = accountKey
+    let cancelled = false
+
+    async function syncAccountProgress(): Promise<void> {
+      setProgressSyncStatus('syncing')
+      try {
+        const remote = await loadIslandRouteProgress(accountUserId, mode)
+        const local = createIslandRouteProgressState({
+          completedChestIds: collectedChestIds,
+          currentRound,
+          mode,
+        })
+        const merged = mergeIslandRouteProgress(local, remote)
+        if (cancelled) return
+
+        setCollectedChestIds(new Set(merged.completedChestIds))
+        if (merged.currentRound !== currentRound) selectRound(merged.currentRound)
+        await saveIslandRouteProgress(accountUserId, merged)
+        if (!cancelled) {
+          setSyncedAccountKey(accountKey)
+          setProgressSyncStatus('synced')
+        }
+      } catch {
+        if (!cancelled) {
+          setSyncedAccountKey(accountKey)
+          setProgressSyncStatus('error')
+        }
+      }
+    }
+
+    void syncAccountProgress()
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, collectedChestIds, currentRound, mode, selectRound, user])
+
+  useEffect(() => {
+    if (authLoading || !user || syncedAccountKey !== `${user.id}:${mode}`) return undefined
+    const accountUserId = user.id
+    let cancelled = false
+    const state = createIslandRouteProgressState({
+      completedChestIds: collectedChestIds,
+      currentRound,
+      mode,
+    })
+    setProgressSyncStatus('syncing')
+    void saveIslandRouteProgress(accountUserId, state)
+      .then(() => {
+        if (!cancelled) setProgressSyncStatus('synced')
+      })
+      .catch(() => {
+        if (!cancelled) setProgressSyncStatus('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, collectedChestIds, currentRound, mode, syncedAccountKey, user])
 
   function toggleRoundComplete(): void {
     if (!selectedRound) return
@@ -171,6 +255,18 @@ export default function IslandRouteOptimizerPage() {
         <article><strong>{collectedCount} / {islandChestNodes.length}</strong><span>completed</span></article>
       </section>
 
+      <p className="island-route-sync-status" role="status" aria-live="polite">
+        {authLoading
+          ? 'Checking your Forge account…'
+          : progressSyncStatus === 'syncing'
+            ? 'Saving progress…'
+            : progressSyncStatus === 'synced'
+              ? 'Progress is saved to your Forge account.'
+              : progressSyncStatus === 'error'
+                ? 'Account sync is unavailable. Your progress is saved in this browser.'
+                : 'Progress is saved in this browser.'}
+      </p>
+
       <div className="island-route-workspace">
         <section className="island-route-map-card" aria-labelledby="island-map-heading">
           <div className="island-route-map-card__heading">
@@ -223,7 +319,7 @@ export default function IslandRouteOptimizerPage() {
 
       <section className="island-route-guidance">
         <article><p className="eyebrow">Route guide</p><h2>How the route works</h2><p>The planner puts the nearest available chest next in the route. Two-route mode gives you two destinations to work on in the same round.</p></article>
-        <article><p className="eyebrow">Saved on this device</p><h2>Your progress stays here</h2><p>Your completed steps are saved in this browser only. They are not shared with your Forge account.</p></article>
+        <article><p className="eyebrow">Saved progress</p><h2>{user ? 'Your progress follows you' : 'Your progress stays here'}</h2><p>{user ? 'Your completed steps are saved to your Forge account.' : 'Your completed steps are saved in this browser only.'}</p></article>
         <article><p className="eyebrow">Good to know</p><h2>Use it as a guide</h2><p>This is a planning tool. It does not show every obstacle or timing detail from the live game.</p></article>
       </section>
 
