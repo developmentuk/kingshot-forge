@@ -221,11 +221,11 @@
 .island-route-map .leaflet-control-zoom a:focus { background: #302d4b; }
 
 .island-route-map__border { stroke: #aaa2cb; }
-.island-route-map__grid { stroke: rgba(185, 179, 212, .18); }
-.island-route-map__grid--major { stroke: rgba(185, 179, 212, .34); }
+.island-route-map__grid { stroke: rgba(185, 179, 212, .1); }
+.island-route-map__grid--major { stroke: rgba(185, 179, 212, .2); }
 .island-route-map__path { stroke-linecap: round; stroke-linejoin: round; }
-.island-route-map__path--reservoir-1 { stroke: #55d4ca; }
-.island-route-map__path--reservoir-2 { stroke: #f3bf4f; stroke-dasharray: 5 4; }
+.island-route-map__path--reservoir-1 { stroke: #55d4ca; filter: drop-shadow(0 0 2px #101426); }
+.island-route-map__path--reservoir-2 { stroke: #f3bf4f; filter: drop-shadow(0 0 2px #101426); stroke-dasharray: 5 4; }
 
 .island-route-map__chest-icon,
 .island-route-map__hq-icon {
@@ -245,6 +245,12 @@
   border-radius: 50%;
   box-shadow: 0 3px 12px rgba(0, 0, 0, .42);
   font-weight: 900;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, .28);
+}
+
+.island-route-map__chest-icon--active > span:first-child {
+  border-color: #fff1b8;
+  box-shadow: 0 0 0 3px rgba(16, 20, 38, .88), 0 0 0 5px #fff1b8, 0 4px 16px rgba(0, 0, 0, .6);
 }
 
 .island-route-map__chest-icon--reservoir-1 > span:first-child { background: #55d4ca; color: #101426; }

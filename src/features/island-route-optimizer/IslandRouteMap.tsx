@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import islandBackgroundUrl from '../../assets/island-route/island-background-draft.png'
 import { ISLAND_HQ, ISLAND_MAP_BOUNDS, islandChestNodes } from './islandRouteData.ts'
 import {
   placementsThroughRound,
@@ -107,6 +108,9 @@ export default function IslandRouteMap({
           maxBoundsViscosity: 0.8,
         })
 
+        api.imageOverlay(islandBackgroundUrl, mapBounds, {
+          interactive: false,
+        }).addTo(map)
         addGrid(api, map)
         routePlacements(plan, currentRound, showFullRoute).forEach((placement) => addRouteLine(api, map as LeafletMap, placement))
 

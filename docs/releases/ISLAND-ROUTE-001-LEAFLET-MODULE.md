@@ -22,7 +22,8 @@ The module is intentionally isolated under `src/features/island-route-optimizer/
 - Single Reservoir plan with 55 steps.
 - Double Reservoir plan with 28 rounds.
 - Leaflet `CRS.Simple` interactive map renderer.
-- Neutral Forge grid overlay instead of copied game-map artwork.
+- Temporary owner-provided Island Route review image as the Leaflet background layer, stretched to the existing 60×60 bounds.
+- Subtle neutral Forge grid overlay above the background instead of copied game-map artwork.
 - Map markers, route lines, current-round state, collected state and tooltips.
 - Device-local progress persistence via `localStorage` only.
 - Accessible complete route list fallback.
@@ -34,6 +35,10 @@ The module is intentionally isolated under `src/features/island-route-optimizer/
 The module uses Leaflet 1.9.4 through the official hosted release with Subresource Integrity hashes. This avoids package-lock churn in this branch while still using Leaflet for the interactive grid map.
 
 A future hardening step may vendor Leaflet locally or add it through npm with a regenerated lockfile if owner-approved.
+
+The background image is a temporary owner-provided review asset. No route logic,
+coordinate data or mode behaviour changed for this visual pass. Final asset
+selection and map-art alignment still require owner acceptance.
 
 ## Data status
 
