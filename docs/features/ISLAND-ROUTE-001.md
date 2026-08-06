@@ -4,6 +4,8 @@
 
 Implementation candidate on `feature/island-route-optimizer`.
 
+Initial implementation began from the accepted Auth production baseline `065b34e6079bed2f40e44105ef7184c13c8067c6`. The branch was then synchronised with the newer canonical `main` baseline `ffb9d2c0d5d30cefb8ff08543dd9d4e7fccea697` after MOD-DOC-001 merged during development.
+
 This document records the player-facing module, algorithm, data confidence, safety boundaries and acceptance requirements. It does not claim production release or owner acceptance.
 
 ## Player outcome
@@ -27,6 +29,8 @@ Player capabilities:
 
 ## Module boundary
 
+This feature belongs to the accepted `app.companion` product-module boundary in `docs/architecture/FORGE-MODULE-CATALOGUE.md`.
+
 Implementation lives under:
 
 ```text
@@ -41,12 +45,13 @@ The module owns:
 - player controls and local progress;
 - responsive module styles.
 
-The Forge shell owns only the compatibility entry points:
+The Forge shell owns only the temporary compatibility entry points:
 
 - route registration in `src/App.tsx`;
-- Player View navigation in `src/navigation/workspaceRegistry.ts`.
+- Player View navigation in `src/navigation/workspaceRegistry.ts`;
+- homepage discovery in `src/pages/HomePage.tsx`.
 
-No platform module registry is introduced. This avoids pre-empting the unmerged modular-platform architecture proposal in draft PR #43.
+ADR-014 and the Forge Module Catalogue are accepted architecture. The separately gated `MOD-FOUND-001` typed contract and static registry implementation does not yet exist on `main`, so this work does not invent or pre-empt it. When that foundation is accepted, this isolated Companion feature can contribute its route and navigation through the canonical registry without moving its internal implementation.
 
 ## Data contract
 
