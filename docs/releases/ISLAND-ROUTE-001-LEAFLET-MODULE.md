@@ -22,10 +22,10 @@ The module is intentionally isolated under `src/features/island-route-optimizer/
 - Single Reservoir plan with 55 steps.
 - Double Reservoir plan with 28 rounds.
 - Leaflet `CRS.Simple` interactive map renderer.
-- Temporary owner-provided Island Route review image as the Leaflet background layer, with artwork bounds calibrated after owner screenshot review.
-- Visual polish after owner screenshot review: ocean-toned gutters and artwork-bounds viewport fitting reduce flat padding around the temporary image.
+- Forge-owned isometric coordinate-board background: an ocean-tone map surface outside a filled diamond board with a muted tile/grid treatment inside.
+- Owner review rejected the scenic island image as the default because some chest markers appeared to sit in the sea, which could make correct route data look wrong to players.
 - Owner screenshot review showed the reference map is isometric/diamond-shaped; the display now uses a display-only isometric projection for the grid, markers and route lines.
-- Subtle neutral Forge grid overlay above the background instead of copied game-map artwork.
+- Subtle Forge coordinate grid and readable vector route layers above the board instead of copied game-map artwork.
 - Map markers, route lines, current-round state, collected state and tooltips.
 - Device-local progress persistence via `localStorage` only.
 - Accessible complete route list fallback.
@@ -38,9 +38,10 @@ The module uses Leaflet 1.9.4 through the official hosted release with Subresour
 
 A future hardening step may vendor Leaflet locally or add it through npm with a regenerated lockfile if owner-approved.
 
-The background image remains temporary owner-provided review artwork. It is kept
-as a decorative backdrop and is not rotated as part of the Leaflet container;
-final production artwork replacement/alignment still requires owner acceptance.
+The scenic background image remains a temporary, non-production review asset in
+the repository, but it is removed from the default rendered map. The Forge
+board prioritises route clarity and keeps the projected chest markers on a
+single visible land surface. Final visual acceptance is still required.
 No route logic, coordinate data or mode behaviour changed. The isometric
 projection is display-only and the canonical route space remains 60×60.
 

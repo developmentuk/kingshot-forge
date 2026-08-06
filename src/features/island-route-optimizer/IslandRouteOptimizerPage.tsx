@@ -156,7 +156,7 @@ export default function IslandRouteOptimizerPage() {
             onStatusChange={setMapStatus}
           />
           <p className="island-route-map-card__status" aria-live="polite">{mapStatus}</p>
-          <p className="island-route-map-card__help">Coordinates use a neutral 60 × 60 Forge grid. Tap a marker to jump to its round; drag or pinch the map to inspect it.</p>
+          <p className="island-route-map-card__help">Planning board view — coordinates are route-authoritative. Tap a marker to jump to its round; drag or pinch the map to inspect it.</p>
         </section>
 
         <aside className="island-route-step-card" aria-labelledby="current-round-heading">

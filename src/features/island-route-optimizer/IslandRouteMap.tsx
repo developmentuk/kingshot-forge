@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import islandBackgroundUrl from '../../assets/island-route/island-background-draft.png'
 import { ISLAND_HQ, ISLAND_MAP_BOUNDS, islandChestNodes } from './islandRouteData.ts'
 import {
   placementsThroughRound,
@@ -25,8 +24,6 @@ type IslandRouteMapProps = Readonly<{
 }>
 
 const ISLAND_PROJECTED_BOUNDS: LeafletBoundsExpression = [[0, 0], [ISLAND_MAP_BOUNDS.height, ISLAND_MAP_BOUNDS.width * 2]]
-// Temporary decorative artwork only; route coordinates remain authoritative at 0–60.
-const ISLAND_BACKGROUND_BOUNDS: LeafletBoundsExpression = [[0, 0], [60, 120]]
 
 function projectIslandPoint(point: Readonly<{ x: number; y: number }>): LeafletLatLngExpression {
   const projectedX = point.x - point.y + ISLAND_MAP_BOUNDS.width
@@ -48,6 +45,16 @@ function addGrid(api: LeafletApi, map: LeafletMap): void {
     projectIslandPoint({ x: 0, y: ISLAND_MAP_BOUNDS.height }),
     projectIslandPoint({ x: 0, y: 0 }),
   ]
+
+  api.polygon(projectedCorners, {
+    className: 'island-route-map__board',
+    color: '#aaa2cb',
+    fill: true,
+    fillColor: '#526476',
+    fillOpacity: 0.96,
+    interactive: false,
+    weight: 2,
+  }).addTo(map)
 
   api.polyline(projectedCorners, {
     className: 'island-route-map__border',
@@ -126,9 +133,6 @@ export default function IslandRouteMap({
           maxBoundsViscosity: 0.8,
         })
 
-        api.imageOverlay(islandBackgroundUrl, ISLAND_BACKGROUND_BOUNDS, {
-          interactive: false,
-        }).addTo(map)
         addGrid(api, map)
         routePlacements(plan, currentRound, showFullRoute).forEach((placement) => addRouteLine(api, map as LeafletMap, placement))
 

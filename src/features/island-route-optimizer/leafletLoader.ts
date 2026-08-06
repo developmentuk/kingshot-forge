@@ -17,6 +17,7 @@ export type LeafletApi = Readonly<{
   map: (element: HTMLElement, options: Readonly<Record<string, unknown>>) => LeafletMap
   latLngBounds: (bounds: LeafletBoundsExpression) => LeafletBoundsExpression
   polyline: (points: ReadonlyArray<LeafletLatLngExpression>, options?: Readonly<Record<string, unknown>>) => LeafletLayer
+  polygon: (points: ReadonlyArray<LeafletLatLngExpression>, options?: Readonly<Record<string, unknown>>) => LeafletLayer
   rectangle: (bounds: LeafletBoundsExpression, options?: Readonly<Record<string, unknown>>) => LeafletLayer
   imageOverlay: (url: string, bounds: LeafletBoundsExpression, options?: Readonly<Record<string, unknown>>) => LeafletLayer
   marker: (point: LeafletLatLngExpression, options?: Readonly<Record<string, unknown>>) => LeafletLayer
