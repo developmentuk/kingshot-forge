@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: island-route-lockfile-refresh
+  cancel-in-progress: true
+
 jobs:
   refresh-lockfile:
     if: github.event.head_commit.message != 'chore(island-route): regenerate package lock'
