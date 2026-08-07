@@ -13,6 +13,7 @@ import {
 import {
   createIslandRouteProgressState,
   islandRouteProgressKey,
+  islandRouteProgressStorageKey,
   mergeIslandRouteProgress,
 } from '../src/features/island-route-optimizer/islandRouteProgress.ts'
 
@@ -68,6 +69,9 @@ assert.deepEqual(buildIslandRoutePlan('double'), double)
 
 assert.equal(islandRouteProgressKey('single'), 'oasis-island:single:v1')
 assert.equal(islandRouteProgressKey('double'), 'oasis-island:double:v1')
+assert.notEqual(islandRouteProgressStorageKey('single'), islandRouteProgressStorageKey('double'))
+assert.match(islandRouteProgressStorageKey('single'), /oasis-island:single:v1$/)
+assert.match(islandRouteProgressStorageKey('double'), /oasis-island:double:v1$/)
 
 const localProgress = createIslandRouteProgressState({
   completedChestIds: ['chest-002', 'chest-001', 'chest-002'],
@@ -94,7 +98,14 @@ const remoteWinsRound = mergeIslandRouteProgress(
 assert.deepEqual(remoteWinsRound.completedChestIds, ['chest-001', 'chest-002'])
 assert.equal(remoteWinsRound.currentRound, 3)
 
-const migration = await readFile(new URL('../supabase/migrations/20260806120000_user_tool_progress.sql', import.meta.url), 'utf8')
+const singleOnly = createIslandRouteProgressState({ completedChestIds: ['single-chest'], currentRound: 2, mode: 'single', updatedAt: 'single' })
+const doubleOnly = createIslandRouteProgressState({ completedChestIds: ['double-chest'], currentRound: 2, mode: 'double', updatedAt: 'double' })
+assert.deepEqual(mergeIslandRouteProgress(singleOnly, null, 'single').completedChestIds, ['single-chest'])
+assert.deepEqual(mergeIslandRouteProgress(doubleOnly, null, 'double').completedChestIds, ['double-chest'])
+assert.deepEqual(mergeIslandRouteProgress(singleOnly, doubleOnly, 'mismatch').completedChestIds, ['single-chest'])
+assert.deepEqual(mergeIslandRouteProgress(doubleOnly, singleOnly, 'mismatch').completedChestIds, ['double-chest'])
+
+const migration = await readFile(new URL('../supabase/migrations/20260806195647_user_tool_progress.sql', import.meta.url), 'utf8')
 assert.match(migration, /create table if not exists public\.user_tool_progress/)
 assert.match(migration, /alter table public\.user_tool_progress enable row level security/)
 assert.match(migration, /create policy user_tool_progress_select_owner/)

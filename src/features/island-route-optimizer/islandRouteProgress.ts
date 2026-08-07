@@ -11,6 +11,10 @@ export function islandRouteProgressKey(mode: IslandRouteMode): string {
   return `oasis-island:${mode}:v1`
 }
 
+export function islandRouteProgressStorageKey(mode: IslandRouteMode): string {
+  return `forge:island-route-optimizer:collected:v1:${islandRouteProgressKey(mode)}`
+}
+
 export function createIslandRouteProgressState(input: {
   completedChestIds: Iterable<string>
   currentRound: number
@@ -29,7 +33,7 @@ export function parseIslandRouteProgressState(value: unknown, fallbackMode: Isla
   if (!value || typeof value !== 'object') return null
 
   const candidate = value as Partial<IslandRouteProgressState>
-  if (candidate.mode !== 'single' && candidate.mode !== 'double') return null
+  if (candidate.mode !== fallbackMode) return null
   if (!Array.isArray(candidate.completedChestIds) || typeof candidate.updatedAt !== 'string') return null
 
   return createIslandRouteProgressState({
@@ -45,19 +49,22 @@ export function mergeIslandRouteProgress(
   remote: IslandRouteProgressState | null,
   updatedAt = new Date().toISOString(),
 ): IslandRouteProgressState {
-  const localCount = local?.completedChestIds.length ?? 0
-  const remoteCount = remote?.completedChestIds.length ?? 0
+  const mode = local?.mode ?? remote?.mode ?? 'single'
+  const modeLocal = local?.mode === mode ? local : null
+  const modeRemote = remote?.mode === mode ? remote : null
+  const localCount = modeLocal?.completedChestIds.length ?? 0
+  const remoteCount = modeRemote?.completedChestIds.length ?? 0
   const localHasMoreCompleted = localCount > remoteCount
 
   return createIslandRouteProgressState({
     completedChestIds: new Set([
-      ...(local?.completedChestIds ?? []),
-      ...(remote?.completedChestIds ?? []),
+      ...(modeLocal?.completedChestIds ?? []),
+      ...(modeRemote?.completedChestIds ?? []),
     ]),
     currentRound: localHasMoreCompleted
-      ? (local?.currentRound ?? 1)
-      : (remote?.currentRound ?? local?.currentRound ?? 1),
-    mode: local?.mode ?? remote?.mode ?? 'single',
+      ? (modeLocal?.currentRound ?? 1)
+      : (modeRemote?.currentRound ?? modeLocal?.currentRound ?? 1),
+    mode,
     updatedAt,
   })
 }
