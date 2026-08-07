@@ -7,12 +7,41 @@ export type IslandRouteProgressState = Readonly<{
   updatedAt: string
 }>
 
+export type IslandRouteProgressByKey = Readonly<Record<string, IslandRouteProgressState | undefined>>
+
 export function islandRouteProgressKey(mode: IslandRouteMode): string {
   return `oasis-island:${mode}:v1`
 }
 
 export function islandRouteProgressStorageKey(mode: IslandRouteMode): string {
   return `forge:island-route-optimizer:collected:v1:${islandRouteProgressKey(mode)}`
+}
+
+export function createEmptyIslandRouteProgress(mode: IslandRouteMode): IslandRouteProgressState {
+  return createIslandRouteProgressState({
+    completedChestIds: [],
+    currentRound: 1,
+    mode,
+    updatedAt: '',
+  })
+}
+
+export function getActiveIslandRouteProgress(
+  progressByKey: IslandRouteProgressByKey,
+  mode: IslandRouteMode,
+): IslandRouteProgressState {
+  const progress = progressByKey[islandRouteProgressKey(mode)]
+  return progress?.mode === mode ? progress : createEmptyIslandRouteProgress(mode)
+}
+
+export function updateIslandRouteProgress(
+  progressByKey: IslandRouteProgressByKey,
+  mode: IslandRouteMode,
+  updater: (current: IslandRouteProgressState) => IslandRouteProgressState,
+): IslandRouteProgressByKey {
+  const progressKey = islandRouteProgressKey(mode)
+  const next = updater(getActiveIslandRouteProgress(progressByKey, mode))
+  return { ...progressByKey, [progressKey]: next.mode === mode ? next : createEmptyIslandRouteProgress(mode) }
 }
 
 export function createIslandRouteProgressState(input: {

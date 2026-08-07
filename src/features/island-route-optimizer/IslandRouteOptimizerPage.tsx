@@ -15,17 +15,18 @@ import {
 } from './routeEngine.ts'
 import {
   createIslandRouteProgressState,
+  getActiveIslandRouteProgress,
   islandRouteProgressKey,
   islandRouteProgressStorageKey,
   mergeIslandRouteProgress,
+  type IslandRouteProgressByKey,
+  updateIslandRouteProgress,
 } from './islandRouteProgress.ts'
 import {
   loadIslandRouteProgress,
   saveIslandRouteProgress,
 } from './islandRouteProgressService.ts'
 import './islandRouteOptimizer.css'
-
-const EMPTY_CHEST_IDS = new Set<string>()
 
 function parseMode(value: string | null): IslandRouteMode {
   return value === 'double' ? 'double' : 'single'
@@ -57,7 +58,7 @@ export default function IslandRouteOptimizerPage() {
   const progressKey = islandRouteProgressKey(mode)
   const plan = useMemo(() => buildIslandRoutePlan(mode), [mode])
   const currentRound = parseRound(searchParams.get('round'), plan.rounds.length)
-  const [progressByKey, setProgressByKey] = useState<Record<string, Set<string>>>({})
+  const [progressByKey, setProgressByKey] = useState<IslandRouteProgressByKey>({})
   const [showFullRoute, setShowFullRoute] = useState(false)
   const [mapStatus, setMapStatus] = useState('Preparing the interactive Island map…')
   const [progressSyncStatus, setProgressSyncStatus] = useState<'signed-out' | 'syncing' | 'synced' | 'error'>('signed-out')
@@ -68,7 +69,11 @@ export default function IslandRouteOptimizerPage() {
   currentRoundRef.current = currentRound
   const datasetValidation = useMemo(() => validateIslandRouteDataset(), [])
 
-  const collectedChestIds = progressByKey[progressKey] ?? EMPTY_CHEST_IDS
+  const hydratedActiveProgress = getActiveIslandRouteProgress(progressByKey, mode)
+  const activeProgress = hydratedProgressKey === progressKey
+    ? hydratedActiveProgress
+    : createIslandRouteProgressState({ completedChestIds: [], currentRound: 1, mode })
+  const collectedChestIds = useMemo(() => new Set(activeProgress.completedChestIds), [activeProgress.completedChestIds])
   const selectedRound = plan.rounds[currentRound - 1]
   const roundChestIds = selectedRound?.placements.map((placement) => placement.chest.id) ?? []
   const roundComplete = roundChestIds.length > 0 && roundChestIds.every((id) => collectedChestIds.has(id))
@@ -77,8 +82,8 @@ export default function IslandRouteOptimizerPage() {
 
   useEffect(() => {
     if (hydratedProgressKey !== progressKey) return
-    window.localStorage.setItem(islandRouteProgressStorageKey(mode), JSON.stringify([...collectedChestIds].sort()))
-  }, [collectedChestIds, hydratedProgressKey, mode, progressKey])
+    window.localStorage.setItem(islandRouteProgressStorageKey(mode), JSON.stringify([...activeProgress.completedChestIds].sort()))
+  }, [activeProgress.completedChestIds, hydratedProgressKey, mode, progressKey])
 
   const selectRound = useCallback((round: number) => {
     setSearchParams((current) => {
@@ -102,7 +107,14 @@ export default function IslandRouteOptimizerPage() {
       syncAttemptRef.current = null
       setProgressSyncStatus('signed-out')
       const local = loadCollectedChestIds(mode)
-      setProgressByKey((current) => ({ ...current, [progressKey]: local }))
+      setProgressByKey((current) => ({
+        ...current,
+        [progressKey]: createIslandRouteProgressState({
+          completedChestIds: local,
+          currentRound: currentRoundRef.current,
+          mode,
+        }),
+      }))
       setHydratedProgressKey(progressKey)
       return undefined
     }
@@ -126,7 +138,7 @@ export default function IslandRouteOptimizerPage() {
         const merged = mergeIslandRouteProgress(local, remote)
         if (cancelled) return
 
-        setProgressByKey((current) => ({ ...current, [progressKey]: new Set(merged.completedChestIds) }))
+        setProgressByKey((current) => ({ ...current, [progressKey]: merged }))
         if (merged.currentRound !== currentRoundRef.current) selectRound(merged.currentRound)
         await saveIslandRouteProgress(accountUserId, merged)
         if (!cancelled) {
@@ -136,7 +148,14 @@ export default function IslandRouteOptimizerPage() {
         }
       } catch {
         if (!cancelled) {
-          setProgressByKey((current) => ({ ...current, [progressKey]: loadCollectedChestIds(mode) }))
+          setProgressByKey((current) => ({
+            ...current,
+            [progressKey]: createIslandRouteProgressState({
+              completedChestIds: loadCollectedChestIds(mode),
+              currentRound: currentRoundRef.current,
+              mode,
+            }),
+          }))
           setHydratedProgressKey(progressKey)
           setSyncedAccountKey(null)
           setProgressSyncStatus('error')
@@ -155,7 +174,7 @@ export default function IslandRouteOptimizerPage() {
     const accountUserId = user.id
     let cancelled = false
     const state = createIslandRouteProgressState({
-      completedChestIds: collectedChestIds,
+      completedChestIds: activeProgress.completedChestIds,
       currentRound,
       mode,
     })
@@ -171,27 +190,28 @@ export default function IslandRouteOptimizerPage() {
     return () => {
       cancelled = true
     }
-  }, [authLoading, collectedChestIds, currentRound, hydratedProgressKey, mode, progressKey, syncedAccountKey, user])
+  }, [activeProgress.completedChestIds, authLoading, currentRound, hydratedProgressKey, mode, progressKey, syncedAccountKey, user])
 
   function toggleRoundComplete(): void {
     if (!selectedRound) return
 
-    setProgressByKey((currentProgress) => {
-      const current = currentProgress[progressKey] ?? new Set<string>()
-      const next = new Set(current)
+    setProgressByKey((currentProgress) => updateIslandRouteProgress(currentProgress, mode, (current) => {
+      const next = new Set(current.completedChestIds)
       if (roundComplete) {
         selectedRound.placements.forEach((placement) => next.delete(placement.chest.id))
       } else {
         selectedRound.placements.forEach((placement) => next.add(placement.chest.id))
       }
-      return { ...currentProgress, [progressKey]: next }
-    })
+      return createIslandRouteProgressState({ completedChestIds: next, currentRound, mode })
+    }))
 
     if (!roundComplete && currentRound < plan.rounds.length) selectRound(currentRound + 1)
   }
 
   function resetProgress(): void {
-    setProgressByKey((current) => ({ ...current, [progressKey]: new Set() }))
+    setProgressByKey((current) => updateIslandRouteProgress(current, mode, () => (
+      createIslandRouteProgressState({ completedChestIds: [], currentRound: 1, mode })
+    )))
     selectRound(1)
   }
 
@@ -295,6 +315,7 @@ export default function IslandRouteOptimizerPage() {
           </div>
           <div className="island-route-progress" aria-label={`${progress}% of chests marked complete`}><span style={{ width: `${progress}%` }} /></div>
           <IslandRouteMap
+            key={progressKey}
             plan={plan}
             currentRound={currentRound}
             collectedChestIds={collectedChestIds}
@@ -345,7 +366,12 @@ export default function IslandRouteOptimizerPage() {
         <ol>
           {plan.rounds.map((round) => <li key={round.index}>
             <strong>{mode === 'double' ? `Round ${round.index}` : `Step ${round.index}`}</strong>
-            <ul>{round.placements.map((placement) => <li key={placement.chest.id}>{describeRoutePlacement(placement)}</li>)}</ul>
+            <ul>{round.placements.map((placement) => {
+              const collected = collectedChestIds.has(placement.chest.id)
+              return <li key={placement.chest.id} aria-label={`${describeRoutePlacement(placement)}${collected ? ' · Complete' : ''}`}>
+                {describeRoutePlacement(placement)}{collected && <strong> · Complete</strong>}
+              </li>
+            })}</ul>
           </li>)}
         </ol>
       </details>

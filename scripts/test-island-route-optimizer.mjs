@@ -12,9 +12,12 @@ import {
 } from '../src/features/island-route-optimizer/routeEngine.ts'
 import {
   createIslandRouteProgressState,
+  createEmptyIslandRouteProgress,
+  getActiveIslandRouteProgress,
   islandRouteProgressKey,
   islandRouteProgressStorageKey,
   mergeIslandRouteProgress,
+  updateIslandRouteProgress,
 } from '../src/features/island-route-optimizer/islandRouteProgress.ts'
 
 const validation = validateIslandRouteDataset()
@@ -104,6 +107,33 @@ assert.deepEqual(mergeIslandRouteProgress(singleOnly, null, 'single').completedC
 assert.deepEqual(mergeIslandRouteProgress(doubleOnly, null, 'double').completedChestIds, ['double-chest'])
 assert.deepEqual(mergeIslandRouteProgress(singleOnly, doubleOnly, 'mismatch').completedChestIds, ['single-chest'])
 assert.deepEqual(mergeIslandRouteProgress(doubleOnly, singleOnly, 'mismatch').completedChestIds, ['double-chest'])
+
+const progressByKey = {
+  [islandRouteProgressKey('single')]: singleOnly,
+  [islandRouteProgressKey('double')]: doubleOnly,
+}
+assert.deepEqual(getActiveIslandRouteProgress(progressByKey, 'single').completedChestIds, ['single-chest'])
+assert.deepEqual(getActiveIslandRouteProgress(progressByKey, 'double').completedChestIds, ['double-chest'])
+assert.deepEqual(getActiveIslandRouteProgress({
+  [islandRouteProgressKey('single')]: singleOnly,
+}, 'double').completedChestIds, [])
+assert.equal(getActiveIslandRouteProgress({
+  [islandRouteProgressKey('single')]: createIslandRouteProgressState({ completedChestIds: ['wrong-mode'], currentRound: 1, mode: 'double', updatedAt: 'mismatch' }),
+}, 'single').completedChestIds.length, 0)
+assert.deepEqual(createEmptyIslandRouteProgress('single').completedChestIds, [])
+const updatedSingleProgress = updateIslandRouteProgress(progressByKey, 'single', (current) => createIslandRouteProgressState({
+  completedChestIds: [...current.completedChestIds, 'single-added'],
+  currentRound: 3,
+  mode: 'single',
+  updatedAt: 'updated',
+}))
+assert.deepEqual(updatedSingleProgress[islandRouteProgressKey('single')].completedChestIds, ['single-added', 'single-chest'])
+assert.deepEqual(updatedSingleProgress[islandRouteProgressKey('double')].completedChestIds, ['double-chest'])
+
+const pageSource = await readFile(new URL('../src/features/island-route-optimizer/IslandRouteOptimizerPage.tsx', import.meta.url), 'utf8')
+assert.match(pageSource, /getActiveIslandRouteProgress\(progressByKey, mode\)/)
+assert.match(pageSource, /hydratedProgressKey === progressKey/)
+assert.match(pageSource, /key=\{progressKey\}/)
 
 const migration = await readFile(new URL('../supabase/migrations/20260806195647_user_tool_progress.sql', import.meta.url), 'utf8')
 assert.match(migration, /create table if not exists public\.user_tool_progress/)
