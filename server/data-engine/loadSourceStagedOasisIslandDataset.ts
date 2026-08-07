@@ -1,8 +1,10 @@
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 
-import type { DatasetSourceMetadata, PublishedDatasetKey } from '../../shared/data-engine/types.js'
+import type { DatasetSourceMetadata } from '../../shared/data-engine/types.js'
 import type { DatasetLoadResult } from './runner.js'
+
+type OasisStagedLoadResult = Omit<DatasetLoadResult, 'dataset'> & { dataset: 'oasis-island' }
 
 type OasisSource = {
   _meta?: Record<string, unknown>
@@ -16,10 +18,12 @@ type OasisRecord = Record<string, unknown> & {
   aliases: string[]
   recordType: string
   levels: unknown[]
-  images: string[]
+  images: Record<string, unknown>
+  imageUrls: string[]
+  imageVariantUrls: Record<string, string[]>
 }
 
-const dataset: PublishedDatasetKey = 'oasis-island'
+const dataset = 'oasis-island' as const
 
 function readSource(): OasisSource {
   const sourceUrl = new URL('./sources/kingshot_oasis_island_buildings.json', import.meta.url)
@@ -39,13 +43,28 @@ function imageFilesForRecord(record: Record<string, unknown>, inventory: string[
     const base = file.replace(/\s+lvl\d+\.png$/i, '').replace(/\.png$/i, '')
     const normalised = normaliseName(base)
     return names.some((name) => normalised === name || normalised.includes(name) || name.includes(normalised))
-  }).map((file) => `/assets/oasis-island/${encodeURIComponent(file)}`)
+  })
+}
+
+function assetUrl(file: string): string {
+  return `/assets/oasis-island/${encodeURIComponent(file)}`
+}
+
+function imageVariantUrls(images: Record<string, unknown>): Record<string, string[]> {
+  const variants = images.levelVariants
+  if (!variants || typeof variants !== 'object') return {}
+  return Object.fromEntries(Object.entries(variants).map(([level, files]) => {
+    const values = Array.isArray(files) ? files : [files]
+    return [level, values.filter((file): file is string => typeof file === 'string').map(assetUrl)]
+  }))
 }
 
 function toRecord(value: unknown, inventory: string[]): OasisRecord | null {
   if (!value || typeof value !== 'object') return null
   const record = value as Record<string, unknown>
   if (typeof record.id !== 'string' || typeof record.name !== 'string') return null
+  const images = record.images && typeof record.images === 'object' ? record.images as Record<string, unknown> : {}
+  const files = imageFilesForRecord(record, inventory)
   return {
     ...record,
     id: record.id,
@@ -53,20 +72,21 @@ function toRecord(value: unknown, inventory: string[]): OasisRecord | null {
     aliases: Array.isArray(record.aliases) ? record.aliases.filter((item): item is string => typeof item === 'string') : [],
     recordType: typeof record.recordType === 'string' ? record.recordType : 'decoration_building',
     levels: Array.isArray(record.levels) ? record.levels : [],
-    images: imageFilesForRecord(record, inventory),
+    images,
+    imageUrls: files.map(assetUrl),
+    imageVariantUrls: imageVariantUrls(images),
   }
 }
 
-export async function loadSourceStagedOasisIslandDataset(): Promise<DatasetLoadResult> {
+export async function loadSourceStagedOasisIslandDataset(): Promise<OasisStagedLoadResult> {
   const source = readSource()
   const inventory = Array.isArray(source.imageInventory) ? source.imageInventory : []
   const records = (source.buildings ?? []).map((record) => toRecord(record, inventory)).filter((record): record is OasisRecord => Boolean(record))
   const ownerVerifiedRecords = records.map((record) => ({
     ...record,
     verification: {
-      ...(record.verification && typeof record.verification === 'object' ? record.verification : {}),
-      status: 'owner_direct_ingame_verified',
-      provenance: 'owner_direct_ingame',
+      current: { status: 'owner_direct_ingame_verified', provenance: 'owner_direct_ingame' },
+      history: record.verification && typeof record.verification === 'object' ? record.verification : null,
     },
   }))
   const sourceText = JSON.stringify(source)

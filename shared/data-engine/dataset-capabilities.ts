@@ -91,10 +91,6 @@ export const PUBLISHED_DATASET_CAPABILITY_REGISTRY: Readonly<
 > = {
   ...DATASET_CAPABILITY_REGISTRY,
   items: publishedOnlyItemsCapabilities,
-  'oasis-island': {
-    ...publishedOnlyItemsCapabilities,
-    importing: true,
-  },
 }
 
 export function getRegisteredDatasetCapabilities(

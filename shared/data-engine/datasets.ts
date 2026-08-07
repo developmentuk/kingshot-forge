@@ -20,7 +20,6 @@ export type DatasetKey = (typeof DATASET_KEYS)[number]
 export const PUBLISHED_DATASET_KEYS = [
   ...DATASET_KEYS,
   'items',
-  'oasis-island',
 ] as const
 
 export type PublishedDatasetKey =

@@ -18,14 +18,17 @@ export type OasisBuilding = {
   aliases: string[]
   recordType: string
   rarity?: string | null
-  footprint?: string | null
+  availabilityCategory?: string | null
+  footprint?: { width?: number; height?: number; display?: string } | null
   typeLimit?: number | null
   maxLevel?: number | null
   function?: string
   levels: OasisLevel[]
   maxEffects?: Array<{ label?: string; stat?: string; valuePct?: number }>
-  images: string[]
-  verification?: { status?: string; notes?: string[] }
+  images: { files?: string[]; levelVariants?: Record<string, string[]>; assetStem?: string; missing?: boolean | string[] }
+  imageUrls: string[]
+  imageVariantUrls: Record<string, string[]>
+  verification?: { current?: { status?: string; provenance?: string }; history?: { status?: string; notes?: string[] } | null }
   unlock?: Record<string, unknown>
   upgradeMechanic?: Record<string, unknown>
   maxProsperity?: number | null
@@ -40,7 +43,9 @@ export function normaliseOasisBuildings(result: DatasetLoadResult): OasisBuildin
     ...record,
     aliases: Array.isArray(record.aliases) ? record.aliases : [],
     levels: Array.isArray(record.levels) ? record.levels.map((level) => level && typeof level === 'object' ? level as OasisLevel : {}).filter(Boolean) : [],
-    images: Array.isArray(record.images) ? record.images : [],
+    images: record.images && typeof record.images === 'object' && !Array.isArray(record.images) ? record.images : {},
+    imageUrls: Array.isArray(record.imageUrls) ? record.imageUrls : [],
+    imageVariantUrls: record.imageVariantUrls && typeof record.imageVariantUrls === 'object' ? record.imageVariantUrls : {},
   })).sort((left, right) => left.name.localeCompare(right.name))
 }
 
@@ -54,7 +59,21 @@ export function trustLabel(status?: string): string {
 }
 
 export function imageForBuilding(building: OasisBuilding): string | undefined {
-  return building.images[building.images.length - 1]
+  return building.imageUrls[0]
+}
+
+export function imageForLevel(building: OasisBuilding, level: number): string | undefined {
+  return building.imageVariantUrls[String(level)]?.[0] ?? imageForBuilding(building)
+}
+
+export function formatFootprint(footprint: OasisBuilding['footprint']): string {
+  return footprint?.display ?? (footprint?.width && footprint?.height ? `${footprint.width}x${footprint.height}` : 'Not available')
+}
+
+export function searchTextForBuilding(building: OasisBuilding): string {
+  const bonuses = building.levels.flatMap((level) => [...(level.buffs ?? []), ...(level.buffsUnlocked ?? [])])
+  const effects = [...bonuses, ...(building.maxEffects ?? [])]
+  return [building.name, ...building.aliases, building.function ?? '', building.rarity ?? '', ...effects.flatMap((effect) => [effect.label ?? '', effect.stat ?? '', 'effect' in effect && typeof effect.effect === 'string' ? effect.effect : '', effect.valuePct == null ? '' : String(effect.valuePct)]), ...building.levels.flatMap((level) => level.knownEffects ?? [])].join(' ').toLocaleLowerCase()
 }
 
 export function formatPercent(value: number): string {

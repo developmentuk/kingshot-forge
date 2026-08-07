@@ -2,7 +2,7 @@
 
 ## Status
 
-Local implementation on `feature/oasis-001a-catalogue-foundation`. This slice is ready for owner local review only. It is not merged, deployed, or published to Supabase.
+Local implementation on `feature/oasis-001a-catalogue-foundation`. This slice remains Draft PR audit work. It is not merged, deployed, or published to Supabase.
 
 ## Owner visual acceptance
 
@@ -14,14 +14,14 @@ The review covered the public hub, catalogue cards and artwork, Sleeping Draketh
 
 ## Scope delivered
 
-- Public `/oasis-island` hub with source-staged catalogue filters.
+- `/oasis-island` route with an explicit not-yet-published state; source staging is not consumed by public pages.
 - Building detail routes at `/oasis-island/buildings/:buildingId`.
 - 55 structure records from the approved Oasis source package, with non-null game values manually checked by the Product Owner.
 - 111 supplied PNG assets copied into the repository’s public media path.
 - Plain-English guidance covering unlock, Water Essence, Prosperity, Reservoirs, chests, priorities and known limits.
 - Direct link to the existing `/calculators/island-chest-route-optimizer`.
 - Discovery through the home hub, Companion Index and Player View navigation.
-- Search destination mapping for future published `oasis-island` records.
+- Search readiness is missing until a published projection and approved Search refresh exist.
 
 ## Owner local review
 
@@ -38,7 +38,7 @@ Open the Vite URL shown in Terminal 1. Vite already proxies `/api` requests to t
 
 The supplied JSON is the primary structured Oasis dataset at `server/data-engine/sources/kingshot_oasis_island_buildings.json`. The React page consumes the existing Data Engine API contract and does not embed a second editable JSON truth. The loader preserves source values, source evidence and the source payload hash, while marking non-null supplied game values as `owner_direct_ingame_verified`. Null or absent fields remain unknown and are not replaced by community claims.
 
-The current projection is explicitly labelled `source-staging; not a Supabase publication`. A future editorial/Data Engine publication should introduce the appropriate canonical persistence and publication manifest after separate owner approval. No migration was required for this local catalogue foundation, and no migration was applied.
+The current projection is explicitly labelled `source-staging; not a Supabase publication`. Under `docs/AEGIS.md` and ADR-008, staged evidence must not be consumed by public route, API, Search or media resolution. No existing immutable published Oasis projection was found, so the public route now stops with a clear publication-pending message. A future publication slice must define canonical persistence, immutable versions, audit history, a published projection, media approval and Search refresh after separate owner approval. No migration was created or applied.
 
 ## Evidence boundaries
 
@@ -53,6 +53,7 @@ The current projection is explicitly labelled `source-staging; not a Supabase pu
 - `npm run test:oasis-001a`
 - `npm run build`
 - `npm run lint`
+- `npm run check` (includes `test:oasis-001a` through the Island Route check)
 - `git diff --check`
 
 The full application build and focused contract checks are local readiness evidence only; they do not prove production publication or owner acceptance.

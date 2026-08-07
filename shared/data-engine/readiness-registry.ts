@@ -68,7 +68,6 @@ const DATASET_NAMES: Record<PublishedDatasetKey, string> = {
   masters: 'Mastery Forging',
   kvk: 'KvK Scoring',
   items: 'Companion Items',
-  'oasis-island': 'Oasis Island',
 }
 
 const DATASET_DOMAINS: Record<PublishedDatasetKey, DatasetDomain> = {
@@ -87,7 +86,6 @@ const DATASET_DOMAINS: Record<PublishedDatasetKey, DatasetDomain> = {
   masters: 'progression',
   kvk: 'events',
   items: 'editorial',
-  'oasis-island': 'editorial',
 }
 
 const ADMIN_CAPABILITY_EVIDENCE: Partial<
@@ -148,14 +146,6 @@ function adminCapabilityStatus(
   key: PublishedDatasetKey,
   capability: ReadinessCapability,
 ): ReadinessStatus | null {
-  if (key === 'oasis-island') {
-    return capability === 'browser' || capability === 'viewer' || capability === 'search' || capability === 'mobile'
-      ? 'implemented'
-      : capability === 'verification'
-        ? 'partial'
-        : 'missing'
-  }
-
   if (key === 'items') {
     return itemAdminCapabilityStatus(capability)
   }

@@ -118,7 +118,7 @@ export default function CompanionIndexPage() {
             <span aria-hidden="true">🌴</span>
             <div>
               <h3>Oasis Island</h3>
-              <p>Browse the governed source-staged Oasis catalogue and practical island guide.</p>
+              <p>Oasis Island is being prepared for publication. The practical island guide will appear here after review.</p>
             </div>
           </Link>
           <Link to="/companion/heroes" className="companion-family-card">

@@ -21,16 +21,18 @@ const page = readFileSync(resolve(root, 'src/features/oasis-island/OasisIslandPa
 const loader = readFileSync(resolve(root, 'server/data-engine/loadSourceStagedOasisIslandDataset.ts'), 'utf8')
 assert.match(app, /path="oasis-island"/u)
 assert.match(app, /path="oasis-island\/buildings\/:buildingId"/u)
-assert.match(page, /fetchPublishedDataset\('oasis-island'/u)
+assert.doesNotMatch(page, /fetchPublishedDataset\('oasis-island'/u)
+assert.match(page, /Oasis Island is not published yet/u)
 assert.match(page, /island-chest-route-optimizer/u)
 assert.match(loader, /source-staging; not a Supabase publication/u)
+assert.match(readFileSync(resolve(root, 'shared/data-engine/datasets.ts'), 'utf8'), /'items',\s*\] as const/u)
 
 const staged = await loadSourceStagedOasisIslandDataset()
 const projected = normaliseOasisBuildings(staged)
 assert.equal(projected.length, source.buildings.length)
 
 const byId = new Map(projected.map((record) => [record.id, record]))
-const sourceFields = ['id', 'name', 'aliases', 'recordType', 'rarity', 'footprint', 'typeLimit', 'maxLevel', 'function', 'levels', 'maxEffects', 'maxProsperity', 'unlock', 'upgradeMechanic']
+const sourceFields = ['id', 'name', 'aliases', 'recordType', 'availabilityCategory', 'rarity', 'footprint', 'typeLimit', 'maxLevel', 'function', 'levels', 'maxEffects', 'maxProsperity', 'unlock', 'upgradeMechanic', 'images']
 for (const sourceRecord of source.buildings) {
   const record = byId.get(sourceRecord.id)
   assert.ok(record, `Missing staged record: ${sourceRecord.id}`)
@@ -38,8 +40,17 @@ for (const sourceRecord of source.buildings) {
     assert.deepEqual(record[field], sourceRecord[field], `${sourceRecord.id}.${field} changed during staging`)
   }
   const expectedImages = (sourceRecord.images?.files ?? []).map((file) => `/assets/oasis-island/${encodeURIComponent(file)}`)
-  assert.deepEqual(record.images, expectedImages, `${sourceRecord.id}.images mapping changed`)
+  assert.deepEqual(record.imageUrls, expectedImages, `${sourceRecord.id}.imageUrls mapping changed`)
+  assert.deepEqual(record.images, sourceRecord.images, `${sourceRecord.id}.rich image metadata changed`)
+  assert.deepEqual(record.imageVariantUrls, Object.fromEntries(Object.entries(sourceRecord.images?.levelVariants ?? {}).map(([level, files]) => [level, (Array.isArray(files) ? files : [files]).map((file) => `/assets/oasis-island/${encodeURIComponent(file)}`)])), `${sourceRecord.id}.level image variants changed`)
+  assert.deepEqual(record.verification?.history, sourceRecord.verification ?? null, `${sourceRecord.id}.raw verification history changed`)
 }
+
+assert.equal(projected.find((record) => record.id === 'amphitheater').footprint.display, '3x3')
+assert.equal(projected.find((record) => record.id === 'braveshrine').footprint.display, '4x4')
+assert.equal(projected.find((record) => record.id === 'construction-hut').footprint.display, '3x3')
+assert.equal(projected.find((record) => record.id === 'dinosaur-fossils').footprint, null)
+assert.equal(projected.find((record) => record.id === 'dinosaur-fossils').imageUrls.length, 1)
 
 const sleeping = byId.get('sleeping-drakethrone')
 assert.equal(sleeping.levels.length, 10)
@@ -47,6 +58,7 @@ assert.equal(sleeping.levels[0].buffs.length, 4)
 assert.deepEqual(sleeping.levels[0].buffs.map((buff) => buff.valuePct), [2, 2, 2, 2])
 assert.deepEqual(sleeping.levels[9].buffs.map((buff) => buff.valuePct), [20, 20, 20, 20])
 assert.equal(sleeping.maxProsperity, 50000)
+assert.match(sleeping.imageUrls[0], /Sleeping%20Drakethrone/u)
 
 const court = byId.get('court-of-knowledge')
 assert.equal(court.levels.length, 20)
@@ -71,5 +83,7 @@ assert.deepEqual(oasisSpring.levels.map((level) => level.buffs[0].valuePct), [0.
 const dinosaurFossils = byId.get('dinosaur-fossils')
 assert.equal(dinosaurFossils.maxEffects[0].label, 'Training Speed')
 assert.equal(dinosaurFossils.maxEffects[0].valuePct, 15)
+assert.equal(projected.find((record) => record.id === 'construction-hut').imageUrls.length, 0)
+assert.equal(projected.find((record) => record.id === 'construction-hut').images.missing, true)
 
 console.log(`OASIS-001A contract passed: ${source.buildings.length} records, ${images.length} PNG assets, source-to-public fidelity and named record regressions verified.`)
