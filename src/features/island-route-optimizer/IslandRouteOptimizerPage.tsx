@@ -15,9 +15,10 @@ import {
 } from './routeEngine.ts'
 import {
   createIslandRouteProgressState,
-  getActiveIslandRouteProgress,
   islandRouteProgressKey,
   islandRouteProgressStorageKey,
+  isCurrentIslandRouteProgressRevision,
+  islandRouteProgressSaveStatus,
   mergeIslandRouteProgress,
   type IslandRouteProgressByKey,
   updateIslandRouteProgress,
@@ -62,28 +63,24 @@ export default function IslandRouteOptimizerPage() {
   const [showFullRoute, setShowFullRoute] = useState(false)
   const [mapStatus, setMapStatus] = useState('Preparing the interactive Island map…')
   const [progressSyncStatus, setProgressSyncStatus] = useState<'signed-out' | 'syncing' | 'synced' | 'error'>('signed-out')
-  const [syncedAccountKey, setSyncedAccountKey] = useState<string | null>(null)
-  const [hydratedProgressKey, setHydratedProgressKey] = useState<string | null>(null)
-  const syncAttemptRef = useRef<string | null>(null)
+  const progressRevisionRef = useRef<Record<string, number>>({})
+  const saveQueueRef = useRef<Record<string, Promise<void> | undefined>>({})
+  const progressByKeyRef = useRef(progressByKey)
+  progressByKeyRef.current = progressByKey
   const currentRoundRef = useRef(currentRound)
   currentRoundRef.current = currentRound
   const datasetValidation = useMemo(() => validateIslandRouteDataset(), [])
 
-  const hydratedActiveProgress = getActiveIslandRouteProgress(progressByKey, mode)
-  const activeProgress = hydratedProgressKey === progressKey
-    ? hydratedActiveProgress
-    : createIslandRouteProgressState({ completedChestIds: [], currentRound: 1, mode })
+  const storedActiveProgress = progressByKey[progressKey]
+  const activeProgress = storedActiveProgress?.mode === mode
+    ? storedActiveProgress
+    : createIslandRouteProgressState({ completedChestIds: loadCollectedChestIds(mode), currentRound, mode })
   const collectedChestIds = useMemo(() => new Set(activeProgress.completedChestIds), [activeProgress.completedChestIds])
   const selectedRound = plan.rounds[currentRound - 1]
   const roundChestIds = selectedRound?.placements.map((placement) => placement.chest.id) ?? []
   const roundComplete = roundChestIds.length > 0 && roundChestIds.every((id) => collectedChestIds.has(id))
   const collectedCount = islandChestNodes.filter((node) => collectedChestIds.has(node.id)).length
   const progress = Math.round((collectedCount / islandChestNodes.length) * 100)
-
-  useEffect(() => {
-    if (hydratedProgressKey !== progressKey) return
-    window.localStorage.setItem(islandRouteProgressStorageKey(mode), JSON.stringify([...activeProgress.completedChestIds].sort()))
-  }, [activeProgress.completedChestIds, hydratedProgressKey, mode, progressKey])
 
   const selectRound = useCallback((round: number) => {
     setSearchParams((current) => {
@@ -101,65 +98,53 @@ export default function IslandRouteOptimizerPage() {
 
   useEffect(() => {
     if (authLoading) return undefined
-    setHydratedProgressKey(null)
-    setSyncedAccountKey(null)
+    const revisionAtStart = progressRevisionRef.current[progressKey] ?? 0
+    const currentProgress = progressByKeyRef.current[progressKey]
+    const local = currentProgress?.mode === mode
+      ? currentProgress
+      : createIslandRouteProgressState({
+        completedChestIds: loadCollectedChestIds(mode),
+        currentRound: currentRoundRef.current,
+        mode,
+      })
+    setProgressByKey((current) => current[progressKey]?.mode === mode ? current : { ...current, [progressKey]: local })
+
     if (!user) {
-      syncAttemptRef.current = null
       setProgressSyncStatus('signed-out')
-      const local = loadCollectedChestIds(mode)
-      setProgressByKey((current) => ({
-        ...current,
-        [progressKey]: createIslandRouteProgressState({
-          completedChestIds: local,
-          currentRound: currentRoundRef.current,
-          mode,
-        }),
-      }))
-      setHydratedProgressKey(progressKey)
       return undefined
     }
 
     const accountUserId = user.id
-    const accountKey = `${accountUserId}:${progressKey}`
-    if (syncAttemptRef.current === accountKey) return undefined
-    syncAttemptRef.current = accountKey
     let cancelled = false
 
     async function syncAccountProgress(): Promise<void> {
       setProgressSyncStatus('syncing')
       try {
         const remote = await loadIslandRouteProgress(accountUserId, mode)
-        const localChestIds = loadCollectedChestIds(mode)
-        const local = createIslandRouteProgressState({
-          completedChestIds: localChestIds,
-          currentRound: currentRoundRef.current,
-          mode,
-        })
+        if (cancelled || !isCurrentIslandRouteProgressRevision({
+          activeProgressKey: progressKey,
+          progressKey,
+          currentRevision: progressRevisionRef.current[progressKey] ?? 0,
+          expectedRevision: revisionAtStart,
+        })) return
         const merged = mergeIslandRouteProgress(local, remote)
-        if (cancelled) return
-
         setProgressByKey((current) => ({ ...current, [progressKey]: merged }))
+        window.localStorage.setItem(islandRouteProgressStorageKey(mode), JSON.stringify([...merged.completedChestIds].sort()))
         if (merged.currentRound !== currentRoundRef.current) selectRound(merged.currentRound)
         await saveIslandRouteProgress(accountUserId, merged)
-        if (!cancelled) {
-          setSyncedAccountKey(accountKey)
-          setHydratedProgressKey(progressKey)
-          setProgressSyncStatus('synced')
-        }
+        if (!cancelled && isCurrentIslandRouteProgressRevision({
+          activeProgressKey: progressKey,
+          progressKey,
+          currentRevision: progressRevisionRef.current[progressKey] ?? 0,
+          expectedRevision: revisionAtStart,
+        })) setProgressSyncStatus(islandRouteProgressSaveStatus('saved'))
       } catch {
-        if (!cancelled) {
-          setProgressByKey((current) => ({
-            ...current,
-            [progressKey]: createIslandRouteProgressState({
-              completedChestIds: loadCollectedChestIds(mode),
-              currentRound: currentRoundRef.current,
-              mode,
-            }),
-          }))
-          setHydratedProgressKey(progressKey)
-          setSyncedAccountKey(null)
-          setProgressSyncStatus('error')
-        }
+        if (!cancelled && isCurrentIslandRouteProgressRevision({
+          activeProgressKey: progressKey,
+          progressKey,
+          currentRevision: progressRevisionRef.current[progressKey] ?? 0,
+          expectedRevision: revisionAtStart,
+        })) setProgressSyncStatus(islandRouteProgressSaveStatus('fallback'))
       }
     }
 
@@ -169,49 +154,59 @@ export default function IslandRouteOptimizerPage() {
     }
   }, [authLoading, mode, progressKey, selectRound, user])
 
-  useEffect(() => {
-    if (authLoading || !user || syncedAccountKey !== `${user.id}:${progressKey}` || hydratedProgressKey !== progressKey) return undefined
+  function persistProgress(state: ReturnType<typeof createIslandRouteProgressState>): void {
+    window.localStorage.setItem(islandRouteProgressStorageKey(state.mode), JSON.stringify([...state.completedChestIds].sort()))
+    if (!user) {
+      setProgressSyncStatus('signed-out')
+      return
+    }
+    const revision = progressRevisionRef.current[islandRouteProgressKey(state.mode)] ?? 0
     const accountUserId = user.id
-    let cancelled = false
-    const state = createIslandRouteProgressState({
-      completedChestIds: activeProgress.completedChestIds,
-      currentRound,
-      mode,
-    })
+    const savedKey = islandRouteProgressKey(state.mode)
     setProgressSyncStatus('syncing')
-    void saveIslandRouteProgress(accountUserId, state)
+    const queuedSave = (saveQueueRef.current[savedKey] ?? Promise.resolve()).catch(() => undefined).then(() => saveIslandRouteProgress(accountUserId, state))
+    saveQueueRef.current[savedKey] = queuedSave
+    void queuedSave
       .then(() => {
-        if (!cancelled) setProgressSyncStatus('synced')
+        if (isCurrentIslandRouteProgressRevision({
+          activeProgressKey: progressKey,
+          progressKey: savedKey,
+          currentRevision: progressRevisionRef.current[savedKey] ?? 0,
+          expectedRevision: revision,
+        })) setProgressSyncStatus(islandRouteProgressSaveStatus('saved'))
       })
       .catch(() => {
-        if (!cancelled) setProgressSyncStatus('error')
+        if (isCurrentIslandRouteProgressRevision({
+          activeProgressKey: progressKey,
+          progressKey: savedKey,
+          currentRevision: progressRevisionRef.current[savedKey] ?? 0,
+          expectedRevision: revision,
+        })) setProgressSyncStatus(islandRouteProgressSaveStatus('fallback'))
       })
-
-    return () => {
-      cancelled = true
-    }
-  }, [activeProgress.completedChestIds, authLoading, currentRound, hydratedProgressKey, mode, progressKey, syncedAccountKey, user])
+  }
 
   function toggleRoundComplete(): void {
     if (!selectedRound) return
 
-    setProgressByKey((currentProgress) => updateIslandRouteProgress(currentProgress, mode, (current) => {
-      const next = new Set(current.completedChestIds)
-      if (roundComplete) {
-        selectedRound.placements.forEach((placement) => next.delete(placement.chest.id))
-      } else {
-        selectedRound.placements.forEach((placement) => next.add(placement.chest.id))
-      }
-      return createIslandRouteProgressState({ completedChestIds: next, currentRound, mode })
-    }))
+    const nextCompletedChestIds = new Set(activeProgress.completedChestIds)
+    if (roundComplete) {
+      selectedRound.placements.forEach((placement) => nextCompletedChestIds.delete(placement.chest.id))
+    } else {
+      selectedRound.placements.forEach((placement) => nextCompletedChestIds.add(placement.chest.id))
+    }
+    const nextState = createIslandRouteProgressState({ completedChestIds: nextCompletedChestIds, currentRound, mode })
+    progressRevisionRef.current[progressKey] = (progressRevisionRef.current[progressKey] ?? 0) + 1
+    setProgressByKey((currentProgress) => updateIslandRouteProgress(currentProgress, mode, () => nextState))
+    persistProgress(nextState)
 
     if (!roundComplete && currentRound < plan.rounds.length) selectRound(currentRound + 1)
   }
 
   function resetProgress(): void {
-    setProgressByKey((current) => updateIslandRouteProgress(current, mode, () => (
-      createIslandRouteProgressState({ completedChestIds: [], currentRound: 1, mode })
-    )))
+    const nextState = createIslandRouteProgressState({ completedChestIds: [], currentRound: 1, mode, reset: true })
+    progressRevisionRef.current[progressKey] = (progressRevisionRef.current[progressKey] ?? 0) + 1
+    setProgressByKey((current) => updateIslandRouteProgress(current, mode, () => nextState))
+    persistProgress(nextState)
     selectRound(1)
   }
 
