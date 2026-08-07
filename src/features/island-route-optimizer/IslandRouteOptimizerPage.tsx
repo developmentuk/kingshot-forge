@@ -130,7 +130,6 @@ export default function IslandRouteOptimizerPage() {
         const merged = mergeIslandRouteProgress(local, remote)
         setProgressByKey((current) => ({ ...current, [progressKey]: merged }))
         window.localStorage.setItem(islandRouteProgressStorageKey(mode), JSON.stringify([...merged.completedChestIds].sort()))
-        if (merged.currentRound !== currentRoundRef.current) selectRound(merged.currentRound)
         await saveIslandRouteProgress(accountUserId, merged)
         if (!cancelled && isCurrentIslandRouteProgressRevision({
           activeProgressKey: progressKey,
