@@ -2,26 +2,27 @@
 
 ## Status
 
-Local implementation on `feature/oasis-001a-catalogue-foundation`. This slice remains Draft PR audit work. It is not merged, deployed, or published to Supabase.
+Local implementation on `feature/oasis-001a-catalogue-foundation`. This slice is a safe source/data/UI foundation for publication handoff. It intentionally does not expose Oasis publicly and is not merged, deployed, or published to Supabase.
 
 ## Owner visual acceptance
 
 On 7 August 2026, the Product Owner completed local desktop and approximately 390px mobile review and recorded:
 
-**OASIS-001A OWNER VISUAL GATE: PASS**
+**OASIS-001A OWNER VISUAL GATE: STAGING PROTOTYPE DESIGN ACCEPTANCE**
 
-The review covered the public hub, catalogue cards and artwork, Sleeping Drakethrone, Fountain of Life, Golden Sunset, long level progression, contrast/readability, responsive metadata cards and bottom mobile navigation interaction. This authorizes Draft PR audit only; it does not authorize Preview, merge, deployment, production data changes or migrations.
+The review covered the staging prototype hub, catalogue cards and artwork, Sleeping Drakethrone, Fountain of Life, Golden Sunset, long level progression, contrast/readability, responsive metadata cards and bottom mobile navigation interaction. Final published-release visual acceptance must be repeated after OASIS-001A-PUB connects the UI to the governed published projection.
 
 ## Scope delivered
 
-- `/oasis-island` route with an explicit not-yet-published state; source staging is not consumed by public pages.
-- Building detail routes at `/oasis-island/buildings/:buildingId`.
+- Accepted but temporarily unwired Oasis catalogue and detail UI implementation for OASIS-001A-PUB.
 - 55 structure records from the approved Oasis source package, with non-null game values manually checked by the Product Owner.
-- 111 supplied PNG assets copied into the repository’s public media path.
+- 111 supplied PNG assets preserved as private source evidence under `server/data-engine/source-assets/oasis-island`.
 - Plain-English guidance covering unlock, Water Essence, Prosperity, Reservoirs, chests, priorities and known limits.
 - Direct link to the existing `/calculators/island-chest-route-optimizer`.
 - Discovery through the home hub, Companion Index and Player View navigation.
-- Search readiness is missing until a published projection and approved Search refresh exist.
+- Publication-ready stable structure IDs and FRKS knowledge for the later governed publication slice.
+
+Not delivered by this PR: public Oasis catalogue or detail routes, published projection, Search integration, public media delivery, My Island, calculator buff integration, or publication migration.
 
 ## Owner local review
 
@@ -38,7 +39,7 @@ Open the Vite URL shown in Terminal 1. Vite already proxies `/api` requests to t
 
 The supplied JSON is the primary structured Oasis dataset at `server/data-engine/sources/kingshot_oasis_island_buildings.json`. The React page consumes the existing Data Engine API contract and does not embed a second editable JSON truth. The loader preserves source values, source evidence and the source payload hash, while marking non-null supplied game values as `owner_direct_ingame_verified`. Null or absent fields remain unknown and are not replaced by community claims.
 
-The current projection is explicitly labelled `source-staging; not a Supabase publication`. Under `docs/AEGIS.md` and ADR-008, staged evidence must not be consumed by public route, API, Search or media resolution. No existing immutable published Oasis projection was found, so the public route now stops with a clear publication-pending message. A future publication slice must define canonical persistence, immutable versions, audit history, a published projection, media approval and Search refresh after separate owner approval. No migration was created or applied.
+The current loader is explicitly source-staging and is not a public Data Engine API. Under `docs/AEGIS.md` and ADR-008, staged evidence must not be consumed by public route, API, Search or media resolution. The public Oasis routes and discovery are intentionally unwired. OASIS-001A-PUB will connect the reviewed foundation to the approved governed publication architecture. No migration was created or applied.
 
 ## Evidence boundaries
 

@@ -26,8 +26,8 @@ export type OasisBuilding = {
   levels: OasisLevel[]
   maxEffects?: Array<{ label?: string; stat?: string; valuePct?: number }>
   images: { files?: string[]; levelVariants?: Record<string, string[]>; assetStem?: string; missing?: boolean | string[] }
-  imageUrls: string[]
-  imageVariantUrls: Record<string, string[]>
+  imageFiles: string[]
+  imageVariantFiles: Record<string, string[]>
   verification?: { current?: { status?: string; provenance?: string }; history?: { status?: string; notes?: string[] } | null }
   unlock?: Record<string, unknown>
   upgradeMechanic?: Record<string, unknown>
@@ -44,8 +44,8 @@ export function normaliseOasisBuildings(result: DatasetLoadResult): OasisBuildin
     aliases: Array.isArray(record.aliases) ? record.aliases : [],
     levels: Array.isArray(record.levels) ? record.levels.map((level) => level && typeof level === 'object' ? level as OasisLevel : {}).filter(Boolean) : [],
     images: record.images && typeof record.images === 'object' && !Array.isArray(record.images) ? record.images : {},
-    imageUrls: Array.isArray(record.imageUrls) ? record.imageUrls : [],
-    imageVariantUrls: record.imageVariantUrls && typeof record.imageVariantUrls === 'object' ? record.imageVariantUrls : {},
+    imageFiles: Array.isArray(record.imageFiles) ? record.imageFiles : [],
+    imageVariantFiles: record.imageVariantFiles && typeof record.imageVariantFiles === 'object' ? record.imageVariantFiles : {},
   })).sort((left, right) => left.name.localeCompare(right.name))
 }
 
@@ -59,11 +59,11 @@ export function trustLabel(status?: string): string {
 }
 
 export function imageForBuilding(building: OasisBuilding): string | undefined {
-  return building.imageUrls[0]
+  return building.imageFiles[0]
 }
 
 export function imageForLevel(building: OasisBuilding, level: number): string | undefined {
-  return building.imageVariantUrls[String(level)]?.[0] ?? imageForBuilding(building)
+  return building.imageVariantFiles[String(level)]?.[0] ?? building.imageFiles[0]
 }
 
 export function formatFootprint(footprint: OasisBuilding['footprint']): string {

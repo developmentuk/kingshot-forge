@@ -23,7 +23,6 @@ const forgeTools: ForgeTool[] = [
   { title: 'My Forge', description: 'View your player tools, favourites and saved items.', icon: '⭐', path: '/my-forge', action: 'View My Forge' },
   { title: 'Gift Codes', description: 'View and copy currently active Kingshot gift codes.', icon: '🎁', path: '/gift-codes', action: 'View active codes', featured: true },
   { title: 'Island Route Planner', description: 'Plan all 55 Oasis Island chest placements with one or two reservoirs.', icon: '🗺️', path: '/calculators/island-chest-route-optimizer', action: 'Plan an Island route', featured: true },
-  { title: 'Oasis Island Catalogue', description: 'Explore source-backed Oasis structures, progression and plain-English guidance.', icon: '🌴', path: '/oasis-island', action: 'Explore Oasis Island', featured: true },
   { title: 'Player Lookup', description: 'Find a player’s current kingdom, level and profile.', icon: '👤', path: '/player-lookup', action: 'Find a player', featured: true },
   { title: 'Kingdom Explorer', description: 'Check a kingdom’s opening date, estimated age and status.', icon: '🏰', path: '/kingdom-explorer', action: 'Explore a kingdom', featured: true },
   { title: 'Kvk Tracker', description: 'Explore prep results, castle winners and kingdom match history.', icon: '⚔️', path: '/kvk-tracker', action: 'Search KvK results', featured: true },

@@ -114,13 +114,6 @@ export default function CompanionIndexPage() {
               <p>Calculate published upgrade resources and construction time.</p>
             </div>
           </Link>
-          <Link to="/oasis-island" className="companion-family-card">
-            <span aria-hidden="true">🌴</span>
-            <div>
-              <h3>Oasis Island</h3>
-              <p>Oasis Island is being prepared for publication. The practical island guide will appear here after review.</p>
-            </div>
-          </Link>
           <Link to="/companion/heroes" className="companion-family-card">
             <span aria-hidden="true">🦸</span>
             <div>
