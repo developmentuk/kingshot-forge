@@ -46,6 +46,7 @@ import HeroCompanionPage from "./pages/HeroCompanionPage";
 import CompanionIndexPage from "./pages/CompanionIndexPage";
 import CompanionItemPage from "./pages/CompanionItemPage";
 import SearchPage from "./features/search/SearchPage";
+import IslandRouteOptimizerPage from "./features/island-route-optimizer/IslandRouteOptimizerPage";
 
 import { DataEngineDiagnosticsPage } from "./pages/admin/DataEngineDiagnosticsPage";
 import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
@@ -121,6 +122,7 @@ function App() {
         <Route path="buildings/:buildingKey" element={<BuildingsBrowserPage />} />
         <Route path="buildings/:buildingKey/progression" element={<BuildingsBrowserPage />} />
         <Route path="calculators/buildings" element={<BuildingCalculatorsPage />} />
+        <Route path="calculators/island-chest-route-optimizer" element={<IslandRouteOptimizerPage />} />
         <Route path="transfer-profile" element={<TransferProfilePage />} />
         <Route path="my-forge/transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />

@@ -46,6 +46,7 @@ const playerGroups = [
     { label: 'Companion Index', shortLabel: 'Companion', icon: '🧭', path: '/companion' },
     { label: 'Buildings', shortLabel: 'Buildings', icon: '🏛️', path: '/buildings' },
     { label: 'Building Planner', shortLabel: 'Planner', icon: '🧮', path: '/calculators/buildings' },
+    { label: 'Island Chest Route', shortLabel: 'Island', icon: '🗺️', path: '/calculators/island-chest-route-optimizer' },
     { label: 'Hero Companion', shortLabel: 'Heroes', icon: '🦸', path: '/companion/heroes' },
     { label: 'Gift Codes', shortLabel: 'Codes', icon: '🎁', path: '/gift-codes' },
     { label: 'Kingdom Explorer', shortLabel: 'Kingdoms', icon: '🏰', path: '/kingdom-explorer' },
