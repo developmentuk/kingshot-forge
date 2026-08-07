@@ -1,0 +1,126 @@
+/* Oasis semantic contrast tokens: dark Forge shell */
+.oasis-page {
+  color: #f7f4ff;
+}
+
+.oasis-hero {
+  color: #173242;
+}
+
+.oasis-hero h1 {
+  color: #102a38;
+}
+
+.oasis-detail__hero h1 {
+  color: #f7f4ff;
+}
+
+.oasis-hero p:not(.eyebrow) {
+  color: #274a57;
+}
+
+.oasis-hero__facts strong {
+  color: #145f59;
+}
+
+.oasis-hero__facts span,
+.oasis-hero__facts small {
+  color: #405963;
+}
+
+/* Dark-shell catalogue and guide copy */
+.oasis-catalogue .oasis-section-heading h2,
+.oasis-guide .oasis-section-heading h2 {
+  color: #f7f4ff;
+}
+
+.oasis-catalogue .oasis-section-heading > span,
+.oasis-guide .oasis-section-heading > p,
+.oasis-controls label > span {
+  color: #c8c3dc;
+}
+
+.oasis-controls input,
+.oasis-controls select {
+  color: #173242;
+}
+
+/* Light cards and panels */
+.oasis-building-card,
+.oasis-guide-card,
+.oasis-panel {
+  color: #173242;
+}
+
+.oasis-building-card h3,
+.oasis-guide-card h3,
+.oasis-panel h2 {
+  color: #173242;
+}
+
+.oasis-building-card__meta,
+.oasis-building-card small,
+.oasis-guide-card p,
+.oasis-guide-card li,
+.oasis-panel p,
+.oasis-panel li,
+.oasis-level-table td {
+  color: #405963;
+}
+
+.oasis-fact-grid span,
+.oasis-panel .oasis-section-heading > span {
+  color: #405963;
+}
+
+.oasis-fact-grid strong,
+.oasis-level-table th {
+  color: #173242;
+}
+
+.oasis-detail__hero {
+  color: #f7f4ff;
+}
+
+.oasis-detail__hero p:not(.eyebrow),
+.oasis-back {
+  color: #c8c3dc;
+}
+
+.oasis-back:hover,
+.oasis-back:focus-visible {
+  color: #7ed5d0;
+}
+
+.oasis-note {
+  color: #4b3f24;
+}
+
+.oasis-state {
+  color: #173242;
+}
+
+.oasis-state--error {
+  color: #7d2f2b;
+}
+
+.oasis-building-card:hover,
+.oasis-building-card:focus-visible,
+.oasis-back:focus-visible,
+.oasis-controls input:focus-visible,
+.oasis-controls select:focus-visible {
+  outline: 2px solid #4ab7b2;
+  outline-offset: 2px;
+}
+
+.oasis-building-card:focus-visible,
+.oasis-controls input:focus-visible,
+.oasis-controls select:focus-visible {
+  border-color: #237b76;
+}
+
+@media (max-width: 560px) {
+  .oasis-hero h1 {
+    color: #102a38;
+  }
+}

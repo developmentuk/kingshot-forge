@@ -47,6 +47,7 @@ import CompanionIndexPage from "./pages/CompanionIndexPage";
 import CompanionItemPage from "./pages/CompanionItemPage";
 import SearchPage from "./features/search/SearchPage";
 import IslandRouteOptimizerPage from "./features/island-route-optimizer/IslandRouteOptimizerPage";
+import OasisIslandPage from "./features/oasis-island/OasisIslandPage";
 
 import { DataEngineDiagnosticsPage } from "./pages/admin/DataEngineDiagnosticsPage";
 import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
@@ -123,6 +124,8 @@ function App() {
         <Route path="buildings/:buildingKey/progression" element={<BuildingsBrowserPage />} />
         <Route path="calculators/buildings" element={<BuildingCalculatorsPage />} />
         <Route path="calculators/island-chest-route-optimizer" element={<IslandRouteOptimizerPage />} />
+        <Route path="oasis-island" element={<OasisIslandPage />} />
+        <Route path="oasis-island/buildings/:buildingId" element={<OasisIslandPage />} />
         <Route path="transfer-profile" element={<TransferProfilePage />} />
         <Route path="my-forge/transfer-profile" element={<TransferProfilePage />} />
         <Route path="transfer-hub" element={<TransferHubPage />} />

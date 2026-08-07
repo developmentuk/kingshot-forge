@@ -9,6 +9,7 @@ export type SearchDestinationRecord = {
 
 const DATASET_ROUTES: Record<string, (id: string) => string> = {
   heroes: (id) => `/companion/heroes/${encodeURIComponent(id)}`,
+  'oasis-island': (id) => `/oasis-island/buildings/${encodeURIComponent(id)}`,
   kvk: () => '/kvk-tracker',
 }
 

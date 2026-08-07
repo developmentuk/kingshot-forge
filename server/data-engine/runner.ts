@@ -15,6 +15,7 @@ import {
 
 import { loadPublishedBuildingsDataset } from './loadPublishedBuildingsDataset.js'
 import { loadPublishedCompanionItemsDataset } from './loadPublishedCompanionItemsDataset.js'
+import { loadSourceStagedOasisIslandDataset } from './loadSourceStagedOasisIslandDataset.js'
 
 export interface DatasetPreviewResult {
   dataset: PublishedDatasetKey
@@ -48,6 +49,23 @@ function companionItemRecordKey(record: unknown): string | null {
 export async function previewDataset(
   key: PublishedDatasetKey,
 ): Promise<DatasetPreviewResult> {
+  if (key === 'oasis-island') {
+    const loaded = await loadSourceStagedOasisIslandDataset()
+    return {
+      dataset: loaded.dataset,
+      sourceUrl: loaded.sourceUrl,
+      fetchedAt: loaded.fetchedAt,
+      httpStatus: loaded.httpStatus,
+      payloadHash: loaded.payloadHash,
+      metadata: loaded.metadata,
+      recordCount: loaded.recordCount,
+      recordKeys: loaded.records.map((record) => {
+        const value = (record as Record<string, unknown>).id
+        return typeof value === 'string' ? value : ''
+      }).filter(Boolean),
+    }
+  }
+
   if (key === 'items') {
     const loaded = await loadPublishedCompanionItemsDataset()
     const recordKeys = loaded.records
@@ -119,6 +137,10 @@ export async function previewDataset(
 export async function loadDataset(
   key: PublishedDatasetKey,
 ): Promise<DatasetLoadResult> {
+  if (key === 'oasis-island') {
+    return loadSourceStagedOasisIslandDataset()
+  }
+
   if (key === 'items') {
     return loadPublishedCompanionItemsDataset()
   }

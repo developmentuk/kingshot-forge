@@ -31,6 +31,7 @@ const SUPPORTED_DATASETS = new Set<PublishedDatasetKey>([
   "events",
   "masters",
   "kvk",
+  "oasis-island",
 ]);
 
 function readDatasetKey(
