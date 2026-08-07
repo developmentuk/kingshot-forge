@@ -19,7 +19,6 @@ The review covered the staging prototype hub, catalogue cards and artwork, Sleep
 - 111 supplied PNG assets preserved as private source evidence under `server/data-engine/source-assets/oasis-island`.
 - Plain-English guidance covering unlock, Water Essence, Prosperity, Reservoirs, chests, priorities and known limits.
 - Direct link to the existing `/calculators/island-chest-route-optimizer`.
-- Discovery through the home hub, Companion Index and Player View navigation.
 - Publication-ready stable structure IDs and FRKS knowledge for the later governed publication slice.
 
 Not delivered by this PR: public Oasis catalogue or detail routes, published projection, Search integration, public media delivery, My Island, calculator buff integration, or publication migration.
@@ -37,7 +36,7 @@ Open the Vite URL shown in Terminal 1. Vite already proxies `/api` requests to t
 
 ## Canonical data boundary
 
-The supplied JSON is the primary structured Oasis dataset at `server/data-engine/sources/kingshot_oasis_island_buildings.json`. The React page consumes the existing Data Engine API contract and does not embed a second editable JSON truth. The loader preserves source values, source evidence and the source payload hash, while marking non-null supplied game values as `owner_direct_ingame_verified`. Null or absent fields remain unknown and are not replaced by community claims.
+The supplied JSON is the primary structured Oasis dataset at `server/data-engine/sources/kingshot_oasis_island_buildings.json`. The staging loader and Oasis view model preserve the reviewed data contract for the later publication slice. The current React UI is intentionally unwired from public data resolution. The loader preserves source values, source evidence and the source payload hash, while marking non-null supplied game values as `owner_direct_ingame_verified`. Null or absent fields remain unknown and are not replaced by community claims.
 
 The current loader is explicitly source-staging and is not a public Data Engine API. Under `docs/AEGIS.md` and ADR-008, staged evidence must not be consumed by public route, API, Search or media resolution. The public Oasis routes and discovery are intentionally unwired. OASIS-001A-PUB will connect the reviewed foundation to the approved governed publication architecture. No migration was created or applied.
 

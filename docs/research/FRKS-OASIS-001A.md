@@ -33,8 +33,8 @@ My Island, player-owned Oasis progression, player Oasis tables, automatic accoun
 
 ## Owner review boundary
 
-Local review may inspect the hub, filters, detail records, guide wording, source labels, image mapping and the existing chest-route link. No merge, deploy, Supabase mutation, migration application, Vercel Preview or production data action is part of OASIS-001A.
+Local review may inspect the staging prototype hub, filters, detail records, guide wording, source labels, image mapping and the existing chest-route link. No Preview was manually requested, and no production deployment, Supabase mutation, migration application or production data action is part of OASIS-001A. Git integration automatically created a branch Preview after the authorized push for head `8bc1e848ba5a8ea321df9f32462ca47f37bbec92`; Aegis independently confirmed that Preview reached READY. This was not an owner-authorized manual Preview.
 
 ## Owner visual gate
 
-The Product Owner accepted the OASIS-001A staging prototype design on 7 August 2026 at desktop and approximately 390px mobile widths. The UI is intentionally unwired from public routing until OASIS-001A-PUB connects it to the governed published projection. Final published-release visual acceptance must be repeated. No production publication, Search implementation, migration application, merge, deploy or Preview is claimed.
+The Product Owner accepted the OASIS-001A staging prototype design on 7 August 2026 at desktop and approximately 390px mobile widths. The UI is intentionally unwired from public routing until OASIS-001A-PUB connects it to the governed published projection. Final published-release visual acceptance must be repeated. No production publication, Search implementation, migration application, merge or production deployment is claimed. The automatically created branch Preview for head `8bc1e848ba5a8ea321df9f32462ca47f37bbec92` reached READY; it was not manually requested or treated as owner acceptance.
