@@ -57,6 +57,26 @@ After deployment, verify:
 - API health endpoints respond;
 - no obvious console or server errors appear.
 
+## Vercel Deployment Cost Control
+
+Forge uses the repository's `vercel.json` Git deployment policy to keep
+ordinary development pushes out of Vercel build consumption while preserving
+the normal production path:
+
+- `main` continues to create the automatic production deployment;
+- all non-`main` branches, including feature, fix, docs, ops and future branch
+  namespaces, do not create an automatic Vercel deployment;
+- an owner-approved Preview is created explicitly from the approved feature
+  worktree with `vercel deploy` (or `vercel deploy <project-path>`), without
+  `--prod`.
+
+The explicit `vercel deploy` command targets the Preview environment and does
+not modify `main`. Production remains the result of merging to `main`; an
+explicit `vercel deploy --prod` is a separate production operation and is not
+part of the normal Preview workflow.
+
+Do not run an explicit Preview deployment until owner approval is recorded.
+
 ## Rollback
 
 When a release causes a critical regression:
