@@ -6,6 +6,12 @@
       "includeFiles": "node_modules/{tesseract.js,tesseract.js-core,@tesseract.js-data/eng}/**"
     }
   },
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "main": true
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!api(?:/|$)).*)",
