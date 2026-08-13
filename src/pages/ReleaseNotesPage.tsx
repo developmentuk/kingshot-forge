@@ -21,6 +21,22 @@ function ReleaseNotesPage() {
       <article className="release-entry release-entry--latest">
         <div className="release-entry__heading">
           <div>
+            <span className="release-entry__badge">Release candidate</span>
+            <h2>Version 1.1.0 — Forge re-baseline</h2>
+            <p>Dependency, documentation and release control reconciliation · production acceptance pending</p>
+          </div>
+          <Link className="button button--secondary" to="/companion">Open Companion</Link>
+        </div>
+        <div className="release-entry__sections">
+          <section><h3>Accepted platform line</h3><ul><li>Companion Index and 75 governed Item identities.</li><li>Forge Vision screenshot-assisted Player linking.</li><li>Route-owned PKCE authentication and production Google sign-in.</li><li>Island Chest Route Planner with account-aware progress.</li></ul></section>
+          <section><h3>Release control</h3><ul><li>Production dependencies updated to zero known audit advisories.</li><li>Version and public release labels use one package source of truth.</li><li>Roadmap, Oasis, Island Route and operational records reconciled with main.</li></ul></section>
+          <section><h3>Still gated</h3><ul><li>Oasis catalogue publication and public media.</li><li>External Player lookup while no safe read-only provider route exists.</li><li>Additional authentication providers and modular implementation movement.</li></ul></section>
+        </div>
+      </article>
+
+      <article className="release-entry release-entry--latest">
+        <div className="release-entry__heading">
+          <div>
             <span className="release-entry__badge">Promotion candidate</span>
             <h2>VISION-REL-001 — Forge Vision Platform and Account Linking</h2>
             <p>Authenticated preview accepted 26 July 2026 · production promotion pending</p>

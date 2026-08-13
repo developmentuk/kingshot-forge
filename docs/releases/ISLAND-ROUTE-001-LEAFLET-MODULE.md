@@ -3,7 +3,9 @@
 Date: 2026-08-06  
 Branch: `feature/island-route-optimizer`  
 Issue: #47  
-Status: Draft implementation — not production accepted
+Status: Merged and production-line accepted
+
+Merged through PR #50 at `effd8a35fbc5c3df5a839b04496fd28ead8d3220` after owner approval and authenticated progress smoke acceptance against `eec6c608fc6b307230fcc79ecb236dcba8734df4`.
 
 ## Summary
 
@@ -71,7 +73,7 @@ The public optimiser confirms:
 - Manhattan-distance route planning;
 - a Prim-style route calculation.
 
-The full coordinate table should still receive owner/community visual review before it is promoted into a governed canonical dataset.
+The full coordinate table remains community-reference planning data. A separate governed-data decision is required before it may be described as canonical Forge data.
 
 ## Safety
 
@@ -79,17 +81,9 @@ The full coordinate table should still receive owner/community visual review bef
 - No Supabase write.
 - No auth, Player Identity, Companion Admin, Art Studio or provider changes.
 - No copied third-party game artwork.
-- No production deployment.
-- Draft PR required before merge.
+- No external provider mutation.
+- Route progress remains isolated by account and route mode.
 
-## Acceptance required
+## Accepted validation
 
-Before production acceptance:
-
-1. Run `npm run test:island-route`.
-2. Run `npm run lint`.
-3. Run `npm run build`.
-4. Optionally run full `npm run check` if environment/time permits.
-5. Browser-review `/calculators/island-chest-route-optimizer` on mobile and desktop.
-6. Owner-review the 55 coordinate markers against the reference map.
-7. Confirm whether to keep CDN Leaflet or vendor/install it locally before merge.
+The focused route gate, full Forge check, production build, desktop/mobile owner review and authenticated progress smoke passed before merge. Leaflet remains a pinned hosted dependency with Subresource Integrity; moving it into the npm bundle is a future hardening decision rather than an unrecorded release blocker.

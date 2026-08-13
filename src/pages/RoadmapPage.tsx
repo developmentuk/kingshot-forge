@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { APP_VERSION } from "../config/release";
 
 type RoadmapStatus = "live" | "development" | "planned" | "future";
 
@@ -239,8 +240,8 @@ function RoadmapPage() {
           <p className="eyebrow">Product roadmap</p>
           <h1 className="page-title">Build each domain completely</h1>
           <p>
-            Community Art Studio is complete. Forge Preview is undergoing final validation
-            before the Version 1.0 production release.
+            Version {APP_VERSION} is reconciling the accepted platform line before the next
+            product sprint. OASIS-001A-PUB is the proposed next complete vertical slice.
           </p>
         </div>
         <div className="product-roadmap__hero-actions">
@@ -253,21 +254,21 @@ function RoadmapPage() {
         <div>
           <span className="roadmap-priority-panel__icon">🎁</span>
           <div>
-            <p className="eyebrow">Forge Preview</p>
-            <h2>Version 1.0 release status</h2>
+            <p className="eyebrow">Release control</p>
+            <h2>Version {APP_VERSION} candidate status</h2>
             <p>
-              This preview is undergoing final validation before the Version 1.0 production
-              release. The secure, transparent redemption journey remains paused until checks pass.
+              Dependency, documentation, version and branch reconciliation is active. Production
+              promotion remains closed until the exact candidate passes deployment and smoke acceptance.
             </p>
           </div>
         </div>
         <div className="roadmap-priority-panel__tags">
-          <span>Linked player consent</span>
-          <span>Redeem all</span>
-          <span>Per-code results</span>
-          <span>Rate limiting</span>
-          <span>Audit history</span>
-          <span>Privacy</span>
+          <span>Zero known production advisories</span>
+          <span>Canonical documentation</span>
+          <span>Semantic version</span>
+          <span>Legacy PR review</span>
+          <span>Exact-head smoke</span>
+          <span>Oasis next</span>
         </div>
       </section>
 

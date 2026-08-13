@@ -1,42 +1,56 @@
-# Forge Platform CS-003E
+# Kingshot Forge
 
-## Record Editor Validation Integration
+Kingshot Forge is a community companion platform for Kingshot players, alliances and kingdoms. It combines governed game knowledge, player identity, planning tools, community creation and operational workflows in one React/Vite application.
 
-This change set connects the existing Record Editor save path to the shared Dataset Validation Service introduced in CS-003D.
+## Canonical systems
 
-## Files
+- Production: `https://ksforge.app/`
+- Repository: `developmentuk/kingshot-forge`
+- Operational constitution: `docs/AEGIS.md`
+- Product direction: `docs/FORGE_BLUEPRINT.md`
+- Persistent platform data: Supabase project `hrvdhjscwitqpwjhnjkm`
 
-- `src/features/admin/recordEditor/recordEditorPlatformValidation.ts`
-- `src/features/admin/recordEditor/RecordEditorPanel.tsx`
-- `docs/architecture/dataset-framework.md`
+`main` is the accepted production line. Feature branches, ZIP snapshots and source-staging data are not canonical release baselines.
 
-## Behaviour
+## Local development
 
-- Existing interactive validation remains active while fields are edited.
-- A save attempt converts the active Record Editor schema and record into platform dataset contracts.
-- The shared Dataset Validation Service runs before `onSave`.
-- Validation errors block the save callback and are displayed in the existing validation summary and field messages.
-- Successful validation permits the existing save flow to continue unchanged.
-- Persistence and publishing are not introduced by this change set.
+Requirements: a current Node.js LTS release and npm.
 
-## Apply
-
-Extract into the repository root while on:
-
-`feature/cs-003e-record-editor-validation`
-
-Then run:
-
-```powershell
-npm run build
-npm run lint
-git status
+```bash
+npm ci
+npm run dev
 ```
 
-Commit after verification:
+Vite serves the browser application. API-backed workflows also require the Vercel Functions runtime in a second terminal:
 
-```powershell
-git add .
-git commit -m "CS-003E integrate Record Editor validation"
-git push
+```bash
+vercel dev --listen 3000
 ```
+
+Never commit `.env.local`, Supabase service-role keys, provider credentials, OAuth secrets or access tokens.
+
+## Validation
+
+Run the complete release gate before requesting merge:
+
+```bash
+npm run check
+```
+
+The gate covers structural validation, domain contracts, security boundaries, publication, Search, Player Identity, Forge Vision, Art Studio, Companion, Island/Oasis, lint and the production build. Focused commands are listed in `package.json` and supplement rather than replace the complete gate.
+
+For production dependency advisories:
+
+```bash
+npm audit --omit=dev
+```
+
+## Delivery rules
+
+- Begin from the latest clean `origin/main`.
+- Work on one bounded branch and vertical slice at a time.
+- Preserve published-only, server-authoritative and immutable-history boundaries.
+- Do not apply migrations, mutate production data or deploy without the milestone's explicit authority and acceptance controls.
+- Update AEGIS, the relevant release record and Roadmap when a capability changes state.
+
+See `governance/DEVELOPMENT_WORKFLOW.md`, `governance/RELEASE_PROCESS.md` and `governance/VERSIONING.md` for the full workflow.

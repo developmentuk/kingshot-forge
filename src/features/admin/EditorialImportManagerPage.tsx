@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import * as XLSX from 'xlsx'
 import { Link, useSearchParams } from 'react-router-dom'
 import { buildingsContract } from '../../../shared/data-pipeline/buildingsContract'
 import type { DatasetValidationResult } from '../../../shared/data-pipeline/contracts'
@@ -13,13 +12,12 @@ type StageResult = { importRunId: string; state: string; stagedCatalog: number; 
 type PublicationData = { manifest: { importRunId: string; warningIds: string[]; decisionIds: string[]; catalogueCount: number; progressionCount: number; warningCount: number; publicationVersion: number } | null; manifestHash?: string; decisions: Array<{ warning_id: string; resolution_type: string; dependency_status: string; external_reference: string | null; decision_id: string }>; refreshes: Array<{ refresh_kind: string; status: string }>; publication: { publication_id: string; publication_version: number; status: string } | null }
 type PrerequisiteWarning = { warning_id: string; sheet: string; row: number; record_id: string; building_key: string; source_text: string; parsed_name: string | null; required_level: number | null; required_stage: number | null; resolved_building_key: string | null; resolution_confidence: string; unresolved_reason: string }
 
-function parseWorkbook(file: File): Promise<{ sheets: SheetRows; names: string[] }> {
-  return file.arrayBuffer().then(buffer => {
-    const workbook = XLSX.read(buffer, { cellDates: true, bookVBA: false })
-    const sheets: SheetRows = {}
-    for (const name of workbook.SheetNames) sheets[name] = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[name], { defval: null, raw: false })
-    return { sheets, names: workbook.SheetNames }
-  })
+async function parseWorkbook(file: File): Promise<{ sheets: SheetRows; names: string[] }> {
+  const [buffer, XLSX] = await Promise.all([file.arrayBuffer(), import('xlsx')])
+  const workbook = XLSX.read(buffer, { cellDates: true, bookVBA: false })
+  const sheets: SheetRows = {}
+  for (const name of workbook.SheetNames) sheets[name] = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[name], { defval: null, raw: false })
+  return { sheets, names: workbook.SheetNames }
 }
 
 function text(value: unknown): string { return value == null ? '' : String(value).trim() }

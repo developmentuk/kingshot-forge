@@ -8,7 +8,7 @@ export const SHORT_COMMIT_SHA = COMMIT_SHA === 'local' ? 'local' : COMMIT_SHA.sl
 
 export const IS_PRODUCTION = DEPLOYMENT_ENVIRONMENT === 'production'
 export const RELEASE_CHANNEL = IS_PRODUCTION
-  ? 'Version 1.0'
+  ? `Version ${APP_VERSION}`
   : DEPLOYMENT_ENVIRONMENT === 'preview'
     ? 'Forge Preview'
     : 'Forge Local'
