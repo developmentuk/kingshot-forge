@@ -2,22 +2,27 @@
 
 Roadmap status is governed by milestone exit criteria, not elapsed time.
 
+## Current release control — Version 1.1.0 candidate
+
+OPS-REBASE-001 is the active release-control sprint. It reconciles security dependencies, documentation, semantic versioning and legacy pull requests after the accepted Companion, Forge Vision, authentication, observability, Player resilience, Island Route and Oasis foundation deliveries. No new product-domain expansion begins until this candidate passes the full gate and exact-head production acceptance.
+
+The next proposed product sprint is **OASIS-001A-PUB**: governed Oasis publication, optimised public media, public routes, Search integration and repeated desktop/mobile acceptance. My Island, profile buffs and calculator injection remain later slices.
+
 ## Milestone 1 — Foundation — Complete
 
 Established the initial public product, authentication, profiles, community foundations, admin access, dataset registry and data-engine preview/load capability.
 
 ## Milestone 2 — CMS & Publishing — Current
 
-Release 0.7.1 Sprint 9.3 has established the local Hero Skills source-governance, canonical-contract and schema-proposal foundation. Approved source coverage, migration application, compatible atomic publication and public consumption remain blockers; Hero Skills is not yet a canonical dataset.
+The shared Editorial, Data Studio, publication, version, rollback and Verification foundations are implemented. Buildings is the accepted complete vertical slice. Most other standard datasets remain partial at live publication/rollback acceptance, and Items Admin remains read-only Stage 1A. Milestone 2 therefore remains current.
 
-### 2.0 Platform hardening
+### 2.0 Platform hardening — Implemented, ongoing maintenance
 
-- restore green build/lint
-- secure repository snapshot process
-- CI quality gates
-- checked-in database migrations
-- shared contracts and server errors
-- initial design tokens/primitives
+- green full repository gate and production build;
+- CI quality workflows and focused module gates;
+- checked-in Supabase migrations;
+- shared contracts, safe errors and design primitives;
+- dependency and release reconciliation through OPS-REBASE-001.
 
 ### 2.1 CMS core
 
@@ -54,18 +59,19 @@ At least Heroes, Events and Buildings complete the full import → draft → val
 - global navigation and information architecture
 - performance budgets
 
-## Milestone 4 — Player & Community Platform
+## Milestone 4 — Player & Community Platform — Partial
 
-- Player Identity disabled vertical slice completed locally in Sprint 9.4; migration recovery, non-production rehearsal and explicit approval remain before enablement
+- Player Identity, screenshot/OCR-assisted linking and hybrid claim review are integrated;
+- live external Player lookup remains disabled because the upstream read-only route was retired;
 - mature player profiles
 - alliance administration
 - kingdom and transfer workflows
 - notification foundations
 - moderation tools
 
-## Release 0.7.3 — Forge UX Polish — In development
+## Historical release line — integrated
 
-The accepted player-facing journeys are being refined through a focused shared UX pass. This work keeps the existing architecture and data boundaries intact while standardising visual tokens, navigation, cards, forms, responsive behaviour, keyboard focus and reduced-motion support.
+The 0.7.x UX, Community Art, Auto Redeem foundation and Operations work were integrated into the later Version 1 production line. Their old branch labels are historical records, not current release candidates.
 
 - shared visual tokens and surface patterns;
 - responsive desktop and mobile navigation;
@@ -74,7 +80,7 @@ The accepted player-facing journeys are being refined through a focused shared U
 - My Forge, Player Passport and public-page refinement;
 - no new domains, product features, tables or schema changes.
 
-## Release 0.8.0 — Forge Operations Centre — In development
+## Forge Operations Centre — Partial platform capability
 
 Sprint 8.0A established separated Player, Contributor, Creator, Moderation and
 Operations workspaces. Sprint 8.0B adds the Forge Identity/User Management
@@ -84,7 +90,7 @@ Settings. Authenticated runtime, responsive and scale validation remain release
 gates; unified audit, standalone role administration and feature flags are
 deferred follow-up work.
 
-### Sprint 8.0C — Workspace UX and Forge Contributors — In development
+### Workspace UX and Forge Contributors — Partial
 
 - shared dark workspace surfaces, switcher and sidebar correction;
 - typed Forge Contributor role catalogue and public `/join` experience;
@@ -100,11 +106,11 @@ deferred follow-up work.
 - search and recommendations
 - event automation
 
-Release 0.7.4 Community Art Studio remains a completed, separate contribution workflow. Release 0.7.5 Auto Redeem is ready for Clark's final production validation: it adds explicit consent, verified linked-player eligibility, server-only provider transport, user-triggered sequential processing, safe outcomes and private history while preserving manual Gift Code copying. It is not live and production provider access remains disabled until the final checks pass.
+Community Art Studio remains a completed contribution workflow. Auto Redeem preserves explicit consent, server-only provider transport, safe outcomes and private history, but provider-dependent operation remains unavailable while the required verified external Player contract is unavailable.
 
-### Future platform initiative — Forge Screenshot Intelligence Engine
+### Forge Vision and Screenshot Intelligence — Foundation integrated
 
-Future work only; explicitly out of scope for Release 0.7.0 Sprint 9.2. This proposed capability may eventually support Kingshot screenshot classification, OCR-assisted data extraction, player-stat import, hero and progression import, artwork extraction, automatic image alignment, renderer comparison, and human review with confidence scoring. No OCR, computer-vision dependency, automatic matching or scoring is introduced by the current Render Engine work.
+Forge Vision now provides governed screenshot/OCR foundations and Player linking assistance. Wider player-stat, hero, progression and artwork ingestion remain separate review-gated extensions; OCR evidence does not bypass human review or canonical publication.
 
 ## Milestone 6 — Ecosystem & Scale
 

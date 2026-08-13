@@ -103,16 +103,16 @@ function HomePage() {
               <span>Latest release</span>
               <strong>Version {APP_VERSION}</strong>
             </div>
-            <h2>Version 1.0 experience hardening is in progress</h2>
+            <h2>Version {APP_VERSION} release reconciliation</h2>
             <p>
-              Auto Redeem now has server-authoritative player verification, explicit consent,
-              provider pause controls and private result history. Production enablement remains gated.
+              Companion, Forge Vision, secure authentication and the Island Route Planner are integrated.
+              Oasis publication and provider-dependent player lookup remain deliberately gated.
             </p>
             <div className="home-release-banner__tags">
-              <span>Verified player link</span>
-              <span>Explicit consent</span>
-              <span>Provider pause gate</span>
-              <span>Private history</span>
+              <span>Companion</span>
+              <span>Forge Vision</span>
+              <span>Island Route</span>
+              <span>Release control</span>
             </div>
           </div>
         </div>

@@ -20,7 +20,6 @@ assert.match(styles, /100dvh/)
 assert.match(styles, /forge-result--selected/)
 const release = await readFile('src/config/release.ts', 'utf8')
 assert.match(release, /Forge Preview/)
-assert.match(release, /Version 1\.0/)
+assert.match(release, /`Version \$\{APP_VERSION\}`/, 'production release label must derive from package metadata')
 assert.doesNotMatch(release, /0\.7\.5/)
 console.log('Player-facing Search surface, local history, command launch and deep-link route checks passed.')
-

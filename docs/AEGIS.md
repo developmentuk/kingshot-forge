@@ -1,5 +1,11 @@
 # Kingshot Forge Project Constitution
 
+## OPS-REBASE-001 operational record — 13 August 2026
+
+The canonical release line is `main` at `a4842d5cba1bf3a46ddc876db70b0cc079a7711e` before this corrective sprint. The full repository check passes. The Island Chest Route Optimiser and OASIS-001A source/catalogue foundation are merged; Oasis public publication remains intentionally closed. Authentication uses the released route-owned PKCE callback contract. The retired Century Games player-detail route remains prohibited as a Forge lookup source.
+
+Release reconciliation targets Version 1.1.0 because the accepted line has added backwards-compatible Companion, Forge Vision, authentication, observability and Island capabilities since v1.0.2. A release tag and production claim require exact-candidate deployment and smoke acceptance; changing package metadata alone is not a release.
+
 ## DATA-001 operational record — 20 July 2026
 
 The Buildings workbook preflight passed with 10 catalog rows, 587 progression rows, zero blocking errors, zero duplicates, zero orphans and eight unresolved prerequisite warnings. The source fingerprint is `840d70bc9173ef12d454fe72fbe517FE49124B250562C8FBEF1B68C0F2DD1980`. The workbook remains unmodified; no direct publication occurred. Staging requires an authenticated Forge actor and owner review, and publication remains explicitly gated.

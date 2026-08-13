@@ -2,7 +2,7 @@
 
 ## Status
 
-Local implementation on `feature/oasis-001a-catalogue-foundation`. This slice is a safe source/data/UI foundation for publication handoff. It intentionally does not expose Oasis publicly and is not merged, deployed, or published to Supabase.
+Merged to `main` through PR #51 at `2cb35b98fb861a6323c229f19579f8a291e4ab81`. This slice is a safe source/data/UI foundation for publication handoff. It intentionally does not expose Oasis publicly and is not published to Supabase. The public route remains unwired until OASIS-001A-PUB creates and accepts a governed published projection.
 
 ## Owner visual acceptance
 
