@@ -155,6 +155,7 @@ assertAdversarialRejection('record/media mismatch', ({ records }) => { records[0
 const placeholderRecordIndex = built.records.findIndex((record) => record.id === 'fountain-of-life')
 const mappedRecordIndex = built.records.findIndex((record) => record.media.some((media) => media.role !== 'placeholder'))
 assertAdversarialRejection('placeholder wrong alt', ({ records }) => { records[placeholderRecordIndex].media[0].alt = 'Artwork missing' }, /public media does not match/u)
+assertAdversarialRejection('placeholder wrong role', ({ records }) => { records[placeholderRecordIndex].media[0].role = 'catalogue' }, /public media does not match/u)
 assertAdversarialRejection('placeholder wrong level variant', ({ records }) => { records[placeholderRecordIndex].media[0].levelVariant = 1 }, /public media does not match/u)
 assertAdversarialRejection('placeholder wrong width', ({ records }) => { records[placeholderRecordIndex].media[0].width += 1 }, /public media does not match/u)
 assertAdversarialRejection('placeholder wrong height', ({ records }) => { records[placeholderRecordIndex].media[0].height += 1 }, /public media does not match/u)
