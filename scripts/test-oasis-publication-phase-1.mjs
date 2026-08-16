@@ -25,6 +25,7 @@ const source = JSON.parse(read('server/data-engine/sources/kingshot_oasis_island
 const manifest = JSON.parse(read('server/oasis-publication/oasis-media-manifest.json'))
 const fixture = JSON.parse(read('fixtures/oasis-001a-publication/oasis-publication.fixture.json'))
 const hashFixture = JSON.parse(read('fixtures/oasis-001a-publication/oasis-manifest-hash.fixture.json'))
+const retiredIslandRoutePngSha256 = '482ba56cae6ca1fdf243c85c8c199965f10a901efaad460e8084e89792510922'
 
 const built = buildOasisPublicDataset({
   records: source.buildings,
@@ -201,8 +202,7 @@ try {
   assert.equal(emitted.some((path) => basename(path) === 'oasis-acceptance.html'), false)
   const scenicDraft = resolve(root, 'src/assets/island-route/island-background-draft.png')
   if (existsSync(scenicDraft)) assert.equal(emittedHashes.has(createHash('sha256').update(readFileSync(scenicDraft)).digest('hex')), false)
-  const oldHeader = execFileSync('git', ['show', 'origin/main:src/assets/island-route/oasis-island-header.png'], { cwd: root, maxBuffer: 16 * 1024 * 1024 })
-  assert.equal(emittedHashes.has(createHash('sha256').update(oldHeader).digest('hex')), false)
+  assert.equal(emittedHashes.has(retiredIslandRoutePngSha256), false)
 } finally {
   rmSync(productionBuild, { recursive: true, force: true })
 }
