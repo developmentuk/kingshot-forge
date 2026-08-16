@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import oasisIslandHeaderUrl from '../../assets/island-route/oasis-island-header.png'
+import oasisIslandHeaderUrl from '../../assets/island-route/oasis-island-header.webp'
 import IslandRouteMap from './IslandRouteMap.tsx'
 import {
   islandChestNodes,

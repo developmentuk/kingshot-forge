@@ -34,6 +34,48 @@ export type OasisBuilding = {
   maxProsperity?: number | null
 }
 
+export type OasisPublicBonus = { label: string | null; stat: string | null; valuePct: number | null; effect: string | null }
+export type OasisPublicLevel = {
+  level: number | null
+  prosperity: number | null
+  prosperityRequired: number | null
+  waterEssencePerHour: number | null
+  bonuses: OasisPublicBonus[]
+  knownEffects: string[]
+  exactOutputKnown: boolean | null
+}
+export type OasisPublishedBuilding = {
+  schemaVersion: 'oasis-public-projection-v1'
+  id: string
+  name: string
+  aliases: string[]
+  recordType: string
+  rarity: string | null
+  availabilityCategory: string | null
+  footprint: { width: number | null; height: number | null; display: string | null } | null
+  typeLimit: number | null
+  maxLevel: number | null
+  function: string | null
+  levels: OasisPublicLevel[]
+  maxEffects: OasisPublicBonus[]
+  unlock: { requirement: string | null; initialBlueprintPurchase: string | null } | null
+  upgrade: { currency: string | null; exchange: string | null; generalBlueprintRefresh: string | null; officiallyVerified: string | null } | null
+  maxProsperity: number | null
+  trustLabel: 'Owner verified in-game'
+  media: Array<{ url: string; alt: string; role: 'catalogue' | 'level' | 'placeholder'; levelVariant: number | null; width: number; height: number }>
+  canonicalRoute: string
+  status: 'published'
+}
+
+export type OasisAcceptanceDataset = {
+  schemaVersion: 'oasis-public-projection-v1'
+  dataset: 'oasis-island'
+  status: 'current_published'
+  recordCount: number
+  mediaCount: number
+  records: OasisPublishedBuilding[]
+}
+
 export function normaliseOasisBuildings(result: DatasetLoadResult): OasisBuilding[] {
   return result.records.filter((record): record is OasisBuilding => {
     if (!record || typeof record !== 'object') return false
@@ -66,7 +108,7 @@ export function imageForLevel(building: OasisBuilding, level: number): string | 
   return building.imageVariantFiles[String(level)]?.[0] ?? building.imageFiles[0]
 }
 
-export function formatFootprint(footprint: OasisBuilding['footprint']): string {
+export function formatFootprint(footprint: { width?: number | null; height?: number | null; display?: string | null } | null | undefined): string {
   return footprint?.display ?? (footprint?.width && footprint?.height ? `${footprint.width}x${footprint.height}` : 'Not available')
 }
 
@@ -78,4 +120,13 @@ export function searchTextForBuilding(building: OasisBuilding): string {
 
 export function formatPercent(value: number): string {
   return `${value % 1 === 0 ? value : value.toFixed(1)}%`
+}
+
+export function imageForPublishedBuilding(building: OasisPublishedBuilding): string | undefined {
+  return building.media.find((media) => media.role === 'catalogue')?.url ?? building.media[0]?.url
+}
+
+export function searchTextForPublishedBuilding(building: OasisPublishedBuilding): string {
+  const effects = [...building.levels.flatMap((level) => level.bonuses), ...building.maxEffects]
+  return [building.name, ...building.aliases, building.function ?? '', building.rarity ?? '', ...effects.flatMap((effect) => [effect.label ?? '', effect.stat ?? '', effect.effect ?? '', effect.valuePct == null ? '' : String(effect.valuePct)]), ...building.levels.flatMap((level) => level.knownEffects)].join(' ').toLocaleLowerCase()
 }
