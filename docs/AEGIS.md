@@ -1,5 +1,14 @@
 # Kingshot Forge Project Constitution
 
+## FRKS-PRESERVE-001 operational record — 13 August 2026
+
+Durable governance, Data Engine and Player Intelligence findings from stale PRs
+#16, #17 and #27 are reconciled into current documentation. Accepted cost-control
+and database-migration decisions are restored as ADR-012 and ADR-013. Obsolete
+executable probes, unapplied SQL, raw evidence and secrets remain excluded.
+Current AEGIS, architecture and release records remain authoritative. This
+preservation makes no production, Supabase, provider or runtime change.
+
 ## OPS-REBASE-001 operational record — 13 August 2026
 
 The canonical release line is `main` at `a4842d5cba1bf3a46ddc876db70b0cc079a7711e` before this corrective sprint. The full repository check passes. The Island Chest Route Optimiser and OASIS-001A source/catalogue foundation are merged; Oasis public publication remains intentionally closed. Authentication uses the released route-owned PKCE callback contract. The retired Century Games player-detail route remains prohibited as a Forge lookup source.
