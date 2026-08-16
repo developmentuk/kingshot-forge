@@ -3,6 +3,10 @@ import { createHash } from 'node:crypto'
 export const OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION = 'oasis-public-projection-v2' as const
 export const OASIS_MEDIA_MANIFEST_SCHEMA_VERSION = 'oasis-media-manifest-v2' as const
 export const OASIS_SOURCE_FINGERPRINT_VERSION = 'oasis-source-fingerprint-v2' as const
+export const OASIS_CANONICAL_JSON_VERSION = 'oasis-canonical-json-v1' as const
+export const OASIS_RECORD_CONTENT_HASH_VERSION = 'oasis-record-content-sha256-v2' as const
+export const OASIS_CANONICAL_NUMBER_MAX_ABS = 100_000_000
+export const OASIS_CANONICAL_NUMBER_DECIMAL_PLACES = 7
 export const OASIS_PUBLIC_RECORD_COUNT = 55
 export const OASIS_PRIVATE_SOURCE_MEDIA_COUNT = 111
 
@@ -226,6 +230,7 @@ function assertNullableFiniteNumber(value: unknown, path: string): asserts value
   if (value !== null && (typeof value !== 'number' || !Number.isFinite(value))) {
     throw new Error(`${path} must be a finite number or null.`)
   }
+  if (typeof value === 'number') canonicalOasisNumber(value)
 }
 
 function assertNullableNonNegativeNumber(value: unknown, path: string): asserts value is number | null {
@@ -244,6 +249,7 @@ function assertPositiveInteger(value: unknown, path: string): asserts value is n
   if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
     throw new Error(`${path} must be a positive integer.`)
   }
+  canonicalOasisNumber(value)
 }
 
 function assertIsoTimestamp(value: unknown, path: string): asserts value is string {
@@ -445,10 +451,31 @@ export function buildOasisPublicDataset(input: {
   })
 }
 
+export function canonicalOasisNumber(value: number): string {
+  if (!Number.isFinite(value)) throw new Error('Oasis canonical numbers must be finite.')
+  if (Math.abs(value) > OASIS_CANONICAL_NUMBER_MAX_ABS) {
+    throw new Error(`Oasis canonical numbers must not exceed ${OASIS_CANONICAL_NUMBER_MAX_ABS} in absolute value.`)
+  }
+  const factor = 10 ** OASIS_CANONICAL_NUMBER_DECIMAL_PLACES
+  const scaled = Math.round(value * factor)
+  if (!Number.isSafeInteger(scaled) || value !== scaled / factor) {
+    throw new Error(`Oasis canonical numbers support at most ${OASIS_CANONICAL_NUMBER_DECIMAL_PLACES} decimal places.`)
+  }
+  if (scaled === 0) return '0'
+  const negative = scaled < 0
+  const digits = String(Math.abs(scaled)).padStart(OASIS_CANONICAL_NUMBER_DECIMAL_PLACES + 1, '0')
+  const whole = digits.slice(0, -OASIS_CANONICAL_NUMBER_DECIMAL_PLACES)
+  const fraction = digits.slice(-OASIS_CANONICAL_NUMBER_DECIMAL_PLACES).replace(/0+$/u, '')
+  return `${negative ? '-' : ''}${whole}${fraction ? `.${fraction}` : ''}`
+}
+
 export function stableOasisJson(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value)
+  if (value === null) return 'null'
+  if (typeof value === 'number') return canonicalOasisNumber(value)
+  if (typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value)
   if (Array.isArray(value)) return `[${value.map(stableOasisJson).join(',')}]`
-  return `{${Object.entries(value as Record<string, unknown>).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0).map(([key, item]) => `${JSON.stringify(key)}:${stableOasisJson(item)}`).join(',')}}`
+  if (typeof value === 'object') return `{${Object.entries(value as Record<string, unknown>).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0).map(([key, item]) => `${JSON.stringify(key)}:${stableOasisJson(item)}`).join(',')}}`
+  throw new Error(`Oasis canonical JSON does not support ${typeof value} values.`)
 }
 
 export function hashOasisManifest(manifest: OasisMediaManifest): string {
@@ -472,7 +499,9 @@ function sortedRecordContent(records: readonly unknown[]): unknown[] {
 }
 
 export function hashOasisRecordContent(records: readonly unknown[]): string {
-  return createHash('sha256').update(stableOasisJson(sortedRecordContent(records))).digest('hex')
+  return createHash('sha256')
+    .update(`${OASIS_RECORD_CONTENT_HASH_VERSION}\n${stableOasisJson(sortedRecordContent(records))}`)
+    .digest('hex')
 }
 
 export function hashOasisSourceFingerprint(input: {
@@ -572,6 +601,7 @@ export function assertOasisPublicRecord(value: unknown): asserts value is OasisP
   }
   if (record.canonicalRoute !== `/oasis-island/buildings/${record.id}`) throw new Error('Oasis public record has an invalid canonical route.')
   if (typeof record.publicationId !== 'string' || !record.publicationId.trim() || record.publicationId !== record.publicationId.trim() || typeof record.publicationVersion !== 'number' || !Number.isInteger(record.publicationVersion) || record.publicationVersion < 1) throw new Error('Oasis public record has an invalid publication identity.')
+  canonicalOasisNumber(record.publicationVersion)
   assertIsoTimestamp(record.publishedAt, `Oasis public record ${record.id}.publishedAt`)
   assertIsoTimestamp(record.updatedAt, `Oasis public record ${record.id}.updatedAt`)
   if (!(Object.values(OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS) as readonly unknown[]).includes(record.trustLabel)) throw new Error('Oasis public record has an invalid trust label.')
@@ -600,6 +630,8 @@ export function assertOasisPublicationPayload(input: {
   if (!/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')
   if (!/^[0-9a-f]{64}$/u.test(input.manifestHash) || hashOasisManifest(input.manifest) !== input.manifestHash) throw new Error('Oasis manifest hash does not match canonical content.')
   if (manifest.sourceAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT || manifest.derivativeAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest counts are incomplete.')
+  assertPositiveInteger(manifest.sourceAssetBytes, 'Oasis manifest.sourceAssetBytes')
+  assertPositiveInteger(manifest.derivativeAssetBytes, 'Oasis manifest.derivativeAssetBytes')
   if (!Array.isArray(manifest.entries) || manifest.entries.length !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest requires exactly 111 entries.')
   const entries = manifest.entries.map((value) => object(value))
   if (entries.some((entry) => !entry)) throw new Error('Oasis manifest entries must be objects.')
@@ -613,9 +645,17 @@ export function assertOasisPublicationPayload(input: {
       || typeof entry.sourceChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(entry.sourceChecksum)
       || typeof entry.derivativeChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(entry.derivativeChecksum)
       || (entry.mediaRole !== 'catalogue' && entry.mediaRole !== 'level')
-      || typeof entry.width !== 'number' || entry.width <= 0 || typeof entry.height !== 'number' || entry.height <= 0) {
+      || typeof entry.sourceBytes !== 'number' || !Number.isInteger(entry.sourceBytes) || entry.sourceBytes <= 0
+      || typeof entry.derivativeBytes !== 'number' || !Number.isInteger(entry.derivativeBytes) || entry.derivativeBytes <= 0
+      || typeof entry.width !== 'number' || !Number.isInteger(entry.width) || entry.width <= 0
+      || typeof entry.height !== 'number' || !Number.isInteger(entry.height) || entry.height <= 0) {
       throw new Error('Oasis manifest entry metadata is incomplete or invalid.')
     }
+  }
+  const sourceAssetBytes = (entries as Record<string, unknown>[]).reduce((total, entry) => total + Number(entry.sourceBytes), 0)
+  const derivativeAssetBytes = (entries as Record<string, unknown>[]).reduce((total, entry) => total + Number(entry.derivativeBytes), 0)
+  if (manifest.sourceAssetBytes !== sourceAssetBytes || manifest.derivativeAssetBytes !== derivativeAssetBytes) {
+    throw new Error('Oasis manifest byte totals do not match its entries.')
   }
   if (!Array.isArray(manifest.missingArtworkRecordIds)
     || [...manifest.missingArtworkRecordIds].sort().join('|') !== OASIS_MISSING_ARTWORK_RECORD_IDS.join('|')) throw new Error('Oasis missing-artwork IDs are invalid.')
@@ -623,7 +663,9 @@ export function assertOasisPublicationPayload(input: {
   if (!placeholder || placeholder.publicDerivativePath !== 'media/oasis-island/shared/artwork-unavailable.webp'
     || placeholder.privateDerivativePath !== `fixtures/oasis-001a-publication/${placeholder.publicDerivativePath}`
     || typeof placeholder.derivativeChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(placeholder.derivativeChecksum)
-    || typeof placeholder.width !== 'number' || placeholder.width <= 0 || typeof placeholder.height !== 'number' || placeholder.height <= 0
+    || typeof placeholder.derivativeBytes !== 'number' || !Number.isInteger(placeholder.derivativeBytes) || placeholder.derivativeBytes <= 0
+    || typeof placeholder.width !== 'number' || !Number.isInteger(placeholder.width) || placeholder.width <= 0
+    || typeof placeholder.height !== 'number' || !Number.isInteger(placeholder.height) || placeholder.height <= 0
     || typeof placeholder.altText !== 'string' || !placeholder.altText) throw new Error('Oasis placeholder metadata is incomplete or invalid.')
   if (!Array.isArray(input.records) || input.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis publication requires exactly 55 records.')
   for (const record of input.records) assertOasisPublicRecord(record)

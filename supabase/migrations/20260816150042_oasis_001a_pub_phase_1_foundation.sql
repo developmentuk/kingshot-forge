@@ -90,6 +90,32 @@ for each row execute function public.prevent_oasis_publication_history_mutation(
 create trigger oasis_audits_immutable before update or delete on public.oasis_publication_audits
 for each row execute function public.prevent_oasis_publication_history_mutation();
 
+create or replace function public.oasis_canonical_number(p_value numeric)
+returns text language plpgsql immutable strict security invoker set search_path = pg_catalog as $$
+begin
+  -- oasis-canonical-json-v1: at most seven decimal places and an absolute
+  -- magnitude of 100,000,000. Multiplication by 10^7 therefore remains below
+  -- JavaScript's maximum safe integer and is reproducible in both runtimes.
+  if p_value::text in ('NaN', 'Infinity', '-Infinity')
+     or abs(p_value) > 100000000 or p_value <> trunc(p_value, 7) then
+    raise exception using
+      errcode = '22023',
+      message = 'Oasis canonical number is outside the supported magnitude or seven-decimal precision boundary.';
+  end if;
+  if p_value = 0 then return '0'; end if;
+  return trim_scale(p_value)::text;
+end;
+$$;
+
+create or replace function public.oasis_positive_integer_json_number(p_value jsonb)
+returns boolean language plpgsql immutable strict security invoker set search_path = pg_catalog as $$
+begin
+  if jsonb_typeof(p_value) is distinct from 'number' then return false; end if;
+  return (p_value #>> '{}')::numeric > 0
+    and (p_value #>> '{}')::numeric = trunc((p_value #>> '{}')::numeric);
+end;
+$$;
+
 create or replace function public.oasis_stable_json(p_value jsonb)
 returns text language plpgsql immutable strict security invoker set search_path = pg_catalog as $$
 declare
@@ -103,6 +129,7 @@ begin
       select '[' || coalesce(string_agg(public.oasis_stable_json(value), ',' order by ordinality), '') || ']'
         into result from jsonb_array_elements(p_value) with ordinality;
     when 'string' then return to_jsonb(p_value #>> '{}')::text;
+    when 'number' then return public.oasis_canonical_number((p_value #>> '{}')::numeric);
     else return p_value::text;
   end case;
   return result;
@@ -141,7 +168,7 @@ $$;
 
 create or replace function public.oasis_record_content_sha256(p_records jsonb)
 returns text language sql immutable strict security invoker set search_path = pg_catalog as $$
-  select encode(pg_catalog.sha256(convert_to(public.oasis_stable_json(
+  select encode(pg_catalog.sha256(convert_to('oasis-record-content-sha256-v2' || chr(10) || public.oasis_stable_json(
     coalesce((
       select jsonb_agg(record - array['publicationId', 'publicationVersion', 'publishedAt', 'updatedAt'] order by record->>'id' collate "C")
       from jsonb_array_elements(p_records) record
@@ -149,12 +176,16 @@ returns text language sql immutable strict security invoker set search_path = pg
   ), 'UTF8')), 'hex');
 $$;
 
+revoke all on function public.oasis_canonical_number(numeric) from public, anon, authenticated;
+revoke all on function public.oasis_positive_integer_json_number(jsonb) from public, anon, authenticated;
 revoke all on function public.oasis_stable_json(jsonb) from public, anon, authenticated;
 revoke all on function public.oasis_json_has_forbidden_key(jsonb) from public, anon, authenticated;
 revoke all on function public.oasis_manifest_sha256(jsonb) from public, anon, authenticated;
 revoke all on function public.oasis_record_content_sha256(jsonb) from public, anon, authenticated;
 
 do $$
+declare
+  vector record;
 begin
   if public.oasis_stable_json('{"z":[3,true,null,"Oasis"],"a":{"width":720,"path":"media/oasis-island/shared/artwork-unavailable.webp"},"count":111}'::jsonb)
        <> '{"a":{"path":"media/oasis-island/shared/artwork-unavailable.webp","width":720},"count":111,"z":[3,true,null,"Oasis"]}'
@@ -162,6 +193,55 @@ begin
        <> '8c76a240d927f231e750fb98bc6ee62881471495cb7e6946a1a0898b8c36ff8d' then
     raise exception 'Oasis canonical JSON/hash contract does not match the shared fixture.';
   end if;
+  for vector in select * from (values
+    ('zero', 0::numeric, '0'),
+    ('negative zero', (-0.0)::numeric, '0'),
+    ('positive integer', 00042::numeric, '42'),
+    ('negative integer', (-00042)::numeric, '-42'),
+    ('ordinary decimal', 12.3400::numeric, '12.34'),
+    ('redundant decimal zeros', 0001.2300000::numeric, '1.23'),
+    ('positive one e minus seven', 0.0000001::numeric, '0.0000001'),
+    ('negative one e minus seven', (-0.0000001)::numeric, '-0.0000001'),
+    ('at JavaScript lower exponent threshold', 0.0000010::numeric, '0.000001'),
+    ('maximum positive magnitude', 100000000.0000000::numeric, '100000000'),
+    ('maximum negative magnitude', (-100000000.0000000)::numeric, '-100000000'),
+    ('maximum magnitude and precision', 99999999.9999999::numeric, '99999999.9999999')
+  ) accepted(name, numeric_value, expected_text) loop
+    if public.oasis_canonical_number(vector.numeric_value) <> vector.expected_text then
+      raise exception 'Oasis canonical-number vector % failed.', vector.name;
+    end if;
+  end loop;
+  if public.oasis_stable_json('{"z":[-0,0.0000001,-0.0000001,100000000],"a":{"decimal":12.3400,"integer":-42}}'::jsonb)
+       <> '{"a":{"decimal":12.34,"integer":-42},"z":[0,0.0000001,-0.0000001,100000000]}'
+    or public.oasis_record_content_sha256('[{"id":"z-record","value":-0.0000001,"publicationId":"ignored","publicationVersion":9,"publishedAt":"ignored","updatedAt":"ignored"},{"id":"a-record","value":{"whole":42,"tiny":0.0000001}}]'::jsonb)
+       <> 'f1b1d745445d6c18663fac523ef05fae7ed6b3a9e67d4048ea9052dfca67298f' then
+    raise exception 'Oasis nested canonical JSON/record hash contract does not match the shared fixture.';
+  end if;
+  begin
+    perform public.oasis_canonical_number(0.00000001::numeric);
+    raise exception 'Oasis excessive-precision numeric vector was accepted.';
+  exception when sqlstate '22023' then null;
+  end;
+  begin
+    perform public.oasis_canonical_number('NaN'::numeric);
+    raise exception 'Oasis non-finite numeric vector was accepted.';
+  exception when sqlstate '22023' then null;
+  end;
+  begin
+    perform public.oasis_canonical_number(100000000.0000001::numeric);
+    raise exception 'Oasis out-of-range numeric vector was accepted.';
+  exception when sqlstate '22023' then null;
+  end;
+  begin
+    perform public.oasis_canonical_number(100000000000000000000::numeric);
+    raise exception 'Oasis pre-upper-exponent numeric vector was accepted.';
+  exception when sqlstate '22023' then null;
+  end;
+  begin
+    perform public.oasis_canonical_number(1000000000000000000000::numeric);
+    raise exception 'Oasis upper-exponent numeric vector was accepted.';
+  exception when sqlstate '22023' then null;
+  end;
 end;
 $$;
 
@@ -223,58 +303,87 @@ begin
     raise exception 'Oasis publication identity, actor, reason and idempotency key are required.';
   end if;
   if p_schema_version <> 'oasis-public-projection-v2' then raise exception 'Unsupported Oasis public projection schema.'; end if;
-  if jsonb_typeof(p_manifest) <> 'object' then raise exception 'Oasis manifest must be a JSON object.'; end if;
-  if p_manifest->>'schemaVersion' <> 'oasis-media-manifest-v2'
-     or p_manifest->>'sourceFingerprintVersion' <> 'oasis-source-fingerprint-v2' then
+  if jsonb_typeof(p_manifest) is distinct from 'object' then raise exception 'Oasis manifest must be a JSON object.'; end if;
+  if not (p_manifest ?& array[
+       'schemaVersion', 'sourceFingerprintVersion', 'sourceFingerprint',
+       'sourceAssetCount', 'derivativeAssetCount', 'sourceAssetBytes',
+       'derivativeAssetBytes', 'entries', 'missingArtworkRecordIds', 'placeholder'
+     ]) then
+    raise exception 'Oasis manifest is missing required fields.';
+  end if;
+  if p_manifest->>'schemaVersion' is distinct from 'oasis-media-manifest-v2'
+     or p_manifest->>'sourceFingerprintVersion' is distinct from 'oasis-source-fingerprint-v2' then
     raise exception 'Unsupported Oasis media manifest or source-fingerprint schema.';
   end if;
-  if p_source_fingerprint !~ '^[0-9a-f]{64}$' or p_manifest->>'sourceFingerprint' <> p_source_fingerprint then raise exception 'Oasis source fingerprint does not match the manifest.'; end if;
+  if p_source_fingerprint !~ '^[0-9a-f]{64}$' or p_manifest->>'sourceFingerprint' is distinct from p_source_fingerprint then raise exception 'Oasis source fingerprint does not match the manifest.'; end if;
   if p_manifest_hash !~ '^[0-9a-f]{64}$' or public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash then raise exception 'Oasis manifest hash does not match canonical manifest content.'; end if;
-  if jsonb_typeof(p_manifest->'sourceAssetCount') <> 'number' or p_manifest->>'sourceAssetCount' <> '111'
-     or jsonb_typeof(p_manifest->'derivativeAssetCount') <> 'number' or p_manifest->>'derivativeAssetCount' <> '111'
-     or jsonb_typeof(p_manifest->'sourceAssetBytes') <> 'number' or (p_manifest->>'sourceAssetBytes')::numeric <= 0
-     or jsonb_typeof(p_manifest->'derivativeAssetBytes') <> 'number' or (p_manifest->>'derivativeAssetBytes')::numeric <= 0 then
+  if not (p_manifest ? 'sourceAssetCount')
+     or public.oasis_positive_integer_json_number(p_manifest->'sourceAssetCount') is distinct from true
+     or (case when jsonb_typeof(p_manifest->'sourceAssetCount') = 'number' then (p_manifest->>'sourceAssetCount')::numeric end) is distinct from 111
+     or not (p_manifest ? 'derivativeAssetCount')
+     or public.oasis_positive_integer_json_number(p_manifest->'derivativeAssetCount') is distinct from true
+     or (case when jsonb_typeof(p_manifest->'derivativeAssetCount') = 'number' then (p_manifest->>'derivativeAssetCount')::numeric end) is distinct from 111
+     or not (p_manifest ? 'sourceAssetBytes')
+     or public.oasis_positive_integer_json_number(p_manifest->'sourceAssetBytes') is distinct from true
+     or not (p_manifest ? 'derivativeAssetBytes')
+     or public.oasis_positive_integer_json_number(p_manifest->'derivativeAssetBytes') is distinct from true then
     raise exception 'Oasis publication requires exactly 111 mapped media assets and complete byte totals.';
   end if;
-  if jsonb_typeof(p_manifest->'entries') <> 'array' or jsonb_array_length(p_manifest->'entries') <> 111 then raise exception 'Oasis manifest requires exactly 111 entries.'; end if;
+  if not (p_manifest ? 'entries') or jsonb_typeof(p_manifest->'entries') is distinct from 'array' or jsonb_array_length(p_manifest->'entries') <> 111 then raise exception 'Oasis manifest requires exactly 111 entries.'; end if;
   if (select count(distinct entry->>'privateSourceFilename') from jsonb_array_elements(p_manifest->'entries') entry) <> 111 then raise exception 'Oasis private-source identities must be complete and unique.'; end if;
   if (select count(distinct entry->>'publicDerivativePath') from jsonb_array_elements(p_manifest->'entries') entry) <> 111 then raise exception 'Oasis derivative paths must be complete and unique.'; end if;
   if exists (
     select 1 from jsonb_array_elements(p_manifest->'entries') entry
-    where jsonb_typeof(entry) <> 'object'
+    where jsonb_typeof(entry) is distinct from 'object'
+      or not (entry ?& array[
+        'recordId', 'privateSourceFilename', 'sourceChecksum', 'publicDerivativePath',
+        'privateDerivativePath', 'derivativeChecksum', 'sourceBytes', 'derivativeBytes',
+        'width', 'height', 'mediaRole', 'levelVariant', 'altText'
+      ])
       or coalesce(entry->>'recordId', '') !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'
       or coalesce(entry->>'privateSourceFilename', '') = ''
       or coalesce(entry->>'sourceChecksum', '') !~ '^[0-9a-f]{64}$'
       or coalesce(entry->>'derivativeChecksum', '') !~ '^[0-9a-f]{64}$'
       or coalesce(entry->>'publicDerivativePath', '') !~ '^media/oasis-island/[a-z0-9-]+/(catalogue|level-[0-9]+)(-variant-[0-9]+)?[.]webp$'
       or entry->>'publicDerivativePath' not like 'media/oasis-island/' || entry->>'recordId' || '/%'
-      or entry->>'privateDerivativePath' <> 'fixtures/oasis-001a-publication/' || entry->>'publicDerivativePath'
-      or jsonb_typeof(entry->'sourceBytes') <> 'number' or (entry->>'sourceBytes')::numeric <= 0
-      or jsonb_typeof(entry->'derivativeBytes') <> 'number' or (entry->>'derivativeBytes')::numeric <= 0
-      or jsonb_typeof(entry->'width') <> 'number' or (entry->>'width')::numeric <= 0 or (entry->>'width')::numeric <> trunc((entry->>'width')::numeric)
-      or jsonb_typeof(entry->'height') <> 'number' or (entry->>'height')::numeric <= 0 or (entry->>'height')::numeric <> trunc((entry->>'height')::numeric)
+      or entry->>'privateDerivativePath' is distinct from 'fixtures/oasis-001a-publication/' || entry->>'publicDerivativePath'
+      or not (entry ? 'sourceBytes') or public.oasis_positive_integer_json_number(entry->'sourceBytes') is distinct from true
+      or not (entry ? 'derivativeBytes') or public.oasis_positive_integer_json_number(entry->'derivativeBytes') is distinct from true
+      or not (entry ? 'width') or public.oasis_positive_integer_json_number(entry->'width') is distinct from true
+      or not (entry ? 'height') or public.oasis_positive_integer_json_number(entry->'height') is distinct from true
       or entry->>'mediaRole' not in ('catalogue', 'level')
       or (entry->>'mediaRole' = 'catalogue' and jsonb_typeof(entry->'levelVariant') <> 'null')
       or (entry->>'mediaRole' = 'level' and (jsonb_typeof(entry->'levelVariant') <> 'number' or (entry->>'levelVariant')::numeric <= 0 or (entry->>'levelVariant')::numeric <> trunc((entry->>'levelVariant')::numeric)))
       or coalesce(entry->>'altText', '') = ''
   ) then raise exception 'Oasis manifest entry metadata is incomplete or invalid.'; end if;
-  if jsonb_typeof(p_manifest->'missingArtworkRecordIds') <> 'array'
+  if (p_manifest->>'sourceAssetBytes')::numeric is distinct from (
+       select sum((entry->>'sourceBytes')::numeric) from jsonb_array_elements(p_manifest->'entries') entry
+     ) or (p_manifest->>'derivativeAssetBytes')::numeric is distinct from (
+       select sum((entry->>'derivativeBytes')::numeric) from jsonb_array_elements(p_manifest->'entries') entry
+     ) then
+    raise exception 'Oasis manifest byte totals do not match its entries.';
+  end if;
+  if not (p_manifest ? 'missingArtworkRecordIds') or jsonb_typeof(p_manifest->'missingArtworkRecordIds') is distinct from 'array'
      or jsonb_array_length(p_manifest->'missingArtworkRecordIds') <> 6
      or (select count(distinct value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> 6
      or (select array_agg(value order by value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> expected_missing_ids then
     raise exception 'Oasis missing-artwork IDs do not match the six approved records.';
   end if;
-  if jsonb_typeof(p_manifest->'placeholder') <> 'object'
-     or p_manifest#>>'{placeholder,publicDerivativePath}' <> 'media/oasis-island/shared/artwork-unavailable.webp'
-     or p_manifest#>>'{placeholder,privateDerivativePath}' <> 'fixtures/oasis-001a-publication/media/oasis-island/shared/artwork-unavailable.webp'
+  if not (p_manifest ? 'placeholder') or jsonb_typeof(p_manifest->'placeholder') is distinct from 'object'
+     or not ((p_manifest->'placeholder') ?& array[
+       'publicDerivativePath', 'privateDerivativePath', 'derivativeChecksum',
+       'derivativeBytes', 'width', 'height', 'altText'
+     ])
+     or p_manifest#>>'{placeholder,publicDerivativePath}' is distinct from 'media/oasis-island/shared/artwork-unavailable.webp'
+     or p_manifest#>>'{placeholder,privateDerivativePath}' is distinct from 'fixtures/oasis-001a-publication/media/oasis-island/shared/artwork-unavailable.webp'
      or coalesce(p_manifest#>>'{placeholder,derivativeChecksum}', '') !~ '^[0-9a-f]{64}$'
-     or jsonb_typeof(p_manifest#>'{placeholder,derivativeBytes}') <> 'number' or (p_manifest#>>'{placeholder,derivativeBytes}')::numeric <= 0
-     or jsonb_typeof(p_manifest#>'{placeholder,width}') <> 'number' or (p_manifest#>>'{placeholder,width}')::numeric <= 0
-     or jsonb_typeof(p_manifest#>'{placeholder,height}') <> 'number' or (p_manifest#>>'{placeholder,height}')::numeric <= 0
+     or not ((p_manifest->'placeholder') ? 'derivativeBytes') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,derivativeBytes}') is distinct from true
+     or not ((p_manifest->'placeholder') ? 'width') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,width}') is distinct from true
+     or not ((p_manifest->'placeholder') ? 'height') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,height}') is distinct from true
      or coalesce(p_manifest#>>'{placeholder,altText}', '') = '' then
     raise exception 'Oasis placeholder metadata is incomplete or invalid.';
   end if;
-  if jsonb_typeof(p_records) <> 'array' or jsonb_array_length(p_records) <> 55 then raise exception 'Oasis publication requires exactly 55 public records.'; end if;
+  if jsonb_typeof(p_records) is distinct from 'array' or jsonb_array_length(p_records) <> 55 then raise exception 'Oasis publication requires exactly 55 public records.'; end if;
   if (select count(distinct r->>'id') from jsonb_array_elements(p_records) r) <> 55 then raise exception 'Oasis record IDs must be complete and unique.'; end if;
   if exists (
     select 1 from jsonb_array_elements(p_records) r
@@ -475,6 +584,9 @@ begin
         and media->>'url' = '/' || p_manifest#>>'{placeholder,publicDerivativePath}'
     )
   ) then raise exception 'Every approved missing-artwork record requires the approved placeholder.'; end if;
+  -- This computes and validates oasis-record-content-sha256-v2 before locking;
+  -- oasis_stable_json rejects every out-of-contract number recursively.
+  submitted_content_hash := public.oasis_record_content_sha256(p_records);
   perform pg_advisory_xact_lock(hashtext('forge-oasis-publication'));
   select versions.published_at into current_publication_timestamp
     from public.oasis_publication_current current_publication
@@ -486,8 +598,6 @@ begin
     publication_timestamp := current_publication_timestamp + interval '1 millisecond';
   end if;
   publication_timestamp_text := to_char(publication_timestamp at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
-  submitted_content_hash := public.oasis_record_content_sha256(p_records);
-
   -- A rollback is a new immutable publication derived from the referenced stored
   -- snapshot. Caller-supplied content is accepted only when it exactly reproduces
   -- that snapshot after removing the four new-publication identity fields.

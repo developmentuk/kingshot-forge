@@ -15,7 +15,12 @@ import {
   hashOasisManifest,
   hashOasisRecordContent,
   hashOasisSourceFingerprint,
+  canonicalOasisNumber,
+  OASIS_CANONICAL_JSON_VERSION,
+  OASIS_CANONICAL_NUMBER_DECIMAL_PLACES,
+  OASIS_CANONICAL_NUMBER_MAX_ABS,
   OASIS_MEDIA_MANIFEST_SCHEMA_VERSION,
+  OASIS_RECORD_CONTENT_HASH_VERSION,
   OASIS_SOURCE_FINGERPRINT_VERSION,
   OASIS_FORBIDDEN_PUBLIC_FIELDS,
   OASIS_PUBLIC_RECORD_ALLOW_LIST,
@@ -33,6 +38,7 @@ const source = JSON.parse(read('server/data-engine/sources/kingshot_oasis_island
 const manifest = JSON.parse(read('server/oasis-publication/oasis-media-manifest.json'))
 const fixture = JSON.parse(read('fixtures/oasis-001a-publication/oasis-publication.fixture.json'))
 const hashFixture = JSON.parse(read('fixtures/oasis-001a-publication/oasis-manifest-hash.fixture.json'))
+const canonicalNumberFixture = JSON.parse(read('fixtures/oasis-001a-publication/oasis-canonical-number.fixture.json'))
 const retiredIslandRoutePngSha256 = '482ba56cae6ca1fdf243c85c8c199965f10a901efaad460e8084e89792510922'
 
 const built = buildOasisPublicDataset({
@@ -165,6 +171,30 @@ assertAdversarialRejection('duplicate media mapping', ({ records }) => { records
 assertAdversarialRejection('extra media mapping', ({ records }) => { records[mappedRecordIndex].media.push({ ...structuredClone(records[mappedRecordIndex].media[0]), alt: 'Extra' }) }, /public media does not match/u)
 assertAdversarialRejection('publication identity mismatch', ({ records }) => { records[0].publicationId = 'different-publication' }, /publication identity conflicts/u)
 
+const byteMutationCases = [
+  ['missing', (target, field) => { delete target[field] }],
+  ['JSON null', (target, field) => { target[field] = null }],
+  ['wrong type', (target, field) => { target[field] = '100' }],
+  ['zero', (target, field) => { target[field] = 0 }],
+  ['negative', (target, field) => { target[field] = -1 }],
+  ['fractional', (target, field) => { target[field] = 1.5 }],
+]
+for (const field of ['sourceAssetBytes', 'derivativeAssetBytes']) {
+  for (const [condition, mutate] of byteMutationCases) {
+    assertAdversarialRejection(`top-level ${field} ${condition}`, ({ manifest: value }) => mutate(value, field), /positive integer|byte totals/u)
+  }
+  assertAdversarialRejection(`top-level ${field} inconsistent total`, ({ manifest: value }) => { value[field] += 1 }, /byte totals do not match/u)
+}
+for (const field of ['sourceBytes', 'derivativeBytes']) {
+  for (const [condition, mutate] of byteMutationCases) {
+    assertAdversarialRejection(`entry ${field} ${condition}`, ({ manifest: value }) => mutate(value.entries[0], field), /entry metadata/u)
+  }
+  assertAdversarialRejection(`entry ${field} inconsistent aggregate`, ({ manifest: value }) => { value.entries[0][field] += 1 }, /byte totals do not match/u)
+}
+for (const [condition, mutate] of byteMutationCases) {
+  assertAdversarialRejection(`placeholder derivativeBytes ${condition}`, ({ manifest: value }) => mutate(value.placeholder, 'derivativeBytes'), /placeholder metadata/u)
+}
+
 const levelRecordIndex = built.records.findIndex((record) => record.levels.some((item) => item.bonuses.length > 0))
 const footprintRecordIndex = built.records.findIndex((record) => record.footprint !== null)
 const unlockRecordIndex = built.records.findIndex((record) => record.unlock !== null)
@@ -250,6 +280,26 @@ assert.doesNotMatch(read('src/main.tsx'), /oasis-acceptance/u)
 assert.doesNotMatch(read('src/App.tsx'), /island-background-draft/u)
 assert.equal(stableOasisJson(hashFixture.input), hashFixture.stableJson)
 assert.equal(createHash('sha256').update(hashFixture.stableJson).digest('hex'), hashFixture.sha256)
+assert.equal(canonicalNumberFixture.canonicalJsonVersion, OASIS_CANONICAL_JSON_VERSION)
+assert.equal(canonicalNumberFixture.recordContentHashVersion, OASIS_RECORD_CONTENT_HASH_VERSION)
+assert.equal(canonicalNumberFixture.maximumAbsoluteValue, OASIS_CANONICAL_NUMBER_MAX_ABS)
+assert.equal(canonicalNumberFixture.decimalPlaces, OASIS_CANONICAL_NUMBER_DECIMAL_PLACES)
+for (const vector of canonicalNumberFixture.accepted) {
+  assert.equal(canonicalOasisNumber(vector.input), vector.canonical, vector.name)
+  assert.doesNotMatch(vector.canonical, /[eE]/u, `${vector.name} must not use exponent notation`)
+}
+for (const vector of canonicalNumberFixture.rejected) {
+  assert.throws(() => canonicalOasisNumber(vector.input), /exceed|magnitude|decimal places/u, vector.name)
+}
+assert.throws(() => canonicalOasisNumber(Number.NaN), /finite/u, 'NaN rejection')
+assert.throws(() => canonicalOasisNumber(Number.POSITIVE_INFINITY), /finite/u, 'positive infinity rejection')
+assert.throws(() => canonicalOasisNumber(Number.NEGATIVE_INFINITY), /finite/u, 'negative infinity rejection')
+assert.equal(stableOasisJson(canonicalNumberFixture.nestedInput), canonicalNumberFixture.nestedStableJson)
+assert.equal(hashOasisRecordContent(canonicalNumberFixture.recordHashRecords), canonicalNumberFixture.recordContentSha256)
+const canonicalRecordPayload = canonicalNumberFixture.recordHashRecords
+  .map(({ publicationId: _publicationId, publicationVersion: _publicationVersion, publishedAt: _publishedAt, updatedAt: _updatedAt, ...record }) => record)
+  .sort((left, right) => left.id.localeCompare(right.id))
+assert.equal(stableOasisJson(canonicalRecordPayload), canonicalNumberFixture.recordHashCanonicalJson)
 
 const sourceFingerprint = () => hashOasisSourceFingerprint({ records: source.buildings, media: manifest.entries })
 const assertSourceFingerprintChanges = (name, mutate) => {
@@ -298,10 +348,10 @@ for (const required of [
 ]) assert.match(migration, new RegExp(required.replace(/[()]/gu, '\\$&'), 'u'))
 assert.doesNotMatch(migration, /delete from public\.oasis_publication_versions|update public\.oasis_publication_versions/iu)
 for (const requiredBoundary of [
-  "jsonb_typeof(p_manifest) <> 'object'",
-  "p_manifest->>'schemaVersion' <> 'oasis-media-manifest-v2'",
-  "p_manifest->>'sourceFingerprintVersion' <> 'oasis-source-fingerprint-v2'",
-  "p_manifest->>'sourceFingerprint' <> p_source_fingerprint",
+  "jsonb_typeof(p_manifest) is distinct from 'object'",
+  "p_manifest->>'schemaVersion' is distinct from 'oasis-media-manifest-v2'",
+  "p_manifest->>'sourceFingerprintVersion' is distinct from 'oasis-source-fingerprint-v2'",
+  "p_manifest->>'sourceFingerprint' is distinct from p_source_fingerprint",
   "jsonb_array_length(p_manifest->'entries') <> 111",
   "count(distinct entry->>'privateSourceFilename')",
   "count(distinct entry->>'publicDerivativePath')",
@@ -331,6 +381,18 @@ for (const requiredBoundary of [
   "'rollbackSourceRecordContentHash'",
   'record_content_hash text not null',
   'public.oasis_record_content_sha256(p_records)',
+  "'oasis-record-content-sha256-v2' || chr(10)",
+  'public.oasis_canonical_number',
+  'abs(p_value) > 100000000',
+  "p_value::text in ('NaN', 'Infinity', '-Infinity')",
+  'p_value <> trunc(p_value, 7)',
+  'public.oasis_positive_integer_json_number',
+  "not (p_manifest ? 'sourceAssetBytes')",
+  "not (p_manifest ? 'derivativeAssetBytes')",
+  "not (entry ? 'sourceBytes')",
+  "not (entry ? 'derivativeBytes')",
+  "not ((p_manifest->'placeholder') ? 'derivativeBytes')",
+  'Oasis manifest byte totals do not match its entries.',
   'existing.record_content_hash <> submitted_content_hash',
   "'recordContentHash', submitted_content_hash",
   "'publishedAt', publication_timestamp_text, 'updatedAt', publication_timestamp_text",
@@ -344,7 +406,14 @@ const adversarialSqlCases = new Map([
   ['duplicate derivative paths', ["count(distinct entry->>'publicDerivativePath')"]],
   ['duplicate private identities', ["count(distinct entry->>'privateSourceFilename')"]],
   ['incorrect manifest hash', ['public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash']],
-  ['mismatched source fingerprint', ["p_manifest->>'sourceFingerprint' <> p_source_fingerprint"]],
+  ['mismatched source fingerprint', ["p_manifest->>'sourceFingerprint' is distinct from p_source_fingerprint"]],
+  ['top-level sourceAssetBytes missing or null', ["not (p_manifest ? 'sourceAssetBytes')", "public.oasis_positive_integer_json_number(p_manifest->'sourceAssetBytes') is distinct from true"]],
+  ['top-level derivativeAssetBytes missing or null', ["not (p_manifest ? 'derivativeAssetBytes')", "public.oasis_positive_integer_json_number(p_manifest->'derivativeAssetBytes') is distinct from true"]],
+  ['entry sourceBytes missing or null', ["not (entry ? 'sourceBytes')", "public.oasis_positive_integer_json_number(entry->'sourceBytes') is distinct from true"]],
+  ['entry derivativeBytes missing or null', ["not (entry ? 'derivativeBytes')", "public.oasis_positive_integer_json_number(entry->'derivativeBytes') is distinct from true"]],
+  ['placeholder derivativeBytes missing or null', ["not ((p_manifest->'placeholder') ? 'derivativeBytes')", "public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,derivativeBytes}') is distinct from true"]],
+  ['byte values wrong zero negative or fractional', ['public.oasis_positive_integer_json_number', 'Oasis manifest entry metadata is incomplete or invalid.']],
+  ['inconsistent byte totals', ["sum((entry->>'sourceBytes')::numeric)", "sum((entry->>'derivativeBytes')::numeric)", 'Oasis manifest byte totals do not match its entries.']],
   ['wrong placeholder list', ['expected_missing_ids', 'array_agg(value order by value)']],
   ['forbidden nested sourceText', ["'sourceText'", 'public.oasis_json_has_forbidden_key(r)']],
   ['forbidden nested verification', ["'verification'", 'public.oasis_json_has_forbidden_key(r)']],
@@ -403,6 +472,8 @@ assert.doesNotMatch(migration, /statement_timestamp\(\)|transaction_timestamp\(\
 const publicationLockIndex = migration.indexOf("perform pg_advisory_xact_lock(hashtext('forge-oasis-publication'))")
 const postLockClockIndex = migration.indexOf("publication_timestamp := date_trunc('milliseconds', clock_timestamp())")
 assert.ok(publicationLockIndex > 0 && postLockClockIndex > publicationLockIndex)
+assert.ok(migration.indexOf('submitted_content_hash := public.oasis_record_content_sha256(p_records)') < publicationLockIndex)
+assert.ok(migration.indexOf('Oasis manifest byte totals do not match its entries.') < publicationLockIndex)
 assert.equal(migration.match(/clock_timestamp\(\)/gu)?.length, 1)
 assert.ok(migration.indexOf('select versions.published_at into current_publication_timestamp') > publicationLockIndex)
 assert.ok(migration.indexOf("publication_timestamp := current_publication_timestamp + interval '1 millisecond'") > postLockClockIndex)

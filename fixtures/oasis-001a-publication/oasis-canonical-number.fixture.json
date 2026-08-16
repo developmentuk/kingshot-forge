@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "oasis-canonical-number-fixture-v1",
+  "canonicalJsonVersion": "oasis-canonical-json-v1",
+  "recordContentHashVersion": "oasis-record-content-sha256-v2",
+  "maximumAbsoluteValue": 100000000,
+  "decimalPlaces": 7,
+  "accepted": [
+    { "name": "zero", "input": 0, "sqlNumeric": "0", "canonical": "0" },
+    { "name": "negative zero", "input": -0, "sqlNumeric": "-0.0", "canonical": "0" },
+    { "name": "positive integer", "input": 42, "sqlNumeric": "00042", "canonical": "42" },
+    { "name": "negative integer", "input": -42, "sqlNumeric": "-00042", "canonical": "-42" },
+    { "name": "ordinary decimal", "input": 12.34, "sqlNumeric": "12.3400", "canonical": "12.34" },
+    { "name": "redundant decimal zeros", "input": 1.23, "sqlNumeric": "0001.2300000", "canonical": "1.23" },
+    { "name": "positive one e minus seven", "input": 1e-7, "sqlNumeric": "0.0000001", "canonical": "0.0000001" },
+    { "name": "negative one e minus seven", "input": -1e-7, "sqlNumeric": "-0.0000001", "canonical": "-0.0000001" },
+    { "name": "at JavaScript lower exponent threshold", "input": 0.000001, "sqlNumeric": "0.0000010", "canonical": "0.000001" },
+    { "name": "below JavaScript lower exponent threshold", "input": 1e-7, "sqlNumeric": "0.0000001", "canonical": "0.0000001" },
+    { "name": "maximum positive magnitude", "input": 100000000, "sqlNumeric": "100000000.0000000", "canonical": "100000000" },
+    { "name": "maximum negative magnitude", "input": -100000000, "sqlNumeric": "-100000000.0000000", "canonical": "-100000000" },
+    { "name": "maximum magnitude and precision", "input": 99999999.9999999, "sqlNumeric": "99999999.9999999", "canonical": "99999999.9999999" }
+  ],
+  "rejected": [
+    { "name": "excessive positive precision", "input": 1e-8, "sqlNumeric": "0.00000001" },
+    { "name": "excessive negative precision", "input": -1e-8, "sqlNumeric": "-0.00000001" },
+    { "name": "positive out of range", "input": 100000000.0000001, "sqlNumeric": "100000000.0000001" },
+    { "name": "negative out of range", "input": -100000000.0000001, "sqlNumeric": "-100000000.0000001" },
+    { "name": "below JavaScript upper exponent threshold", "input": 100000000000000000000, "sqlNumeric": "100000000000000000000" },
+    { "name": "at JavaScript upper exponent threshold", "input": 1e21, "sqlNumeric": "1000000000000000000000" }
+  ],
+  "nestedInput": {
+    "z": [-0, 1e-7, -1e-7, 100000000],
+    "a": { "decimal": 12.34, "integer": -42 }
+  },
+  "nestedStableJson": "{\"a\":{\"decimal\":12.34,\"integer\":-42},\"z\":[0,0.0000001,-0.0000001,100000000]}",
+  "recordHashRecords": [
+    { "id": "z-record", "value": -1e-7, "publicationId": "ignored", "publicationVersion": 9, "publishedAt": "ignored", "updatedAt": "ignored" },
+    { "id": "a-record", "value": { "whole": 42, "tiny": 1e-7 } }
+  ],
+  "recordHashCanonicalJson": "[{\"id\":\"a-record\",\"value\":{\"tiny\":0.0000001,\"whole\":42}},{\"id\":\"z-record\",\"value\":-0.0000001}]",
+  "recordContentSha256": "f1b1d745445d6c18663fac523ef05fae7ed6b3a9e67d4048ea9052dfca67298f"
+}
