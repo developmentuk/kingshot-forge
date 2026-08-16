@@ -7,12 +7,16 @@ import { execFileSync } from 'node:child_process'
 
 import { loadPublishedOasisIslandDataset } from '../server/data-engine/loadPublishedOasisIslandDataset.ts'
 import {
+  assertOasisRollbackCandidateMatchesSnapshot,
   assertOasisPublicRecord,
   assertOasisPublicationPayload,
   buildOasisPublicDataset,
+  deriveOasisRollbackRecords,
   hashOasisManifest,
   OASIS_FORBIDDEN_PUBLIC_FIELDS,
   OASIS_PUBLIC_RECORD_ALLOW_LIST,
+  OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS,
+  oasisPublicTrustLabel,
   stableOasisJson,
 } from '../server/oasis-publication/publicProjection.ts'
 import { buildOasisSearchRecords } from '../server/oasis-publication/searchAdapter.ts'
@@ -51,6 +55,50 @@ assertOasisPublicationPayload({
   manifest,
   records: built.records,
 })
+
+for (const record of source.buildings) {
+  assert.equal(oasisPublicTrustLabel(record), OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS[record.verification.status])
+}
+assert.equal(built.records.find((record) => record.id === 'skating-rink').trustLabel, 'Partial source coverage')
+assert.notEqual(built.records.find((record) => record.id === 'skating-rink').trustLabel, 'Owner verified in-game')
+assert.equal(oasisPublicTrustLabel({ id: 'owner-proof', verification: { status: 'owner_direct_ingame_verified' } }), 'Owner verified in-game')
+assert.throws(() => oasisPublicTrustLabel({ id: 'missing-status' }), /unsupported verification status/u)
+assert.throws(() => oasisPublicTrustLabel({ id: 'invented-status', verification: { status: 'invented' } }), /unsupported verification status/u)
+for (const [index, record] of built.records.entries()) {
+  if (record.trustLabel === 'Owner verified in-game') assert.equal(source.buildings[index].verification.status, 'owner_direct_ingame_verified')
+}
+
+const immutableSource = {
+  dataset: built.dataset,
+  publicationId: built.publicationId,
+  sourceFingerprint: manifest.sourceFingerprint,
+  manifestHash: hashOasisManifest(manifest),
+  manifest,
+  records: built.records,
+}
+const rollbackIdentity = {
+  publicationId: 'oasis-rollback-forward-2',
+  publicationVersion: 2,
+  publishedAt: '2026-08-16T20:00:00.000Z',
+  updatedAt: '2026-08-16T20:00:00.000Z',
+}
+const rollbackRecords = deriveOasisRollbackRecords(immutableSource, rollbackIdentity)
+const rollbackCandidate = { ...immutableSource, publicationId: rollbackIdentity.publicationId, records: rollbackRecords }
+assertOasisRollbackCandidateMatchesSnapshot(rollbackCandidate, immutableSource)
+const withoutPublicationIdentity = (record) => {
+  const content = { ...record }
+  for (const field of ['publicationId', 'publicationVersion', 'publishedAt', 'updatedAt']) delete content[field]
+  return content
+}
+assert.deepEqual(
+  rollbackRecords.map(withoutPublicationIdentity),
+  built.records.map(withoutPublicationIdentity),
+)
+assert.equal(rollbackRecords.every((record) => record.publicationId === rollbackIdentity.publicationId && record.publicationVersion === 2), true)
+assert.throws(() => assertOasisRollbackCandidateMatchesSnapshot(rollbackCandidate, null), /does not exist/u)
+assert.throws(() => assertOasisRollbackCandidateMatchesSnapshot({ ...rollbackCandidate, dataset: 'another-dataset' }, immutableSource), /another dataset/u)
+assert.throws(() => assertOasisRollbackCandidateMatchesSnapshot({ ...rollbackCandidate, records: rollbackRecords.map((record, index) => index ? record : { ...record, name: 'Altered' }) }, immutableSource), /does not match/u)
+assert.throws(() => deriveOasisRollbackRecords({ ...immutableSource, dataset: 'another-dataset' }, rollbackIdentity), /another dataset/u)
 
 function assertAdversarialRejection(name, mutate, expected) {
   const candidateManifest = structuredClone(manifest)
@@ -136,6 +184,7 @@ for (const required of [
   'oasis_publication_audits', 'oasis_publication_search_refreshes', 'idempotency_key text not null unique',
   'pg_advisory_xact_lock', 'enable row level security', 'from public, anon, authenticated',
   'prevent_oasis_publication_history_mutation', 'rollback_published', 'on conflict (singleton) do update',
+  "dataset_id text not null default 'oasis-island'", 'allowed_trust_labels',
 ]) assert.match(migration, new RegExp(required.replace(/[()]/gu, '\\$&'), 'u'))
 assert.doesNotMatch(migration, /delete from public\.oasis_publication_versions|update public\.oasis_publication_versions/iu)
 for (const requiredBoundary of [
@@ -160,6 +209,12 @@ for (const requiredBoundary of [
   'pg_catalog.sha256',
   hashFixture.stableJson,
   hashFixture.sha256,
+  'Rollback candidate does not match the referenced immutable publication.',
+  "public_record - array['publicationId', 'publicationVersion', 'publishedAt', 'updatedAt']",
+  "rollback_source.dataset_id <> 'oasis-island'",
+  'existing.rollback_of_publication_id is distinct from p_rollback_of_publication_id',
+  "p_records\n      from public.oasis_publication_records",
+  "'rollbackSourceManifestHash'",
 ]) assert.ok(migration.includes(requiredBoundary), `Missing SQL publication guard: ${requiredBoundary}`)
 
 const adversarialSqlCases = new Map([
@@ -185,6 +240,9 @@ for (const [name, guards] of adversarialSqlCases) {
 }
 assert.ok(pointerMutationIndex > migration.indexOf('Oasis record publication identity conflicts with the publication being created.'))
 assert.ok(pointerMutationIndex > migration.indexOf('Oasis public media does not match the approved manifest.'))
+assert.ok(pointerMutationIndex > migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))
+assert.ok(migration.indexOf('select * into rollback_source') < migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))
+assert.ok(migration.indexOf('Rollback candidate does not match the referenced immutable publication.') < migration.indexOf('insert into public.oasis_publication_versions'))
 
 const productionBuild = mkdtempSync(join(tmpdir(), 'oasis-production-build-'))
 try {

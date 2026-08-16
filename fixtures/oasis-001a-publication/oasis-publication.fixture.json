@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "oasis-public-projection-v1",
+  "schemaVersion": "oasis-public-projection-v2",
   "dataset": "oasis-island",
   "status": "current_published",
   "publicationId": "development-fixture-oasis-001a-pub-phase-1",
@@ -12,7 +12,7 @@
   "mediaCount": 111,
   "records": [
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "fountain-of-life",
       "name": "Fountain of Life",
       "aliases": [],
@@ -205,7 +205,7 @@
       "unlock": null,
       "upgrade": null,
       "maxProsperity": null,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Mixed official and community evidence",
       "media": [
         {
           "url": "/media/oasis-island/shared/artwork-unavailable.webp",
@@ -224,7 +224,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "reservoir",
       "name": "Reservoir",
       "aliases": [
@@ -337,7 +337,7 @@
       "unlock": null,
       "upgrade": null,
       "maxProsperity": null,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Official mechanics; values partial",
       "media": [
         {
           "url": "/media/oasis-island/shared/artwork-unavailable.webp",
@@ -356,7 +356,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "purifier",
       "name": "Purifier",
       "aliases": [],
@@ -372,7 +372,7 @@
       "unlock": null,
       "upgrade": null,
       "maxProsperity": null,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Officially verified",
       "media": [
         {
           "url": "/media/oasis-island/shared/artwork-unavailable.webp",
@@ -391,7 +391,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "golden-sunset",
       "name": "Golden Sunset",
       "aliases": [
@@ -418,7 +418,7 @@
         "officiallyVerified": null
       },
       "maxProsperity": null,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Official mechanics; values partial",
       "media": [
         {
           "url": "/media/oasis-island/shared/artwork-unavailable.webp",
@@ -437,7 +437,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "skating-rink",
       "name": "Skating Rink",
       "aliases": [],
@@ -460,7 +460,7 @@
       "unlock": null,
       "upgrade": null,
       "maxProsperity": null,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Partial source coverage",
       "media": [
         {
           "url": "/media/oasis-island/shared/artwork-unavailable.webp",
@@ -479,7 +479,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "braveshrine",
       "name": "Braveshrine",
       "aliases": [],
@@ -672,7 +672,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 12000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/braveshrine/level-1.webp",
@@ -707,7 +707,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "observation-deck",
       "name": "Observation Deck",
       "aliases": [],
@@ -900,7 +900,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/observation-deck/level-1.webp",
@@ -935,7 +935,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "amphitheater",
       "name": "Amphitheater",
       "aliases": [],
@@ -1128,7 +1128,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/amphitheater/level-1.webp",
@@ -1163,7 +1163,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "bustling-tavern",
       "name": "Bustling Tavern",
       "aliases": [],
@@ -1356,7 +1356,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/bustling-tavern/level-1.webp",
@@ -1391,7 +1391,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "speaker-hall",
       "name": "Speaker Hall",
       "aliases": [],
@@ -1584,7 +1584,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/speaker-hall/level-1.webp",
@@ -1619,7 +1619,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "floating-market",
       "name": "Floating Market",
       "aliases": [],
@@ -1812,7 +1812,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/floating-market/level-1.webp",
@@ -1847,7 +1847,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "windmill",
       "name": "Windmill",
       "aliases": [],
@@ -1960,7 +1960,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/windmill/catalogue.webp",
@@ -1979,7 +1979,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "gentle-grove",
       "name": "Gentle Grove",
       "aliases": [],
@@ -2092,7 +2092,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/gentle-grove/catalogue.webp",
@@ -2111,7 +2111,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "ranger-cabin",
       "name": "Ranger Cabin",
       "aliases": [],
@@ -2224,7 +2224,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/ranger-cabin/catalogue.webp",
@@ -2243,7 +2243,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "hearth-grill",
       "name": "Hearth Grill",
       "aliases": [],
@@ -2356,7 +2356,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/hearth-grill/catalogue.webp",
@@ -2375,7 +2375,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "construction-hut",
       "name": "Construction Hut",
       "aliases": [],
@@ -2488,7 +2488,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Community corroborated",
       "media": [
         {
           "url": "/media/oasis-island/shared/artwork-unavailable.webp",
@@ -2507,7 +2507,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "ssilor-s-cottage",
       "name": "Ssilor’s Cottage",
       "aliases": [
@@ -2622,7 +2622,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/ssilor-s-cottage/catalogue.webp",
@@ -2641,7 +2641,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "fishing-hut",
       "name": "Fishing Hut",
       "aliases": [],
@@ -2754,7 +2754,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/fishing-hut/catalogue.webp",
@@ -2773,7 +2773,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "pro-ball-trainer",
       "name": "Pro Ball Trainer",
       "aliases": [],
@@ -2966,7 +2966,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/pro-ball-trainer/level-1.webp",
@@ -3001,7 +3001,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "eggchanted",
       "name": "Eggchanted",
       "aliases": [],
@@ -3194,7 +3194,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/eggchanted/level-1.webp",
@@ -3229,7 +3229,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "journey-of-the-heart",
       "name": "Journey of the Heart",
       "aliases": [],
@@ -3422,7 +3422,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/journey-of-the-heart/level-1.webp",
@@ -3457,7 +3457,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "new-year-greeting",
       "name": "New Year Greeting",
       "aliases": [],
@@ -3650,7 +3650,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/new-year-greeting/level-1.webp",
@@ -3685,7 +3685,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "lantern-garden",
       "name": "Lantern Garden",
       "aliases": [],
@@ -3878,7 +3878,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/lantern-garden/level-1.webp",
@@ -3913,7 +3913,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "court-of-knowledge",
       "name": "Court of Knowledge",
       "aliases": [],
@@ -4266,7 +4266,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 20000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Community corroborated",
       "media": [
         {
           "url": "/media/oasis-island/court-of-knowledge/level-1.webp",
@@ -4317,7 +4317,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "horn-of-victory",
       "name": "Horn of Victory",
       "aliases": [],
@@ -4510,7 +4510,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/horn-of-victory/level-1.webp",
@@ -4545,7 +4545,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "merchant-caravan",
       "name": "Merchant Caravan",
       "aliases": [],
@@ -4738,7 +4738,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/merchant-caravan/level-1.webp",
@@ -4773,7 +4773,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "small-coliseum",
       "name": "Small Coliseum",
       "aliases": [],
@@ -4886,7 +4886,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/small-coliseum/catalogue.webp",
@@ -4905,7 +4905,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "brewery",
       "name": "Brewery",
       "aliases": [],
@@ -5014,7 +5014,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/brewery/catalogue.webp",
@@ -5033,7 +5033,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "bazaar-row",
       "name": "Bazaar Row",
       "aliases": [
@@ -5144,7 +5144,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/bazaar-row/catalogue.webp",
@@ -5163,7 +5163,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "blacksmith",
       "name": "Blacksmith",
       "aliases": [],
@@ -5272,7 +5272,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/blacksmith/catalogue.webp",
@@ -5291,7 +5291,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "deluxe-restaurant",
       "name": "Deluxe Restaurant",
       "aliases": [],
@@ -5400,7 +5400,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/deluxe-restaurant/catalogue.webp",
@@ -5419,7 +5419,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "ore-stow",
       "name": "Ore Stow",
       "aliases": [],
@@ -5532,7 +5532,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/ore-stow/catalogue.webp",
@@ -5551,7 +5551,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "halo-of-valor",
       "name": "Halo of Valor",
       "aliases": [],
@@ -5660,7 +5660,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/halo-of-valor/catalogue.webp",
@@ -5679,7 +5679,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "exquisite-crown",
       "name": "Exquisite Crown",
       "aliases": [],
@@ -5792,7 +5792,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/exquisite-crown/catalogue.webp",
@@ -5811,7 +5811,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "oasis-spring",
       "name": "Oasis Spring",
       "aliases": [],
@@ -5924,7 +5924,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Needs in-game verification",
       "media": [
         {
           "url": "/media/oasis-island/oasis-spring/catalogue.webp",
@@ -5943,7 +5943,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "conservatory",
       "name": "Conservatory",
       "aliases": [],
@@ -6056,7 +6056,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/conservatory/catalogue.webp",
@@ -6075,7 +6075,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "picnic-mat",
       "name": "Picnic Mat",
       "aliases": [],
@@ -6188,7 +6188,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 1000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/picnic-mat/catalogue.webp",
@@ -6207,7 +6207,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "goddess-of-glory",
       "name": "Goddess of Glory",
       "aliases": [],
@@ -6396,7 +6396,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/goddess-of-glory/level-1.webp",
@@ -6431,7 +6431,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "passing-of-the-sword",
       "name": "Passing of the Sword",
       "aliases": [],
@@ -6686,7 +6686,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/passing-of-the-sword/level-1.webp",
@@ -6721,7 +6721,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "mini-crucible",
       "name": "Mini Crucible",
       "aliases": [],
@@ -6910,7 +6910,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/mini-crucible/level-1.webp",
@@ -6945,7 +6945,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "dinosaur-fort",
       "name": "Dinosaur Fort",
       "aliases": [],
@@ -7134,7 +7134,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/dinosaur-fort/level-1.webp",
@@ -7169,7 +7169,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "lakeside-dream",
       "name": "Lakeside Dream",
       "aliases": [],
@@ -7358,7 +7358,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/lakeside-dream/level-1.webp",
@@ -7393,7 +7393,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "starstation",
       "name": "Starstation",
       "aliases": [],
@@ -7582,7 +7582,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/starstation/level-1.webp",
@@ -7617,7 +7617,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "sleeping-drakethrone",
       "name": "Sleeping Drakethrone",
       "aliases": [],
@@ -8004,7 +8004,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 50000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/sleeping-drakethrone/level-1.webp",
@@ -8039,7 +8039,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "dragon-sculpture",
       "name": "Dragon Sculpture",
       "aliases": [],
@@ -8228,7 +8228,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/dragon-sculpture/level-1.webp",
@@ -8263,7 +8263,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "ritual-altar",
       "name": "Ritual Altar",
       "aliases": [],
@@ -8452,7 +8452,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/ritual-altar/level-1.webp",
@@ -8487,7 +8487,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "jade-jubilation",
       "name": "Jade Jubilation",
       "aliases": [],
@@ -8676,7 +8676,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/jade-jubilation/level-1.webp",
@@ -8711,7 +8711,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "winter-rollercoaster",
       "name": "Winter Rollercoaster",
       "aliases": [],
@@ -8900,7 +8900,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/winter-rollercoaster/level-1.webp",
@@ -8935,7 +8935,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "autumn-canvas",
       "name": "Autumn Canvas",
       "aliases": [],
@@ -9124,7 +9124,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/autumn-canvas/level-1.webp",
@@ -9159,7 +9159,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "wicked-hut",
       "name": "Wicked Hut",
       "aliases": [],
@@ -9348,7 +9348,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/wicked-hut/level-1.webp",
@@ -9383,7 +9383,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "cheesy-perfection",
       "name": "Cheesy Perfection",
       "aliases": [],
@@ -9572,7 +9572,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/cheesy-perfection/level-1.webp",
@@ -9607,7 +9607,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "grizzly-statue",
       "name": "Grizzly Statue",
       "aliases": [],
@@ -9796,7 +9796,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/grizzly-statue/level-1.webp",
@@ -9831,7 +9831,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "lion-of-glory",
       "name": "Lion of Glory",
       "aliases": [],
@@ -10020,7 +10020,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 10000,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Community corroborated",
       "media": [
         {
           "url": "/media/oasis-island/lion-of-glory/level-1.webp",
@@ -10055,7 +10055,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "dinosaur-fossils",
       "name": "Dinosaur Fossils",
       "aliases": [],
@@ -10164,7 +10164,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Needs in-game verification",
       "media": [
         {
           "url": "/media/oasis-island/dinosaur-fossils/catalogue.webp",
@@ -10183,7 +10183,7 @@
       "status": "published"
     },
     {
-      "schemaVersion": "oasis-public-projection-v1",
+      "schemaVersion": "oasis-public-projection-v2",
       "id": "treasure-icicle",
       "name": "Treasure Icicle",
       "aliases": [],
@@ -10292,7 +10292,7 @@
         "officiallyVerified": "All decorations except Fountain of Life and Reservoir use Lv. 1 decorations as upgrade material. Exact copy quantities by target level are community-documented, not officially published."
       },
       "maxProsperity": 2500,
-      "trustLabel": "Owner verified in-game",
+      "trustLabel": "Source attachment extracted",
       "media": [
         {
           "url": "/media/oasis-island/treasure-icicle/catalogue.webp",

@@ -35,6 +35,15 @@ export type OasisBuilding = {
 }
 
 export type OasisPublicBonus = { label: string | null; stat: string | null; valuePct: number | null; effect: string | null }
+export type OasisPublicTrustLabel =
+  | 'Owner verified in-game'
+  | 'Officially verified'
+  | 'Mixed official and community evidence'
+  | 'Official mechanics; values partial'
+  | 'Source attachment extracted'
+  | 'Community corroborated'
+  | 'Partial source coverage'
+  | 'Needs in-game verification'
 export type OasisPublicLevel = {
   level: number | null
   prosperity: number | null
@@ -45,7 +54,7 @@ export type OasisPublicLevel = {
   exactOutputKnown: boolean | null
 }
 export type OasisPublishedBuilding = {
-  schemaVersion: 'oasis-public-projection-v1'
+  schemaVersion: 'oasis-public-projection-v2'
   id: string
   name: string
   aliases: string[]
@@ -61,14 +70,14 @@ export type OasisPublishedBuilding = {
   unlock: { requirement: string | null; initialBlueprintPurchase: string | null } | null
   upgrade: { currency: string | null; exchange: string | null; generalBlueprintRefresh: string | null; officiallyVerified: string | null } | null
   maxProsperity: number | null
-  trustLabel: 'Owner verified in-game'
+  trustLabel: OasisPublicTrustLabel
   media: Array<{ url: string; alt: string; role: 'catalogue' | 'level' | 'placeholder'; levelVariant: number | null; width: number; height: number }>
   canonicalRoute: string
   status: 'published'
 }
 
 export type OasisAcceptanceDataset = {
-  schemaVersion: 'oasis-public-projection-v1'
+  schemaVersion: 'oasis-public-projection-v2'
   dataset: 'oasis-island'
   status: 'current_published'
   recordCount: number

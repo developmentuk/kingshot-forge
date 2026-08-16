@@ -1,8 +1,24 @@
 import { createHash } from 'node:crypto'
 
-export const OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION = 'oasis-public-projection-v1' as const
+export const OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION = 'oasis-public-projection-v2' as const
 export const OASIS_PUBLIC_RECORD_COUNT = 55
 export const OASIS_PRIVATE_SOURCE_MEDIA_COUNT = 111
+
+export const OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS = Object.freeze({
+  owner_direct_ingame_verified: 'Owner verified in-game',
+  official_verified: 'Officially verified',
+  community_table_plus_official_mechanics: 'Mixed official and community evidence',
+  official_mechanics_partial_values: 'Official mechanics; values partial',
+  official_mechanics_stats_incomplete: 'Official mechanics; values partial',
+  attachment_extracted: 'Source attachment extracted',
+  corroborated_web: 'Community corroborated',
+  mentioned_only_partial: 'Partial source coverage',
+  needs_ingame_verification: 'Needs in-game verification',
+  conflict_needs_ingame_verification: 'Needs in-game verification',
+} as const)
+
+export type OasisSourceVerificationStatus = keyof typeof OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS
+export type OasisPublicTrustLabel = typeof OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS[OasisSourceVerificationStatus]
 
 export type OasisPublicMedia = Readonly<{
   url: string
@@ -47,7 +63,7 @@ export type OasisPublicRecord = Readonly<{
   unlock: Readonly<{ requirement: string | null; initialBlueprintPurchase: string | null }> | null
   upgrade: Readonly<{ currency: string | null; exchange: string | null; generalBlueprintRefresh: string | null; officiallyVerified: string | null }> | null
   maxProsperity: number | null
-  trustLabel: 'Owner verified in-game'
+  trustLabel: OasisPublicTrustLabel
   media: readonly OasisPublicMedia[]
   publicationId: string
   publicationVersion: number
@@ -115,6 +131,15 @@ export type OasisPublicDataset = Readonly<{
   records: readonly OasisPublicRecord[]
 }>
 
+export type OasisImmutablePublicationSnapshot = Readonly<{
+  dataset: string
+  publicationId: string
+  sourceFingerprint: string
+  manifestHash: string
+  manifest: OasisMediaManifest
+  records: readonly OasisPublicRecord[]
+}>
+
 export const OASIS_PUBLIC_RECORD_ALLOW_LIST = Object.freeze([
   'schemaVersion', 'id', 'name', 'aliases', 'recordType', 'rarity',
   'availabilityCategory', 'footprint', 'typeLimit', 'maxLevel', 'function',
@@ -138,6 +163,16 @@ function object(value: unknown): Record<string, unknown> | null {
 
 function text(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+export function oasisPublicTrustLabel(value: unknown): OasisPublicTrustLabel {
+  const record = object(value)
+  const verification = object(record?.verification)
+  const status = text(verification?.status)
+  if (!status || !Object.hasOwn(OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS, status)) {
+    throw new Error(`Oasis record ${text(record?.id) ?? '<unknown>'} has an unsupported verification status.`)
+  }
+  return OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS[status as OasisSourceVerificationStatus]
 }
 
 function number(value: unknown): number | null {
@@ -238,7 +273,7 @@ export function buildOasisPublicRecord(
     unlock: unlock ? Object.freeze({ requirement: text(unlock.requirement), initialBlueprintPurchase: text(unlock.initialBlueprintPurchase) }) : null,
     upgrade: upgrade ? Object.freeze({ currency: text(upgrade.currency), exchange: text(upgrade.exchange), generalBlueprintRefresh: text(upgrade.generalBlueprintRefresh), officiallyVerified: text(upgrade.officiallyVerified) }) : null,
     maxProsperity: number(record.maxProsperity),
-    trustLabel: 'Owner verified in-game',
+    trustLabel: oasisPublicTrustLabel(record),
     media: Object.freeze(publicMedia(id, manifest)),
     publicationId: publication.publicationId,
     publicationVersion: publication.publicationVersion,
@@ -284,6 +319,50 @@ export function hashOasisManifest(manifest: OasisMediaManifest): string {
   return createHash('sha256').update(stableOasisJson(manifest)).digest('hex')
 }
 
+const OASIS_ROLLBACK_IDENTITY_FIELDS = Object.freeze([
+  'publicationId', 'publicationVersion', 'publishedAt', 'updatedAt',
+] as const)
+
+function rollbackRecordContent(record: OasisPublicRecord): Record<string, unknown> {
+  const content = { ...record } as Record<string, unknown>
+  for (const field of OASIS_ROLLBACK_IDENTITY_FIELDS) delete content[field]
+  return content
+}
+
+function rollbackContent(records: readonly OasisPublicRecord[]): string {
+  return stableOasisJson(records
+    .map(rollbackRecordContent)
+    .sort((left, right) => String(left.id).localeCompare(String(right.id))))
+}
+
+export function assertOasisRollbackCandidateMatchesSnapshot(
+  candidate: OasisImmutablePublicationSnapshot,
+  source: OasisImmutablePublicationSnapshot | null | undefined,
+): void {
+  if (!source) throw new Error('Oasis rollback source publication does not exist.')
+  if (candidate.dataset !== 'oasis-island' || source.dataset !== 'oasis-island') throw new Error('Oasis rollback source belongs to another dataset.')
+  if (source.records.length !== OASIS_PUBLIC_RECORD_COUNT || candidate.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis rollback requires complete immutable snapshots.')
+  if (hashOasisManifest(source.manifest) !== source.manifestHash) throw new Error('Oasis rollback source manifest integrity failed.')
+  if (candidate.sourceFingerprint !== source.sourceFingerprint
+    || candidate.manifestHash !== source.manifestHash
+    || stableOasisJson(candidate.manifest) !== stableOasisJson(source.manifest)
+    || rollbackContent(candidate.records) !== rollbackContent(source.records)) {
+    throw new Error('Oasis rollback candidate does not match the referenced immutable publication.')
+  }
+}
+
+export function deriveOasisRollbackRecords(
+  source: OasisImmutablePublicationSnapshot,
+  publication: OasisPublicationIdentity,
+): readonly OasisPublicRecord[] {
+  if (source.dataset !== 'oasis-island') throw new Error('Oasis rollback source belongs to another dataset.')
+  return Object.freeze(source.records.map((record) => {
+    const derived = Object.freeze({ ...record, ...publication })
+    assertOasisPublicRecord(derived)
+    return derived
+  }))
+}
+
 export function assertOasisPublicRecord(value: unknown): asserts value is OasisPublicRecord {
   const record = object(value)
   if (!record) throw new Error('Oasis public record is not an object.')
@@ -297,7 +376,7 @@ export function assertOasisPublicRecord(value: unknown): asserts value is OasisP
   if (typeof record.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(record.id)) throw new Error('Oasis public record has an invalid stable ID.')
   if (record.canonicalRoute !== `/oasis-island/buildings/${record.id}`) throw new Error('Oasis public record has an invalid canonical route.')
   if (typeof record.publicationId !== 'string' || !record.publicationId || typeof record.publicationVersion !== 'number' || !Number.isInteger(record.publicationVersion) || record.publicationVersion < 1) throw new Error('Oasis public record has an invalid publication identity.')
-  if (record.trustLabel !== 'Owner verified in-game') throw new Error('Oasis public record has an invalid trust label.')
+  if (!(Object.values(OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS) as readonly unknown[]).includes(record.trustLabel)) throw new Error('Oasis public record has an invalid trust label.')
   if (!Array.isArray(record.levels) || !Array.isArray(record.maxEffects) || !Array.isArray(record.media)) throw new Error('Oasis public record has invalid projection collections.')
 }
 

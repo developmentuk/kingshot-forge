@@ -11,7 +11,7 @@ function BuildingImage({ building, compact = false }: { building: OasisPublished
 }
 
 function statusClass(status?: string): string {
-  return status?.includes('official') ? 'oasis-badge oasis-badge--official' : 'oasis-badge'
+  return status?.toLocaleLowerCase().includes('official') ? 'oasis-badge oasis-badge--official' : 'oasis-badge'
 }
 
 function GuideSection({ title, children }: { title: string; children: ReactNode }) {
@@ -29,7 +29,7 @@ function levelBonuses(level: OasisPublishedBuilding['levels'][number]): string[]
 
 function OasisGuide() {
   return <section className="oasis-guide" aria-labelledby="oasis-guide-title">
-    <div className="oasis-section-heading"><div><p className="eyebrow">Plain-English guide</p><h2 id="oasis-guide-title">How Oasis Island works</h2></div><p>Published non-null values are owner-verified in-game. Unknown or unavailable values remain visibly unknown.</p></div>
+    <div className="oasis-section-heading"><div><p className="eyebrow">Plain-English guide</p><h2 id="oasis-guide-title">How Oasis Island works</h2></div><p>Each record carries a public trust label derived from its recognised source state. Unknown or unavailable values remain visibly unknown.</p></div>
     <div className="oasis-guide-grid">
       <GuideSection title="Unlock and core loop"><p>Oasis Island opens when your Town Center reaches Level 19. Enter through the Dock or Island icon, then collect Water Essence, place or upgrade structures, build Prosperity and upgrade the Fountain of Life.</p><p className="oasis-note">The island grants permanent account-wide advantages. It is not a player-owned showcase or a Forge progression tracker.</p></GuideSection>
       <GuideSection title="Water Essence and Prosperity"><p>Water Essence pays for island activity. The Fountain stores up to 12 hours, while Reservoir workers clear cacti and reveal chests. Prosperity is a milestone score: upgrading the Fountain does not spend it.</p><ul><li>Collect before the Fountain storage cap is full.</li><li>Only copies within a decoration's Type Limit contribute.</li><li>Different decoration types can stack their buffs.</li></ul></GuideSection>
@@ -48,7 +48,7 @@ function BuildingDetail({ building }: { building: OasisPublishedBuilding }) {
   const hasUnrecordedLevels = building.levels.length === 0 && !building.maxEffects?.length
   return <main className="oasis-page oasis-page--detail">
     <Link className="oasis-back" to="/oasis-island">← Oasis Island catalogue</Link>
-    <header className="oasis-detail__hero"><BuildingImage building={building} /><div><p className="eyebrow">Oasis Island · {building.recordType.replaceAll('_', ' ')}</p><h1>{building.name}</h1><p>{building.function ?? 'Explore this building’s levels, bonuses and place in your island plan.'}</p><span className={statusClass('owner')}>{building.trustLabel}</span></div></header>
+    <header className="oasis-detail__hero"><BuildingImage building={building} /><div><p className="eyebrow">Oasis Island · {building.recordType.replaceAll('_', ' ')}</p><h1>{building.name}</h1><p>{building.function ?? 'Explore this building’s levels, bonuses and place in your island plan.'}</p><span className={statusClass(building.trustLabel)}>{building.trustLabel}</span></div></header>
     <section className="oasis-fact-grid" aria-label={`${building.name} facts`}><div><span>Rarity</span><strong>{building.rarity ?? 'Not available'}</strong></div><div><span>Maximum level</span><strong>{building.maxLevel ?? 'Not available'}</strong></div><div><span>Type Limit</span><strong>{building.typeLimit ?? 'Not available'}</strong></div><div><span>Footprint</span><strong>{formatFootprint(building.footprint)}</strong></div></section>
     {isWonder && building.unlock ? <section className="oasis-panel"><p className="eyebrow">Unlock and upgrade</p><p><strong>Unlock:</strong> {building.unlock.requirement ?? 'See the building details above.'}</p><p><strong>Blueprints:</strong> {building.upgrade?.exchange ?? 'More level details have not been recorded yet.'}</p></section> : null}
     {building.maxEffects?.length && !building.levels.length ? <section className="oasis-panel"><p className="eyebrow">Known bonus</p>{building.maxEffects.map((effect) => <p key={`${effect.stat}-${effect.valuePct}`}>{formatBonus(effect)}</p>)}</section> : null}
