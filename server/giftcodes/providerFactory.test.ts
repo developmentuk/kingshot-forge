@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   GIFT_CODE_APPROVED_ENVIRONMENT_FLAG,
   GIFT_CODE_OFFICIAL_PROVIDER_FLAG,
+  GIFT_CODE_QUEUE_PROCESSING_FLAG,
   GIFT_CODE_REDEMPTION_FLAG,
 } from './config.ts'
 import {
@@ -45,6 +46,7 @@ test('default factory selects simulation while official remains gated off', () =
         'redemption_disabled',
         'official_provider_disabled',
         'environment_not_approved',
+        'queue_processing_disabled',
       ])
       return true
     },
@@ -56,13 +58,17 @@ test('explicit gates select the server-configured official provider boundary', (
     [GIFT_CODE_REDEMPTION_FLAG]: 'true',
     [GIFT_CODE_OFFICIAL_PROVIDER_FLAG]: 'true',
     [GIFT_CODE_APPROVED_ENVIRONMENT_FLAG]: 'true',
+    [GIFT_CODE_QUEUE_PROCESSING_FLAG]: 'true',
+    KINGSHOT_REDEMPTION_CODE_URL: 'https://provider.test/api/gift_code',
+    KINGSHOT_REDEMPTION_SIGNING_KEY: 'injected-signing-key',
+    KINGSHOT_REDEMPTION_TIMEOUT_MS: '15000',
   })
   const provider = factory.create(
     OFFICIAL_GIFT_CODE_PROVIDER_ID,
   )
 
   assert.equal(provider.id, OFFICIAL_GIFT_CODE_PROVIDER_ID)
-  assert.equal(provider.productionReady, false)
+  assert.equal(provider.productionReady, true)
   assert.equal(provider.capabilities.externalRequestsAllowed, true)
   assert.equal(
     provider.capabilities.redemptionSupport,

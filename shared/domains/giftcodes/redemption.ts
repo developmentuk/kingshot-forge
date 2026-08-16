@@ -1,8 +1,7 @@
 export const GIFT_CODE_CONSENT_VERSION =
-  'giftcode-redemption-v1'
+  'giftcode-redemption-v2'
 
 export const VERIFIED_PLAYER_STATUSES = [
-  'community_verified',
   'officially_verified',
 ] as const
 

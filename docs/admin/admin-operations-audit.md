@@ -1,5 +1,19 @@
 # Forge Operations Centre audit
 
+## AUTO-REDEEM-SAFETY-001 containment
+
+Administrative provider enablement now fails unless all four canonical
+`GIFTCODE_*` environment gates pass. Those gates default to false and remain
+authoritative over database provider configuration. The provider also requires
+a closed circuit and healthy production status immediately before a run is
+created and immediately before any provider call.
+
+Every authenticated Gift Centre action rejects restricted, suspended and
+deactivated Forge accounts with HTTP 403. Consent requires an
+`officially_verified` Governor and policy v2; historical v1 rows remain intact.
+There is no `auto-run` action and authentication never initiates redemption.
+Phase 1 does not enable the provider or close its circuit.
+
 ## Scope
 
 Release 0.7.5 preview validation covers the Admin Gift Redemption surface and

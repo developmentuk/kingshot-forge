@@ -30,6 +30,7 @@ export type GiftCodeProviderGateReason =
   | 'redemption_disabled'
   | 'official_provider_disabled'
   | 'environment_not_approved'
+  | 'queue_processing_disabled'
 
 export type GiftCodeProviderGateDecision = Readonly<{
   allowed: boolean
@@ -107,6 +108,10 @@ export function evaluateGiftCodeProviderGates(
     reasons.push('environment_not_approved')
   }
 
+  if (!gates.queueProcessingEnabled) {
+    reasons.push('queue_processing_disabled')
+  }
+
   return Object.freeze({
     allowed: reasons.length === 0,
     reasons: Object.freeze(reasons),
@@ -143,6 +148,12 @@ export function assertProviderCanRun(
   ) {
     throw new Error(
       'The gift-code provider environment is not approved.',
+    )
+  }
+
+  if (!gates.queueProcessingEnabled) {
+    throw new Error(
+      'Gift-code queue processing is disabled.',
     )
   }
 

@@ -3,9 +3,21 @@ import fs from 'node:fs'
 import { createServer } from 'vite'
 
 const workflowSource = fs.readFileSync('server/giftcodes/autoRedeemService.ts', 'utf8')
+const apiSource = fs.readFileSync('api/giftcodes.ts', 'utf8')
+const identitySource = fs.readFileSync('src/context/PlayerIdentityContext.tsx', 'utf8')
 assert.doesNotMatch(workflowSource, /AbortSignal\.timeout/)
 assert.match(workflowSource, /new AbortController\(\)/)
 assert.match(workflowSource, /kingdomId: String\(player\.kingdom_id\)/)
+assert.match(workflowSource, /giftcode-redemption-v2/)
+assert.match(workflowSource, /value === 'officially_verified'/)
+assert.doesNotMatch(workflowSource, /value === 'verified'|value === 'community_verified'/)
+assert.match(workflowSource, /evidence_version: 'auto-redeem-safety-001'/)
+assert.match(workflowSource, /assertProviderReadiness\(\)/)
+assert.doesNotMatch(workflowSource, /triggerAutomaticRedemption|automaticRunInFlight/)
+assert.match(apiSource, /actor\.accountStatus !== 'active'/)
+assert.match(apiSource, /statusCode: 403/)
+assert.doesNotMatch(apiSource, /auto-run|triggerAutomaticRedemption/)
+assert.doesNotMatch(identitySource, /\/api\/giftcodes\?action=auto-run/)
 
 const vite = await createServer({ appType: 'custom', logLevel: 'silent', server: { middlewareMode: true } })
 try {
@@ -14,7 +26,6 @@ try {
     codeUrl: 'https://provider.test/api/gift_code',
     signingKey: 'fixture-signing-key',
     timeoutMs: 15000,
-    enabled: true,
   }
   assert.equal(provider.createSignedFields({ cdk: 'CODE', fid: 'PLAYER', kid: '850', time: '123' }, fixtureConfig.signingKey).sign, 'd0ea1d1f2dc144b1342c61acea91ef5e')
   assert.equal(provider.normaliseOfficialResponse({ msg: 'SUCCESS' }).status, 'succeeded')

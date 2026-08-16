@@ -1,9 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { ForgeAuthenticationError, requireForgeActor } from '../server/auth/requireForgeActor.js'
-import { autoRedeemPolicy, getAdminGiftCodeCatalogue, getAdminGiftCodeMetrics, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redeemControlledValidationCode, redemptionHistory, revokeConsent, setProviderOperations, triggerAutomaticRedemption } from '../server/giftcodes/autoRedeemService.js'
+import { ForgeAuthenticationError, requireForgeActor, type ForgeActor } from '../server/auth/requireForgeActor.js'
+import { autoRedeemPolicy, getAdminGiftCodeCatalogue, getAdminGiftCodeMetrics, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redeemControlledValidationCode, redemptionHistory, revokeConsent, setProviderOperations } from '../server/giftcodes/autoRedeemService.js'
 
 function body(request: VercelRequest) { return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {} }
 function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
+function requireActiveAccount(actor: ForgeActor) {
+  if (actor.accountStatus !== 'active') throw Object.assign(new Error('An active Forge account is required.'), { statusCode: 403 })
+}
 
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
   try {
@@ -11,11 +14,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (request.method === 'GET' && action === 'policy') { response.status(200).json({ status: 'success', data: autoRedeemPolicy }); return }
     if (request.method === 'GET' && action === 'context') {
       const actor = await requireForgeActor(request)
+      requireActiveAccount(actor)
       response.status(200).json({ status: 'success', data: await getAutoRedeemContext(actor.userId) }); return
     }
     const actor = await requireForgeActor(request)
+    requireActiveAccount(actor)
     if (request.method === 'GET' && action === 'history') { response.status(200).json({ status: 'success', data: await redemptionHistory(actor.userId) }); return }
-    if (request.method === 'POST' && action === 'auto-run') { response.status(202).json({ status: 'success', data: await triggerAutomaticRedemption(actor.userId, 'login') }); return }
     if (action === 'operations') {
       if (actor.role !== 'owner' && actor.role !== 'admin') { fail(response, 403, 'Administrator access is required.'); return }
       if (request.method === 'GET') { response.status(200).json({ status: 'success', data: await getProviderOperations() }); return }
