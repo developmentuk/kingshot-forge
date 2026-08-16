@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 
 export const OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION = 'oasis-public-projection-v2' as const
+export const OASIS_MEDIA_MANIFEST_SCHEMA_VERSION = 'oasis-media-manifest-v2' as const
+export const OASIS_SOURCE_FINGERPRINT_VERSION = 'oasis-source-fingerprint-v2' as const
 export const OASIS_PUBLIC_RECORD_COUNT = 55
 export const OASIS_PRIVATE_SOURCE_MEDIA_COUNT = 111
 
@@ -90,7 +92,8 @@ export type OasisMediaManifestEntry = Readonly<{
 }>
 
 export type OasisMediaManifest = Readonly<{
-  schemaVersion: 'oasis-media-manifest-v1'
+  schemaVersion: typeof OASIS_MEDIA_MANIFEST_SCHEMA_VERSION
+  sourceFingerprintVersion: typeof OASIS_SOURCE_FINGERPRINT_VERSION
   sourceFingerprint: string
   sourceAssetCount: number
   derivativeAssetCount: number
@@ -126,6 +129,7 @@ export type OasisPublicDataset = Readonly<{
   updatedAt: string
   sourceFingerprint: string
   manifestHash: string
+  recordContentHash: string
   recordCount: number
   mediaCount: number
   records: readonly OasisPublicRecord[]
@@ -136,6 +140,7 @@ export type OasisImmutablePublicationSnapshot = Readonly<{
   publicationId: string
   sourceFingerprint: string
   manifestHash: string
+  recordContentHash: string
   manifest: OasisMediaManifest
   records: readonly OasisPublicRecord[]
 }>
@@ -303,6 +308,7 @@ export function buildOasisPublicDataset(input: {
     updatedAt: input.publication.updatedAt,
     sourceFingerprint: input.manifest.sourceFingerprint,
     manifestHash: hashOasisManifest(input.manifest),
+    recordContentHash: hashOasisRecordContent(records),
     recordCount: records.length,
     mediaCount: input.manifest.derivativeAssetCount,
     records: Object.freeze(records),
@@ -323,16 +329,40 @@ const OASIS_ROLLBACK_IDENTITY_FIELDS = Object.freeze([
   'publicationId', 'publicationVersion', 'publishedAt', 'updatedAt',
 ] as const)
 
-function rollbackRecordContent(record: OasisPublicRecord): Record<string, unknown> {
-  const content = { ...record } as Record<string, unknown>
-  for (const field of OASIS_ROLLBACK_IDENTITY_FIELDS) delete content[field]
-  return content
+function withoutPublicationIdentity(value: unknown): unknown {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return value
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>)
+    .filter(([key]) => !(OASIS_ROLLBACK_IDENTITY_FIELDS as readonly string[]).includes(key)))
 }
 
-function rollbackContent(records: readonly OasisPublicRecord[]): string {
-  return stableOasisJson(records
-    .map(rollbackRecordContent)
-    .sort((left, right) => String(left.id).localeCompare(String(right.id))))
+function sortedRecordContent(records: readonly unknown[]): unknown[] {
+  return records
+    .map((record) => withoutPublicationIdentity(record) as Record<string, unknown>)
+    .sort((left, right) => String(left.id) < String(right.id) ? -1 : String(left.id) > String(right.id) ? 1 : 0)
+}
+
+export function hashOasisRecordContent(records: readonly unknown[]): string {
+  return createHash('sha256').update(stableOasisJson(sortedRecordContent(records))).digest('hex')
+}
+
+export function hashOasisSourceFingerprint(input: {
+  records: readonly unknown[]
+  media: readonly Pick<OasisMediaManifestEntry, 'recordId' | 'privateSourceFilename' | 'sourceChecksum' | 'mediaRole' | 'levelVariant'>[]
+}): string {
+  const media = [...input.media]
+    .map((entry) => ({
+      recordId: entry.recordId,
+      privateSourceFilename: entry.privateSourceFilename,
+      sourceChecksum: entry.sourceChecksum,
+      mediaRole: entry.mediaRole,
+      levelVariant: entry.levelVariant,
+    }))
+    .sort((left, right) => stableOasisJson(left) < stableOasisJson(right) ? -1 : stableOasisJson(left) > stableOasisJson(right) ? 1 : 0)
+  return createHash('sha256').update(stableOasisJson({
+    version: OASIS_SOURCE_FINGERPRINT_VERSION,
+    records: sortedRecordContent(input.records),
+    media,
+  })).digest('hex')
 }
 
 export function assertOasisRollbackCandidateMatchesSnapshot(
@@ -343,10 +373,12 @@ export function assertOasisRollbackCandidateMatchesSnapshot(
   if (candidate.dataset !== 'oasis-island' || source.dataset !== 'oasis-island') throw new Error('Oasis rollback source belongs to another dataset.')
   if (source.records.length !== OASIS_PUBLIC_RECORD_COUNT || candidate.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis rollback requires complete immutable snapshots.')
   if (hashOasisManifest(source.manifest) !== source.manifestHash) throw new Error('Oasis rollback source manifest integrity failed.')
+  if (hashOasisRecordContent(source.records) !== source.recordContentHash) throw new Error('Oasis rollback source record-content integrity failed.')
   if (candidate.sourceFingerprint !== source.sourceFingerprint
     || candidate.manifestHash !== source.manifestHash
+    || candidate.recordContentHash !== source.recordContentHash
     || stableOasisJson(candidate.manifest) !== stableOasisJson(source.manifest)
-    || rollbackContent(candidate.records) !== rollbackContent(source.records)) {
+    || hashOasisRecordContent(candidate.records) !== source.recordContentHash) {
     throw new Error('Oasis rollback candidate does not match the referenced immutable publication.')
   }
 }
@@ -385,7 +417,7 @@ const OASIS_MISSING_ARTWORK_RECORD_IDS = Object.freeze([
 ])
 
 function mediaIdentity(recordId: string, media: OasisPublicMedia): string {
-  return [recordId, media.url, media.role, media.levelVariant ?? 'null', media.width, media.height].join('|')
+  return [recordId, media.url, media.alt, media.role, media.levelVariant ?? 'null', media.width, media.height].join('|')
 }
 
 export function assertOasisPublicationPayload(input: {
@@ -396,7 +428,8 @@ export function assertOasisPublicationPayload(input: {
   records: readonly unknown[]
 }): void {
   const manifest = object(input.manifest)
-  if (!manifest || manifest.schemaVersion !== 'oasis-media-manifest-v1') throw new Error('Oasis manifest must be a v1 JSON object.')
+  if (!manifest || manifest.schemaVersion !== OASIS_MEDIA_MANIFEST_SCHEMA_VERSION
+    || manifest.sourceFingerprintVersion !== OASIS_SOURCE_FINGERPRINT_VERSION) throw new Error('Oasis manifest must use the v2 fingerprint contract.')
   if (!/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')
   if (!/^[0-9a-f]{64}$/u.test(input.manifestHash) || hashOasisManifest(input.manifest) !== input.manifestHash) throw new Error('Oasis manifest hash does not match canonical content.')
   if (manifest.sourceAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT || manifest.derivativeAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest counts are incomplete.')
@@ -437,6 +470,8 @@ export function assertOasisPublicationPayload(input: {
     url: `/${input.manifest.placeholder.publicDerivativePath}`, alt: input.manifest.placeholder.altText, role: 'placeholder', levelVariant: null,
     width: input.manifest.placeholder.width, height: input.manifest.placeholder.height,
   }))
-  const actualMedia = new Set(records.flatMap((record) => record.media.map((media) => mediaIdentity(record.id, media))))
-  if (actualMedia.size !== expectedMedia.size || [...actualMedia].some((identity) => !expectedMedia.has(identity))) throw new Error('Oasis public media does not match the approved manifest.')
+  const actualMediaIdentities = records.flatMap((record) => record.media.map((media) => mediaIdentity(record.id, media)))
+  const actualMedia = new Set(actualMediaIdentities)
+  if (actualMediaIdentities.length !== expectedMedia.size || actualMedia.size !== expectedMedia.size
+    || [...actualMedia].some((identity) => !expectedMedia.has(identity))) throw new Error('Oasis public media does not match the approved manifest.')
 }

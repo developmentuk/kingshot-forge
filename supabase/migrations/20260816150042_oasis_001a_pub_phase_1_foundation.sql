@@ -9,6 +9,7 @@ create table public.oasis_publication_versions (
   source_fingerprint text not null,
   manifest jsonb not null,
   manifest_hash text not null check (manifest_hash ~ '^[0-9a-f]{64}$'),
+  record_content_hash text not null check (record_content_hash ~ '^[0-9a-f]{64}$'),
   record_count integer not null check (record_count = 55),
   media_count integer not null check (media_count = 111),
   actor_id text not null,
@@ -138,9 +139,20 @@ returns text language sql immutable strict security invoker set search_path = pg
   select encode(pg_catalog.sha256(convert_to(public.oasis_stable_json(p_manifest), 'UTF8')), 'hex');
 $$;
 
+create or replace function public.oasis_record_content_sha256(p_records jsonb)
+returns text language sql immutable strict security invoker set search_path = pg_catalog as $$
+  select encode(pg_catalog.sha256(convert_to(public.oasis_stable_json(
+    coalesce((
+      select jsonb_agg(record - array['publicationId', 'publicationVersion', 'publishedAt', 'updatedAt'] order by record->>'id' collate "C")
+      from jsonb_array_elements(p_records) record
+    ), '[]'::jsonb)
+  ), 'UTF8')), 'hex');
+$$;
+
 revoke all on function public.oasis_stable_json(jsonb) from public, anon, authenticated;
 revoke all on function public.oasis_json_has_forbidden_key(jsonb) from public, anon, authenticated;
 revoke all on function public.oasis_manifest_sha256(jsonb) from public, anon, authenticated;
+revoke all on function public.oasis_record_content_sha256(jsonb) from public, anon, authenticated;
 
 do $$
 begin
@@ -173,7 +185,9 @@ declare
   version_value bigint;
   rollback_candidate_content jsonb;
   rollback_source_content jsonb;
-  rollback_timestamp text;
+  submitted_content_hash text;
+  publication_timestamp timestamptz := date_trunc('milliseconds', statement_timestamp());
+  publication_timestamp_text text;
   allowed_record_keys constant text[] := array[
     'schemaVersion', 'id', 'name', 'aliases', 'recordType', 'rarity',
     'availabilityCategory', 'footprint', 'typeLimit', 'maxLevel', 'function',
@@ -199,7 +213,10 @@ begin
   end if;
   if p_schema_version <> 'oasis-public-projection-v2' then raise exception 'Unsupported Oasis public projection schema.'; end if;
   if jsonb_typeof(p_manifest) <> 'object' then raise exception 'Oasis manifest must be a JSON object.'; end if;
-  if p_manifest->>'schemaVersion' <> 'oasis-media-manifest-v1' then raise exception 'Unsupported Oasis media manifest schema.'; end if;
+  if p_manifest->>'schemaVersion' <> 'oasis-media-manifest-v2'
+     or p_manifest->>'sourceFingerprintVersion' <> 'oasis-source-fingerprint-v2' then
+    raise exception 'Unsupported Oasis media manifest or source-fingerprint schema.';
+  end if;
   if p_source_fingerprint !~ '^[0-9a-f]{64}$' or p_manifest->>'sourceFingerprint' <> p_source_fingerprint then raise exception 'Oasis source fingerprint does not match the manifest.'; end if;
   if p_manifest_hash !~ '^[0-9a-f]{64}$' or public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash then raise exception 'Oasis manifest hash does not match canonical manifest content.'; end if;
   if jsonb_typeof(p_manifest->'sourceAssetCount') <> 'number' or p_manifest->>'sourceAssetCount' <> '111'
@@ -278,17 +295,31 @@ begin
       or not (
         (media->>'role' = 'placeholder'
           and media->>'url' = '/' || p_manifest#>>'{placeholder,publicDerivativePath}'
+          and media->>'alt' = p_manifest#>>'{placeholder,altText}'
+          and jsonb_typeof(media->'levelVariant') = 'null'
+          and media->'width' = p_manifest#>'{placeholder,width}'
+          and media->'height' = p_manifest#>'{placeholder,height}'
           and (p_manifest->'missingArtworkRecordIds') ? (r->>'id'))
         or exists (
           select 1 from jsonb_array_elements(p_manifest->'entries') entry
           where entry->>'recordId' = r->>'id'
             and media->>'url' = '/' || entry->>'publicDerivativePath'
             and media->>'role' = entry->>'mediaRole'
+            and media->>'alt' = entry->>'altText'
             and media->'levelVariant' = entry->'levelVariant'
             and media->'width' = entry->'width' and media->'height' = entry->'height'
         )
       )
   ) then raise exception 'Oasis public media does not match the approved manifest.'; end if;
+  if (select count(*) from jsonb_array_elements(p_records) r cross join lateral jsonb_array_elements(r->'media') media) <> 117
+     or exists (
+       select 1
+       from jsonb_array_elements(p_records) r cross join lateral jsonb_array_elements(r->'media') media
+       group by r->>'id', public.oasis_stable_json(media)
+       having count(*) > 1
+     ) then
+    raise exception 'Oasis public media contains missing, extra or duplicate mappings.';
+  end if;
   if exists (
     select 1 from jsonb_array_elements(p_manifest->'entries') entry
     where not exists (
@@ -306,6 +337,8 @@ begin
     )
   ) then raise exception 'Every approved missing-artwork record requires the approved placeholder.'; end if;
   perform pg_advisory_xact_lock(hashtext('forge-oasis-publication'));
+  publication_timestamp_text := to_char(publication_timestamp at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+  submitted_content_hash := public.oasis_record_content_sha256(p_records);
 
   -- A rollback is a new immutable publication derived from the referenced stored
   -- snapshot. Caller-supplied content is accepted only when it exactly reproduces
@@ -323,6 +356,12 @@ begin
     if public.oasis_manifest_sha256(rollback_source.manifest) <> rollback_source.manifest_hash then
       raise exception 'Rollback source manifest integrity failed.';
     end if;
+    if public.oasis_record_content_sha256((
+         select jsonb_agg(public_record order by record_id)
+         from public.oasis_publication_records where publication_id = rollback_source.publication_id
+       )) <> rollback_source.record_content_hash then
+      raise exception 'Rollback source record-content integrity failed.';
+    end if;
     select jsonb_agg(r - array['publicationId', 'publicationVersion', 'publishedAt', 'updatedAt'] order by r->>'id')
       into rollback_candidate_content from jsonb_array_elements(p_records) r;
     select jsonb_agg(public_record - array['publicationId', 'publicationVersion', 'publishedAt', 'updatedAt'] order by record_id)
@@ -331,17 +370,17 @@ begin
     if p_schema_version <> rollback_source.schema_version
        or p_source_fingerprint <> rollback_source.source_fingerprint
        or p_manifest_hash <> rollback_source.manifest_hash
+       or submitted_content_hash <> rollback_source.record_content_hash
        or p_manifest <> rollback_source.manifest
        or rollback_candidate_content <> rollback_source_content then
       raise exception 'Rollback candidate does not match the referenced immutable publication.';
     end if;
-    rollback_timestamp := to_char(statement_timestamp() at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
     select jsonb_agg(
       public_record || jsonb_build_object(
         'publicationId', p_publication_id,
         'publicationVersion', null,
-        'publishedAt', rollback_timestamp,
-        'updatedAt', rollback_timestamp
+        'publishedAt', publication_timestamp_text,
+        'updatedAt', publication_timestamp_text
       ) order by record_id
     ) into p_records
       from public.oasis_publication_records
@@ -350,12 +389,14 @@ begin
     p_source_fingerprint := rollback_source.source_fingerprint;
     p_manifest := rollback_source.manifest;
     p_manifest_hash := rollback_source.manifest_hash;
+    submitted_content_hash := rollback_source.record_content_hash;
   end if;
 
   select * into existing from public.oasis_publication_versions where idempotency_key = p_idempotency_key;
   if found then
     if existing.publication_id <> p_publication_id or existing.manifest_hash <> p_manifest_hash
        or existing.source_fingerprint <> p_source_fingerprint
+       or existing.record_content_hash <> submitted_content_hash
        or existing.rollback_of_publication_id is distinct from p_rollback_of_publication_id then
       raise exception 'Oasis idempotency key conflicts with an existing publication.';
     end if;
@@ -367,28 +408,35 @@ begin
   select publication_id into previous_id from public.oasis_publication_current where singleton = true for update;
   insert into public.oasis_publication_versions(
     publication_id, dataset_id, schema_version, status, source_fingerprint, manifest, manifest_hash,
-    record_count, media_count, actor_id, publication_reason, idempotency_key,
-    rollback_of_publication_id
+    record_content_hash, record_count, media_count, actor_id, publication_reason, idempotency_key,
+    rollback_of_publication_id, published_at, updated_at
   ) values (
     p_publication_id, 'oasis-island', p_schema_version, 'published', p_source_fingerprint, p_manifest,
-    p_manifest_hash, 55, 111, p_actor_id, p_reason, p_idempotency_key,
-    p_rollback_of_publication_id
+    p_manifest_hash, submitted_content_hash, 55, 111, p_actor_id, p_reason, p_idempotency_key,
+    p_rollback_of_publication_id, publication_timestamp, publication_timestamp
   ) returning publication_version into version_value;
   if exists (select 1 from jsonb_array_elements(p_records) r where jsonb_typeof(r->'publicationVersion') = 'number' and (r->>'publicationVersion')::bigint <> version_value) then
     raise exception 'Oasis record publication identity conflicts with the publication being created.';
   end if;
   insert into public.oasis_publication_records(publication_id, record_id, public_record)
-    select p_publication_id, r->>'id', r || jsonb_build_object('publicationId', p_publication_id, 'publicationVersion', version_value)
+    select p_publication_id, r->>'id', r || jsonb_build_object(
+      'publicationId', p_publication_id, 'publicationVersion', version_value,
+      'publishedAt', publication_timestamp_text, 'updatedAt', publication_timestamp_text
+    )
     from jsonb_array_elements(p_records) r;
-  insert into public.oasis_publication_search_refreshes(publication_id, status) values (p_publication_id, 'pending');
-  insert into public.oasis_publication_audits(publication_id, action, actor_id, reason, previous_publication_id, manifest_hash, evidence)
+  insert into public.oasis_publication_search_refreshes(publication_id, status, requested_at, updated_at)
+    values (p_publication_id, 'pending', publication_timestamp, publication_timestamp);
+  insert into public.oasis_publication_audits(publication_id, action, actor_id, reason, previous_publication_id, manifest_hash, occurred_at, evidence)
     values (p_publication_id, case when p_rollback_of_publication_id is null then 'published' else 'rollback_published' end,
-      p_actor_id, p_reason, previous_id, p_manifest_hash,
+      p_actor_id, p_reason, previous_id, p_manifest_hash, publication_timestamp,
       jsonb_build_object('recordCount', 55, 'mediaCount', 111, 'sourceFingerprint', p_source_fingerprint,
+        'recordContentHash', submitted_content_hash,
         'rollbackOf', p_rollback_of_publication_id, 'rollbackSourceManifestHash',
-        case when p_rollback_of_publication_id is null then null else rollback_source.manifest_hash end));
+        case when p_rollback_of_publication_id is null then null else rollback_source.manifest_hash end,
+        'rollbackSourceFingerprint', case when p_rollback_of_publication_id is null then null else rollback_source.source_fingerprint end,
+        'rollbackSourceRecordContentHash', case when p_rollback_of_publication_id is null then null else rollback_source.record_content_hash end));
   insert into public.oasis_publication_current(singleton, publication_id, activated_at, activated_by)
-    values (true, p_publication_id, now(), p_actor_id)
+    values (true, p_publication_id, publication_timestamp, p_actor_id)
     on conflict (singleton) do update set publication_id = excluded.publication_id, activated_at = excluded.activated_at, activated_by = excluded.activated_by;
   return jsonb_build_object('publicationId', p_publication_id, 'publicationVersion', version_value, 'duplicate', false, 'previousPublicationId', previous_id);
 end;
@@ -397,6 +445,6 @@ revoke all on function public.publish_oasis_catalogue(text, text, text, jsonb, t
 grant execute on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) to service_role;
 
 comment on table public.oasis_publication_versions is 'OASIS-001A-PUB immutable publication history. Applying this migration does not publish a catalogue.';
-comment on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) is 'Creates and atomically activates a validated immutable Oasis publication. EXECUTE is revoked from PUBLIC, anon and authenticated and granted only to service_role; this grant is the caller boundary because current_user inside SECURITY DEFINER is the function owner. Rollback validates the requested content against the referenced immutable snapshot, derives a new forward-only publication from stored history, and never mutates history.';
+comment on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) is 'Creates and atomically activates a validated immutable Oasis publication. EXECUTE is revoked from PUBLIC, anon and authenticated and granted only to service_role; this grant is the caller boundary because current_user inside SECURITY DEFINER is the function owner. Record-content identity excludes only publication ID, version and timestamps. One database statement timestamp is authoritative for the version, records, Search request, audit and pointer. Rollback validates source fingerprint, manifest and record-content hashes against immutable history, derives a new forward-only publication, and never mutates history.';
 
 commit;

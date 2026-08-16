@@ -4,7 +4,12 @@ import { dirname, resolve } from 'node:path'
 
 import sharp from 'sharp'
 
-import { buildOasisPublicDataset } from '../server/oasis-publication/publicProjection.ts'
+import {
+  buildOasisPublicDataset,
+  hashOasisSourceFingerprint,
+  OASIS_MEDIA_MANIFEST_SCHEMA_VERSION,
+  OASIS_SOURCE_FINGERPRINT_VERSION,
+} from '../server/oasis-publication/publicProjection.ts'
 
 const root = process.cwd()
 const sourceJsonPath = resolve(root, 'server/data-engine/sources/kingshot_oasis_island_buildings.json')
@@ -16,6 +21,7 @@ const headerPngPath = resolve(root, 'src/assets/island-route/oasis-island-header
 const headerWebpPath = resolve(root, 'src/assets/island-route/oasis-island-header.webp')
 
 const sha256 = (buffer) => createHash('sha256').update(buffer).digest('hex')
+const metadataOnly = process.argv.includes('--metadata-only')
 const source = JSON.parse(await readFile(sourceJsonPath, 'utf8'))
 const inventory = (await readdir(privateAssetRoot)).filter((name) => name.toLowerCase().endsWith('.png')).sort()
 const ownership = new Map()
@@ -55,8 +61,10 @@ for (const name of inventory) {
   const privateDerivativePath = `fixtures/oasis-001a-publication/${publicDerivativePath}`
   const privatePath = resolve(root, privateDerivativePath)
   await mkdir(dirname(privatePath), { recursive: true })
-  const derivative = await sharp(sourceBuffer).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toBuffer()
-  await writeFile(privatePath, derivative)
+  const derivative = metadataOnly
+    ? await readFile(privatePath)
+    : await sharp(sourceBuffer).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toBuffer()
+  if (!metadataOnly) await writeFile(privatePath, derivative)
   const metadata = await sharp(derivative).metadata()
   entries.push({
     recordId: owner.recordId,
@@ -80,13 +88,16 @@ const placeholderPrivatePath = `fixtures/oasis-001a-publication/${placeholderPat
 const placeholderOutput = resolve(privateDerivativeRoot, placeholderPath)
 await mkdir(dirname(placeholderOutput), { recursive: true })
 const placeholderSvg = Buffer.from(`<svg width="720" height="720" viewBox="0 0 720 720" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eaf7f2"/><stop offset="1" stop-color="#badfd4"/></linearGradient></defs><rect width="720" height="720" rx="64" fill="url(#g)"/><path d="M360 178 516 360 360 542 204 360Z" fill="none" stroke="#276c61" stroke-width="24"/><circle cx="360" cy="360" r="54" fill="#276c61"/><text x="360" y="632" text-anchor="middle" font-family="Arial,sans-serif" font-size="32" fill="#1f514a">Artwork unavailable</text></svg>`)
-const placeholderBuffer = await sharp(placeholderSvg).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toBuffer()
-await writeFile(placeholderOutput, placeholderBuffer)
+const placeholderBuffer = metadataOnly
+  ? await readFile(placeholderOutput)
+  : await sharp(placeholderSvg).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toBuffer()
+if (!metadataOnly) await writeFile(placeholderOutput, placeholderBuffer)
 const placeholderMetadata = await sharp(placeholderBuffer).metadata()
 
-const sourceFingerprint = sha256(Buffer.from(entries.map((entry) => `${entry.privateSourceFilename}:${entry.sourceChecksum}`).join('\n')))
+const sourceFingerprint = hashOasisSourceFingerprint({ records: source.buildings, media: entries })
 const manifest = {
-  schemaVersion: 'oasis-media-manifest-v1',
+  schemaVersion: OASIS_MEDIA_MANIFEST_SCHEMA_VERSION,
+  sourceFingerprintVersion: OASIS_SOURCE_FINGERPRINT_VERSION,
   sourceFingerprint,
   sourceAssetCount: entries.length,
   derivativeAssetCount: entries.length,
@@ -120,7 +131,7 @@ const fixture = buildOasisPublicDataset({
 await mkdir(dirname(fixturePath), { recursive: true })
 await writeFile(fixturePath, `${JSON.stringify(fixture, null, 2)}\n`)
 
-try {
+if (!metadataOnly) try {
   const headerBuffer = await readFile(headerPngPath)
   const header = await sharp(headerBuffer).webp({ quality: 84, effort: 6 }).toBuffer()
   await writeFile(headerWebpPath, header)

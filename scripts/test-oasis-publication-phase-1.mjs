@@ -13,6 +13,10 @@ import {
   buildOasisPublicDataset,
   deriveOasisRollbackRecords,
   hashOasisManifest,
+  hashOasisRecordContent,
+  hashOasisSourceFingerprint,
+  OASIS_MEDIA_MANIFEST_SCHEMA_VERSION,
+  OASIS_SOURCE_FINGERPRINT_VERSION,
   OASIS_FORBIDDEN_PUBLIC_FIELDS,
   OASIS_PUBLIC_RECORD_ALLOW_LIST,
   OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS,
@@ -43,6 +47,10 @@ const built = buildOasisPublicDataset({
 })
 assert.deepEqual(built, fixture)
 assert.equal(built.recordCount, 55)
+assert.equal(manifest.schemaVersion, OASIS_MEDIA_MANIFEST_SCHEMA_VERSION)
+assert.equal(manifest.sourceFingerprintVersion, OASIS_SOURCE_FINGERPRINT_VERSION)
+assert.equal(manifest.sourceFingerprint, hashOasisSourceFingerprint({ records: source.buildings, media: manifest.entries }))
+assert.equal(built.recordContentHash, hashOasisRecordContent(built.records))
 assert.equal(source.buildings.flatMap((record) => record.levels ?? []).length, 430)
 assert.equal(built.records.flatMap((record) => record.levels).length, 430)
 assert.equal(new Set(built.records.map((record) => record.id)).size, 55)
@@ -73,6 +81,7 @@ const immutableSource = {
   publicationId: built.publicationId,
   sourceFingerprint: manifest.sourceFingerprint,
   manifestHash: hashOasisManifest(manifest),
+  recordContentHash: hashOasisRecordContent(built.records),
   manifest,
   records: built.records,
 }
@@ -95,6 +104,22 @@ assert.deepEqual(
   built.records.map(withoutPublicationIdentity),
 )
 assert.equal(rollbackRecords.every((record) => record.publicationId === rollbackIdentity.publicationId && record.publicationVersion === 2), true)
+assert.equal(hashOasisRecordContent(rollbackRecords), immutableSource.recordContentHash)
+assert.equal(hashOasisRecordContent([...built.records].reverse()), immutableSource.recordContentHash)
+assert.equal(hashOasisRecordContent(built.records.map((record) => ({ ...record, publishedAt: '2099-01-01T00:00:00.000Z', updatedAt: '2000-01-01T00:00:00.000Z' }))), immutableSource.recordContentHash)
+assert.equal(hashOasisRecordContent(built.records.map((record) => ({ ...record, publicationId: 'another-publication', publicationVersion: 999 }))), immutableSource.recordContentHash)
+for (const [name, mutate] of [
+  ['name', (records) => { records[0].name = 'Changed name' }],
+  ['level', (records) => { records[0].levels[0].level = 99 }],
+  ['bonus', (records) => { records[0].levels[0].bonuses[0].valuePct = 31 }],
+  ['trust', (records) => { records[0].trustLabel = 'Community corroborated' }],
+  ['media', (records) => { records[1].media[0].alt = 'Changed alt' }],
+  ['route', (records) => { records[0].canonicalRoute = '/changed' }],
+]) {
+  const changed = structuredClone(built.records)
+  mutate(changed)
+  assert.notEqual(hashOasisRecordContent(changed), immutableSource.recordContentHash, `${name} must affect record-content identity`)
+}
 assert.throws(() => assertOasisRollbackCandidateMatchesSnapshot(rollbackCandidate, null), /does not exist/u)
 assert.throws(() => assertOasisRollbackCandidateMatchesSnapshot({ ...rollbackCandidate, dataset: 'another-dataset' }, immutableSource), /another dataset/u)
 assert.throws(() => assertOasisRollbackCandidateMatchesSnapshot({ ...rollbackCandidate, records: rollbackRecords.map((record, index) => index ? record : { ...record, name: 'Altered' }) }, immutableSource), /does not match/u)
@@ -121,11 +146,22 @@ assertAdversarialRejection('duplicate private identities', ({ manifest: value })
 assertAdversarialRejection('incorrect manifest hash', (candidate) => { candidate.manifestHash = '0'.repeat(64) }, /manifest hash does not match/u)
 assertAdversarialRejection('mismatched source fingerprint', (candidate) => { candidate.sourceFingerprint = '0'.repeat(64) }, /source fingerprint does not match/u)
 assertAdversarialRejection('wrong placeholder list', ({ manifest: value }) => { value.missingArtworkRecordIds[0] = 'not-approved' }, /missing-artwork IDs are invalid/u)
+assertAdversarialRejection('obsolete manifest contract', ({ manifest: value }) => { value.schemaVersion = 'oasis-media-manifest-v1' }, /v2 fingerprint contract/u)
 assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { records[0].levels[0].sourceText = 'private' }, /forbidden field: sourceText/u)
 assertAdversarialRejection('forbidden nested verification', ({ records }) => { records[0].media[0].verification = { status: 'private' } }, /forbidden field: verification/u)
 assertAdversarialRejection('extra top-level record fields', ({ records }) => { records[0].unexpected = true }, /non-allow-listed fields/u)
 assertAdversarialRejection('invalid canonical route', ({ records }) => { records[0].canonicalRoute = '/wrong' }, /invalid canonical route/u)
 assertAdversarialRejection('record/media mismatch', ({ records }) => { records[0].media[0].url = '/media/oasis-island/wrong/catalogue.webp' }, /public media does not match/u)
+const placeholderRecordIndex = built.records.findIndex((record) => record.id === 'fountain-of-life')
+const mappedRecordIndex = built.records.findIndex((record) => record.media.some((media) => media.role !== 'placeholder'))
+assertAdversarialRejection('placeholder wrong alt', ({ records }) => { records[placeholderRecordIndex].media[0].alt = 'Artwork missing' }, /public media does not match/u)
+assertAdversarialRejection('placeholder wrong level variant', ({ records }) => { records[placeholderRecordIndex].media[0].levelVariant = 1 }, /public media does not match/u)
+assertAdversarialRejection('placeholder wrong width', ({ records }) => { records[placeholderRecordIndex].media[0].width += 1 }, /public media does not match/u)
+assertAdversarialRejection('placeholder wrong height', ({ records }) => { records[placeholderRecordIndex].media[0].height += 1 }, /public media does not match/u)
+assertAdversarialRejection('missing record arbitrary placeholder', ({ records }) => { records[placeholderRecordIndex].media[0].url = '/media/oasis-island/shared/arbitrary.webp' }, /public media does not match/u)
+assertAdversarialRejection('nonmissing record placeholder', ({ records }) => { records[mappedRecordIndex].media = [structuredClone(built.records[placeholderRecordIndex].media[0])] }, /public media does not match/u)
+assertAdversarialRejection('duplicate media mapping', ({ records }) => { records[mappedRecordIndex].media.push(structuredClone(records[mappedRecordIndex].media[0])) }, /public media does not match/u)
+assertAdversarialRejection('extra media mapping', ({ records }) => { records[mappedRecordIndex].media.push({ ...structuredClone(records[mappedRecordIndex].media[0]), alt: 'Extra' }) }, /public media does not match/u)
 assertAdversarialRejection('publication identity mismatch', ({ records }) => { records[0].publicationId = 'different-publication' }, /publication identity conflicts/u)
 
 const injected = buildOasisPublicDataset({
@@ -168,11 +204,37 @@ assert.doesNotMatch(read('src/App.tsx'), /island-background-draft/u)
 assert.equal(stableOasisJson(hashFixture.input), hashFixture.stableJson)
 assert.equal(createHash('sha256').update(hashFixture.stableJson).digest('hex'), hashFixture.sha256)
 
+const sourceFingerprint = () => hashOasisSourceFingerprint({ records: source.buildings, media: manifest.entries })
+const assertSourceFingerprintChanges = (name, mutate) => {
+  const records = structuredClone(source.buildings)
+  const media = structuredClone(manifest.entries)
+  mutate(records, media)
+  assert.notEqual(hashOasisSourceFingerprint({ records, media }), sourceFingerprint(), `${name} must affect the source fingerprint`)
+}
+assertSourceFingerprintChanges('catalogue name', (records) => { records[0].name = 'Changed name' })
+assertSourceFingerprintChanges('catalogue level', (records) => { records[0].levels[0].level = 99 })
+assertSourceFingerprintChanges('catalogue prosperity', (records) => { records[0].levels[1].prosperityRequired = 151 })
+assertSourceFingerprintChanges('catalogue bonus', (records) => { records[0].levels[0].buffsUnlocked[0].valuePct = 31 })
+assertSourceFingerprintChanges('catalogue effect', (records) => { records[0].levels[0].buffsUnlocked[0].effect = 'changed' })
+assertSourceFingerprintChanges('catalogue verification', (records) => { records[0].verification.status = 'needs_ingame_verification' })
+assertSourceFingerprintChanges('private media checksum', (_records, media) => { media[0].sourceChecksum = '0'.repeat(64) })
+assert.equal(hashOasisSourceFingerprint({ records: [...source.buildings].reverse(), media: [...manifest.entries].reverse() }), sourceFingerprint())
+const reverseObjectKeys = (value) => Array.isArray(value)
+  ? value.map(reverseObjectKeys)
+  : value && typeof value === 'object'
+    ? Object.fromEntries(Object.entries(value).reverse().map(([key, item]) => [key, reverseObjectKeys(item)]))
+    : value
+const reorderedKeys = source.buildings.map(reverseObjectKeys)
+assert.equal(hashOasisSourceFingerprint({ records: reorderedKeys, media: manifest.entries }), sourceFingerprint())
+assert.equal(hashOasisRecordContent(built.records.map(reverseObjectKeys)), immutableSource.recordContentHash)
+
 const searchRecords = buildOasisSearchRecords(built)
 assert.equal(searchRecords.length, 55)
 assert.equal(searchRecords.every((record) => record.dataset === 'oasis-island' && record.status === 'published'), true)
 assert.equal(searchRecords.every((record) => record.canonical_url === `/oasis-island/buildings/${record.id}`), true)
 assert.equal(searchRecords.every((record) => record.image?.endsWith('.webp')), true)
+assert.equal(searchRecords.every((record) => record.published_at === built.publishedAt && record.source_updated_at === built.updatedAt), true)
+assert.throws(() => buildOasisSearchRecords({ ...built, publishedAt: '2099-01-01T00:00:00.000Z' }), /database-authoritative/u)
 assert.throws(() => buildOasisSearchRecords({ ...built, status: 'source-staged' }), /current published/u)
 assert.throws(() => buildOasisSearchRecords({ ...built, recordCount: 1, records: [{ ...built.records[0], sourceText: 'private' }] }), /non-allow-listed|forbidden/u)
 assert.doesNotMatch(read('shared/data-engine/datasets.ts'), /oasis-island/u)
@@ -189,7 +251,8 @@ for (const required of [
 assert.doesNotMatch(migration, /delete from public\.oasis_publication_versions|update public\.oasis_publication_versions/iu)
 for (const requiredBoundary of [
   "jsonb_typeof(p_manifest) <> 'object'",
-  "p_manifest->>'schemaVersion' <> 'oasis-media-manifest-v1'",
+  "p_manifest->>'schemaVersion' <> 'oasis-media-manifest-v2'",
+  "p_manifest->>'sourceFingerprintVersion' <> 'oasis-source-fingerprint-v2'",
   "p_manifest->>'sourceFingerprint' <> p_source_fingerprint",
   "jsonb_array_length(p_manifest->'entries') <> 111",
   "count(distinct entry->>'privateSourceFilename')",
@@ -205,6 +268,7 @@ for (const requiredBoundary of [
   "r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'",
   "r->>'publicationId' <> p_publication_id",
   'Oasis public media does not match the approved manifest.',
+  'Oasis public media contains missing, extra or duplicate mappings.',
   'public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash',
   'pg_catalog.sha256',
   hashFixture.stableJson,
@@ -215,6 +279,16 @@ for (const requiredBoundary of [
   'existing.rollback_of_publication_id is distinct from p_rollback_of_publication_id',
   "p_records\n      from public.oasis_publication_records",
   "'rollbackSourceManifestHash'",
+  "'rollbackSourceFingerprint'",
+  "'rollbackSourceRecordContentHash'",
+  'record_content_hash text not null',
+  'public.oasis_record_content_sha256(p_records)',
+  'existing.record_content_hash <> submitted_content_hash',
+  "'recordContentHash', submitted_content_hash",
+  "'publishedAt', publication_timestamp_text, 'updatedAt', publication_timestamp_text",
+  "values (p_publication_id, 'pending', publication_timestamp, publication_timestamp)",
+  'p_manifest#>>\'{placeholder,altText}\'',
+  "jsonb_typeof(media->'levelVariant') = 'null'",
 ]) assert.ok(migration.includes(requiredBoundary), `Missing SQL publication guard: ${requiredBoundary}`)
 
 const adversarialSqlCases = new Map([
@@ -229,6 +303,8 @@ const adversarialSqlCases = new Map([
   ['extra top-level record fields', ['jsonb_object_keys(r)', 'allowed_record_keys']],
   ['invalid canonical route', ["r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'"]],
   ['record/media mismatch', ['Oasis public media does not match the approved manifest.']],
+  ['placeholder exact metadata', ["media->>'alt' = p_manifest#>>'{placeholder,altText}'", "jsonb_typeof(media->'levelVariant') = 'null'", "media->'width' = p_manifest#>'{placeholder,width}'", "media->'height' = p_manifest#>'{placeholder,height}'"]],
+  ['extra or duplicate media', ['Oasis public media contains missing, extra or duplicate mappings.']],
   ['publication identity mismatch', ['Oasis record publication identity conflicts with the publication being created.']],
 ])
 for (const [name, guards] of adversarialSqlCases) {
@@ -243,6 +319,12 @@ assert.ok(pointerMutationIndex > migration.indexOf('Oasis public media does not 
 assert.ok(pointerMutationIndex > migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))
 assert.ok(migration.indexOf('select * into rollback_source') < migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))
 assert.ok(migration.indexOf('Rollback candidate does not match the referenced immutable publication.') < migration.indexOf('insert into public.oasis_publication_versions'))
+assert.ok(migration.indexOf('existing.record_content_hash <> submitted_content_hash') < migration.indexOf('insert into public.oasis_publication_versions'))
+assert.ok(migration.indexOf('Oasis public media contains missing, extra or duplicate mappings.') < migration.indexOf('insert into public.oasis_publication_versions'))
+assert.ok(migration.includes("publication_timestamp timestamptz := date_trunc('milliseconds', statement_timestamp())"))
+const recordHistoryInsertIndex = migration.indexOf('insert into public.oasis_publication_records')
+const authoritativeRecordTimestampIndex = migration.indexOf("'publishedAt', publication_timestamp_text, 'updatedAt', publication_timestamp_text", recordHistoryInsertIndex)
+assert.ok(recordHistoryInsertIndex < authoritativeRecordTimestampIndex && authoritativeRecordTimestampIndex < migration.indexOf('insert into public.oasis_publication_search_refreshes'))
 
 const productionBuild = mkdtempSync(join(tmpdir(), 'oasis-production-build-'))
 try {
@@ -291,6 +373,7 @@ const publicationRow = {
   manifest,
   manifest_hash: hashOasisManifest(manifest),
   source_fingerprint: manifest.sourceFingerprint,
+  record_content_hash: built.recordContentHash,
   record_count: 55,
   media_count: 111,
   published_at: built.publishedAt,
@@ -308,6 +391,20 @@ await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
   { data: { singleton: true, publication_id: built.publicationId }, error: null },
   { data: { ...publicationRow, manifest: { ...manifest, derivativeAssetCount: 110 } }, error: null },
 ])), /manifest media counts are incomplete/u)
+await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
+  { data: { singleton: true, publication_id: built.publicationId }, error: null },
+  { data: { ...publicationRow, manifest: { ...manifest, schemaVersion: 'oasis-media-manifest-v1' } }, error: null },
+])), /manifest is invalid/u)
+await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
+  { data: { singleton: true, publication_id: built.publicationId }, error: null },
+  { data: { ...publicationRow, record_content_hash: '0'.repeat(64) }, error: null },
+  { data: built.records.map((record) => ({ record_id: record.id, public_record: record })), error: null },
+])), /record-content verification failed/u)
+await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
+  { data: { singleton: true, publication_id: built.publicationId }, error: null },
+  { data: publicationRow, error: null },
+  { data: built.records.map((record, index) => ({ record_id: record.id, public_record: index ? record : { ...record, publishedAt: '2099-01-01T00:00:00.000Z' } })), error: null },
+])), /timestamp mismatch/u)
 const loaded = await loadPublishedOasisIslandDataset(clientFor([
   { data: { singleton: true, publication_id: built.publicationId }, error: null },
   { data: publicationRow, error: null },

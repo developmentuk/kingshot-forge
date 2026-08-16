@@ -1,6 +1,7 @@
 {
-  "schemaVersion": "oasis-media-manifest-v1",
-  "sourceFingerprint": "9e03b078fe6841c3754d74b6673bb69ec8ac032b6ae0120f3023e69136c58e21",
+  "schemaVersion": "oasis-media-manifest-v2",
+  "sourceFingerprintVersion": "oasis-source-fingerprint-v2",
+  "sourceFingerprint": "c8baaca6eb3939e76b3e482dd44bd8ca14ca7ce33540dc6fec71e52dd488f669",
   "sourceAssetCount": 111,
   "derivativeAssetCount": 111,
   "sourceAssetBytes": 10723573,

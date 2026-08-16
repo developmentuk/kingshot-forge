@@ -38,6 +38,8 @@ Open the Vite URL shown in Terminal 1. Vite already proxies `/api` requests to t
 
 The supplied JSON is the primary structured Oasis dataset at `server/data-engine/sources/kingshot_oasis_island_buildings.json`. The staging loader and Oasis view model preserve the reviewed data contract for the later publication slice. The current React UI is intentionally unwired from public data resolution. The loader preserves source values, source evidence and the source payload hash, while marking non-null supplied game values as `owner_direct_ingame_verified`. Null or absent fields remain unknown and are not replaced by community claims.
 
+The Phase 1 publication proposal uses the explicit `oasis-source-fingerprint-v2` contract: recursively canonicalised source records sorted by stable ID, including levels, prosperity, bonuses/effects and verification, plus governed private-media identity and source checksum sorted independently. Generated timestamps, absolute filesystem paths and machine-dependent values are not inputs. Its separate public record-content hash excludes only publication ID, version and timestamps, so idempotent publication and rollback remain bound to names, levels, bonuses, trust labels, media and canonical routes.
+
 The current loader is explicitly source-staging and is not a public Data Engine API. Under `docs/AEGIS.md` and ADR-008, staged evidence must not be consumed by public route, API, Search or media resolution. The public Oasis routes and discovery are intentionally unwired. OASIS-001A-PUB will connect the reviewed foundation to the approved governed publication architecture. No migration was created or applied.
 
 ## Evidence boundaries

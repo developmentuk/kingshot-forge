@@ -4,6 +4,9 @@ import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
 import {
   assertOasisPublicRecord,
   hashOasisManifest,
+  hashOasisRecordContent,
+  OASIS_MEDIA_MANIFEST_SCHEMA_VERSION,
+  OASIS_SOURCE_FINGERPRINT_VERSION,
   OASIS_PRIVATE_SOURCE_MEDIA_COUNT,
   OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION,
   OASIS_PUBLIC_RECORD_COUNT,
@@ -32,13 +35,19 @@ function requiredInteger(row: Row, field: string): number {
   return value
 }
 
+function sameTimestamp(left: unknown, right: unknown): boolean {
+  return typeof left === 'string' && typeof right === 'string'
+    && Number.isFinite(Date.parse(left)) && Date.parse(left) === Date.parse(right)
+}
+
 function isMissingPublicationSchema(error: { code?: string; message?: string } | null): boolean {
   return error?.code === '42P01' || error?.code === 'PGRST205' || Boolean(error?.message?.includes('schema cache'))
 }
 
 function assertCompleteManifest(value: unknown, expectedFingerprint: string): asserts value is OasisMediaManifest {
   const manifest = asRow(value)
-  if (!manifest || manifest.schemaVersion !== 'oasis-media-manifest-v1') throw new Error('Oasis publication manifest is invalid.')
+  if (!manifest || manifest.schemaVersion !== OASIS_MEDIA_MANIFEST_SCHEMA_VERSION
+    || manifest.sourceFingerprintVersion !== OASIS_SOURCE_FINGERPRINT_VERSION) throw new Error('Oasis publication manifest is invalid.')
   if (manifest.sourceFingerprint !== expectedFingerprint) throw new Error('Oasis publication source fingerprint does not match its manifest.')
   if (manifest.sourceAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT || manifest.derivativeAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) {
     throw new Error('Oasis publication manifest media counts are incomplete.')
@@ -73,7 +82,7 @@ export async function loadPublishedOasisIslandDataset(
   const publicationId = requiredString(pointer, 'publication_id')
   const publicationResult = await client
     .from('oasis_publication_versions')
-    .select('publication_id, publication_version, schema_version, status, manifest, manifest_hash, source_fingerprint, record_count, media_count, published_at, updated_at')
+    .select('publication_id, publication_version, schema_version, status, manifest, manifest_hash, source_fingerprint, record_content_hash, record_count, media_count, published_at, updated_at')
     .eq('publication_id', publicationId)
     .maybeSingle()
 
@@ -110,8 +119,11 @@ export async function loadPublishedOasisIslandDataset(
   for (const record of records) {
     assertOasisPublicRecord(record)
     if (record.publicationId !== publicationId || record.publicationVersion !== publicationVersion) throw new Error('Oasis publication record identity mismatch.')
+    if (!sameTimestamp(record.publishedAt, publication.published_at) || !sameTimestamp(record.updatedAt, publication.updated_at)) throw new Error('Oasis publication record timestamp mismatch.')
   }
   const publicRecords = records as OasisPublicRecord[]
+  const recordContentHash = requiredString(publication, 'record_content_hash')
+  if (recordContentHash !== hashOasisRecordContent(publicRecords)) throw new Error('Oasis publication record-content verification failed.')
   const placeholderUrl = `/${manifest.placeholder.publicDerivativePath.replace(/^\/+/, '')}`
   const mappedMedia = new Set(publicRecords.flatMap((record) => record.media.map((media) => media.url)).filter((url) => url !== placeholderUrl))
   if (mappedMedia.size !== mediaCount) throw new Error('Oasis publication public media set is incomplete.')
@@ -126,6 +138,7 @@ export async function loadPublishedOasisIslandDataset(
     updatedAt: requiredString(publication, 'updated_at'),
     sourceFingerprint,
     manifestHash: requiredString(publication, 'manifest_hash'),
+    recordContentHash,
     recordCount,
     mediaCount,
     records: Object.freeze(publicRecords),
