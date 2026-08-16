@@ -95,7 +95,6 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.2",
-    "sharp": "0.35.3",
     "tesseract.js": "7.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
@@ -107,6 +106,7 @@
     "@vercel/node": "^5.8.24",
     "@vitejs/plugin-react": "^6.0.3",
     "oxlint": "^1.71.0",
+    "sharp": "0.35.3",
     "tsx": "^4.21.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"

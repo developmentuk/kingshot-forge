@@ -29,7 +29,7 @@ function levelBonuses(level: OasisPublishedBuilding['levels'][number]): string[]
 
 function OasisGuide() {
   return <section className="oasis-guide" aria-labelledby="oasis-guide-title">
-    <div className="oasis-section-heading"><div><p className="eyebrow">Plain-English guide</p><h2 id="oasis-guide-title">How Oasis Island works</h2></div><p>Use this as a practical starting point. Values marked as community or partial remain visibly qualified until they are verified in-game.</p></div>
+    <div className="oasis-section-heading"><div><p className="eyebrow">Plain-English guide</p><h2 id="oasis-guide-title">How Oasis Island works</h2></div><p>Published non-null values are owner-verified in-game. Unknown or unavailable values remain visibly unknown.</p></div>
     <div className="oasis-guide-grid">
       <GuideSection title="Unlock and core loop"><p>Oasis Island opens when your Town Center reaches Level 19. Enter through the Dock or Island icon, then collect Water Essence, place or upgrade structures, build Prosperity and upgrade the Fountain of Life.</p><p className="oasis-note">The island grants permanent account-wide advantages. It is not a player-owned showcase or a Forge progression tracker.</p></GuideSection>
       <GuideSection title="Water Essence and Prosperity"><p>Water Essence pays for island activity. The Fountain stores up to 12 hours, while Reservoir workers clear cacti and reveal chests. Prosperity is a milestone score: upgrading the Fountain does not spend it.</p><ul><li>Collect before the Fountain storage cap is full.</li><li>Only copies within a decoration's Type Limit contribute.</li><li>Different decoration types can stack their buffs.</li></ul></GuideSection>

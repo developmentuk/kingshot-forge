@@ -9,9 +9,9 @@ import { buildOasisPublicDataset } from '../server/oasis-publication/publicProje
 const root = process.cwd()
 const sourceJsonPath = resolve(root, 'server/data-engine/sources/kingshot_oasis_island_buildings.json')
 const privateAssetRoot = resolve(root, 'server/data-engine/source-assets/oasis-island')
-const publicRoot = resolve(root, 'public')
+const privateDerivativeRoot = resolve(root, 'fixtures/oasis-001a-publication')
 const manifestPath = resolve(root, 'server/oasis-publication/oasis-media-manifest.json')
-const fixturePath = resolve(root, 'src/features/oasis-island/acceptance/oasis-publication.fixture.json')
+const fixturePath = resolve(root, 'fixtures/oasis-001a-publication/oasis-publication.fixture.json')
 const headerPngPath = resolve(root, 'src/assets/island-route/oasis-island-header.png')
 const headerWebpPath = resolve(root, 'src/assets/island-route/oasis-island-header.webp')
 
@@ -52,16 +52,18 @@ for (const name of inventory) {
   const identity = owner.levelVariant === null ? 'catalogue' : `level-${owner.levelVariant}`
   const suffix = variantNumber === 1 ? '' : `-variant-${variantNumber}`
   const publicDerivativePath = `media/oasis-island/${owner.recordId}/${identity}${suffix}.webp`
-  const publicPath = resolve(publicRoot, publicDerivativePath)
-  await mkdir(dirname(publicPath), { recursive: true })
+  const privateDerivativePath = `fixtures/oasis-001a-publication/${publicDerivativePath}`
+  const privatePath = resolve(root, privateDerivativePath)
+  await mkdir(dirname(privatePath), { recursive: true })
   const derivative = await sharp(sourceBuffer).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toBuffer()
-  await writeFile(publicPath, derivative)
+  await writeFile(privatePath, derivative)
   const metadata = await sharp(derivative).metadata()
   entries.push({
     recordId: owner.recordId,
     privateSourceFilename: name,
     sourceChecksum: sha256(sourceBuffer),
     publicDerivativePath,
+    privateDerivativePath,
     derivativeChecksum: sha256(derivative),
     sourceBytes: sourceBuffer.byteLength,
     derivativeBytes: derivative.byteLength,
@@ -74,7 +76,8 @@ for (const name of inventory) {
 }
 
 const placeholderPath = 'media/oasis-island/shared/artwork-unavailable.webp'
-const placeholderOutput = resolve(publicRoot, placeholderPath)
+const placeholderPrivatePath = `fixtures/oasis-001a-publication/${placeholderPath}`
+const placeholderOutput = resolve(privateDerivativeRoot, placeholderPath)
 await mkdir(dirname(placeholderOutput), { recursive: true })
 const placeholderSvg = Buffer.from(`<svg width="720" height="720" viewBox="0 0 720 720" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eaf7f2"/><stop offset="1" stop-color="#badfd4"/></linearGradient></defs><rect width="720" height="720" rx="64" fill="url(#g)"/><path d="M360 178 516 360 360 542 204 360Z" fill="none" stroke="#276c61" stroke-width="24"/><circle cx="360" cy="360" r="54" fill="#276c61"/><text x="360" y="632" text-anchor="middle" font-family="Arial,sans-serif" font-size="32" fill="#1f514a">Artwork unavailable</text></svg>`)
 const placeholderBuffer = await sharp(placeholderSvg).webp({ quality: 82, alphaQuality: 90, effort: 6 }).toBuffer()
@@ -93,6 +96,7 @@ const manifest = {
   missingArtworkRecordIds: ['fountain-of-life', 'reservoir', 'purifier', 'golden-sunset', 'skating-rink', 'construction-hut'],
   placeholder: {
     publicDerivativePath: placeholderPath,
+    privateDerivativePath: placeholderPrivatePath,
     derivativeChecksum: sha256(placeholderBuffer),
     derivativeBytes: placeholderBuffer.byteLength,
     width: placeholderMetadata.width,

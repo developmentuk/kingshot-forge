@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "oasis-manifest-hash-fixture-v1",
+  "input": {
+    "z": [
+      3,
+      true,
+      null,
+      "Oasis"
+    ],
+    "a": {
+      "width": 720,
+      "path": "media/oasis-island/shared/artwork-unavailable.webp"
+    },
+    "count": 111
+  },
+  "stableJson": "{\"a\":{\"path\":\"media/oasis-island/shared/artwork-unavailable.webp\",\"width\":720},\"count\":111,\"z\":[3,true,null,\"Oasis\"]}",
+  "sha256": "8c76a240d927f231e750fb98bc6ee62881471495cb7e6946a1a0898b8c36ff8d"
+}

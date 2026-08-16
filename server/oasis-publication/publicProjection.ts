@@ -62,6 +62,7 @@ export type OasisMediaManifestEntry = Readonly<{
   privateSourceFilename: string
   sourceChecksum: string
   publicDerivativePath: string
+  privateDerivativePath: string
   derivativeChecksum: string
   sourceBytes: number
   derivativeBytes: number
@@ -83,6 +84,7 @@ export type OasisMediaManifest = Readonly<{
   missingArtworkRecordIds: readonly string[]
   placeholder: Readonly<{
     publicDerivativePath: string
+    privateDerivativePath: string
     derivativeChecksum: string
     derivativeBytes: number
     width: number
@@ -275,7 +277,7 @@ export function buildOasisPublicDataset(input: {
 export function stableOasisJson(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value)
   if (Array.isArray(value)) return `[${value.map(stableOasisJson).join(',')}]`
-  return `{${Object.entries(value as Record<string, unknown>).sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => `${JSON.stringify(key)}:${stableOasisJson(item)}`).join(',')}}`
+  return `{${Object.entries(value as Record<string, unknown>).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0).map(([key, item]) => `${JSON.stringify(key)}:${stableOasisJson(item)}`).join(',')}}`
 }
 
 export function hashOasisManifest(manifest: OasisMediaManifest): string {
@@ -292,4 +294,70 @@ export function assertOasisPublicRecord(value: unknown): asserts value is OasisP
     if (new RegExp(`"${field}"\\s*:`).test(serialized)) throw new Error(`Oasis public record contains forbidden field: ${field}`)
   }
   if (record.schemaVersion !== OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION || record.status !== 'published') throw new Error('Oasis public record is not a published v1 projection.')
+  if (typeof record.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(record.id)) throw new Error('Oasis public record has an invalid stable ID.')
+  if (record.canonicalRoute !== `/oasis-island/buildings/${record.id}`) throw new Error('Oasis public record has an invalid canonical route.')
+  if (typeof record.publicationId !== 'string' || !record.publicationId || typeof record.publicationVersion !== 'number' || !Number.isInteger(record.publicationVersion) || record.publicationVersion < 1) throw new Error('Oasis public record has an invalid publication identity.')
+  if (record.trustLabel !== 'Owner verified in-game') throw new Error('Oasis public record has an invalid trust label.')
+  if (!Array.isArray(record.levels) || !Array.isArray(record.maxEffects) || !Array.isArray(record.media)) throw new Error('Oasis public record has invalid projection collections.')
+}
+
+const OASIS_MISSING_ARTWORK_RECORD_IDS = Object.freeze([
+  'construction-hut', 'fountain-of-life', 'golden-sunset', 'purifier', 'reservoir', 'skating-rink',
+])
+
+function mediaIdentity(recordId: string, media: OasisPublicMedia): string {
+  return [recordId, media.url, media.role, media.levelVariant ?? 'null', media.width, media.height].join('|')
+}
+
+export function assertOasisPublicationPayload(input: {
+  publicationId: string
+  sourceFingerprint: string
+  manifestHash: string
+  manifest: OasisMediaManifest
+  records: readonly unknown[]
+}): void {
+  const manifest = object(input.manifest)
+  if (!manifest || manifest.schemaVersion !== 'oasis-media-manifest-v1') throw new Error('Oasis manifest must be a v1 JSON object.')
+  if (!/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')
+  if (!/^[0-9a-f]{64}$/u.test(input.manifestHash) || hashOasisManifest(input.manifest) !== input.manifestHash) throw new Error('Oasis manifest hash does not match canonical content.')
+  if (manifest.sourceAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT || manifest.derivativeAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest counts are incomplete.')
+  if (!Array.isArray(manifest.entries) || manifest.entries.length !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest requires exactly 111 entries.')
+  const entries = manifest.entries.map((value) => object(value))
+  if (entries.some((entry) => !entry)) throw new Error('Oasis manifest entries must be objects.')
+  if (new Set(entries.map((entry) => entry?.privateSourceFilename)).size !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis private-source identities must be unique.')
+  if (new Set(entries.map((entry) => entry?.publicDerivativePath)).size !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis derivative paths must be unique.')
+  for (const entry of entries as Record<string, unknown>[]) {
+    if (typeof entry.recordId !== 'string' || typeof entry.privateSourceFilename !== 'string'
+      || typeof entry.publicDerivativePath !== 'string' || typeof entry.privateDerivativePath !== 'string'
+      || !entry.publicDerivativePath.startsWith(`media/oasis-island/${entry.recordId}/`)
+      || entry.privateDerivativePath !== `fixtures/oasis-001a-publication/${entry.publicDerivativePath}`
+      || typeof entry.sourceChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(entry.sourceChecksum)
+      || typeof entry.derivativeChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(entry.derivativeChecksum)
+      || (entry.mediaRole !== 'catalogue' && entry.mediaRole !== 'level')
+      || typeof entry.width !== 'number' || entry.width <= 0 || typeof entry.height !== 'number' || entry.height <= 0) {
+      throw new Error('Oasis manifest entry metadata is incomplete or invalid.')
+    }
+  }
+  if (!Array.isArray(manifest.missingArtworkRecordIds)
+    || [...manifest.missingArtworkRecordIds].sort().join('|') !== OASIS_MISSING_ARTWORK_RECORD_IDS.join('|')) throw new Error('Oasis missing-artwork IDs are invalid.')
+  const placeholder = object(manifest.placeholder)
+  if (!placeholder || placeholder.publicDerivativePath !== 'media/oasis-island/shared/artwork-unavailable.webp'
+    || placeholder.privateDerivativePath !== `fixtures/oasis-001a-publication/${placeholder.publicDerivativePath}`
+    || typeof placeholder.derivativeChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(placeholder.derivativeChecksum)
+    || typeof placeholder.width !== 'number' || placeholder.width <= 0 || typeof placeholder.height !== 'number' || placeholder.height <= 0
+    || typeof placeholder.altText !== 'string' || !placeholder.altText) throw new Error('Oasis placeholder metadata is incomplete or invalid.')
+  if (!Array.isArray(input.records) || input.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis publication requires exactly 55 records.')
+  for (const record of input.records) assertOasisPublicRecord(record)
+  const records = input.records as OasisPublicRecord[]
+  if (new Set(records.map((record) => record.id)).size !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis record IDs must be unique.')
+  if (records.some((record) => record.publicationId !== input.publicationId)) throw new Error('Oasis record publication identity conflicts with the publication.')
+  const expectedMedia = new Set((input.manifest.entries as OasisMediaManifestEntry[]).map((entry) => mediaIdentity(entry.recordId, {
+    url: `/${entry.publicDerivativePath}`, alt: entry.altText, role: entry.mediaRole, levelVariant: entry.levelVariant, width: entry.width, height: entry.height,
+  })))
+  for (const recordId of OASIS_MISSING_ARTWORK_RECORD_IDS) expectedMedia.add(mediaIdentity(recordId, {
+    url: `/${input.manifest.placeholder.publicDerivativePath}`, alt: input.manifest.placeholder.altText, role: 'placeholder', levelVariant: null,
+    width: input.manifest.placeholder.width, height: input.manifest.placeholder.height,
+  }))
+  const actualMedia = new Set(records.flatMap((record) => record.media.map((media) => mediaIdentity(record.id, media))))
+  if (actualMedia.size !== expectedMedia.size || [...actualMedia].some((identity) => !expectedMedia.has(identity))) throw new Error('Oasis public media does not match the approved manifest.')
 }

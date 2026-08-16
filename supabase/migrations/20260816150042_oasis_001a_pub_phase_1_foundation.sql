@@ -88,6 +88,70 @@ for each row execute function public.prevent_oasis_publication_history_mutation(
 create trigger oasis_audits_immutable before update or delete on public.oasis_publication_audits
 for each row execute function public.prevent_oasis_publication_history_mutation();
 
+create or replace function public.oasis_stable_json(p_value jsonb)
+returns text language plpgsql immutable strict security invoker set search_path = pg_catalog as $$
+declare
+  result text;
+begin
+  case jsonb_typeof(p_value)
+    when 'object' then
+      select '{' || coalesce(string_agg(to_jsonb(key)::text || ':' || public.oasis_stable_json(value), ',' order by key collate "C"), '') || '}'
+        into result from jsonb_each(p_value);
+    when 'array' then
+      select '[' || coalesce(string_agg(public.oasis_stable_json(value), ',' order by ordinality), '') || ']'
+        into result from jsonb_array_elements(p_value) with ordinality;
+    when 'string' then return to_jsonb(p_value #>> '{}')::text;
+    else return p_value::text;
+  end case;
+  return result;
+end;
+$$;
+
+create or replace function public.oasis_json_has_forbidden_key(p_value jsonb)
+returns boolean language plpgsql immutable strict security invoker set search_path = pg_catalog as $$
+declare
+  child record;
+begin
+  if jsonb_typeof(p_value) = 'object' then
+    for child in select key, value from jsonb_each(p_value) loop
+      if child.key = any(array[
+        '_meta', 'source', 'sourceUrl', 'sourceText', 'sourceDocument', 'sourceTableIndex',
+        'verification', 'verificationHistory', 'verificationNotes', 'provenance',
+        'provenanceNotes', 'knownConflicts', 'privateSourceFilename', 'imageInventory',
+        'imageFiles', 'imageVariantFiles', 'assetStem', 'repositoryPath', 'filesystemPath'
+      ]) or public.oasis_json_has_forbidden_key(child.value) then
+        return true;
+      end if;
+    end loop;
+  elsif jsonb_typeof(p_value) = 'array' then
+    for child in select value from jsonb_array_elements(p_value) loop
+      if public.oasis_json_has_forbidden_key(child.value) then return true; end if;
+    end loop;
+  end if;
+  return false;
+end;
+$$;
+
+create or replace function public.oasis_manifest_sha256(p_manifest jsonb)
+returns text language sql immutable strict security invoker set search_path = pg_catalog as $$
+  select encode(pg_catalog.sha256(convert_to(public.oasis_stable_json(p_manifest), 'UTF8')), 'hex');
+$$;
+
+revoke all on function public.oasis_stable_json(jsonb) from public, anon, authenticated;
+revoke all on function public.oasis_json_has_forbidden_key(jsonb) from public, anon, authenticated;
+revoke all on function public.oasis_manifest_sha256(jsonb) from public, anon, authenticated;
+
+do $$
+begin
+  if public.oasis_stable_json('{"z":[3,true,null,"Oasis"],"a":{"width":720,"path":"media/oasis-island/shared/artwork-unavailable.webp"},"count":111}'::jsonb)
+       <> '{"a":{"path":"media/oasis-island/shared/artwork-unavailable.webp","width":720},"count":111,"z":[3,true,null,"Oasis"]}'
+    or public.oasis_manifest_sha256('{"z":[3,true,null,"Oasis"],"a":{"width":720,"path":"media/oasis-island/shared/artwork-unavailable.webp"},"count":111}'::jsonb)
+       <> '8c76a240d927f231e750fb98bc6ee62881471495cb7e6946a1a0898b8c36ff8d' then
+    raise exception 'Oasis canonical JSON/hash contract does not match the shared fixture.';
+  end if;
+end;
+$$;
+
 create or replace function public.publish_oasis_catalogue(
   p_publication_id text,
   p_schema_version text,
@@ -100,30 +164,149 @@ create or replace function public.publish_oasis_catalogue(
   p_idempotency_key text,
   p_rollback_of_publication_id text default null
 )
-returns jsonb language plpgsql security definer set search_path = public, pg_catalog as $$
+returns jsonb language plpgsql security definer set search_path = pg_catalog as $$
 declare
   existing public.oasis_publication_versions%rowtype;
   previous_id text;
   version_value bigint;
+  allowed_record_keys constant text[] := array[
+    'schemaVersion', 'id', 'name', 'aliases', 'recordType', 'rarity',
+    'availabilityCategory', 'footprint', 'typeLimit', 'maxLevel', 'function',
+    'levels', 'maxEffects', 'unlock', 'upgrade', 'maxProsperity', 'trustLabel',
+    'media', 'publicationId', 'publicationVersion', 'publishedAt', 'updatedAt',
+    'canonicalRoute', 'status'
+  ];
+  expected_missing_ids constant text[] := array[
+    'construction-hut', 'fountain-of-life', 'golden-sunset', 'purifier', 'reservoir', 'skating-rink'
+  ];
 begin
-  if current_user not in ('service_role', 'postgres') then raise exception 'Oasis publication is service-role-only.'; end if;
+  -- SECURITY DEFINER makes current_user the owner. The caller boundary is therefore
+  -- the explicit EXECUTE revoke/grant below, with only service_role granted access.
+  if coalesce(btrim(p_publication_id), '') = '' or coalesce(btrim(p_actor_id), '') = ''
+     or coalesce(btrim(p_reason), '') = '' or coalesce(btrim(p_idempotency_key), '') = '' then
+    raise exception 'Oasis publication identity, actor, reason and idempotency key are required.';
+  end if;
+  if p_schema_version <> 'oasis-public-projection-v1' then raise exception 'Unsupported Oasis public projection schema.'; end if;
+  if jsonb_typeof(p_manifest) <> 'object' then raise exception 'Oasis manifest must be a JSON object.'; end if;
+  if p_manifest->>'schemaVersion' <> 'oasis-media-manifest-v1' then raise exception 'Unsupported Oasis media manifest schema.'; end if;
+  if p_source_fingerprint !~ '^[0-9a-f]{64}$' or p_manifest->>'sourceFingerprint' <> p_source_fingerprint then raise exception 'Oasis source fingerprint does not match the manifest.'; end if;
+  if p_manifest_hash !~ '^[0-9a-f]{64}$' or public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash then raise exception 'Oasis manifest hash does not match canonical manifest content.'; end if;
+  if jsonb_typeof(p_manifest->'sourceAssetCount') <> 'number' or p_manifest->>'sourceAssetCount' <> '111'
+     or jsonb_typeof(p_manifest->'derivativeAssetCount') <> 'number' or p_manifest->>'derivativeAssetCount' <> '111'
+     or jsonb_typeof(p_manifest->'sourceAssetBytes') <> 'number' or (p_manifest->>'sourceAssetBytes')::numeric <= 0
+     or jsonb_typeof(p_manifest->'derivativeAssetBytes') <> 'number' or (p_manifest->>'derivativeAssetBytes')::numeric <= 0 then
+    raise exception 'Oasis publication requires exactly 111 mapped media assets and complete byte totals.';
+  end if;
+  if jsonb_typeof(p_manifest->'entries') <> 'array' or jsonb_array_length(p_manifest->'entries') <> 111 then raise exception 'Oasis manifest requires exactly 111 entries.'; end if;
+  if (select count(distinct entry->>'privateSourceFilename') from jsonb_array_elements(p_manifest->'entries') entry) <> 111 then raise exception 'Oasis private-source identities must be complete and unique.'; end if;
+  if (select count(distinct entry->>'publicDerivativePath') from jsonb_array_elements(p_manifest->'entries') entry) <> 111 then raise exception 'Oasis derivative paths must be complete and unique.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_manifest->'entries') entry
+    where jsonb_typeof(entry) <> 'object'
+      or coalesce(entry->>'recordId', '') !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+      or coalesce(entry->>'privateSourceFilename', '') = ''
+      or coalesce(entry->>'sourceChecksum', '') !~ '^[0-9a-f]{64}$'
+      or coalesce(entry->>'derivativeChecksum', '') !~ '^[0-9a-f]{64}$'
+      or coalesce(entry->>'publicDerivativePath', '') !~ '^media/oasis-island/[a-z0-9-]+/(catalogue|level-[0-9]+)(-variant-[0-9]+)?[.]webp$'
+      or entry->>'publicDerivativePath' not like 'media/oasis-island/' || entry->>'recordId' || '/%'
+      or entry->>'privateDerivativePath' <> 'fixtures/oasis-001a-publication/' || entry->>'publicDerivativePath'
+      or jsonb_typeof(entry->'sourceBytes') <> 'number' or (entry->>'sourceBytes')::numeric <= 0
+      or jsonb_typeof(entry->'derivativeBytes') <> 'number' or (entry->>'derivativeBytes')::numeric <= 0
+      or jsonb_typeof(entry->'width') <> 'number' or (entry->>'width')::numeric <= 0 or (entry->>'width')::numeric <> trunc((entry->>'width')::numeric)
+      or jsonb_typeof(entry->'height') <> 'number' or (entry->>'height')::numeric <= 0 or (entry->>'height')::numeric <> trunc((entry->>'height')::numeric)
+      or entry->>'mediaRole' not in ('catalogue', 'level')
+      or (entry->>'mediaRole' = 'catalogue' and jsonb_typeof(entry->'levelVariant') <> 'null')
+      or (entry->>'mediaRole' = 'level' and (jsonb_typeof(entry->'levelVariant') <> 'number' or (entry->>'levelVariant')::numeric <= 0 or (entry->>'levelVariant')::numeric <> trunc((entry->>'levelVariant')::numeric)))
+      or coalesce(entry->>'altText', '') = ''
+  ) then raise exception 'Oasis manifest entry metadata is incomplete or invalid.'; end if;
+  if jsonb_typeof(p_manifest->'missingArtworkRecordIds') <> 'array'
+     or jsonb_array_length(p_manifest->'missingArtworkRecordIds') <> 6
+     or (select count(distinct value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> 6
+     or (select array_agg(value order by value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> expected_missing_ids then
+    raise exception 'Oasis missing-artwork IDs do not match the six approved records.';
+  end if;
+  if jsonb_typeof(p_manifest->'placeholder') <> 'object'
+     or p_manifest#>>'{placeholder,publicDerivativePath}' <> 'media/oasis-island/shared/artwork-unavailable.webp'
+     or p_manifest#>>'{placeholder,privateDerivativePath}' <> 'fixtures/oasis-001a-publication/media/oasis-island/shared/artwork-unavailable.webp'
+     or coalesce(p_manifest#>>'{placeholder,derivativeChecksum}', '') !~ '^[0-9a-f]{64}$'
+     or jsonb_typeof(p_manifest#>'{placeholder,derivativeBytes}') <> 'number' or (p_manifest#>>'{placeholder,derivativeBytes}')::numeric <= 0
+     or jsonb_typeof(p_manifest#>'{placeholder,width}') <> 'number' or (p_manifest#>>'{placeholder,width}')::numeric <= 0
+     or jsonb_typeof(p_manifest#>'{placeholder,height}') <> 'number' or (p_manifest#>>'{placeholder,height}')::numeric <= 0
+     or coalesce(p_manifest#>>'{placeholder,altText}', '') = '' then
+    raise exception 'Oasis placeholder metadata is incomplete or invalid.';
+  end if;
+  if jsonb_typeof(p_records) <> 'array' or jsonb_array_length(p_records) <> 55 then raise exception 'Oasis publication requires exactly 55 public records.'; end if;
+  if (select count(distinct r->>'id') from jsonb_array_elements(p_records) r) <> 55 then raise exception 'Oasis record IDs must be complete and unique.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_records) r
+    where jsonb_typeof(r) <> 'object' or not (r ?& allowed_record_keys)
+      or exists (select 1 from jsonb_object_keys(r) key where not key = any(allowed_record_keys))
+      or public.oasis_json_has_forbidden_key(r)
+      or r->>'schemaVersion' <> p_schema_version or r->>'status' <> 'published'
+      or coalesce(r->>'id', '') !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+      or coalesce(r->>'name', '') = '' or coalesce(r->>'recordType', '') = ''
+      or jsonb_typeof(r->'aliases') <> 'array' or jsonb_typeof(r->'levels') <> 'array'
+      or jsonb_typeof(r->'maxEffects') <> 'array' or jsonb_typeof(r->'media') <> 'array'
+      or r->>'trustLabel' <> 'Owner verified in-game'
+      or r->>'publicationId' <> p_publication_id
+      or (jsonb_typeof(r->'publicationVersion') not in ('number', 'null'))
+      or (jsonb_typeof(r->'publicationVersion') = 'number' and ((r->>'publicationVersion')::numeric <= 0 or (r->>'publicationVersion')::numeric <> trunc((r->>'publicationVersion')::numeric)))
+      or coalesce(r->>'publishedAt', '') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?Z$'
+      or coalesce(r->>'updatedAt', '') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?Z$'
+      or (r->>'publishedAt')::timestamptz is null or (r->>'updatedAt')::timestamptz is null
+      or r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'
+  ) then raise exception 'Oasis public records failed the publication boundary.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_records) r cross join lateral jsonb_array_elements(r->'media') media
+    where jsonb_typeof(media) <> 'object'
+      or not (media ?& array['url', 'alt', 'role', 'levelVariant', 'width', 'height'])
+      or exists (select 1 from jsonb_object_keys(media) key where not key = any(array['url', 'alt', 'role', 'levelVariant', 'width', 'height']))
+      or coalesce(media->>'alt', '') = '' or media->>'role' not in ('catalogue', 'level', 'placeholder')
+      or jsonb_typeof(media->'width') <> 'number' or (media->>'width')::numeric <= 0
+      or jsonb_typeof(media->'height') <> 'number' or (media->>'height')::numeric <= 0
+      or not (
+        (media->>'role' = 'placeholder'
+          and media->>'url' = '/' || p_manifest#>>'{placeholder,publicDerivativePath}'
+          and (p_manifest->'missingArtworkRecordIds') ? (r->>'id'))
+        or exists (
+          select 1 from jsonb_array_elements(p_manifest->'entries') entry
+          where entry->>'recordId' = r->>'id'
+            and media->>'url' = '/' || entry->>'publicDerivativePath'
+            and media->>'role' = entry->>'mediaRole'
+            and media->'levelVariant' = entry->'levelVariant'
+            and media->'width' = entry->'width' and media->'height' = entry->'height'
+        )
+      )
+  ) then raise exception 'Oasis public media does not match the approved manifest.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_manifest->'entries') entry
+    where not exists (
+      select 1 from jsonb_array_elements(p_records) r cross join lateral jsonb_array_elements(r->'media') media
+      where r->>'id' = entry->>'recordId' and media->>'url' = '/' || entry->>'publicDerivativePath'
+    )
+  ) then raise exception 'Oasis manifest derivatives are not completely represented by public records.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds') missing(record_id)
+    where not exists (
+      select 1 from jsonb_array_elements(p_records) r cross join lateral jsonb_array_elements(r->'media') media
+      where r->>'id' = missing.record_id
+        and media->>'role' = 'placeholder'
+        and media->>'url' = '/' || p_manifest#>>'{placeholder,publicDerivativePath}'
+    )
+  ) then raise exception 'Every approved missing-artwork record requires the approved placeholder.'; end if;
+  if p_rollback_of_publication_id is not null and not exists (select 1 from public.oasis_publication_versions where publication_id = p_rollback_of_publication_id) then raise exception 'Rollback source publication does not exist.'; end if;
+
   perform pg_advisory_xact_lock(hashtext('forge-oasis-publication'));
   select * into existing from public.oasis_publication_versions where idempotency_key = p_idempotency_key;
   if found then
+    if existing.publication_id <> p_publication_id or existing.manifest_hash <> p_manifest_hash or existing.source_fingerprint <> p_source_fingerprint then
+      raise exception 'Oasis idempotency key conflicts with an existing publication.';
+    end if;
+    if exists (select 1 from jsonb_array_elements(p_records) r where jsonb_typeof(r->'publicationVersion') = 'number' and (r->>'publicationVersion')::bigint <> existing.publication_version) then
+      raise exception 'Oasis record publication identity conflicts with the existing publication.';
+    end if;
     return jsonb_build_object('publicationId', existing.publication_id, 'publicationVersion', existing.publication_version, 'duplicate', true);
   end if;
-  if p_schema_version <> 'oasis-public-projection-v1' then raise exception 'Unsupported Oasis public projection schema.'; end if;
-  if p_manifest_hash !~ '^[0-9a-f]{64}$' then raise exception 'Invalid Oasis manifest hash.'; end if;
-  if jsonb_typeof(p_records) <> 'array' or jsonb_array_length(p_records) <> 55 then raise exception 'Oasis publication requires exactly 55 public records.'; end if;
-  if (p_manifest->>'sourceAssetCount')::integer <> 111 or (p_manifest->>'derivativeAssetCount')::integer <> 111 then raise exception 'Oasis publication requires exactly 111 mapped media assets.'; end if;
-  if exists (
-    select 1 from jsonb_array_elements(p_records) r
-    where r->>'schemaVersion' <> p_schema_version or r->>'status' <> 'published'
-      or r ?| array['_meta', 'source', 'sourceUrl', 'sourceText', 'verification', 'provenance', 'privateSourceFilename', 'imageFiles', 'repositoryPath', 'filesystemPath']
-  ) then raise exception 'Oasis public records failed the publication boundary.'; end if;
-  if (select count(distinct r->>'id') from jsonb_array_elements(p_records) r) <> 55 then raise exception 'Oasis record IDs must be complete and unique.'; end if;
-  if p_rollback_of_publication_id is not null and not exists (select 1 from public.oasis_publication_versions where publication_id = p_rollback_of_publication_id) then raise exception 'Rollback source publication does not exist.'; end if;
-
   select publication_id into previous_id from public.oasis_publication_current where singleton = true for update;
   insert into public.oasis_publication_versions(
     publication_id, schema_version, status, source_fingerprint, manifest, manifest_hash,
@@ -134,6 +317,9 @@ begin
     p_manifest_hash, 55, 111, p_actor_id, p_reason, p_idempotency_key,
     p_rollback_of_publication_id
   ) returning publication_version into version_value;
+  if exists (select 1 from jsonb_array_elements(p_records) r where jsonb_typeof(r->'publicationVersion') = 'number' and (r->>'publicationVersion')::bigint <> version_value) then
+    raise exception 'Oasis record publication identity conflicts with the publication being created.';
+  end if;
   insert into public.oasis_publication_records(publication_id, record_id, public_record)
     select p_publication_id, r->>'id', r || jsonb_build_object('publicationId', p_publication_id, 'publicationVersion', version_value)
     from jsonb_array_elements(p_records) r;
@@ -152,6 +338,6 @@ revoke all on function public.publish_oasis_catalogue(text, text, text, jsonb, t
 grant execute on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) to service_role;
 
 comment on table public.oasis_publication_versions is 'OASIS-001A-PUB immutable publication history. Applying this migration does not publish a catalogue.';
-comment on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) is 'Creates and atomically activates a new immutable Oasis publication. Rollback creates a new publication; it never mutates history.';
+comment on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) is 'Creates and atomically activates a validated immutable Oasis publication. EXECUTE is revoked from PUBLIC, anon and authenticated and granted only to service_role; this grant is the caller boundary because current_user inside SECURITY DEFINER is the function owner. Rollback creates a new publication; it never mutates history.';
 
 commit;
