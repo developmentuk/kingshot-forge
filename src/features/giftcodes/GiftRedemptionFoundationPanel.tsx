@@ -129,11 +129,12 @@ export function GiftRedemptionFoundationPanel() {
         </h2>
 
         <p>
-          Auto Redeem submits only the linked, verified Governor and
-          active Gift Codes when you start a run. Forge never asks for
-          or stores a game password, and manual copying remains available.
+          Auto Redeem requires a Governor whose ownership is officially
+          verified. It submits that Governor and active Gift Codes only when
+          you select <strong>Redeem available codes</strong>. Forge never asks
+          for or stores a game password, and manual copying remains available.
         </p>
-        <p>Your linked Player ID was verified through the Kingshot player service.</p>
+        <p>A successful public Kingshot Player ID lookup confirms that the account exists; it does not verify that you own it.</p>
       </div>
 
       <div
@@ -215,7 +216,7 @@ export function GiftRedemptionFoundationPanel() {
               to="/my-forge"
               className="gift-redemption-panel__change"
             >
-              Review linked Governor
+              Verify Governor ownership
             </Link>
           </>
         )}
@@ -251,7 +252,7 @@ export function GiftRedemptionFoundationPanel() {
                 <div>
                   <label>
                     <input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} />
-                    I understand Forge will submit my linked Player ID and selected codes, record normalised outcomes and timestamps, will not request a game password, and will process codes only when I start a run.
+                    I understand Forge will submit my ownership-verified Governor and selected codes, record normalised outcomes and timestamps, will not request a game password, and will process codes only when I explicitly select <strong>Redeem available codes</strong>.
                   </label>
                   <button type="button" className="button button--primary" disabled={!consentChecked || busy || !context.eligibility.eligible && !context.eligibility.reasons.includes('consent_required')} onClick={() => void grant()}>Grant Auto Redeem consent</button>
                 </div>

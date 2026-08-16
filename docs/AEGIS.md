@@ -1,5 +1,27 @@
 # Kingshot Forge Project Constitution
 
+## AUTO-REDEEM-SAFETY-001 containment record — 16 August 2026
+
+Auto Redeem remains disabled. Phase 1 contains unsafe activation paths; it is
+not production activation. Provider execution requires all four server-only
+gates (`GIFTCODE_REDEMPTION_ENABLED`,
+`GIFTCODE_OFFICIAL_PROVIDER_ENABLED`,
+`GIFTCODE_PROVIDER_ENVIRONMENT_APPROVED` and
+`GIFTCODE_QUEUE_PROCESSING_ENABLED`), database provider enablement, a closed
+circuit and healthy provider status. All four example gates default to false.
+
+Consent policy `giftcode-redemption-v2` requires an ownership-verified
+Governor (`verification_status=officially_verified`). Public Player ID lookup
+and community verification do not prove ownership. Historical v1 consent is
+preserved but is not current consent. Redemption begins only when the player
+explicitly selects **Redeem available codes**; login and session restoration
+never start redemption. Authenticated gift-code actions require an active Forge
+account.
+
+Provider protocol recovery, a genuine asynchronous queue/worker, complete
+production audit events and stronger provider integration testing remain
+activation blockers. See `docs/releases/AUTO-REDEEM-SAFETY-001.md`.
+
 ## FRKS-PRESERVE-001 operational record — 13 August 2026
 
 Durable governance, Data Engine and Player Intelligence findings from stale PRs
@@ -382,13 +404,21 @@ Public profile reads select only public profile fields and non-sensitive player 
 
 Validation completed for this milestone: Player Identity structural validation, focused and vertical-slice tests, TypeScript production build and lint, targeted route checks, and Data Engine record-shape checks for troops, Truegold and VIP. Legacy progression values are preserved in history and rendered with a review label when they are no longer in the published selector options; no destructive migration is performed. Lint retains the repository's existing seven warnings in unrelated/shared files. Live signed-in route and RLS verification still require a deployment or authenticated browser session with access to the configured Supabase project.
 
-### Release 0.7.5 Player ID verification trust model
+### Historical Release 0.7.5 Player ID verification trust model
 
-For Auto Redeem, Forge verifies that a Player ID is valid through the Kingshot player service and links it to the authenticated Forge account. Forge does not request a game password or claim official account authentication. The trusted server link/revalidation route owns the canonical player fields, `verification_status`, `verification_method` and `verified_at`; browser roles cannot mutate verification columns or verification events. A legacy `linked` row remains ineligible until that same server path revalidates it. Consent and the provider-health pause are independent gates.
+This 0.7.5 lookup-based model is superseded by AUTO-REDEEM-SAFETY-001. A
+successful public Player ID lookup proves existence, not ownership. Auto Redeem
+now requires `verification_status=officially_verified`; browser roles still
+cannot mutate verification columns or verification events. Consent and provider
+health remain independent gates.
 
 ## Active Release
 
-### Release 0.7.5 — Auto Redeem
+### Historical Release 0.7.5 — Auto Redeem
+
+This material records the earlier release design and is superseded for Auto
+Redeem activation by AUTO-REDEEM-SAFETY-001. It must not be read as a current
+production-readiness or activation claim.
 
 Working branch:
 

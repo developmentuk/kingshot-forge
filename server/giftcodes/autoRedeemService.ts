@@ -1,10 +1,11 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
+import { assertProviderCanRun, readGiftCodeFeatureGates } from './config.js'
 import { createOfficialGiftCodeProvider, OFFICIAL_GIFT_CODE_PROVIDER_ID, readOfficialProviderConfig } from './officialProvider.js'
 import { createGiftCodeIdempotencyIdentity } from './workflow/idempotency.js'
 
-const CONSENT_VERSION = 'giftcode-redemption-v1'
-const POLICY_TEXT = 'Forge Auto Redeem submits the linked Player ID, linked kingdom ID and selected active Gift Codes to the Kingshot provider, records normalized outcomes and timestamps, never requests a game password, and only processes codes after explicit opt-in and an automatic or user-triggered run.'
+const CONSENT_VERSION = 'giftcode-redemption-v2'
+const POLICY_TEXT = 'Forge Auto Redeem submits the ownership-verified Governor Player ID, linked kingdom ID and selected active Gift Codes to the Kingshot provider, records normalized outcomes and timestamps, never requests a game password, and processes codes only when the player explicitly selects Redeem available codes.'
 const POLICY_DIGEST = createHash('sha256').update(POLICY_TEXT).digest('hex')
 const MAX_CODES_PER_RUN = 20
 const MIN_DELAY_MS = 750
@@ -52,7 +53,7 @@ export type GiftCodeAdminMetrics = Readonly<{
 
 function now() { return new Date().toISOString() }
 function configured() { return readOfficialProviderConfig() }
-function isVerified(value: unknown) { return value === 'verified' || value === 'community_verified' || value === 'officially_verified' }
+function isVerified(value: unknown) { return value === 'officially_verified' }
 function hasValidKingdom(value: unknown) {
   const kingdom = typeof value === 'number' ? value : Number(value)
   return Number.isInteger(kingdom) && kingdom >= 1 && kingdom <= 9999
@@ -121,8 +122,29 @@ async function providerHealth() {
   return data as PlayerRow | null
 }
 
+function environmentReady() {
+  const gates = readGiftCodeFeatureGates()
+  return gates.redemptionEnabled && gates.officialProviderEnabled && gates.approvedEnvironment && gates.queueProcessingEnabled
+}
+
 function providerReady(config: ReturnType<typeof configured>, health: PlayerRow | null) {
-  return Boolean(config?.enabled && health?.provider_enabled === true && health.circuit_state === 'closed')
+  return Boolean(
+    config &&
+    environmentReady() &&
+    health?.provider_enabled === true &&
+    health.circuit_state === 'closed' &&
+    health.health_status === 'healthy',
+  )
+}
+
+async function assertProviderReadiness() {
+  const provider = createOfficialGiftCodeProvider(configured())
+  assertProviderCanRun(readGiftCodeFeatureGates(), provider)
+  const health = await providerHealth()
+  if (health?.provider_enabled !== true) throw Object.assign(new Error('The database provider configuration is disabled.'), { statusCode: 409 })
+  if (health.circuit_state !== 'closed') throw Object.assign(new Error('The gift-code provider circuit is not closed.'), { statusCode: 409 })
+  if (health.health_status !== 'healthy') throw Object.assign(new Error('The gift-code provider is not production-ready.'), { statusCode: 409 })
+  return provider
 }
 
 function eligibility(input: { player: PlayerRow | null; consent: PlayerRow | null; providerReady: boolean; codeCount: number }) {
@@ -151,15 +173,15 @@ export async function getAutoRedeemContext(userId: string | null) {
   }
   const provider = configured()
   const ready = Math.max(0, codes.length - processed)
-  return { authenticated: true, provider: { configured: provider !== null, configEnabled: Boolean(provider?.enabled), enabled: providerReady(provider, health), health: health ? { status: health.health_status, reason: health.reason_code, circuitState: health.circuit_state } : { status: 'disabled', reason: 'provider_health_not_enabled', circuitState: 'open' } }, player: safePlayer(player), consent: consent ? { grantedAt: consent.granted_at, version: consent.policy_version } : null, codes: { active: codes.length, ready, processed }, eligibility: eligibility({ player, consent, providerReady: providerReady(provider, health), codeCount: ready }) }
+  return { authenticated: true, provider: { configured: provider !== null, configEnabled: environmentReady(), enabled: providerReady(provider, health), health: health ? { status: health.health_status, reason: health.reason_code, circuitState: health.circuit_state } : { status: 'disabled', reason: 'provider_health_not_enabled', circuitState: 'open' } }, player: safePlayer(player), consent: consent ? { grantedAt: consent.granted_at, version: consent.policy_version } : null, codes: { active: codes.length, ready, processed }, eligibility: eligibility({ player, consent, providerReady: providerReady(provider, health), codeCount: ready }) }
 }
 
 export async function grantConsent(userId: string) {
   const player = await ownedPlayer(userId)
-  if (!player || !isVerified(player.verification_status)) throw Object.assign(new Error('A verified linked Governor is required.'), { statusCode: 409 })
+  if (!player || !isVerified(player.verification_status)) throw Object.assign(new Error('An ownership-verified Governor is required.'), { statusCode: 409 })
   if (!hasValidKingdom(player.kingdom_id)) throw Object.assign(new Error('The linked Governor needs a verified kingdom before Auto Redeem can be enabled.'), { statusCode: 409 })
   const grantedAt = now()
-  const { data, error } = await getSupabaseAdmin().from('gift_code_redemption_consents').insert({ user_id: userId, player_account_id: player.id, character_ref: player.id, character_revision: Math.max(1, Math.floor(Date.parse(String(player.updated_at ?? grantedAt)) / 1000)), provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', provider_mode: 'automatic_selection', purpose: 'official_gift_code_redemption', policy_version: CONSENT_VERSION, policy_digest: POLICY_DIGEST, evidence_version: 'gift-centre-0.7.5', evidence_metadata: { surface: 'gift-centre', user_triggered: true }, granted_at: grantedAt }).select('id,granted_at,policy_version').single()
+  const { data, error } = await getSupabaseAdmin().from('gift_code_redemption_consents').insert({ user_id: userId, player_account_id: player.id, character_ref: player.id, character_revision: Math.max(1, Math.floor(Date.parse(String(player.updated_at ?? grantedAt)) / 1000)), provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', provider_mode: 'automatic_selection', purpose: 'official_gift_code_redemption', policy_version: CONSENT_VERSION, policy_digest: POLICY_DIGEST, evidence_version: 'auto-redeem-safety-001', evidence_metadata: { surface: 'gift-centre', user_triggered: true, ownership_verification: 'officially_verified' }, granted_at: grantedAt }).select('id,granted_at,policy_version').single()
   if (error) throw error
   return data
 }
@@ -167,7 +189,7 @@ export async function grantConsent(userId: string) {
 export async function revokeConsent(userId: string) {
   const player = await ownedPlayer(userId)
   if (!player) return
-  const { error } = await getSupabaseAdmin().from('gift_code_redemption_consents').update({ revoked_at: now(), updated_at: now(), version: 2 }).eq('user_id', userId).eq('player_account_id', player.id).eq('provider_id', OFFICIAL_GIFT_CODE_PROVIDER_ID).is('revoked_at', null)
+  const { error } = await getSupabaseAdmin().from('gift_code_redemption_consents').update({ revoked_at: now(), updated_at: now(), version: 2 }).eq('user_id', userId).eq('player_account_id', player.id).eq('provider_id', OFFICIAL_GIFT_CODE_PROVIDER_ID).eq('policy_version', CONSENT_VERSION).is('revoked_at', null)
   if (error) throw error
 }
 
@@ -191,16 +213,17 @@ export async function redeemAvailable(userId: string, options: { allowedCodes?: 
   const player = await ownedPlayer(userId)
   const consent = player ? await currentConsent(userId, String(player.id)) : null
   if (!player || !consent) throw Object.assign(new Error('Redemption consent is required.'), { statusCode: 409 })
+  if (!isVerified(player.verification_status)) throw Object.assign(new Error('Governor ownership verification is required.'), { statusCode: 409 })
   if (!hasValidKingdom(player.kingdom_id)) throw Object.assign(new Error('The linked Governor needs a verified kingdom before redemption.'), { statusCode: 409 })
   const availableCodes = await activeCodes()
   const codes = (options.allowedCodes
     ? availableCodes.filter((code) => options.allowedCodes?.includes(code.code))
     : availableCodes).slice(0, MAX_CODES_PER_RUN)
   if (codes.length === 0) throw Object.assign(new Error('The requested validation code is not active.'), { statusCode: 409 })
+  await assertProviderReadiness()
   const admin = getSupabaseAdmin()
   const { data: run, error: runError } = await admin.from('gift_code_redemption_runs').insert({ user_id: userId, player_account_id: player.id, requested_code_count: codes.length }).select('id').single()
   if (runError || !run) throw Object.assign(new Error('Another redemption run may already be in progress.'), { statusCode: 409 })
-  const provider = createOfficialGiftCodeProvider()
   const results: Record<string, unknown>[] = []
   let previousRequest = 0
   for (const code of codes) {
@@ -218,6 +241,7 @@ export async function redeemAvailable(userId: string, options: { allowedCodes?: 
     await waitBetween(previousRequest); previousRequest = Date.now()
     const attemptId = randomUUID()
     await admin.from('gift_code_redemption_attempts').insert({ id: attemptId, request_id: request.id, user_id: userId, ordinal: 1, provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, lease_owner: `run:${run.id}`, started_at: now(), deadline_at: new Date(Date.now() + 20_000).toISOString(), code_publication_id: code.id, publication_version: code.version, code_snapshot: code.code })
+    const provider = await assertProviderReadiness()
     const providerResult = await provider.redeem({ attemptId, playerAccountId: String(player.id), playerId: String(player.player_id), kingdomId: String(player.kingdom_id), giftCodeId: code.id, giftCodeVersion: code.version, code: code.code, idempotencyKey: identity.hash, consentVersion: CONSENT_VERSION })
     const mapped = providerToAttempt(providerResult)
     await admin.from('gift_code_redemption_attempts').update({ outcome: mapped.outcome, request_disposition: mapped.requestDisposition, result_code: mapped.resultCode, safe_diagnostic_code: providerResult.safeDiagnosticCode, retryable: mapped.retryable, completed_at: now(), version: 1 }).eq('id', attemptId)
@@ -233,18 +257,6 @@ export async function redeemAvailable(userId: string, options: { allowedCodes?: 
 
 export async function redeemControlledValidationCode(userId: string) {
   return redeemAvailable(userId, { allowedCodes: [CONTROLLED_VALIDATION_CODE] })
-}
-
-const automaticRunInFlight = new Set<string>()
-export async function triggerAutomaticRedemption(userId: string, trigger: 'login' | 'player_refresh' | 'scheduled' | 'new_code' = 'login') {
-  if (automaticRunInFlight.has(userId)) return { skipped: true, reason: 'run_in_progress', trigger }
-  automaticRunInFlight.add(userId)
-  try {
-    const context = await getAutoRedeemContext(userId)
-    if (!context.eligibility.eligible || !context.consent) return { skipped: true, reason: context.eligibility.reasons.join(','), trigger }
-    try { return { skipped: false, trigger, ...(await redeemAvailable(userId)) } }
-    catch (error) { console.warn('[giftcodes:auto]', { userId, trigger, name: error instanceof Error ? error.name : 'UnknownError' }); return { skipped: true, reason: 'automatic_run_failed', trigger } }
-  } finally { automaticRunInFlight.delete(userId) }
 }
 
 export async function redemptionHistory(userId: string) {
@@ -267,7 +279,7 @@ export async function redemptionHistory(userId: string) {
 export async function getProviderOperations() {
   const config = configured()
   const health = await providerHealth()
-  return { providerId: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', configured: config !== null, configEnabled: Boolean(config?.enabled), health: health ? { enabled: health.provider_enabled === true, circuitState: String(health.circuit_state ?? 'open'), status: String(health.health_status ?? 'unknown'), reason: String(health.reason_code ?? 'provider_health_unavailable'), changedAt: String(health.changed_at ?? '') || null, updatedAt: String(health.updated_at ?? '') || null } : null } satisfies GiftCodeProviderOperations
+  return { providerId: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', configured: config !== null, configEnabled: environmentReady(), health: health ? { enabled: health.provider_enabled === true, circuitState: String(health.circuit_state ?? 'open'), status: String(health.health_status ?? 'unknown'), reason: String(health.reason_code ?? 'provider_health_unavailable'), changedAt: String(health.changed_at ?? '') || null, updatedAt: String(health.updated_at ?? '') || null } : null } satisfies GiftCodeProviderOperations
 }
 
 export async function getAdminGiftCodeCatalogue() {
@@ -349,12 +361,15 @@ export async function getAdminGiftCodeMetrics(): Promise<GiftCodeAdminMetrics> {
 }
 
 export async function setProviderOperations(actorId: string, enabled: boolean, reasonCode: string) {
-  const config = configured()
-  // The environment kill switch is authoritative. Admin state cannot enable
-  // a provider while the release flag is false.
-  if (enabled && !config?.enabled) {
-    const current = await providerHealth()
-    return current ?? { provider_enabled: false, circuit_state: 'open', health_status: 'disabled', reason_code: 'environment_disabled', changed_at: null, updated_at: null }
+  // Canonical environment gates are authoritative. Admin state cannot enable
+  // a provider unless every activation boundary is already approved.
+  if (enabled) {
+    const provider = createOfficialGiftCodeProvider(configured())
+    try {
+      assertProviderCanRun(readGiftCodeFeatureGates(), provider)
+    } catch (error) {
+      throw Object.assign(error instanceof Error ? error : new Error('Provider activation is blocked.'), { statusCode: 409 })
+    }
   }
   const status = enabled ? 'unknown' : 'disabled'
   const { data, error } = await getSupabaseAdmin().from('gift_code_provider_health').upsert({ provider_id: OFFICIAL_GIFT_CODE_PROVIDER_ID, environment: 'production', provider_enabled: enabled, circuit_state: enabled ? 'closed' : 'open', health_status: status, health_score: enabled ? null : null, reason_code: reasonCode.trim() || (enabled ? 'admin_enabled' : 'admin_paused'), changed_by: actorId, changed_at: now(), updated_at: now() }, { onConflict: 'provider_id,environment' }).select('provider_enabled,circuit_state,health_status,reason_code,changed_at,updated_at').single()

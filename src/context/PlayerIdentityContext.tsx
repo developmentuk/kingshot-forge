@@ -189,11 +189,6 @@ export function PlayerIdentityProvider({
   }, [authLoading, canAutoRefresh, isVisionAcceptanceRoute, loadPlayerIdentity, refreshPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
-    if (isVisionAcceptanceRoute || !session?.access_token || !user) return
-    void fetch('/api/giftcodes?action=auto-run', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: '{}' }).catch(() => undefined)
-  }, [isVisionAcceptanceRoute, session?.access_token, user])
-
-  useEffect(() => {
     if (isVisionAcceptanceRoute) return
     function handlePlayerUpdate() {
       void refreshPlayerIdentity('manual')

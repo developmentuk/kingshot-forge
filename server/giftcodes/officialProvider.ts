@@ -12,7 +12,6 @@ export type OfficialProviderConfig = Readonly<{
   codeUrl: string
   signingKey: string
   timeoutMs: number
-  enabled: boolean
 }>
 
 export type OfficialProviderFetch = (
@@ -45,10 +44,6 @@ const SAFE_MESSAGES = Object.freeze({
   unknown: 'The provider returned an unexpected result.',
 })
 
-function readBoolean(value: string | undefined) {
-  return value === 'true'
-}
-
 export function readOfficialProviderConfig(
   environment: NodeJS.ProcessEnv = process.env,
 ): OfficialProviderConfig | null {
@@ -70,7 +65,6 @@ export function readOfficialProviderConfig(
     codeUrl,
     signingKey,
     timeoutMs,
-    enabled: readBoolean(environment.KINGSHOT_REDEMPTION_ENABLED),
   })
 }
 
@@ -215,7 +209,7 @@ export function createOfficialGiftCodeProvider(
     productionReady: config !== null,
     capabilities: officialGiftCodeProviderCapabilities,
     async redeem(request: GiftCodeRedemptionRequest) {
-      if (!config || !config.enabled) {
+      if (!config) {
         return result({ status: 'not_supported', externalRequestSent: false, requestDisposition: 'not_sent', providerReference: null, failureCategory: 'permanent', retryAfterSeconds: null, safeDiagnosticCode: 'provider_not_configured', safeMessage: 'Automatic redemption is not configured.' })
       }
       if (!validKingdomId(request.kingdomId)) {

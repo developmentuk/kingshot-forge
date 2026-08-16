@@ -55,7 +55,7 @@ test('stale consent and expired codes remain ineligible', () => {
     featureEnabled: true,
     authenticated: true,
     playerAccountId: 'player-account-1',
-    verificationStatus: 'community_verified',
+    verificationStatus: 'officially_verified',
     consent: {
       enabled: true,
       version: 'retired-consent-version',
@@ -70,6 +70,25 @@ test('stale consent and expired codes remain ineligible', () => {
       'code_expired',
     ],
   })
+})
+
+test('public lookup and community verification do not prove ownership', () => {
+  for (const verificationStatus of ['verified', 'community_verified']) {
+    const result = evaluateRedemptionEligibility({
+      featureEnabled: true,
+      authenticated: true,
+      playerAccountId: 'player-account-1',
+      verificationStatus,
+      consent: {
+        enabled: true,
+        version: GIFT_CODE_CONSENT_VERSION,
+      },
+      codeAvailability: 'active',
+    })
+
+    assert.equal(result.eligible, false)
+    assert.ok(result.reasons.includes('player_verification_required'))
+  }
 })
 
 test('gift-code normalisation trims but preserves case', () => {

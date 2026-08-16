@@ -11,6 +11,7 @@ import {
 } from './config.ts'
 import { mockGiftCodeRedemptionProvider } from './mockProvider.ts'
 import {
+  createOfficialGiftCodeProvider,
   createSignedFields,
   normaliseOfficialResponse,
   officialGiftCodeProviderSkeleton,
@@ -96,7 +97,7 @@ test('simulation provider is rejected even when every live gate is enabled', () 
           redemptionEnabled: true,
           officialProviderEnabled: true,
           approvedEnvironment: true,
-          queueProcessingEnabled: false,
+          queueProcessingEnabled: true,
         },
         mockGiftCodeRedemptionProvider,
       ),
@@ -105,6 +106,25 @@ test('simulation provider is rejected even when every live gate is enabled', () 
 })
 
 test('production execution guard requires every live gate', () => {
+  const productionProvider = {
+    id: 'future-live-provider',
+    productionReady: true,
+    capabilities: {
+      executionMode: 'external' as const,
+      redemptionSupport: 'live' as const,
+      externalRequestsAllowed: true,
+      requiresVerifiedCharacter: true,
+      requiresConsent: true,
+      supportsBatchRedemption: false,
+      supportsHealthScoring: true,
+    },
+    async redeem() {
+      throw new Error(
+        'The gate test must never execute the provider.',
+      )
+    },
+  }
+
   assert.throws(
     () =>
       assertProviderCanRun(
@@ -114,26 +134,55 @@ test('production execution guard requires every live gate', () => {
           approvedEnvironment: false,
           queueProcessingEnabled: false,
         },
-        {
-          id: 'future-live-provider',
-          productionReady: true,
-          capabilities: {
-            executionMode: 'external',
-            redemptionSupport: 'live',
-            externalRequestsAllowed: true,
-            requiresVerifiedCharacter: true,
-            requiresConsent: true,
-            supportsBatchRedemption: false,
-            supportsHealthScoring: true,
-          },
-          async redeem() {
-            throw new Error(
-              'The gate test must never execute the provider.',
-            )
-          },
-        },
+        productionProvider,
       ),
     /environment is not approved/,
+  )
+
+  assert.throws(
+    () =>
+      assertProviderCanRun(
+        {
+          redemptionEnabled: true,
+          officialProviderEnabled: true,
+          approvedEnvironment: true,
+          queueProcessingEnabled: false,
+        },
+        productionProvider,
+      ),
+    /queue processing is disabled/,
+  )
+
+  assert.doesNotThrow(() =>
+    assertProviderCanRun(
+      {
+        redemptionEnabled: true,
+        officialProviderEnabled: true,
+        approvedEnvironment: true,
+        queueProcessingEnabled: true,
+      },
+      productionProvider,
+    ),
+  )
+})
+
+test('provider gate evaluator reports queue processing as a canonical boundary', () => {
+  assert.throws(
+    () =>
+      assertProviderCanRun(
+        {
+          redemptionEnabled: true,
+          officialProviderEnabled: true,
+          approvedEnvironment: true,
+          queueProcessingEnabled: false,
+        },
+        createOfficialGiftCodeProvider({
+          codeUrl: 'https://provider.test/api/gift_code',
+          signingKey: 'fixture-signing-key',
+          timeoutMs: 15_000,
+        }),
+      ),
+    /queue processing is disabled/,
   )
 })
 
