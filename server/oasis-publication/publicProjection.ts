@@ -160,6 +160,19 @@ export const OASIS_FORBIDDEN_PUBLIC_FIELDS = Object.freeze([
   'imageFiles', 'imageVariantFiles', 'assetStem', 'repositoryPath', 'filesystemPath',
 ] as const)
 
+const OASIS_PUBLIC_LEVEL_KEYS = Object.freeze([
+  'level', 'prosperity', 'prosperityRequired', 'waterEssencePerHour',
+  'bonuses', 'knownEffects', 'exactOutputKnown',
+] as const)
+
+const OASIS_PUBLIC_BONUS_KEYS = Object.freeze(['label', 'stat', 'valuePct', 'effect'] as const)
+const OASIS_PUBLIC_FOOTPRINT_KEYS = Object.freeze(['width', 'height', 'display'] as const)
+const OASIS_PUBLIC_UNLOCK_KEYS = Object.freeze(['requirement', 'initialBlueprintPurchase'] as const)
+const OASIS_PUBLIC_UPGRADE_KEYS = Object.freeze([
+  'currency', 'exchange', 'generalBlueprintRefresh', 'officiallyVerified',
+] as const)
+const OASIS_PUBLIC_MEDIA_KEYS = Object.freeze(['url', 'alt', 'role', 'levelVariant', 'width', 'height'] as const)
+
 function object(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -186,6 +199,121 @@ function number(value: unknown): number | null {
 
 function boolean(value: unknown): boolean | null {
   return typeof value === 'boolean' ? value : null
+}
+
+function assertExactKeys(
+  value: Record<string, unknown>,
+  expected: readonly string[],
+  path: string,
+): void {
+  const missing = expected.filter((key) => !Object.hasOwn(value, key))
+  if (missing.length > 0) throw new Error(`${path} is missing required fields: ${missing.join(', ')}`)
+  const extra = Object.keys(value).filter((key) => !expected.includes(key))
+  if (extra.length > 0) throw new Error(`${path} contains unexpected fields: ${extra.join(', ')}`)
+}
+
+function assertTrimmedString(value: unknown, path: string): asserts value is string {
+  if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+    throw new Error(`${path} must be a non-empty trimmed string.`)
+  }
+}
+
+function assertNullableTrimmedString(value: unknown, path: string): asserts value is string | null {
+  if (value !== null) assertTrimmedString(value, path)
+}
+
+function assertNullableFiniteNumber(value: unknown, path: string): asserts value is number | null {
+  if (value !== null && (typeof value !== 'number' || !Number.isFinite(value))) {
+    throw new Error(`${path} must be a finite number or null.`)
+  }
+}
+
+function assertNullableNonNegativeNumber(value: unknown, path: string): asserts value is number | null {
+  assertNullableFiniteNumber(value, path)
+  if (typeof value === 'number' && value < 0) throw new Error(`${path} must be non-negative or null.`)
+}
+
+function assertNullablePositiveInteger(value: unknown, path: string): asserts value is number | null {
+  assertNullableFiniteNumber(value, path)
+  if (typeof value === 'number' && (!Number.isInteger(value) || value < 1)) {
+    throw new Error(`${path} must be a positive integer or null.`)
+  }
+}
+
+function assertPositiveInteger(value: unknown, path: string): asserts value is number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
+    throw new Error(`${path} must be a positive integer.`)
+  }
+}
+
+function assertIsoTimestamp(value: unknown, path: string): asserts value is string {
+  if (typeof value !== 'string'
+    || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u.test(value)
+    || !Number.isFinite(Date.parse(value))) {
+    throw new Error(`${path} must be a valid UTC timestamp.`)
+  }
+}
+
+function assertPublicBonus(value: unknown, path: string): asserts value is OasisPublicBonus {
+  const item = object(value)
+  if (!item) throw new Error(`${path} must be a non-null object.`)
+  assertExactKeys(item, OASIS_PUBLIC_BONUS_KEYS, path)
+  assertNullableTrimmedString(item.label, `${path}.label`)
+  assertNullableTrimmedString(item.stat, `${path}.stat`)
+  assertNullableFiniteNumber(item.valuePct, `${path}.valuePct`)
+  assertNullableTrimmedString(item.effect, `${path}.effect`)
+}
+
+function assertPublicBonusArray(value: unknown, path: string): asserts value is readonly OasisPublicBonus[] {
+  if (!Array.isArray(value)) throw new Error(`${path} must be an array.`)
+  value.forEach((item, index) => assertPublicBonus(item, `${path}[${index}]`))
+}
+
+function assertPublicLevel(value: unknown, path: string): asserts value is OasisPublicLevel {
+  const item = object(value)
+  if (!item) throw new Error(`${path} must be a non-null object.`)
+  assertExactKeys(item, OASIS_PUBLIC_LEVEL_KEYS, path)
+  assertNullablePositiveInteger(item.level, `${path}.level`)
+  assertNullableNonNegativeNumber(item.prosperity, `${path}.prosperity`)
+  assertNullableNonNegativeNumber(item.prosperityRequired, `${path}.prosperityRequired`)
+  assertNullableNonNegativeNumber(item.waterEssencePerHour, `${path}.waterEssencePerHour`)
+  assertPublicBonusArray(item.bonuses, `${path}.bonuses`)
+  if (!Array.isArray(item.knownEffects)) throw new Error(`${path}.knownEffects must be an array.`)
+  item.knownEffects.forEach((effect, index) => assertTrimmedString(effect, `${path}.knownEffects[${index}]`))
+  if (item.exactOutputKnown !== null && typeof item.exactOutputKnown !== 'boolean') {
+    throw new Error(`${path}.exactOutputKnown must be a boolean or null.`)
+  }
+}
+
+function assertNullableExactObject(
+  value: unknown,
+  keys: readonly string[],
+  path: string,
+): Record<string, unknown> | null {
+  if (value === null) return null
+  const item = object(value)
+  if (!item) throw new Error(`${path} must be an object or null.`)
+  assertExactKeys(item, keys, path)
+  return item
+}
+
+function assertPublicMedia(value: unknown, path: string): asserts value is OasisPublicMedia {
+  const item = object(value)
+  if (!item) throw new Error(`${path} must be a non-null object.`)
+  assertExactKeys(item, OASIS_PUBLIC_MEDIA_KEYS, path)
+  assertTrimmedString(item.url, `${path}.url`)
+  if (!/^\/media\/oasis-island\/[a-z0-9-]+\/(?:catalogue|level-[0-9]+)(?:-variant-[0-9]+)?\.webp$/u.test(item.url)
+    && item.url !== '/media/oasis-island/shared/artwork-unavailable.webp') {
+    throw new Error(`${path}.url is outside the planned Oasis WebP boundary.`)
+  }
+  assertTrimmedString(item.alt, `${path}.alt`)
+  if (item.role !== 'catalogue' && item.role !== 'level' && item.role !== 'placeholder') {
+    throw new Error(`${path}.role is invalid.`)
+  }
+  if (item.role === 'level') assertPositiveInteger(item.levelVariant, `${path}.levelVariant`)
+  else if (item.levelVariant !== null) throw new Error(`${path}.levelVariant must be null for ${item.role} media.`)
+  assertPositiveInteger(item.width, `${path}.width`)
+  assertPositiveInteger(item.height, `${path}.height`)
 }
 
 function stringList(value: unknown): string[] {
@@ -261,7 +389,7 @@ export function buildOasisPublicRecord(
   const footprint = object(record.footprint)
   const unlock = object(record.unlock)
   const upgrade = object(record.upgradeMechanic)
-  return Object.freeze({
+  const publicRecord = Object.freeze({
     schemaVersion: OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION,
     id,
     name,
@@ -287,6 +415,8 @@ export function buildOasisPublicRecord(
     canonicalRoute: `/oasis-island/buildings/${id}`,
     status: 'published',
   })
+  assertOasisPublicRecord(publicRecord)
+  return publicRecord
 }
 
 export function buildOasisPublicDataset(input: {
@@ -398,18 +528,55 @@ export function deriveOasisRollbackRecords(
 export function assertOasisPublicRecord(value: unknown): asserts value is OasisPublicRecord {
   const record = object(value)
   if (!record) throw new Error('Oasis public record is not an object.')
+  const missing = (OASIS_PUBLIC_RECORD_ALLOW_LIST as readonly string[]).filter((key) => !Object.hasOwn(record, key))
+  if (missing.length > 0) throw new Error(`Oasis public record is missing required fields: ${missing.join(', ')}`)
   const extra = Object.keys(record).filter((key) => !(OASIS_PUBLIC_RECORD_ALLOW_LIST as readonly string[]).includes(key))
   if (extra.length > 0) throw new Error(`Oasis public record contains non-allow-listed fields: ${extra.join(', ')}`)
   const serialized = JSON.stringify(record)
   for (const field of OASIS_FORBIDDEN_PUBLIC_FIELDS) {
     if (new RegExp(`"${field}"\\s*:`).test(serialized)) throw new Error(`Oasis public record contains forbidden field: ${field}`)
   }
-  if (record.schemaVersion !== OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION || record.status !== 'published') throw new Error('Oasis public record is not a published v1 projection.')
+  if (record.schemaVersion !== OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION || record.status !== 'published') throw new Error('Oasis public record is not a published v2 projection.')
   if (typeof record.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(record.id)) throw new Error('Oasis public record has an invalid stable ID.')
+  assertTrimmedString(record.name, `Oasis public record ${record.id}.name`)
+  assertTrimmedString(record.recordType, `Oasis public record ${record.id}.recordType`)
+  if (!Array.isArray(record.aliases)) throw new Error(`Oasis public record ${record.id}.aliases must be an array.`)
+  record.aliases.forEach((alias, index) => assertTrimmedString(alias, `Oasis public record ${record.id}.aliases[${index}]`))
+  if (new Set(record.aliases).size !== record.aliases.length) throw new Error(`Oasis public record ${record.id}.aliases must be unique.`)
+  assertNullableTrimmedString(record.rarity, `Oasis public record ${record.id}.rarity`)
+  assertNullableTrimmedString(record.availabilityCategory, `Oasis public record ${record.id}.availabilityCategory`)
+  assertNullableTrimmedString(record.function, `Oasis public record ${record.id}.function`)
+  assertNullablePositiveInteger(record.typeLimit, `Oasis public record ${record.id}.typeLimit`)
+  assertNullablePositiveInteger(record.maxLevel, `Oasis public record ${record.id}.maxLevel`)
+  assertNullableNonNegativeNumber(record.maxProsperity, `Oasis public record ${record.id}.maxProsperity`)
+  const footprint = assertNullableExactObject(record.footprint, OASIS_PUBLIC_FOOTPRINT_KEYS, `Oasis public record ${record.id}.footprint`)
+  if (footprint) {
+    assertNullablePositiveInteger(footprint.width, `Oasis public record ${record.id}.footprint.width`)
+    assertNullablePositiveInteger(footprint.height, `Oasis public record ${record.id}.footprint.height`)
+    assertNullableTrimmedString(footprint.display, `Oasis public record ${record.id}.footprint.display`)
+  }
+  if (!Array.isArray(record.levels)) throw new Error(`Oasis public record ${record.id}.levels must be an array.`)
+  record.levels.forEach((item, index) => assertPublicLevel(item, `Oasis public record ${record.id}.levels[${index}]`))
+  assertPublicBonusArray(record.maxEffects, `Oasis public record ${record.id}.maxEffects`)
+  const unlock = assertNullableExactObject(record.unlock, OASIS_PUBLIC_UNLOCK_KEYS, `Oasis public record ${record.id}.unlock`)
+  if (unlock) {
+    assertNullableTrimmedString(unlock.requirement, `Oasis public record ${record.id}.unlock.requirement`)
+    assertNullableTrimmedString(unlock.initialBlueprintPurchase, `Oasis public record ${record.id}.unlock.initialBlueprintPurchase`)
+  }
+  const upgrade = assertNullableExactObject(record.upgrade, OASIS_PUBLIC_UPGRADE_KEYS, `Oasis public record ${record.id}.upgrade`)
+  if (upgrade) {
+    assertNullableTrimmedString(upgrade.currency, `Oasis public record ${record.id}.upgrade.currency`)
+    assertNullableTrimmedString(upgrade.exchange, `Oasis public record ${record.id}.upgrade.exchange`)
+    assertNullableTrimmedString(upgrade.generalBlueprintRefresh, `Oasis public record ${record.id}.upgrade.generalBlueprintRefresh`)
+    assertNullableTrimmedString(upgrade.officiallyVerified, `Oasis public record ${record.id}.upgrade.officiallyVerified`)
+  }
   if (record.canonicalRoute !== `/oasis-island/buildings/${record.id}`) throw new Error('Oasis public record has an invalid canonical route.')
-  if (typeof record.publicationId !== 'string' || !record.publicationId || typeof record.publicationVersion !== 'number' || !Number.isInteger(record.publicationVersion) || record.publicationVersion < 1) throw new Error('Oasis public record has an invalid publication identity.')
+  if (typeof record.publicationId !== 'string' || !record.publicationId.trim() || record.publicationId !== record.publicationId.trim() || typeof record.publicationVersion !== 'number' || !Number.isInteger(record.publicationVersion) || record.publicationVersion < 1) throw new Error('Oasis public record has an invalid publication identity.')
+  assertIsoTimestamp(record.publishedAt, `Oasis public record ${record.id}.publishedAt`)
+  assertIsoTimestamp(record.updatedAt, `Oasis public record ${record.id}.updatedAt`)
   if (!(Object.values(OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS) as readonly unknown[]).includes(record.trustLabel)) throw new Error('Oasis public record has an invalid trust label.')
-  if (!Array.isArray(record.levels) || !Array.isArray(record.maxEffects) || !Array.isArray(record.media)) throw new Error('Oasis public record has invalid projection collections.')
+  if (!Array.isArray(record.media)) throw new Error(`Oasis public record ${record.id}.media must be an array.`)
+  record.media.forEach((item, index) => assertPublicMedia(item, `Oasis public record ${record.id}.media[${index}]`))
 }
 
 const OASIS_MISSING_ARTWORK_RECORD_IDS = Object.freeze([

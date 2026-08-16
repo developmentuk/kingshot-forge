@@ -186,7 +186,8 @@ declare
   rollback_candidate_content jsonb;
   rollback_source_content jsonb;
   submitted_content_hash text;
-  publication_timestamp timestamptz := date_trunc('milliseconds', statement_timestamp());
+  publication_timestamp timestamptz;
+  current_publication_timestamp timestamptz;
   publication_timestamp_text text;
   allowed_record_keys constant text[] := array[
     'schemaVersion', 'id', 'name', 'aliases', 'recordType', 'rarity',
@@ -203,6 +204,16 @@ declare
     'Mixed official and community evidence', 'Official mechanics; values partial',
     'Source attachment extracted', 'Community corroborated',
     'Partial source coverage', 'Needs in-game verification'
+  ];
+  allowed_level_keys constant text[] := array[
+    'level', 'prosperity', 'prosperityRequired', 'waterEssencePerHour',
+    'bonuses', 'knownEffects', 'exactOutputKnown'
+  ];
+  allowed_bonus_keys constant text[] := array['label', 'stat', 'valuePct', 'effect'];
+  allowed_footprint_keys constant text[] := array['width', 'height', 'display'];
+  allowed_unlock_keys constant text[] := array['requirement', 'initialBlueprintPurchase'];
+  allowed_upgrade_keys constant text[] := array[
+    'currency', 'exchange', 'generalBlueprintRefresh', 'officiallyVerified'
   ];
 begin
   -- SECURITY DEFINER makes current_user the owner. The caller boundary is therefore
@@ -268,22 +279,150 @@ begin
   if exists (
     select 1 from jsonb_array_elements(p_records) r
     where jsonb_typeof(r) <> 'object' or not (r ?& allowed_record_keys)
-      or exists (select 1 from jsonb_object_keys(r) key where not key = any(allowed_record_keys))
+      or exists (select 1 from jsonb_object_keys(case when jsonb_typeof(r) = 'object' then r else '{}'::jsonb end) key where not key = any(allowed_record_keys))
       or public.oasis_json_has_forbidden_key(r)
-      or r->>'schemaVersion' <> p_schema_version or r->>'status' <> 'published'
-      or coalesce(r->>'id', '') !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'
-      or coalesce(r->>'name', '') = '' or coalesce(r->>'recordType', '') = ''
+      or jsonb_typeof(r->'schemaVersion') <> 'string' or r->>'schemaVersion' <> p_schema_version
+      or jsonb_typeof(r->'status') <> 'string' or r->>'status' <> 'published'
+      or jsonb_typeof(r->'id') <> 'string' or coalesce(r->>'id', '') !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+      or jsonb_typeof(r->'name') <> 'string' or coalesce(btrim(r->>'name'), '') = '' or r->>'name' <> btrim(r->>'name')
+      or jsonb_typeof(r->'recordType') <> 'string' or coalesce(btrim(r->>'recordType'), '') = '' or r->>'recordType' <> btrim(r->>'recordType')
       or jsonb_typeof(r->'aliases') <> 'array' or jsonb_typeof(r->'levels') <> 'array'
       or jsonb_typeof(r->'maxEffects') <> 'array' or jsonb_typeof(r->'media') <> 'array'
-      or not (r->>'trustLabel' = any(allowed_trust_labels))
-      or r->>'publicationId' <> p_publication_id
+      or jsonb_typeof(r->'footprint') not in ('object', 'null')
+      or jsonb_typeof(r->'unlock') not in ('object', 'null')
+      or jsonb_typeof(r->'upgrade') not in ('object', 'null')
+      or jsonb_typeof(r->'rarity') not in ('string', 'null')
+      or (jsonb_typeof(r->'rarity') = 'string' and (coalesce(btrim(r->>'rarity'), '') = '' or r->>'rarity' <> btrim(r->>'rarity')))
+      or jsonb_typeof(r->'availabilityCategory') not in ('string', 'null')
+      or (jsonb_typeof(r->'availabilityCategory') = 'string' and (coalesce(btrim(r->>'availabilityCategory'), '') = '' or r->>'availabilityCategory' <> btrim(r->>'availabilityCategory')))
+      or jsonb_typeof(r->'function') not in ('string', 'null')
+      or (jsonb_typeof(r->'function') = 'string' and (coalesce(btrim(r->>'function'), '') = '' or r->>'function' <> btrim(r->>'function')))
+      or jsonb_typeof(r->'typeLimit') not in ('number', 'null')
+      or (case when jsonb_typeof(r->'typeLimit') = 'number' then (r->>'typeLimit')::numeric < 1 or (r->>'typeLimit')::numeric <> trunc((r->>'typeLimit')::numeric) else false end)
+      or jsonb_typeof(r->'maxLevel') not in ('number', 'null')
+      or (case when jsonb_typeof(r->'maxLevel') = 'number' then (r->>'maxLevel')::numeric < 1 or (r->>'maxLevel')::numeric <> trunc((r->>'maxLevel')::numeric) else false end)
+      or jsonb_typeof(r->'maxProsperity') not in ('number', 'null')
+      or (case when jsonb_typeof(r->'maxProsperity') = 'number' then (r->>'maxProsperity')::numeric < 0 else false end)
+      or jsonb_typeof(r->'trustLabel') <> 'string' or not (r->>'trustLabel' = any(allowed_trust_labels))
+      or jsonb_typeof(r->'publicationId') <> 'string' or r->>'publicationId' <> p_publication_id
       or (jsonb_typeof(r->'publicationVersion') not in ('number', 'null'))
       or (jsonb_typeof(r->'publicationVersion') = 'number' and ((r->>'publicationVersion')::numeric <= 0 or (r->>'publicationVersion')::numeric <> trunc((r->>'publicationVersion')::numeric)))
-      or coalesce(r->>'publishedAt', '') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?Z$'
-      or coalesce(r->>'updatedAt', '') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?Z$'
+      or jsonb_typeof(r->'publishedAt') <> 'string' or coalesce(r->>'publishedAt', '') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?Z$'
+      or jsonb_typeof(r->'updatedAt') <> 'string' or coalesce(r->>'updatedAt', '') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?Z$'
       or (r->>'publishedAt')::timestamptz is null or (r->>'updatedAt')::timestamptz is null
+      or jsonb_typeof(r->'canonicalRoute') <> 'string'
       or r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'
   ) then raise exception 'Oasis public records failed the publication boundary.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_records) r
+    where exists (
+      select 1 from jsonb_array_elements(case when jsonb_typeof(r->'aliases') = 'array' then r->'aliases' else '[]'::jsonb end) alias_value
+      where jsonb_typeof(alias_value) <> 'string'
+        or coalesce(btrim(alias_value#>>'{}'), '') = ''
+        or alias_value#>>'{}' <> btrim(alias_value#>>'{}')
+    ) or (
+      select count(*) <> count(distinct alias_value#>>'{}')
+      from jsonb_array_elements(case when jsonb_typeof(r->'aliases') = 'array' then r->'aliases' else '[]'::jsonb end) alias_value
+    )
+  ) then raise exception 'Oasis aliases must contain unique non-empty trimmed strings.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_records) r
+    where jsonb_typeof(r->'footprint') = 'object' and (
+      not (r->'footprint' ?& allowed_footprint_keys)
+      or exists (select 1 from jsonb_object_keys(r->'footprint') key where not key = any(allowed_footprint_keys))
+      or jsonb_typeof(r#>'{footprint,width}') not in ('number', 'null')
+      or (case when jsonb_typeof(r#>'{footprint,width}') = 'number' then (r#>>'{footprint,width}')::numeric < 1 or (r#>>'{footprint,width}')::numeric <> trunc((r#>>'{footprint,width}')::numeric) else false end)
+      or jsonb_typeof(r#>'{footprint,height}') not in ('number', 'null')
+      or (case when jsonb_typeof(r#>'{footprint,height}') = 'number' then (r#>>'{footprint,height}')::numeric < 1 or (r#>>'{footprint,height}')::numeric <> trunc((r#>>'{footprint,height}')::numeric) else false end)
+      or jsonb_typeof(r#>'{footprint,display}') not in ('string', 'null')
+      or (jsonb_typeof(r#>'{footprint,display}') = 'string' and (coalesce(btrim(r#>>'{footprint,display}'), '') = '' or r#>>'{footprint,display}' <> btrim(r#>>'{footprint,display}')))
+    )
+  ) then raise exception 'Oasis footprint values are incomplete or invalid.'; end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(p_records) r
+    cross join lateral jsonb_array_elements(case when jsonb_typeof(r->'levels') = 'array' then r->'levels' else '[]'::jsonb end) level_value
+    where jsonb_typeof(level_value) <> 'object'
+      or not (level_value ?& allowed_level_keys)
+      or exists (select 1 from jsonb_object_keys(case when jsonb_typeof(level_value) = 'object' then level_value else '{}'::jsonb end) key where not key = any(allowed_level_keys))
+      or jsonb_typeof(level_value->'level') not in ('number', 'null')
+      or (case when jsonb_typeof(level_value->'level') = 'number' then (level_value->>'level')::numeric < 1 or (level_value->>'level')::numeric <> trunc((level_value->>'level')::numeric) else false end)
+      or jsonb_typeof(level_value->'prosperity') not in ('number', 'null')
+      or (case when jsonb_typeof(level_value->'prosperity') = 'number' then (level_value->>'prosperity')::numeric < 0 else false end)
+      or jsonb_typeof(level_value->'prosperityRequired') not in ('number', 'null')
+      or (case when jsonb_typeof(level_value->'prosperityRequired') = 'number' then (level_value->>'prosperityRequired')::numeric < 0 else false end)
+      or jsonb_typeof(level_value->'waterEssencePerHour') not in ('number', 'null')
+      or (case when jsonb_typeof(level_value->'waterEssencePerHour') = 'number' then (level_value->>'waterEssencePerHour')::numeric < 0 else false end)
+      or jsonb_typeof(level_value->'bonuses') <> 'array'
+      or jsonb_typeof(level_value->'knownEffects') <> 'array'
+      or jsonb_typeof(level_value->'exactOutputKnown') not in ('boolean', 'null')
+  ) then raise exception 'Oasis levels are incomplete or invalid.'; end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(p_records) r
+    cross join lateral jsonb_array_elements(case when jsonb_typeof(r->'levels') = 'array' then r->'levels' else '[]'::jsonb end) level_value
+    cross join lateral jsonb_array_elements(case when jsonb_typeof(level_value->'knownEffects') = 'array' then level_value->'knownEffects' else '[]'::jsonb end) effect
+    where jsonb_typeof(effect) <> 'string'
+      or coalesce(btrim(effect#>>'{}'), '') = ''
+      or effect#>>'{}' <> btrim(effect#>>'{}')
+  ) then raise exception 'Oasis known effects must contain non-empty trimmed strings.'; end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(p_records) r
+    cross join lateral jsonb_array_elements(case when jsonb_typeof(r->'levels') = 'array' then r->'levels' else '[]'::jsonb end) level_value
+    cross join lateral jsonb_array_elements(case when jsonb_typeof(level_value->'bonuses') = 'array' then level_value->'bonuses' else '[]'::jsonb end) bonus_value
+    where jsonb_typeof(bonus_value) <> 'object'
+      or not (bonus_value ?& allowed_bonus_keys)
+      or exists (select 1 from jsonb_object_keys(case when jsonb_typeof(bonus_value) = 'object' then bonus_value else '{}'::jsonb end) key where not key = any(allowed_bonus_keys))
+      or jsonb_typeof(bonus_value->'label') not in ('string', 'null')
+      or (jsonb_typeof(bonus_value->'label') = 'string' and (coalesce(btrim(bonus_value->>'label'), '') = '' or bonus_value->>'label' <> btrim(bonus_value->>'label')))
+      or jsonb_typeof(bonus_value->'stat') not in ('string', 'null')
+      or (jsonb_typeof(bonus_value->'stat') = 'string' and (coalesce(btrim(bonus_value->>'stat'), '') = '' or bonus_value->>'stat' <> btrim(bonus_value->>'stat')))
+      or jsonb_typeof(bonus_value->'valuePct') not in ('number', 'null')
+      or jsonb_typeof(bonus_value->'effect') not in ('string', 'null')
+      or (jsonb_typeof(bonus_value->'effect') = 'string' and (coalesce(btrim(bonus_value->>'effect'), '') = '' or bonus_value->>'effect' <> btrim(bonus_value->>'effect')))
+  ) then raise exception 'Oasis level bonuses are incomplete or invalid.'; end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(p_records) r
+    cross join lateral jsonb_array_elements(case when jsonb_typeof(r->'maxEffects') = 'array' then r->'maxEffects' else '[]'::jsonb end) bonus_value
+    where jsonb_typeof(bonus_value) <> 'object'
+      or not (bonus_value ?& allowed_bonus_keys)
+      or exists (select 1 from jsonb_object_keys(case when jsonb_typeof(bonus_value) = 'object' then bonus_value else '{}'::jsonb end) key where not key = any(allowed_bonus_keys))
+      or jsonb_typeof(bonus_value->'label') not in ('string', 'null')
+      or (jsonb_typeof(bonus_value->'label') = 'string' and (coalesce(btrim(bonus_value->>'label'), '') = '' or bonus_value->>'label' <> btrim(bonus_value->>'label')))
+      or jsonb_typeof(bonus_value->'stat') not in ('string', 'null')
+      or (jsonb_typeof(bonus_value->'stat') = 'string' and (coalesce(btrim(bonus_value->>'stat'), '') = '' or bonus_value->>'stat' <> btrim(bonus_value->>'stat')))
+      or jsonb_typeof(bonus_value->'valuePct') not in ('number', 'null')
+      or jsonb_typeof(bonus_value->'effect') not in ('string', 'null')
+      or (jsonb_typeof(bonus_value->'effect') = 'string' and (coalesce(btrim(bonus_value->>'effect'), '') = '' or bonus_value->>'effect' <> btrim(bonus_value->>'effect')))
+  ) then raise exception 'Oasis maximum effects are incomplete or invalid.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_records) r
+    where jsonb_typeof(r->'unlock') = 'object' and (
+      not (r->'unlock' ?& allowed_unlock_keys)
+      or exists (select 1 from jsonb_object_keys(r->'unlock') key where not key = any(allowed_unlock_keys))
+      or jsonb_typeof(r#>'{unlock,requirement}') not in ('string', 'null')
+      or (jsonb_typeof(r#>'{unlock,requirement}') = 'string' and (coalesce(btrim(r#>>'{unlock,requirement}'), '') = '' or r#>>'{unlock,requirement}' <> btrim(r#>>'{unlock,requirement}')))
+      or jsonb_typeof(r#>'{unlock,initialBlueprintPurchase}') not in ('string', 'null')
+      or (jsonb_typeof(r#>'{unlock,initialBlueprintPurchase}') = 'string' and (coalesce(btrim(r#>>'{unlock,initialBlueprintPurchase}'), '') = '' or r#>>'{unlock,initialBlueprintPurchase}' <> btrim(r#>>'{unlock,initialBlueprintPurchase}')))
+    )
+  ) then raise exception 'Oasis unlock values are incomplete or invalid.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_records) r
+    where jsonb_typeof(r->'upgrade') = 'object' and (
+      not (r->'upgrade' ?& allowed_upgrade_keys)
+      or exists (select 1 from jsonb_object_keys(r->'upgrade') key where not key = any(allowed_upgrade_keys))
+      or jsonb_typeof(r#>'{upgrade,currency}') not in ('string', 'null')
+      or (jsonb_typeof(r#>'{upgrade,currency}') = 'string' and (coalesce(btrim(r#>>'{upgrade,currency}'), '') = '' or r#>>'{upgrade,currency}' <> btrim(r#>>'{upgrade,currency}')))
+      or jsonb_typeof(r#>'{upgrade,exchange}') not in ('string', 'null')
+      or (jsonb_typeof(r#>'{upgrade,exchange}') = 'string' and (coalesce(btrim(r#>>'{upgrade,exchange}'), '') = '' or r#>>'{upgrade,exchange}' <> btrim(r#>>'{upgrade,exchange}')))
+      or jsonb_typeof(r#>'{upgrade,generalBlueprintRefresh}') not in ('string', 'null')
+      or (jsonb_typeof(r#>'{upgrade,generalBlueprintRefresh}') = 'string' and (coalesce(btrim(r#>>'{upgrade,generalBlueprintRefresh}'), '') = '' or r#>>'{upgrade,generalBlueprintRefresh}' <> btrim(r#>>'{upgrade,generalBlueprintRefresh}')))
+      or jsonb_typeof(r#>'{upgrade,officiallyVerified}') not in ('string', 'null')
+      or (jsonb_typeof(r#>'{upgrade,officiallyVerified}') = 'string' and (coalesce(btrim(r#>>'{upgrade,officiallyVerified}'), '') = '' or r#>>'{upgrade,officiallyVerified}' <> btrim(r#>>'{upgrade,officiallyVerified}')))
+    )
+  ) then raise exception 'Oasis upgrade values are incomplete or invalid.'; end if;
   if exists (
     select 1 from jsonb_array_elements(p_records) r cross join lateral jsonb_array_elements(r->'media') media
     where jsonb_typeof(media) <> 'object'
@@ -337,6 +476,15 @@ begin
     )
   ) then raise exception 'Every approved missing-artwork record requires the approved placeholder.'; end if;
   perform pg_advisory_xact_lock(hashtext('forge-oasis-publication'));
+  select versions.published_at into current_publication_timestamp
+    from public.oasis_publication_current current_publication
+    join public.oasis_publication_versions versions
+      on versions.publication_id = current_publication.publication_id
+    where current_publication.singleton = true;
+  publication_timestamp := date_trunc('milliseconds', clock_timestamp());
+  if current_publication_timestamp is not null and publication_timestamp <= current_publication_timestamp then
+    publication_timestamp := current_publication_timestamp + interval '1 millisecond';
+  end if;
   publication_timestamp_text := to_char(publication_timestamp at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
   submitted_content_hash := public.oasis_record_content_sha256(p_records);
 
@@ -445,6 +593,6 @@ revoke all on function public.publish_oasis_catalogue(text, text, text, jsonb, t
 grant execute on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) to service_role;
 
 comment on table public.oasis_publication_versions is 'OASIS-001A-PUB immutable publication history. Applying this migration does not publish a catalogue.';
-comment on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) is 'Creates and atomically activates a validated immutable Oasis publication. EXECUTE is revoked from PUBLIC, anon and authenticated and granted only to service_role; this grant is the caller boundary because current_user inside SECURITY DEFINER is the function owner. Record-content identity excludes only publication ID, version and timestamps. One database statement timestamp is authoritative for the version, records, Search request, audit and pointer. Rollback validates source fingerprint, manifest and record-content hashes against immutable history, derives a new forward-only publication, and never mutates history.';
+comment on function public.publish_oasis_catalogue(text, text, text, jsonb, text, jsonb, text, text, text, text) is 'Creates and atomically activates a validated immutable Oasis publication. EXECUTE is revoked from PUBLIC, anon and authenticated and granted only to service_role; this grant is the caller boundary because current_user inside SECURITY DEFINER is the function owner. Record-content identity excludes only publication ID, version and timestamps. One post-lock clock timestamp is authoritative for the version, records, Search request, audit and pointer; while holding the lock it advances by one millisecond when needed to remain strictly newer than the current publication. Rollback validates source fingerprint, manifest and record-content hashes against immutable history, derives a new forward-only publication, and never mutates history.';
 
 commit;

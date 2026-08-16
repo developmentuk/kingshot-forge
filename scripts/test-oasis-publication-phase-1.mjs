@@ -156,14 +156,60 @@ const placeholderRecordIndex = built.records.findIndex((record) => record.id ===
 const mappedRecordIndex = built.records.findIndex((record) => record.media.some((media) => media.role !== 'placeholder'))
 assertAdversarialRejection('placeholder wrong alt', ({ records }) => { records[placeholderRecordIndex].media[0].alt = 'Artwork missing' }, /public media does not match/u)
 assertAdversarialRejection('placeholder wrong role', ({ records }) => { records[placeholderRecordIndex].media[0].role = 'catalogue' }, /public media does not match/u)
-assertAdversarialRejection('placeholder wrong level variant', ({ records }) => { records[placeholderRecordIndex].media[0].levelVariant = 1 }, /public media does not match/u)
+assertAdversarialRejection('placeholder wrong level variant', ({ records }) => { records[placeholderRecordIndex].media[0].levelVariant = 1 }, /levelVariant|public media does not match/u)
 assertAdversarialRejection('placeholder wrong width', ({ records }) => { records[placeholderRecordIndex].media[0].width += 1 }, /public media does not match/u)
 assertAdversarialRejection('placeholder wrong height', ({ records }) => { records[placeholderRecordIndex].media[0].height += 1 }, /public media does not match/u)
-assertAdversarialRejection('missing record arbitrary placeholder', ({ records }) => { records[placeholderRecordIndex].media[0].url = '/media/oasis-island/shared/arbitrary.webp' }, /public media does not match/u)
+assertAdversarialRejection('missing record arbitrary placeholder', ({ records }) => { records[placeholderRecordIndex].media[0].url = '/media/oasis-island/shared/arbitrary.webp' }, /planned Oasis WebP boundary|public media does not match/u)
 assertAdversarialRejection('nonmissing record placeholder', ({ records }) => { records[mappedRecordIndex].media = [structuredClone(built.records[placeholderRecordIndex].media[0])] }, /public media does not match/u)
 assertAdversarialRejection('duplicate media mapping', ({ records }) => { records[mappedRecordIndex].media.push(structuredClone(records[mappedRecordIndex].media[0])) }, /public media does not match/u)
 assertAdversarialRejection('extra media mapping', ({ records }) => { records[mappedRecordIndex].media.push({ ...structuredClone(records[mappedRecordIndex].media[0]), alt: 'Extra' }) }, /public media does not match/u)
 assertAdversarialRejection('publication identity mismatch', ({ records }) => { records[0].publicationId = 'different-publication' }, /publication identity conflicts/u)
+
+const levelRecordIndex = built.records.findIndex((record) => record.levels.some((item) => item.bonuses.length > 0))
+const footprintRecordIndex = built.records.findIndex((record) => record.footprint !== null)
+const unlockRecordIndex = built.records.findIndex((record) => record.unlock !== null)
+const upgradeRecordIndex = built.records.findIndex((record) => record.upgrade !== null)
+const maxEffectsRecordIndex = built.records.findIndex((record) => record.maxEffects.length > 0)
+assert.ok([levelRecordIndex, footprintRecordIndex, unlockRecordIndex, upgradeRecordIndex, maxEffectsRecordIndex].every((index) => index >= 0))
+
+const nestedContractCases = [
+  ['levels containing null', (records) => { records[levelRecordIndex].levels = [null] }, /levels\[0\].*non-null object/u],
+  ['level as string', (records) => { records[levelRecordIndex].levels = ['invalid'] }, /levels\[0\].*non-null object/u],
+  ['level as number', (records) => { records[levelRecordIndex].levels = [42] }, /levels\[0\].*non-null object/u],
+  ['level as array', (records) => { records[levelRecordIndex].levels = [[]] }, /levels\[0\].*non-null object/u],
+  ['level missing bonuses', (records) => { delete records[levelRecordIndex].levels[0].bonuses }, /missing required fields: bonuses/u],
+  ['bonuses set to null', (records) => { records[levelRecordIndex].levels[0].bonuses = null }, /bonuses must be an array/u],
+  ['bonuses containing null', (records) => { records[levelRecordIndex].levels[0].bonuses = [null] }, /bonuses\[0\].*non-null object/u],
+  ['malformed bonus field types', (records) => { records[levelRecordIndex].levels[0].bonuses[0].valuePct = '30' }, /valuePct must be a finite number or null/u],
+  ['missing bonus keys', (records) => { delete records[levelRecordIndex].levels[0].bonuses[0].effect }, /missing required fields: effect/u],
+  ['extra bonus keys', (records) => { records[levelRecordIndex].levels[0].bonuses[0].privateNote = 'no' }, /unexpected fields: privateNote/u],
+  ['knownEffects set to null', (records) => { records[levelRecordIndex].levels[0].knownEffects = null }, /knownEffects must be an array/u],
+  ['non-string known effect', (records) => { records[levelRecordIndex].levels[0].knownEffects = [7] }, /knownEffects\[0\].*trimmed string/u],
+  ['malformed alias member', (records) => { records[0].aliases = [null] }, /aliases\[0\].*trimmed string/u],
+  ['duplicate alias member', (records) => { records[0].aliases = ['Alias', 'Alias'] }, /aliases must be unique/u],
+  ['malformed footprint', (records) => { records[footprintRecordIndex].footprint = [] }, /footprint must be an object or null/u],
+  ['footprint missing field', (records) => { delete records[footprintRecordIndex].footprint.display }, /missing required fields: display/u],
+  ['footprint extra field', (records) => { records[footprintRecordIndex].footprint.depth = 1 }, /unexpected fields: depth/u],
+  ['malformed unlock', (records) => { records[unlockRecordIndex].unlock = 'invalid' }, /unlock must be an object or null/u],
+  ['unlock missing field', (records) => { delete records[unlockRecordIndex].unlock.requirement }, /missing required fields: requirement/u],
+  ['unlock extra field', (records) => { records[unlockRecordIndex].unlock.privateNote = 'no' }, /unexpected fields: privateNote/u],
+  ['malformed upgrade', (records) => { records[upgradeRecordIndex].upgrade = 7 }, /upgrade must be an object or null/u],
+  ['upgrade missing field', (records) => { delete records[upgradeRecordIndex].upgrade.currency }, /missing required fields: currency/u],
+  ['upgrade extra field', (records) => { records[upgradeRecordIndex].upgrade.privateNote = 'no' }, /unexpected fields: privateNote/u],
+  ['malformed maxEffects collection', (records) => { records[maxEffectsRecordIndex].maxEffects = null }, /maxEffects must be an array/u],
+  ['malformed maxEffects member', (records) => { records[maxEffectsRecordIndex].maxEffects = [null] }, /maxEffects\[0\].*non-null object/u],
+  ['incorrect nullable string type', (records) => { records[0].rarity = 7 }, /rarity must be a non-empty trimmed string/u],
+  ['incorrect nullable numeric type', (records) => { records[0].maxProsperity = '1000' }, /maxProsperity must be a finite number or null/u],
+  ['missing nested required level key', (records) => { delete records[levelRecordIndex].levels[0].exactOutputKnown }, /missing required fields: exactOutputKnown/u],
+  ['unexpected nested level key', (records) => { records[levelRecordIndex].levels[0].privateNote = 'no' }, /unexpected fields: privateNote/u],
+]
+
+for (const [name, mutate, expected] of nestedContractCases) {
+  const records = structuredClone(built.records)
+  mutate(records)
+  assert.throws(() => records.forEach((record) => assertOasisPublicRecord(record)), expected, `${name}: shared record validator`)
+  assertAdversarialRejection(name, ({ records: candidateRecords }) => mutate(candidateRecords), expected)
+}
 
 const injected = buildOasisPublicDataset({
   records: source.buildings.map((record, index) => index === 0 ? { ...record, sourceText: 'private', repositoryPath: 'private', inventedValue: 42 } : record),
@@ -238,6 +284,7 @@ assert.equal(searchRecords.every((record) => record.published_at === built.publi
 assert.throws(() => buildOasisSearchRecords({ ...built, publishedAt: '2099-01-01T00:00:00.000Z' }), /database-authoritative/u)
 assert.throws(() => buildOasisSearchRecords({ ...built, status: 'source-staged' }), /current published/u)
 assert.throws(() => buildOasisSearchRecords({ ...built, recordCount: 1, records: [{ ...built.records[0], sourceText: 'private' }] }), /non-allow-listed|forbidden/u)
+assert.throws(() => buildOasisSearchRecords({ ...built, records: built.records.map((record, index) => index ? record : { ...record, levels: [null] }) }), /levels\[0\].*non-null object/u)
 assert.doesNotMatch(read('shared/data-engine/datasets.ts'), /oasis-island/u)
 assert.doesNotMatch(read('server/search/runtime.ts'), /oasis-island/u)
 
@@ -301,12 +348,41 @@ const adversarialSqlCases = new Map([
   ['wrong placeholder list', ['expected_missing_ids', 'array_agg(value order by value)']],
   ['forbidden nested sourceText', ["'sourceText'", 'public.oasis_json_has_forbidden_key(r)']],
   ['forbidden nested verification', ["'verification'", 'public.oasis_json_has_forbidden_key(r)']],
-  ['extra top-level record fields', ['jsonb_object_keys(r)', 'allowed_record_keys']],
+  ['extra top-level record fields', ['jsonb_object_keys(case when jsonb_typeof(r)', 'allowed_record_keys']],
   ['invalid canonical route', ["r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'"]],
   ['record/media mismatch', ['Oasis public media does not match the approved manifest.']],
   ['placeholder exact metadata', ["media->>'alt' = p_manifest#>>'{placeholder,altText}'", "jsonb_typeof(media->'levelVariant') = 'null'", "media->'width' = p_manifest#>'{placeholder,width}'", "media->'height' = p_manifest#>'{placeholder,height}'"]],
   ['extra or duplicate media', ['Oasis public media contains missing, extra or duplicate mappings.']],
   ['publication identity mismatch', ['Oasis record publication identity conflicts with the publication being created.']],
+  ['levels containing null', ['allowed_level_keys', 'Oasis levels are incomplete or invalid.']],
+  ['level as string', ['allowed_level_keys', 'Oasis levels are incomplete or invalid.']],
+  ['level as number', ['allowed_level_keys', 'Oasis levels are incomplete or invalid.']],
+  ['level as array', ['allowed_level_keys', 'Oasis levels are incomplete or invalid.']],
+  ['level missing bonuses', ['level_value ?& allowed_level_keys', 'Oasis levels are incomplete or invalid.']],
+  ['bonuses set to null', ["jsonb_typeof(level_value->'bonuses') <> 'array'"]],
+  ['bonuses containing null', ['allowed_bonus_keys', 'Oasis level bonuses are incomplete or invalid.']],
+  ['malformed bonus field types', ["jsonb_typeof(bonus_value->'valuePct') not in ('number', 'null')"]],
+  ['missing bonus keys', ['bonus_value ?& allowed_bonus_keys']],
+  ['extra bonus keys', ['jsonb_object_keys(case when jsonb_typeof(bonus_value)']],
+  ['knownEffects set to null', ["jsonb_typeof(level_value->'knownEffects') <> 'array'"]],
+  ['non-string known effect', ['Oasis known effects must contain non-empty trimmed strings.']],
+  ['malformed alias member', ['Oasis aliases must contain unique non-empty trimmed strings.']],
+  ['duplicate alias member', ["count(distinct alias_value#>>'{}')"]],
+  ['malformed footprint', ["jsonb_typeof(r->'footprint') not in ('object', 'null')"]],
+  ['footprint missing field', ["r->'footprint' ?& allowed_footprint_keys"]],
+  ['footprint extra field', ["jsonb_object_keys(r->'footprint')"]],
+  ['malformed unlock', ["jsonb_typeof(r->'unlock') not in ('object', 'null')"]],
+  ['unlock missing field', ["r->'unlock' ?& allowed_unlock_keys"]],
+  ['unlock extra field', ["jsonb_object_keys(r->'unlock')"]],
+  ['malformed upgrade', ["jsonb_typeof(r->'upgrade') not in ('object', 'null')"]],
+  ['upgrade missing field', ["r->'upgrade' ?& allowed_upgrade_keys"]],
+  ['upgrade extra field', ["jsonb_object_keys(r->'upgrade')"]],
+  ['malformed maxEffects collection', ["jsonb_typeof(r->'maxEffects') <> 'array'"]],
+  ['malformed maxEffects member', ['Oasis maximum effects are incomplete or invalid.']],
+  ['incorrect nullable string type', ["jsonb_typeof(r->'rarity') not in ('string', 'null')"]],
+  ['incorrect nullable numeric type', ["jsonb_typeof(r->'maxProsperity') not in ('number', 'null')"]],
+  ['missing nested required level key', ['level_value ?& allowed_level_keys']],
+  ['unexpected nested level key', ['jsonb_object_keys(case when jsonb_typeof(level_value)']],
 ])
 for (const [name, guards] of adversarialSqlCases) {
   for (const guard of guards) assert.ok(migration.includes(guard), `${name}: missing structural SQL rejection guard ${guard}`)
@@ -322,10 +398,27 @@ assert.ok(migration.indexOf('select * into rollback_source') < migration.indexOf
 assert.ok(migration.indexOf('Rollback candidate does not match the referenced immutable publication.') < migration.indexOf('insert into public.oasis_publication_versions'))
 assert.ok(migration.indexOf('existing.record_content_hash <> submitted_content_hash') < migration.indexOf('insert into public.oasis_publication_versions'))
 assert.ok(migration.indexOf('Oasis public media contains missing, extra or duplicate mappings.') < migration.indexOf('insert into public.oasis_publication_versions'))
-assert.ok(migration.includes("publication_timestamp timestamptz := date_trunc('milliseconds', statement_timestamp())"))
+assert.ok(migration.includes('publication_timestamp timestamptz;'))
+assert.doesNotMatch(migration, /statement_timestamp\(\)|transaction_timestamp\(\)/u)
+const publicationLockIndex = migration.indexOf("perform pg_advisory_xact_lock(hashtext('forge-oasis-publication'))")
+const postLockClockIndex = migration.indexOf("publication_timestamp := date_trunc('milliseconds', clock_timestamp())")
+assert.ok(publicationLockIndex > 0 && postLockClockIndex > publicationLockIndex)
+assert.equal(migration.match(/clock_timestamp\(\)/gu)?.length, 1)
+assert.ok(migration.indexOf('select versions.published_at into current_publication_timestamp') > publicationLockIndex)
+assert.ok(migration.indexOf("publication_timestamp := current_publication_timestamp + interval '1 millisecond'") > postLockClockIndex)
+assert.ok(migration.indexOf('select * into existing') > postLockClockIndex)
+assert.ok(migration.indexOf("return jsonb_build_object('publicationId', existing.publication_id", postLockClockIndex) > postLockClockIndex)
 const recordHistoryInsertIndex = migration.indexOf('insert into public.oasis_publication_records')
 const authoritativeRecordTimestampIndex = migration.indexOf("'publishedAt', publication_timestamp_text, 'updatedAt', publication_timestamp_text", recordHistoryInsertIndex)
 assert.ok(recordHistoryInsertIndex < authoritativeRecordTimestampIndex && authoritativeRecordTimestampIndex < migration.indexOf('insert into public.oasis_publication_search_refreshes'))
+for (const write of [
+  'insert into public.oasis_publication_versions',
+  'insert into public.oasis_publication_records',
+  'insert into public.oasis_publication_search_refreshes',
+  'insert into public.oasis_publication_audits',
+  'insert into public.oasis_publication_current',
+]) assert.ok(migration.indexOf(write) > postLockClockIndex, `${write} must use the captured post-lock timestamp`)
+assert.ok(migration.indexOf("'publishedAt', publication_timestamp_text", migration.indexOf('if p_rollback_of_publication_id is not null')) > postLockClockIndex)
 
 const productionBuild = mkdtempSync(join(tmpdir(), 'oasis-production-build-'))
 try {
@@ -406,6 +499,11 @@ await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
   { data: publicationRow, error: null },
   { data: built.records.map((record, index) => ({ record_id: record.id, public_record: index ? record : { ...record, publishedAt: '2099-01-01T00:00:00.000Z' } })), error: null },
 ])), /timestamp mismatch/u)
+await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
+  { data: { singleton: true, publication_id: built.publicationId }, error: null },
+  { data: publicationRow, error: null },
+  { data: built.records.map((record, index) => ({ record_id: record.id, public_record: index ? record : { ...record, levels: [null] } })), error: null },
+])), /levels\[0\].*non-null object/u)
 const loaded = await loadPublishedOasisIslandDataset(clientFor([
   { data: { singleton: true, publication_id: built.publicationId }, error: null },
   { data: publicationRow, error: null },
