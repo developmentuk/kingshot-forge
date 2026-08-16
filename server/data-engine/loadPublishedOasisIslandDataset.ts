@@ -23,6 +23,14 @@ function asRow(value: unknown): Row | null {
     : null
 }
 
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === 'object') {
+    for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child)
+    Object.freeze(value)
+  }
+  return value
+}
+
 function requiredString(row: Row, field: string): string {
   const value = row[field]
   if (typeof value !== 'string' || !value.trim()) throw new Error(`Oasis publication has invalid ${field}.`)
@@ -128,7 +136,7 @@ export async function loadPublishedOasisIslandDataset(
   const mappedMedia = new Set(publicRecords.flatMap((record) => record.media.map((media) => media.url)).filter((url) => url !== placeholderUrl))
   if (mappedMedia.size !== mediaCount) throw new Error('Oasis publication public media set is incomplete.')
 
-  return Object.freeze({
+  return deepFreeze({
     schemaVersion: OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION,
     dataset: 'oasis-island',
     status: 'current_published',
@@ -141,6 +149,6 @@ export async function loadPublishedOasisIslandDataset(
     recordContentHash,
     recordCount,
     mediaCount,
-    records: Object.freeze(publicRecords),
+    records: publicRecords,
   })
 }

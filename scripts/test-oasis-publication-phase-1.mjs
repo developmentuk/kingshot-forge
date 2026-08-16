@@ -8,9 +8,12 @@ import { execFileSync } from 'node:child_process'
 import { loadPublishedOasisIslandDataset } from '../server/data-engine/loadPublishedOasisIslandDataset.ts'
 import {
   assertOasisRollbackCandidateMatchesSnapshot,
+  assertOasisPublicationCandidateRecord,
   assertOasisPublicRecord,
   assertOasisPublicationPayload,
+  assertOasisStagedSourceRecords,
   buildOasisPublicDataset,
+  buildOasisPublicationCandidateRecords,
   deriveOasisRollbackRecords,
   hashOasisManifest,
   hashOasisRecordContent,
@@ -62,12 +65,19 @@ assert.equal(built.records.flatMap((record) => record.levels).length, 430)
 assert.equal(new Set(built.records.map((record) => record.id)).size, 55)
 assert.deepEqual(Object.keys(built.records[0]).sort(), [...OASIS_PUBLIC_RECORD_ALLOW_LIST].sort())
 for (const record of built.records) assertOasisPublicRecord(record)
+const candidateRecords = buildOasisPublicationCandidateRecords({
+  records: source.buildings,
+  publicationId: built.publicationId,
+  manifest,
+})
+assert.equal(candidateRecords.every((record) => record.publicationVersion === null && record.publishedAt === null && record.updatedAt === null), true)
+for (const record of candidateRecords) assertOasisPublicationCandidateRecord(record)
 assertOasisPublicationPayload({
   publicationId: built.publicationId,
   sourceFingerprint: manifest.sourceFingerprint,
   manifestHash: hashOasisManifest(manifest),
   manifest,
-  records: built.records,
+  records: candidateRecords,
 })
 
 for (const record of source.buildings) {
@@ -93,9 +103,9 @@ const immutableSource = {
 }
 const rollbackIdentity = {
   publicationId: 'oasis-rollback-forward-2',
-  publicationVersion: 2,
-  publishedAt: '2026-08-16T20:00:00.000Z',
-  updatedAt: '2026-08-16T20:00:00.000Z',
+  publicationVersion: null,
+  publishedAt: null,
+  updatedAt: null,
 }
 const rollbackRecords = deriveOasisRollbackRecords(immutableSource, rollbackIdentity)
 const rollbackCandidate = { ...immutableSource, publicationId: rollbackIdentity.publicationId, records: rollbackRecords }
@@ -109,11 +119,13 @@ assert.deepEqual(
   rollbackRecords.map(withoutPublicationIdentity),
   built.records.map(withoutPublicationIdentity),
 )
-assert.equal(rollbackRecords.every((record) => record.publicationId === rollbackIdentity.publicationId && record.publicationVersion === 2), true)
+assert.equal(rollbackRecords.every((record) => record.publicationId === rollbackIdentity.publicationId && record.publicationVersion === null && record.publishedAt === null && record.updatedAt === null), true)
 assert.equal(hashOasisRecordContent(rollbackRecords), immutableSource.recordContentHash)
 assert.equal(hashOasisRecordContent([...built.records].reverse()), immutableSource.recordContentHash)
 assert.equal(hashOasisRecordContent(built.records.map((record) => ({ ...record, publishedAt: '2099-01-01T00:00:00.000Z', updatedAt: '2000-01-01T00:00:00.000Z' }))), immutableSource.recordContentHash)
 assert.equal(hashOasisRecordContent(built.records.map((record) => ({ ...record, publicationId: 'another-publication', publicationVersion: 999 }))), immutableSource.recordContentHash)
+assert.equal(hashOasisRecordContent(candidateRecords), immutableSource.recordContentHash)
+assert.throws(() => assertOasisPublicationCandidateRecord({ ...candidateRecords[0], publicationVersion: 2 }), /database-owned version and timestamps null/u)
 for (const [name, mutate] of [
   ['name', (records) => { records[0].name = 'Changed name' }],
   ['level', (records) => { records[0].levels[0].level = 99 }],
@@ -133,7 +145,7 @@ assert.throws(() => deriveOasisRollbackRecords({ ...immutableSource, dataset: 'a
 
 function assertAdversarialRejection(name, mutate, expected) {
   const candidateManifest = structuredClone(manifest)
-  const candidateRecords = structuredClone(built.records)
+  const candidateRecords = structuredClone(buildOasisPublicationCandidateRecords({ records: source.buildings, publicationId: built.publicationId, manifest }))
   const candidate = {
     publicationId: built.publicationId,
     sourceFingerprint: manifest.sourceFingerprint,
@@ -325,6 +337,61 @@ const reorderedKeys = source.buildings.map(reverseObjectKeys)
 assert.equal(hashOasisSourceFingerprint({ records: reorderedKeys, media: manifest.entries }), sourceFingerprint())
 assert.equal(hashOasisRecordContent(built.records.map(reverseObjectKeys)), immutableSource.recordContentHash)
 
+const stagedLevelRecordIndex = source.buildings.findIndex((record) => record.levels.some((item) => Array.isArray(item.buffs) && item.buffs.length > 0))
+const stagedKnownEffectsRecordIndex = source.buildings.findIndex((record) => record.levels.some((item) => Array.isArray(item.knownEffects) && item.knownEffects.length > 0))
+const stagedFootprintRecordIndex = source.buildings.findIndex((record) => record.footprint)
+const stagedUnlockRecordIndex = source.buildings.findIndex((record) => record.unlock)
+const stagedUpgradeRecordIndex = source.buildings.findIndex((record) => record.upgradeMechanic)
+assert.ok([stagedLevelRecordIndex, stagedKnownEffectsRecordIndex, stagedFootprintRecordIndex, stagedUnlockRecordIndex, stagedUpgradeRecordIndex].every((index) => index >= 0))
+
+function assertStagedSourceRejection(name, mutate, expected) {
+  const records = structuredClone(source.buildings)
+  mutate(records)
+  assert.throws(() => assertOasisStagedSourceRecords(records), expected, `${name}: staged validator`)
+  assert.throws(() => hashOasisSourceFingerprint({ records, media: manifest.entries }), expected, `${name}: source fingerprint`)
+  assert.throws(() => buildOasisPublicDataset({ records, manifest, publication: {
+    publicationId: built.publicationId,
+    publicationVersion: built.publicationVersion,
+    publishedAt: built.publishedAt,
+    updatedAt: built.updatedAt,
+  } }), expected, `${name}: projection`)
+}
+
+assertStagedSourceRejection('staged levels containing null', (records) => { records[stagedLevelRecordIndex].levels = [null] }, /levels\[0\].*non-null object/u)
+assertStagedSourceRejection('staged levels non-array', (records) => { records[stagedLevelRecordIndex].levels = {} }, /levels must be an array/u)
+assertStagedSourceRejection('staged malformed level object', (records) => { records[stagedLevelRecordIndex].levels[0] = {} }, /levels\[0\].level is required/u)
+assertStagedSourceRejection('staged buffs null', (records) => { records[stagedLevelRecordIndex].levels[0].buffs = null }, /buffs must be an array/u)
+assertStagedSourceRejection('staged buffs scalar', (records) => { records[stagedLevelRecordIndex].levels[0].buffs = 'invalid' }, /buffs must be an array/u)
+assertStagedSourceRejection('staged buffs mixed members', (records) => { records[stagedLevelRecordIndex].levels[0].buffs.push(null) }, /buffs\[[0-9]+\].*non-null object/u)
+assertStagedSourceRejection('staged buffsUnlocked null', (records) => { records[stagedLevelRecordIndex].levels[0].buffsUnlocked = null }, /buffsUnlocked must be an array/u)
+assertStagedSourceRejection('staged buffsUnlocked mixed members', (records) => { records[stagedLevelRecordIndex].levels[0].buffsUnlocked = [{ stat: 'valid', valuePct: 1 }, 7] }, /buffsUnlocked\[1\].*non-null object/u)
+assertStagedSourceRejection('staged malformed bonus', (records) => { records[stagedLevelRecordIndex].levels[0].buffs[0] = { label: 'missing fields' } }, /\.stat is required/u)
+assertStagedSourceRejection('staged numeric string bonus', (records) => { records[stagedLevelRecordIndex].levels[0].buffs[0].valuePct = '30' }, /valuePct must be a finite number/u)
+assertStagedSourceRejection('staged malformed aliases', (records) => { records[0].aliases = ['valid', null] }, /aliases\[1\].*trimmed string/u)
+assertStagedSourceRejection('staged malformed known effects', (records) => { records[stagedKnownEffectsRecordIndex].levels.find((item) => item.knownEffects).knownEffects.push(7) }, /knownEffects\[[0-9]+\].*trimmed string/u)
+assertStagedSourceRejection('staged malformed footprint', (records) => { records[stagedFootprintRecordIndex].footprint.width = '2' }, /footprint.width must be a positive integer/u)
+assertStagedSourceRejection('staged malformed unlock', (records) => { records[stagedUnlockRecordIndex].unlock.requirement = ' padded ' }, /unlock.requirement.*trimmed string/u)
+assertStagedSourceRejection('staged malformed upgrade', (records) => { records[stagedUpgradeRecordIndex].upgradeMechanic.currency = [] }, /upgradeMechanic.currency.*trimmed string/u)
+assertStagedSourceRejection('staged invalid verification status', (records) => { records[0].verification.status = 'invented' }, /verification.status is unsupported/u)
+assertStagedSourceRejection('staged non-finite number', (records) => { records[0].maxProsperity = Number.POSITIVE_INFINITY }, /finite number/u)
+assertStagedSourceRejection('staged excessive-precision number', (records) => { records[0].maxProsperity = 0.00000001 }, /decimal places/u)
+assertStagedSourceRejection('staged out-of-range number', (records) => { records[0].maxProsperity = 100000001 }, /must not exceed/u)
+assertStagedSourceRejection('staged missing required consumed field', (records) => { delete records[0].name }, /\.name is required/u)
+const validOptionalSource = structuredClone(source.buildings)
+delete validOptionalSource[0].availabilityCategory
+delete validOptionalSource[0].function
+delete validOptionalSource[0].maxEffects
+validOptionalSource[0].maxProsperity = null
+validOptionalSource[0].levels[0].exactOutputKnown = null
+assert.doesNotThrow(() => assertOasisStagedSourceRecords(validOptionalSource), 'valid optional and null staged values')
+assert.equal(buildOasisPublicDataset({ records: validOptionalSource, manifest, publication: {
+  publicationId: built.publicationId,
+  publicationVersion: built.publicationVersion,
+  publishedAt: built.publishedAt,
+  updatedAt: built.updatedAt,
+} }).records.length, 55)
+assert.match(read('scripts/generate-oasis-publication-media.mjs'), /assertOasisStagedSourceRecords\(source\.buildings\)/u)
+
 const searchRecords = buildOasisSearchRecords(built)
 assert.equal(searchRecords.length, 55)
 assert.equal(searchRecords.every((record) => record.dataset === 'oasis-island' && record.status === 'published'), true)
@@ -335,6 +402,23 @@ assert.throws(() => buildOasisSearchRecords({ ...built, publishedAt: '2099-01-01
 assert.throws(() => buildOasisSearchRecords({ ...built, status: 'source-staged' }), /current published/u)
 assert.throws(() => buildOasisSearchRecords({ ...built, recordCount: 1, records: [{ ...built.records[0], sourceText: 'private' }] }), /non-allow-listed|forbidden/u)
 assert.throws(() => buildOasisSearchRecords({ ...built, records: built.records.map((record, index) => index ? record : { ...record, levels: [null] }) }), /levels\[0\].*non-null object/u)
+function assertSearchIntegrityRejection(name, mutate, expected = /record-content integrity/u) {
+  const dataset = structuredClone(built)
+  mutate(dataset.records)
+  let output
+  assert.throws(() => { output = buildOasisSearchRecords(dataset) }, expected, name)
+  assert.equal(output, undefined, `${name}: no Search output may be returned`)
+}
+assertSearchIntegrityRejection('Search rejects valid-shaped top-level mutation', (records) => { records[0].name = 'Changed name' })
+assertSearchIntegrityRejection('Search rejects valid-shaped nested level mutation', (records) => { records[0].levels[0].prosperity = (records[0].levels[0].prosperity ?? 0) + 1 })
+assertSearchIntegrityRejection('Search rejects valid-shaped nested bonus mutation', (records) => { records[levelRecordIndex].levels[0].bonuses[0].label = 'Changed bonus' })
+assertSearchIntegrityRejection('Search rejects media mutation', (records) => { records[mappedRecordIndex].media[0].alt = 'Changed artwork alt' })
+assertSearchIntegrityRejection('Search rejects route mutation', (records) => { records[0].id = 'changed-id'; records[0].canonicalRoute = '/oasis-island/buildings/changed-id' })
+assertSearchIntegrityRejection('Search rejects trust-label mutation', (records) => { records[0].trustLabel = records[0].trustLabel === 'Community corroborated' ? 'Partial source coverage' : 'Community corroborated' })
+assertSearchIntegrityRejection('Search rejects alias mutation', (records) => { records[0].aliases.push('Changed alias') })
+assert.equal(buildOasisSearchRecords({ ...built, records: [...built.records].reverse() }).length, 55)
+assert.throws(() => buildOasisSearchRecords({ ...built, recordContentHash: '0'.repeat(64) }), /record-content integrity/u)
+assert.throws(() => buildOasisSearchRecords({ ...built, recordContentHash: 'malformed' }), /valid record-content hash/u)
 assert.doesNotMatch(read('shared/data-engine/datasets.ts'), /oasis-island/u)
 assert.doesNotMatch(read('server/search/runtime.ts'), /oasis-island/u)
 
@@ -365,6 +449,9 @@ for (const requiredBoundary of [
   'public.oasis_json_has_forbidden_key(r)',
   "r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'",
   "r->>'publicationId' <> p_publication_id",
+  "jsonb_typeof(r->'publicationVersion') <> 'null'",
+  "jsonb_typeof(r->'publishedAt') <> 'null'",
+  "jsonb_typeof(r->'updatedAt') <> 'null'",
   'Oasis public media does not match the approved manifest.',
   'Oasis public media contains missing, extra or duplicate mappings.',
   'public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash',
@@ -422,7 +509,9 @@ const adversarialSqlCases = new Map([
   ['record/media mismatch', ['Oasis public media does not match the approved manifest.']],
   ['placeholder exact metadata', ["media->>'alt' = p_manifest#>>'{placeholder,altText}'", "jsonb_typeof(media->'levelVariant') = 'null'", "media->'width' = p_manifest#>'{placeholder,width}'", "media->'height' = p_manifest#>'{placeholder,height}'"]],
   ['extra or duplicate media', ['Oasis public media contains missing, extra or duplicate mappings.']],
-  ['publication identity mismatch', ['Oasis record publication identity conflicts with the publication being created.']],
+  ['publication identity mismatch', ["r->>'publicationId' <> p_publication_id"]],
+  ['candidate numeric publication version', ["jsonb_typeof(r->'publicationVersion') <> 'null'"]],
+  ['candidate timestamp injection', ["jsonb_typeof(r->'publishedAt') <> 'null'", "jsonb_typeof(r->'updatedAt') <> 'null'"]],
   ['levels containing null', ['allowed_level_keys', 'Oasis levels are incomplete or invalid.']],
   ['level as string', ['allowed_level_keys', 'Oasis levels are incomplete or invalid.']],
   ['level as number', ['allowed_level_keys', 'Oasis levels are incomplete or invalid.']],
@@ -460,7 +549,7 @@ const pointerMutationIndex = migration.indexOf('insert into public.oasis_publica
 for (const [name, guards] of adversarialSqlCases) {
   for (const guard of guards) assert.ok(migration.indexOf(guard) < pointerMutationIndex, `${name}: SQL rejection guard must precede current-pointer mutation`)
 }
-assert.ok(pointerMutationIndex > migration.indexOf('Oasis record publication identity conflicts with the publication being created.'))
+assert.ok(pointerMutationIndex > migration.indexOf("jsonb_typeof(r->'publicationVersion') <> 'null'"))
 assert.ok(pointerMutationIndex > migration.indexOf('Oasis public media does not match the approved manifest.'))
 assert.ok(pointerMutationIndex > migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))
 assert.ok(migration.indexOf('select * into rollback_source') < migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))
@@ -489,7 +578,17 @@ for (const write of [
   'insert into public.oasis_publication_audits',
   'insert into public.oasis_publication_current',
 ]) assert.ok(migration.indexOf(write) > postLockClockIndex, `${write} must use the captured post-lock timestamp`)
-assert.ok(migration.indexOf("'publishedAt', publication_timestamp_text", migration.indexOf('if p_rollback_of_publication_id is not null')) > postLockClockIndex)
+const rollbackCandidateIndex = migration.indexOf("'publishedAt', null", migration.indexOf('if p_rollback_of_publication_id is not null'))
+assert.ok(rollbackCandidateIndex > postLockClockIndex && rollbackCandidateIndex < migration.indexOf('insert into public.oasis_publication_versions'))
+assert.match(migration, /publication_version bigint generated always as identity unique not null/u)
+assert.match(migration, /sequence allocations can retain gaps after rolled-back inserts/u)
+assert.doesNotMatch(migration, /max\s*\(\s*publication_version\s*\)\s*\+\s*1/iu)
+assert.doesNotMatch(migration, /publicationVersion'\) = 'number'.*existing\.publication_version/su)
+assert.doesNotMatch(migration, /publicationVersion'\) = 'number'.*version_value/su)
+assert.ok(migration.indexOf('returning publication_version into version_value') < migration.indexOf("'publicationVersion', version_value"))
+assert.ok(migration.indexOf("return jsonb_build_object('publicationId', existing.publication_id, 'publicationVersion', existing.publication_version") > migration.indexOf('select * into existing'))
+assert.ok(publicationLockIndex < migration.indexOf('insert into public.oasis_publication_versions'))
+assert.ok(migration.indexOf('returning publication_version into version_value') < recordHistoryInsertIndex)
 
 const productionBuild = mkdtempSync(join(tmpdir(), 'oasis-production-build-'))
 try {
@@ -567,6 +666,21 @@ await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
 ])), /record-content verification failed/u)
 await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
   { data: { singleton: true, publication_id: built.publicationId }, error: null },
+  { data: { ...publicationRow, publication_version: null }, error: null },
+  { data: built.records.map((record) => ({ record_id: record.id, public_record: record })), error: null },
+])), /invalid publication_version/u)
+await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
+  { data: { singleton: true, publication_id: built.publicationId }, error: null },
+  { data: publicationRow, error: null },
+  { data: built.records.map((record, index) => ({ record_id: record.id, public_record: index ? record : { ...record, publicationVersion: null } })), error: null },
+])), /invalid publication identity/u)
+await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
+  { data: { singleton: true, publication_id: built.publicationId }, error: null },
+  { data: publicationRow, error: null },
+  { data: built.records.map((record, index) => ({ record_id: record.id, public_record: index ? record : { ...record, publicationVersion: record.publicationVersion + 1 } })), error: null },
+])), /record identity mismatch/u)
+await assert.rejects(loadPublishedOasisIslandDataset(clientFor([
+  { data: { singleton: true, publication_id: built.publicationId }, error: null },
   { data: publicationRow, error: null },
   { data: built.records.map((record, index) => ({ record_id: record.id, public_record: index ? record : { ...record, publishedAt: '2099-01-01T00:00:00.000Z' } })), error: null },
 ])), /timestamp mismatch/u)
@@ -581,5 +695,15 @@ const loaded = await loadPublishedOasisIslandDataset(clientFor([
   { data: built.records.map((record) => ({ record_id: record.id, public_record: record })), error: null },
 ]))
 assert.deepEqual(loaded, built)
+assert.equal(Object.isFrozen(loaded), true)
+assert.equal(Object.isFrozen(loaded.records), true)
+assert.equal(Object.isFrozen(loaded.records[0]), true)
+assert.equal(Object.isFrozen(loaded.records[0].aliases), true)
+assert.equal(Object.isFrozen(loaded.records[levelRecordIndex].levels), true)
+assert.equal(Object.isFrozen(loaded.records[levelRecordIndex].levels[0]), true)
+assert.equal(Object.isFrozen(loaded.records[levelRecordIndex].levels[0].bonuses), true)
+assert.equal(Object.isFrozen(loaded.records[levelRecordIndex].levels[0].bonuses[0]), true)
+assert.equal(Object.isFrozen(loaded.records[mappedRecordIndex].media), true)
+assert.equal(Object.isFrozen(loaded.records[mappedRecordIndex].media[0]), true)
 
 console.log(`OASIS-001A-PUB Phase 1 passed: 55 records, 430 levels, 111 private-to-planned-public media mappings, six placeholders, private acceptance assets, clean production build, fail-closed loader and inactive Search adapter verified. SQL adversarial guards were structurally verified; no disposable PostgreSQL runtime was used by this test.`)

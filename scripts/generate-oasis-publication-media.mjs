@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path'
 import sharp from 'sharp'
 
 import {
+  assertOasisStagedSourceRecords,
   buildOasisPublicDataset,
   hashOasisSourceFingerprint,
   OASIS_MEDIA_MANIFEST_SCHEMA_VERSION,
@@ -23,6 +24,8 @@ const headerWebpPath = resolve(root, 'src/assets/island-route/oasis-island-heade
 const sha256 = (buffer) => createHash('sha256').update(buffer).digest('hex')
 const metadataOnly = process.argv.includes('--metadata-only')
 const source = JSON.parse(await readFile(sourceJsonPath, 'utf8'))
+if (!Array.isArray(source.buildings)) throw new Error('Oasis staged source must contain a buildings array.')
+assertOasisStagedSourceRecords(source.buildings)
 const inventory = (await readdir(privateAssetRoot)).filter((name) => name.toLowerCase().endsWith('.png')).sort()
 const ownership = new Map()
 

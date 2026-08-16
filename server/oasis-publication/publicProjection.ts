@@ -123,6 +123,21 @@ export type OasisPublicationIdentity = Readonly<{
   updatedAt: string
 }>
 
+export type OasisPublicationCandidateIdentity = Readonly<{
+  publicationId: string
+  publicationVersion: null
+  publishedAt: null
+  updatedAt: null
+}>
+
+export type OasisPublicationCandidateRecord = Readonly<
+  Omit<OasisPublicRecord, 'publicationVersion' | 'publishedAt' | 'updatedAt'> & {
+    publicationVersion: null
+    publishedAt: null
+    updatedAt: null
+  }
+>
+
 export type OasisPublicDataset = Readonly<{
   schemaVersion: typeof OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION
   dataset: 'oasis-island'
@@ -148,6 +163,12 @@ export type OasisImmutablePublicationSnapshot = Readonly<{
   manifest: OasisMediaManifest
   records: readonly OasisPublicRecord[]
 }>
+
+export type OasisPublicationCandidateSnapshot = Readonly<
+  Omit<OasisImmutablePublicationSnapshot, 'records'> & {
+    records: readonly OasisPublicationCandidateRecord[]
+  }
+>
 
 export const OASIS_PUBLIC_RECORD_ALLOW_LIST = Object.freeze([
   'schemaVersion', 'id', 'name', 'aliases', 'recordType', 'rarity',
@@ -195,14 +216,6 @@ export function oasisPublicTrustLabel(value: unknown): OasisPublicTrustLabel {
     throw new Error(`Oasis record ${text(record?.id) ?? '<unknown>'} has an unsupported verification status.`)
   }
   return OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS[status as OasisSourceVerificationStatus]
-}
-
-function number(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
-}
-
-function boolean(value: unknown): boolean | null {
-  return typeof value === 'boolean' ? value : null
 }
 
 function assertExactKeys(
@@ -322,40 +335,205 @@ function assertPublicMedia(value: unknown, path: string): asserts value is Oasis
   assertPositiveInteger(item.height, `${path}.height`)
 }
 
-function stringList(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.map(text).filter((item): item is string => item !== null)
-    : []
+type OasisStagedSourceBonus = Readonly<{
+  label?: string | null
+  stat: string | null
+  valuePct: number | null
+  effect?: string | null
+}>
+
+type OasisStagedSourceLevel = Readonly<{
+  level: number
+  prosperity?: number | null
+  prosperityRequired?: number | null
+  waterEssencePerHour?: number | null
+  buffs?: readonly OasisStagedSourceBonus[]
+  buffsUnlocked?: readonly OasisStagedSourceBonus[]
+  knownEffects?: readonly string[]
+  exactOutputKnown?: boolean | null
+}>
+
+type OasisStagedSourceRecord = Readonly<{
+  id: string
+  name: string
+  aliases: readonly string[]
+  recordType: string
+  rarity: string | null
+  availabilityCategory?: string | null
+  footprint: Readonly<{ width: number; height: number; display: string }> | null
+  typeLimit: number | null
+  maxLevel: number | null
+  function?: string | null
+  levels: readonly OasisStagedSourceLevel[]
+  maxEffects?: readonly OasisStagedSourceBonus[]
+  unlock?: Readonly<{ requirement: string | null; initialBlueprintPurchase: string | null }> | null
+  upgradeMechanic?: Readonly<{
+    currency: string | null
+    exchange?: string | null
+    generalBlueprintRefresh?: string | null
+    officiallyVerified?: string | null
+  }> | null
+  maxProsperity?: number | null
+  verification: Readonly<{ status: OasisSourceVerificationStatus }>
+  images: Readonly<{
+    files: readonly string[]
+    levelVariants?: Readonly<Record<string, string | readonly string[]>>
+    missing: boolean
+  }>
+}>
+
+function assertRequiredField(value: Record<string, unknown>, key: string, path: string): void {
+  if (!Object.hasOwn(value, key)) throw new Error(`${path}.${key} is required.`)
 }
 
-function bonus(value: unknown): OasisPublicBonus | null {
+function assertOptionalNullableTrimmedString(value: Record<string, unknown>, key: string, path: string): void {
+  if (Object.hasOwn(value, key)) assertNullableTrimmedString(value[key], `${path}.${key}`)
+}
+
+function assertOptionalNullableNonNegativeNumber(value: Record<string, unknown>, key: string, path: string): void {
+  if (Object.hasOwn(value, key)) assertNullableNonNegativeNumber(value[key], `${path}.${key}`)
+}
+
+function assertStagedSourceBonus(value: unknown, path: string): asserts value is OasisStagedSourceBonus {
   const item = object(value)
-  if (!item) return null
+  if (!item) throw new Error(`${path} must be a non-null object.`)
+  assertRequiredField(item, 'stat', path)
+  assertRequiredField(item, 'valuePct', path)
+  assertOptionalNullableTrimmedString(item, 'label', path)
+  assertNullableTrimmedString(item.stat, `${path}.stat`)
+  assertNullableFiniteNumber(item.valuePct, `${path}.valuePct`)
+  assertOptionalNullableTrimmedString(item, 'effect', path)
+}
+
+function assertStagedSourceBonusArray(value: Record<string, unknown>, key: string, path: string): void {
+  if (!Object.hasOwn(value, key)) return
+  const items = value[key]
+  if (!Array.isArray(items)) throw new Error(`${path}.${key} must be an array when present.`)
+  items.forEach((item, index) => assertStagedSourceBonus(item, `${path}.${key}[${index}]`))
+}
+
+function assertStagedSourceImages(value: unknown, path: string): void {
+  const images = object(value)
+  if (!images) throw new Error(`${path} must be a non-null object.`)
+  assertRequiredField(images, 'files', path)
+  assertRequiredField(images, 'missing', path)
+  if (!Array.isArray(images.files)) throw new Error(`${path}.files must be an array.`)
+  images.files.forEach((name, index) => assertTrimmedString(name, `${path}.files[${index}]`))
+  if (typeof images.missing !== 'boolean') throw new Error(`${path}.missing must be a boolean.`)
+  if (Object.hasOwn(images, 'levelVariants')) {
+    const variants = object(images.levelVariants)
+    if (!variants) throw new Error(`${path}.levelVariants must be an object when present.`)
+    for (const [levelKey, names] of Object.entries(variants)) {
+      if (!/^[1-9][0-9]*$/u.test(levelKey)) throw new Error(`${path}.levelVariants has an invalid level key.`)
+      const list = Array.isArray(names) ? names : [names]
+      if (list.length === 0) throw new Error(`${path}.levelVariants.${levelKey} must not be empty.`)
+      list.forEach((name, index) => assertTrimmedString(name, `${path}.levelVariants.${levelKey}[${index}]`))
+    }
+  }
+}
+
+export function assertOasisStagedSourceRecord(value: unknown, path = 'Oasis staged source record'): asserts value is OasisStagedSourceRecord {
+  const record = object(value)
+  if (!record) throw new Error(`${path} must be a non-null object.`)
+  for (const key of ['id', 'name', 'aliases', 'recordType', 'rarity', 'footprint', 'typeLimit', 'maxLevel', 'levels', 'verification', 'images']) {
+    assertRequiredField(record, key, path)
+  }
+  assertTrimmedString(record.id, `${path}.id`)
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(record.id)) throw new Error(`${path}.id must be a stable slug.`)
+  assertTrimmedString(record.name, `${path}.name`)
+  assertTrimmedString(record.recordType, `${path}.recordType`)
+  if (!Array.isArray(record.aliases)) throw new Error(`${path}.aliases must be an array.`)
+  record.aliases.forEach((alias, index) => assertTrimmedString(alias, `${path}.aliases[${index}]`))
+  if (new Set(record.aliases).size !== record.aliases.length) throw new Error(`${path}.aliases must be unique.`)
+  assertNullableTrimmedString(record.rarity, `${path}.rarity`)
+  assertOptionalNullableTrimmedString(record, 'availabilityCategory', path)
+  assertOptionalNullableTrimmedString(record, 'function', path)
+  assertNullablePositiveInteger(record.typeLimit, `${path}.typeLimit`)
+  assertNullablePositiveInteger(record.maxLevel, `${path}.maxLevel`)
+  assertOptionalNullableNonNegativeNumber(record, 'maxProsperity', path)
+
+  if (record.footprint !== null) {
+    const footprint = object(record.footprint)
+    if (!footprint) throw new Error(`${path}.footprint must be an object or null.`)
+    for (const key of OASIS_PUBLIC_FOOTPRINT_KEYS) assertRequiredField(footprint, key, `${path}.footprint`)
+    assertPositiveInteger(footprint.width, `${path}.footprint.width`)
+    assertPositiveInteger(footprint.height, `${path}.footprint.height`)
+    assertTrimmedString(footprint.display, `${path}.footprint.display`)
+  }
+
+  if (!Array.isArray(record.levels)) throw new Error(`${path}.levels must be an array.`)
+  record.levels.forEach((value, index) => {
+    const level = object(value)
+    const levelPath = `${path}.levels[${index}]`
+    if (!level) throw new Error(`${levelPath} must be a non-null object.`)
+    assertRequiredField(level, 'level', levelPath)
+    assertPositiveInteger(level.level, `${levelPath}.level`)
+    for (const key of ['prosperity', 'prosperityRequired', 'waterEssencePerHour']) {
+      assertOptionalNullableNonNegativeNumber(level, key, levelPath)
+    }
+    assertStagedSourceBonusArray(level, 'buffs', levelPath)
+    assertStagedSourceBonusArray(level, 'buffsUnlocked', levelPath)
+    if (Object.hasOwn(level, 'knownEffects')) {
+      if (!Array.isArray(level.knownEffects)) throw new Error(`${levelPath}.knownEffects must be an array when present.`)
+      level.knownEffects.forEach((effect, effectIndex) => assertTrimmedString(effect, `${levelPath}.knownEffects[${effectIndex}]`))
+    }
+    if (Object.hasOwn(level, 'exactOutputKnown') && level.exactOutputKnown !== null && typeof level.exactOutputKnown !== 'boolean') {
+      throw new Error(`${levelPath}.exactOutputKnown must be a boolean or null when present.`)
+    }
+  })
+  assertStagedSourceBonusArray(record, 'maxEffects', path)
+
+  if (Object.hasOwn(record, 'unlock') && record.unlock !== null) {
+    const unlock = object(record.unlock)
+    if (!unlock) throw new Error(`${path}.unlock must be an object or null when present.`)
+    for (const key of OASIS_PUBLIC_UNLOCK_KEYS) assertRequiredField(unlock, key, `${path}.unlock`)
+    assertNullableTrimmedString(unlock.requirement, `${path}.unlock.requirement`)
+    assertNullableTrimmedString(unlock.initialBlueprintPurchase, `${path}.unlock.initialBlueprintPurchase`)
+  }
+  if (Object.hasOwn(record, 'upgradeMechanic') && record.upgradeMechanic !== null) {
+    const upgrade = object(record.upgradeMechanic)
+    if (!upgrade) throw new Error(`${path}.upgradeMechanic must be an object or null when present.`)
+    assertRequiredField(upgrade, 'currency', `${path}.upgradeMechanic`)
+    assertNullableTrimmedString(upgrade.currency, `${path}.upgradeMechanic.currency`)
+    for (const key of ['exchange', 'generalBlueprintRefresh', 'officiallyVerified']) {
+      assertOptionalNullableTrimmedString(upgrade, key, `${path}.upgradeMechanic`)
+    }
+  }
+  const verification = object(record.verification)
+  if (!verification) throw new Error(`${path}.verification must be a non-null object.`)
+  assertRequiredField(verification, 'status', `${path}.verification`)
+  assertTrimmedString(verification.status, `${path}.verification.status`)
+  if (!Object.hasOwn(OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS, verification.status)) throw new Error(`${path}.verification.status is unsupported.`)
+  assertStagedSourceImages(record.images, `${path}.images`)
+}
+
+export function assertOasisStagedSourceRecords(value: readonly unknown[]): asserts value is readonly OasisStagedSourceRecord[] {
+  if (!Array.isArray(value)) throw new Error('Oasis staged source records must be an array.')
+  value.forEach((record, index) => assertOasisStagedSourceRecord(record, `Oasis staged source records[${index}]`))
+}
+
+function projectBonus(value: OasisStagedSourceBonus): OasisPublicBonus {
   return Object.freeze({
-    label: text(item.label),
-    stat: text(item.stat),
-    valuePct: number(item.valuePct),
-    effect: text(item.effect),
+    label: value.label ?? null,
+    stat: value.stat,
+    valuePct: value.valuePct,
+    effect: value.effect ?? null,
   })
 }
 
-function bonuses(value: unknown): OasisPublicBonus[] {
-  return Array.isArray(value)
-    ? value.map(bonus).filter((item): item is OasisPublicBonus => item !== null)
-    : []
+function projectBonuses(value: readonly OasisStagedSourceBonus[] | undefined): OasisPublicBonus[] {
+  return (value ?? []).map(projectBonus)
 }
 
-function level(value: unknown): OasisPublicLevel | null {
-  const item = object(value)
-  if (!item) return null
+function projectLevel(value: OasisStagedSourceLevel): OasisPublicLevel {
   return Object.freeze({
-    level: number(item.level),
-    prosperity: number(item.prosperity),
-    prosperityRequired: number(item.prosperityRequired),
-    waterEssencePerHour: number(item.waterEssencePerHour),
-    bonuses: Object.freeze([...bonuses(item.buffs), ...bonuses(item.buffsUnlocked)]),
-    knownEffects: Object.freeze(stringList(item.knownEffects)),
-    exactOutputKnown: boolean(item.exactOutputKnown),
+    level: value.level,
+    prosperity: value.prosperity ?? null,
+    prosperityRequired: value.prosperityRequired ?? null,
+    waterEssencePerHour: value.waterEssencePerHour ?? null,
+    bonuses: Object.freeze([...projectBonuses(value.buffs), ...projectBonuses(value.buffsUnlocked)]),
+    knownEffects: Object.freeze([...(value.knownEffects ?? [])]),
+    exactOutputKnown: value.exactOutputKnown ?? null,
   })
 }
 
@@ -382,36 +560,36 @@ function publicMedia(recordId: string, manifest: OasisMediaManifest): OasisPubli
   })]
 }
 
-export function buildOasisPublicRecord(
+function projectOasisRecord(
   value: unknown,
-  publication: OasisPublicationIdentity,
+  publication: OasisPublicationIdentity | OasisPublicationCandidateIdentity,
   manifest: OasisMediaManifest,
-): OasisPublicRecord {
-  const record = object(value)
-  const id = text(record?.id)
-  const name = text(record?.name)
-  const recordType = text(record?.recordType)
-  if (!record || !id || !name || !recordType) throw new Error('Oasis public records require stable id, name and recordType values.')
-  const footprint = object(record.footprint)
-  const unlock = object(record.unlock)
-  const upgrade = object(record.upgradeMechanic)
+): OasisPublicRecord | OasisPublicationCandidateRecord {
+  assertOasisStagedSourceRecord(value)
+  const record = value
+  const id = record.id
   const publicRecord = Object.freeze({
     schemaVersion: OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION,
     id,
-    name,
-    aliases: Object.freeze(stringList(record.aliases)),
-    recordType,
-    rarity: text(record.rarity),
-    availabilityCategory: text(record.availabilityCategory),
-    footprint: footprint ? Object.freeze({ width: number(footprint.width), height: number(footprint.height), display: text(footprint.display) }) : null,
-    typeLimit: number(record.typeLimit),
-    maxLevel: number(record.maxLevel),
-    function: text(record.function),
-    levels: Object.freeze(Array.isArray(record.levels) ? record.levels.map(level).filter((item): item is OasisPublicLevel => item !== null) : []),
-    maxEffects: Object.freeze(bonuses(record.maxEffects)),
-    unlock: unlock ? Object.freeze({ requirement: text(unlock.requirement), initialBlueprintPurchase: text(unlock.initialBlueprintPurchase) }) : null,
-    upgrade: upgrade ? Object.freeze({ currency: text(upgrade.currency), exchange: text(upgrade.exchange), generalBlueprintRefresh: text(upgrade.generalBlueprintRefresh), officiallyVerified: text(upgrade.officiallyVerified) }) : null,
-    maxProsperity: number(record.maxProsperity),
+    name: record.name,
+    aliases: Object.freeze([...record.aliases]),
+    recordType: record.recordType,
+    rarity: record.rarity,
+    availabilityCategory: record.availabilityCategory ?? null,
+    footprint: record.footprint ? Object.freeze({ ...record.footprint }) : null,
+    typeLimit: record.typeLimit,
+    maxLevel: record.maxLevel,
+    function: record.function ?? null,
+    levels: Object.freeze(record.levels.map(projectLevel)),
+    maxEffects: Object.freeze(projectBonuses(record.maxEffects)),
+    unlock: record.unlock ? Object.freeze({ ...record.unlock }) : null,
+    upgrade: record.upgradeMechanic ? Object.freeze({
+      currency: record.upgradeMechanic.currency,
+      exchange: record.upgradeMechanic.exchange ?? null,
+      generalBlueprintRefresh: record.upgradeMechanic.generalBlueprintRefresh ?? null,
+      officiallyVerified: record.upgradeMechanic.officiallyVerified ?? null,
+    }) : null,
+    maxProsperity: record.maxProsperity ?? null,
     trustLabel: oasisPublicTrustLabel(record),
     media: Object.freeze(publicMedia(id, manifest)),
     publicationId: publication.publicationId,
@@ -421,8 +599,36 @@ export function buildOasisPublicRecord(
     canonicalRoute: `/oasis-island/buildings/${id}`,
     status: 'published',
   })
-  assertOasisPublicRecord(publicRecord)
+  if (publication.publicationVersion === null) assertOasisPublicationCandidateRecord(publicRecord)
+  else assertOasisPublicRecord(publicRecord)
   return publicRecord
+}
+
+export function buildOasisPublicRecord(
+  value: unknown,
+  publication: OasisPublicationIdentity,
+  manifest: OasisMediaManifest,
+): OasisPublicRecord {
+  return projectOasisRecord(value, publication, manifest) as OasisPublicRecord
+}
+
+export function buildOasisPublicationCandidateRecords(input: {
+  records: readonly unknown[]
+  publicationId: string
+  manifest: OasisMediaManifest
+}): readonly OasisPublicationCandidateRecord[] {
+  assertTrimmedString(input.publicationId, 'Oasis candidate publicationId')
+  assertOasisStagedSourceRecords(input.records)
+  if (input.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error(`Oasis publication requires exactly ${OASIS_PUBLIC_RECORD_COUNT} records.`)
+  const identity: OasisPublicationCandidateIdentity = Object.freeze({
+    publicationId: input.publicationId,
+    publicationVersion: null,
+    publishedAt: null,
+    updatedAt: null,
+  })
+  const records = input.records.map((record) => projectOasisRecord(record, identity, input.manifest) as OasisPublicationCandidateRecord)
+  if (new Set(records.map((record) => record.id)).size !== records.length) throw new Error('Oasis publication contains duplicate record IDs.')
+  return Object.freeze(records)
 }
 
 export function buildOasisPublicDataset(input: {
@@ -430,6 +636,7 @@ export function buildOasisPublicDataset(input: {
   publication: OasisPublicationIdentity
   manifest: OasisMediaManifest
 }): OasisPublicDataset {
+  assertOasisStagedSourceRecords(input.records)
   if (input.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error(`Oasis publication requires exactly ${OASIS_PUBLIC_RECORD_COUNT} records.`)
   if (input.manifest.sourceAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT || input.manifest.derivativeAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error(`Oasis publication requires exactly ${OASIS_PRIVATE_SOURCE_MEDIA_COUNT} mapped source and derivative assets.`)
   const records = input.records.map((record) => buildOasisPublicRecord(record, input.publication, input.manifest))
@@ -508,6 +715,7 @@ export function hashOasisSourceFingerprint(input: {
   records: readonly unknown[]
   media: readonly Pick<OasisMediaManifestEntry, 'recordId' | 'privateSourceFilename' | 'sourceChecksum' | 'mediaRole' | 'levelVariant'>[]
 }): string {
+  assertOasisStagedSourceRecords(input.records)
   const media = [...input.media]
     .map((entry) => ({
       recordId: entry.recordId,
@@ -525,7 +733,7 @@ export function hashOasisSourceFingerprint(input: {
 }
 
 export function assertOasisRollbackCandidateMatchesSnapshot(
-  candidate: OasisImmutablePublicationSnapshot,
+  candidate: OasisPublicationCandidateSnapshot,
   source: OasisImmutablePublicationSnapshot | null | undefined,
 ): void {
   if (!source) throw new Error('Oasis rollback source publication does not exist.')
@@ -544,12 +752,12 @@ export function assertOasisRollbackCandidateMatchesSnapshot(
 
 export function deriveOasisRollbackRecords(
   source: OasisImmutablePublicationSnapshot,
-  publication: OasisPublicationIdentity,
-): readonly OasisPublicRecord[] {
+  publication: OasisPublicationCandidateIdentity,
+): readonly OasisPublicationCandidateRecord[] {
   if (source.dataset !== 'oasis-island') throw new Error('Oasis rollback source belongs to another dataset.')
   return Object.freeze(source.records.map((record) => {
     const derived = Object.freeze({ ...record, ...publication })
-    assertOasisPublicRecord(derived)
+    assertOasisPublicationCandidateRecord(derived)
     return derived
   }))
 }
@@ -607,6 +815,20 @@ export function assertOasisPublicRecord(value: unknown): asserts value is OasisP
   if (!(Object.values(OASIS_PUBLIC_TRUST_BY_SOURCE_STATUS) as readonly unknown[]).includes(record.trustLabel)) throw new Error('Oasis public record has an invalid trust label.')
   if (!Array.isArray(record.media)) throw new Error(`Oasis public record ${record.id}.media must be an array.`)
   record.media.forEach((item, index) => assertPublicMedia(item, `Oasis public record ${record.id}.media[${index}]`))
+}
+
+export function assertOasisPublicationCandidateRecord(value: unknown): asserts value is OasisPublicationCandidateRecord {
+  const record = object(value)
+  if (!record) throw new Error('Oasis publication candidate record is not an object.')
+  if (record.publicationVersion !== null || record.publishedAt !== null || record.updatedAt !== null) {
+    throw new Error('Oasis publication candidates must leave database-owned version and timestamps null.')
+  }
+  assertOasisPublicRecord({
+    ...record,
+    publicationVersion: 1,
+    publishedAt: '2000-01-01T00:00:00.000Z',
+    updatedAt: '2000-01-01T00:00:00.000Z',
+  })
 }
 
 const OASIS_MISSING_ARTWORK_RECORD_IDS = Object.freeze([
@@ -668,8 +890,8 @@ export function assertOasisPublicationPayload(input: {
     || typeof placeholder.height !== 'number' || !Number.isInteger(placeholder.height) || placeholder.height <= 0
     || typeof placeholder.altText !== 'string' || !placeholder.altText) throw new Error('Oasis placeholder metadata is incomplete or invalid.')
   if (!Array.isArray(input.records) || input.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis publication requires exactly 55 records.')
-  for (const record of input.records) assertOasisPublicRecord(record)
-  const records = input.records as OasisPublicRecord[]
+  for (const record of input.records) assertOasisPublicationCandidateRecord(record)
+  const records = input.records as OasisPublicationCandidateRecord[]
   if (new Set(records.map((record) => record.id)).size !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis record IDs must be unique.')
   if (records.some((record) => record.publicationId !== input.publicationId)) throw new Error('Oasis record publication identity conflicts with the publication.')
   const expectedMedia = new Set((input.manifest.entries as OasisMediaManifestEntry[]).map((entry) => mediaIdentity(entry.recordId, {

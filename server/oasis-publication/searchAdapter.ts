@@ -1,17 +1,26 @@
 import type { SearchRecord } from '../../shared/search/contracts.js'
 import type { OasisPublicDataset } from './publicProjection.js'
-import { assertOasisPublicRecord } from './publicProjection.js'
+import {
+  assertOasisPublicRecord,
+  hashOasisRecordContent,
+  OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION,
+} from './publicProjection.js'
 
 function sameTimestamp(left: string, right: string): boolean {
   return Number.isFinite(Date.parse(left)) && Date.parse(left) === Date.parse(right)
 }
 
 export function buildOasisSearchRecords(dataset: OasisPublicDataset): readonly SearchRecord[] {
-  if (dataset.dataset !== 'oasis-island' || dataset.status !== 'current_published') throw new Error('Only the current published Oasis projection may be prepared for Search.')
-  if (!dataset.publicationId || dataset.recordCount !== dataset.records.length) throw new Error('Oasis Search preparation requires a complete publication identity and record set.')
-  return dataset.records.map((record) => {
+  if (dataset.dataset !== 'oasis-island' || dataset.status !== 'current_published' || dataset.schemaVersion !== OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION) throw new Error('Only the current published Oasis projection may be prepared for Search.')
+  if (!dataset.publicationId || !Number.isInteger(dataset.publicationVersion) || dataset.publicationVersion < 1 || dataset.recordCount !== dataset.records.length) throw new Error('Oasis Search preparation requires a complete publication identity and record set.')
+  for (const record of dataset.records) {
     assertOasisPublicRecord(record)
+    if (record.publicationId !== dataset.publicationId || record.publicationVersion !== dataset.publicationVersion) throw new Error('Oasis Search preparation requires matching publication identity.')
     if (!sameTimestamp(record.publishedAt, dataset.publishedAt) || !sameTimestamp(record.updatedAt, dataset.updatedAt)) throw new Error('Oasis Search preparation requires database-authoritative publication timestamps.')
+  }
+  if (!/^[0-9a-f]{64}$/u.test(dataset.recordContentHash)) throw new Error('Oasis Search preparation requires a valid record-content hash.')
+  if (hashOasisRecordContent(dataset.records) !== dataset.recordContentHash) throw new Error('Oasis Search record-content integrity verification failed.')
+  return dataset.records.map((record) => {
     return Object.freeze({
       id: record.id,
       forge_id: null,
