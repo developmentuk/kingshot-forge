@@ -313,6 +313,11 @@ begin
      ]) then
     raise exception 'Oasis manifest is missing required fields.';
   end if;
+  if jsonb_typeof(p_manifest->'schemaVersion') is distinct from 'string'
+     or jsonb_typeof(p_manifest->'sourceFingerprintVersion') is distinct from 'string'
+     or jsonb_typeof(p_manifest->'sourceFingerprint') is distinct from 'string' then
+    raise exception 'Oasis manifest text metadata must use JSON strings.';
+  end if;
   if p_manifest->>'schemaVersion' is distinct from 'oasis-media-manifest-v2'
      or p_manifest->>'sourceFingerprintVersion' is distinct from 'oasis-source-fingerprint-v2' then
     raise exception 'Unsupported Oasis media manifest or source-fingerprint schema.';
@@ -332,6 +337,18 @@ begin
     raise exception 'Oasis publication requires exactly 111 mapped media assets and complete byte totals.';
   end if;
   if not (p_manifest ? 'entries') or jsonb_typeof(p_manifest->'entries') is distinct from 'array' or jsonb_array_length(p_manifest->'entries') <> 111 then raise exception 'Oasis manifest requires exactly 111 entries.'; end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_manifest->'entries') entry
+    where jsonb_typeof(entry) is distinct from 'object'
+      or jsonb_typeof(entry->'recordId') is distinct from 'string'
+      or jsonb_typeof(entry->'privateSourceFilename') is distinct from 'string'
+      or jsonb_typeof(entry->'sourceChecksum') is distinct from 'string'
+      or jsonb_typeof(entry->'publicDerivativePath') is distinct from 'string'
+      or jsonb_typeof(entry->'privateDerivativePath') is distinct from 'string'
+      or jsonb_typeof(entry->'derivativeChecksum') is distinct from 'string'
+      or jsonb_typeof(entry->'mediaRole') is distinct from 'string'
+      or jsonb_typeof(entry->'altText') is distinct from 'string'
+  ) then raise exception 'Oasis manifest entry text metadata must use JSON strings.'; end if;
   if (select count(distinct entry->>'privateSourceFilename') from jsonb_array_elements(p_manifest->'entries') entry) <> 111 then raise exception 'Oasis private-source identities must be complete and unique.'; end if;
   if (select count(distinct entry->>'publicDerivativePath') from jsonb_array_elements(p_manifest->'entries') entry) <> 111 then raise exception 'Oasis derivative paths must be complete and unique.'; end if;
   if exists (
@@ -367,7 +384,13 @@ begin
   end if;
   if not (p_manifest ? 'missingArtworkRecordIds') or jsonb_typeof(p_manifest->'missingArtworkRecordIds') is distinct from 'array'
      or jsonb_array_length(p_manifest->'missingArtworkRecordIds') <> 6
-     or (select count(distinct value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> 6
+     or exists (
+       select 1 from jsonb_array_elements(p_manifest->'missingArtworkRecordIds') missing
+       where jsonb_typeof(missing) is distinct from 'string'
+     ) then
+    raise exception 'Oasis missing-artwork IDs do not match the six approved records.';
+  end if;
+  if (select count(distinct value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> 6
      or (select array_agg(value order by value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> expected_missing_ids then
     raise exception 'Oasis missing-artwork IDs do not match the six approved records.';
   end if;
@@ -375,8 +398,16 @@ begin
      or not ((p_manifest->'placeholder') ?& array[
        'publicDerivativePath', 'privateDerivativePath', 'derivativeChecksum',
        'derivativeBytes', 'width', 'height', 'altText'
-     ])
-     or p_manifest#>>'{placeholder,publicDerivativePath}' is distinct from 'media/oasis-island/shared/artwork-unavailable.webp'
+     ]) then
+    raise exception 'Oasis placeholder metadata is incomplete or invalid.';
+  end if;
+  if jsonb_typeof(p_manifest#>'{placeholder,publicDerivativePath}') is distinct from 'string'
+     or jsonb_typeof(p_manifest#>'{placeholder,privateDerivativePath}') is distinct from 'string'
+     or jsonb_typeof(p_manifest#>'{placeholder,derivativeChecksum}') is distinct from 'string'
+     or jsonb_typeof(p_manifest#>'{placeholder,altText}') is distinct from 'string' then
+    raise exception 'Oasis placeholder text metadata must use JSON strings.';
+  end if;
+  if p_manifest#>>'{placeholder,publicDerivativePath}' is distinct from 'media/oasis-island/shared/artwork-unavailable.webp'
      or p_manifest#>>'{placeholder,privateDerivativePath}' is distinct from 'fixtures/oasis-001a-publication/media/oasis-island/shared/artwork-unavailable.webp'
      or coalesce(p_manifest#>>'{placeholder,derivativeChecksum}', '') !~ '^[0-9a-f]{64}$'
      or not ((p_manifest->'placeholder') ? 'derivativeBytes') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,derivativeBytes}') is distinct from true

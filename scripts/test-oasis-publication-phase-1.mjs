@@ -165,6 +165,38 @@ assertAdversarialRejection('incorrect manifest hash', (candidate) => { candidate
 assertAdversarialRejection('mismatched source fingerprint', (candidate) => { candidate.sourceFingerprint = '0'.repeat(64) }, /source fingerprint does not match/u)
 assertAdversarialRejection('wrong placeholder list', ({ manifest: value }) => { value.missingArtworkRecordIds[0] = 'not-approved' }, /missing-artwork IDs are invalid/u)
 assertAdversarialRejection('obsolete manifest contract', ({ manifest: value }) => { value.schemaVersion = 'oasis-media-manifest-v1' }, /v2 fingerprint contract/u)
+
+const nonStringManifestValues = [
+  ['number', 7],
+  ['boolean', true],
+  ['object', { value: 'text' }],
+  ['array', ['text']],
+  ['null', null],
+]
+const manifestTextCases = [
+  ['top-level schemaVersion', (value, replacement) => { value.schemaVersion = replacement }, /v2 fingerprint contract/u],
+  ['top-level sourceFingerprintVersion', (value, replacement) => { value.sourceFingerprintVersion = replacement }, /v2 fingerprint contract/u],
+  ['top-level sourceFingerprint', (value, replacement) => { value.sourceFingerprint = replacement }, /source fingerprint does not match/u],
+  ['entry recordId', (value, replacement) => { value.entries[0].recordId = replacement }, /entry metadata|public media does not match/u],
+  ['entry privateSourceFilename', (value, replacement) => { value.entries[0].privateSourceFilename = replacement }, /entry metadata/u],
+  ['entry sourceChecksum', (value, replacement) => { value.entries[0].sourceChecksum = replacement }, /entry metadata/u],
+  ['entry publicDerivativePath', (value, replacement) => { value.entries[0].publicDerivativePath = replacement }, /entry metadata/u],
+  ['entry privateDerivativePath', (value, replacement) => { value.entries[0].privateDerivativePath = replacement }, /entry metadata/u],
+  ['entry derivativeChecksum', (value, replacement) => { value.entries[0].derivativeChecksum = replacement }, /entry metadata/u],
+  ['entry mediaRole', (value, replacement) => { value.entries[0].mediaRole = replacement }, /entry metadata/u],
+  ['entry altText', (value, replacement) => { value.entries[0].altText = replacement }, /public media does not match/u],
+  ['placeholder publicDerivativePath', (value, replacement) => { value.placeholder.publicDerivativePath = replacement }, /placeholder metadata/u],
+  ['placeholder privateDerivativePath', (value, replacement) => { value.placeholder.privateDerivativePath = replacement }, /placeholder metadata/u],
+  ['placeholder derivativeChecksum', (value, replacement) => { value.placeholder.derivativeChecksum = replacement }, /placeholder metadata/u],
+  ['placeholder altText', (value, replacement) => { value.placeholder.altText = replacement }, /placeholder metadata/u],
+  ['missingArtworkRecordIds member', (value, replacement) => { value.missingArtworkRecordIds[0] = replacement }, /missing-artwork IDs are invalid/u],
+]
+for (const [field, mutate, expected] of manifestTextCases) {
+  for (const [kind, replacement] of nonStringManifestValues) {
+    assertAdversarialRejection(`${field} rejects JSON ${kind}`, ({ manifest: value }) => mutate(value, structuredClone(replacement)), expected)
+  }
+}
+
 assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { records[0].levels[0].sourceText = 'private' }, /forbidden field: sourceText/u)
 assertAdversarialRejection('forbidden nested verification', ({ records }) => { records[0].media[0].verification = { status: 'private' } }, /forbidden field: verification/u)
 assertAdversarialRejection('extra top-level record fields', ({ records }) => { records[0].unexpected = true }, /non-allow-listed fields/u)
@@ -433,15 +465,31 @@ for (const required of [
 assert.doesNotMatch(migration, /delete from public\.oasis_publication_versions|update public\.oasis_publication_versions/iu)
 for (const requiredBoundary of [
   "jsonb_typeof(p_manifest) is distinct from 'object'",
+  "jsonb_typeof(p_manifest->'schemaVersion') is distinct from 'string'",
+  "jsonb_typeof(p_manifest->'sourceFingerprintVersion') is distinct from 'string'",
+  "jsonb_typeof(p_manifest->'sourceFingerprint') is distinct from 'string'",
   "p_manifest->>'schemaVersion' is distinct from 'oasis-media-manifest-v2'",
   "p_manifest->>'sourceFingerprintVersion' is distinct from 'oasis-source-fingerprint-v2'",
   "p_manifest->>'sourceFingerprint' is distinct from p_source_fingerprint",
   "jsonb_array_length(p_manifest->'entries') <> 111",
+  "jsonb_typeof(entry->'recordId') is distinct from 'string'",
+  "jsonb_typeof(entry->'privateSourceFilename') is distinct from 'string'",
+  "jsonb_typeof(entry->'sourceChecksum') is distinct from 'string'",
+  "jsonb_typeof(entry->'publicDerivativePath') is distinct from 'string'",
+  "jsonb_typeof(entry->'privateDerivativePath') is distinct from 'string'",
+  "jsonb_typeof(entry->'derivativeChecksum') is distinct from 'string'",
+  "jsonb_typeof(entry->'mediaRole') is distinct from 'string'",
+  "jsonb_typeof(entry->'altText') is distinct from 'string'",
   "count(distinct entry->>'privateSourceFilename')",
   "count(distinct entry->>'publicDerivativePath')",
   "coalesce(entry->>'sourceChecksum', '') !~ '^[0-9a-f]{64}$'",
   "coalesce(entry->>'derivativeChecksum', '') !~ '^[0-9a-f]{64}$'",
   "array_agg(value order by value)",
+  "jsonb_typeof(missing) is distinct from 'string'",
+  "jsonb_typeof(p_manifest#>'{placeholder,publicDerivativePath}') is distinct from 'string'",
+  "jsonb_typeof(p_manifest#>'{placeholder,privateDerivativePath}') is distinct from 'string'",
+  "jsonb_typeof(p_manifest#>'{placeholder,derivativeChecksum}') is distinct from 'string'",
+  "jsonb_typeof(p_manifest#>'{placeholder,altText}') is distinct from 'string'",
   "Oasis placeholder metadata is incomplete or invalid.",
   "jsonb_array_length(p_records) <> 55",
   "count(distinct r->>'id')",
@@ -487,6 +535,19 @@ for (const requiredBoundary of [
   'p_manifest#>>\'{placeholder,altText}\'',
   "jsonb_typeof(media->'levelVariant') = 'null'",
 ]) assert.ok(migration.includes(requiredBoundary), `Missing SQL publication guard: ${requiredBoundary}`)
+
+const topLevelManifestTypeGuard = migration.indexOf("jsonb_typeof(p_manifest->'schemaVersion') is distinct from 'string'")
+const topLevelManifestTextExtraction = migration.indexOf("p_manifest->>'schemaVersion' is distinct from 'oasis-media-manifest-v2'")
+const entryManifestTypeGuard = migration.indexOf("jsonb_typeof(entry->'privateSourceFilename') is distinct from 'string'")
+const entryManifestUniqueness = migration.indexOf("count(distinct entry->>'privateSourceFilename')")
+const missingArtworkTypeGuard = migration.indexOf("jsonb_typeof(missing) is distinct from 'string'")
+const missingArtworkTextExtraction = migration.indexOf("jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')")
+const placeholderTypeGuard = migration.indexOf("jsonb_typeof(p_manifest#>'{placeholder,publicDerivativePath}') is distinct from 'string'")
+const placeholderTextExtraction = migration.indexOf("p_manifest#>>'{placeholder,publicDerivativePath}'")
+assert.ok(topLevelManifestTypeGuard >= 0 && topLevelManifestTypeGuard < topLevelManifestTextExtraction)
+assert.ok(entryManifestTypeGuard >= 0 && entryManifestTypeGuard < entryManifestUniqueness)
+assert.ok(missingArtworkTypeGuard >= 0 && missingArtworkTypeGuard < missingArtworkTextExtraction)
+assert.ok(placeholderTypeGuard >= 0 && placeholderTypeGuard < placeholderTextExtraction)
 
 const adversarialSqlCases = new Map([
   ['empty manifest entries with declared count 111', ["jsonb_array_length(p_manifest->'entries') <> 111"]],
