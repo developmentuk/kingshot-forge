@@ -43,6 +43,7 @@ import PublicPlayerProgressionPage from "./pages/PublicPlayerProgressionPage";
 import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
 import HeroCollectionPage from "./pages/HeroCollectionPage";
 import HeroCompanionPage from "./pages/HeroCompanionPage";
+import Generation6HeroGuidePage from "./pages/Generation6HeroGuidePage";
 import CompanionIndexPage from "./pages/CompanionIndexPage";
 import CompanionItemPage from "./pages/CompanionItemPage";
 import SearchPage from "./features/search/SearchPage";
@@ -141,6 +142,7 @@ function App() {
         <Route path="join/my-application" element={<MyContributorApplicationPage />} />
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
+        <Route path="guides/kingshot-generation-6-heroes-yang-sophia-triton-guide" element={<Generation6HeroGuidePage />} />
 
         <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
         <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="users.read"><UserManagementPage /></ProtectedRoute></WorkspaceRoute>} />
