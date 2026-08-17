@@ -372,7 +372,7 @@ begin
       or entry->>'mediaRole' not in ('catalogue', 'level')
       or (entry->>'mediaRole' = 'catalogue' and jsonb_typeof(entry->'levelVariant') <> 'null')
       or (entry->>'mediaRole' = 'level' and (jsonb_typeof(entry->'levelVariant') <> 'number' or (entry->>'levelVariant')::numeric <= 0 or (entry->>'levelVariant')::numeric <> trunc((entry->>'levelVariant')::numeric)))
-      or coalesce(entry->>'altText', '') = ''
+      or coalesce(btrim(entry->>'altText'), '') = '' or entry->>'altText' <> btrim(entry->>'altText')
   ) then raise exception 'Oasis manifest entry metadata is incomplete or invalid.'; end if;
   if (p_manifest->>'sourceAssetBytes')::numeric is distinct from (
        select sum((entry->>'sourceBytes')::numeric) from jsonb_array_elements(p_manifest->'entries') entry
@@ -420,7 +420,8 @@ begin
      or not ((p_manifest->'placeholder') ? 'derivativeBytes') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,derivativeBytes}') is distinct from true
      or not ((p_manifest->'placeholder') ? 'width') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,width}') is distinct from true
      or not ((p_manifest->'placeholder') ? 'height') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,height}') is distinct from true
-     or coalesce(p_manifest#>>'{placeholder,altText}', '') = '' then
+     or coalesce(btrim(p_manifest#>>'{placeholder,altText}'), '') = ''
+     or p_manifest#>>'{placeholder,altText}' <> btrim(p_manifest#>>'{placeholder,altText}') then
     raise exception 'Oasis placeholder metadata is incomplete or invalid.';
   end if;
   if jsonb_typeof(p_records) is distinct from 'array' or jsonb_array_length(p_records) <> 55 then raise exception 'Oasis publication requires exactly 55 public records.'; end if;
@@ -578,7 +579,8 @@ begin
       or jsonb_typeof(media->'url') is distinct from 'string'
       or jsonb_typeof(media->'alt') is distinct from 'string'
       or jsonb_typeof(media->'role') is distinct from 'string'
-      or coalesce(media->>'alt', '') = '' or media->>'role' not in ('catalogue', 'level', 'placeholder')
+      or coalesce(btrim(media->>'alt'), '') = '' or media->>'alt' <> btrim(media->>'alt')
+      or media->>'role' not in ('catalogue', 'level', 'placeholder')
       or jsonb_typeof(media->'width') <> 'number' or (media->>'width')::numeric <= 0
       or jsonb_typeof(media->'height') <> 'number' or (media->>'height')::numeric <= 0
       or not (

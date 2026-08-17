@@ -274,6 +274,24 @@ assertAdversarialRejection('entry privateSourceFilename rejects shared-reference
   value.entries[0].privateSourceFilename = shared
   value.entries[1].privateSourceFilename = shared
 }, /entry metadata/u)
+assertAdversarialRejection('entry altText rejects self-consistent surrounding whitespace', (candidate) => {
+  const entry = candidate.manifest.entries.find((item) => item.mediaRole === 'catalogue')
+  assert.ok(entry)
+  const record = candidate.records.find((item) => item.id === entry.recordId)
+  assert.ok(record)
+  const media = record.media.find((item) => item.url === `/${entry.publicDerivativePath}`)
+  assert.ok(media)
+  entry.altText = ` ${entry.altText} `
+  media.alt = entry.altText
+  candidate.manifestHash = hashOasisManifest(candidate.manifest)
+}, /trimmed string/u)
+assertAdversarialRejection('placeholder altText rejects self-consistent surrounding whitespace', (candidate) => {
+  const record = candidate.records.find((item) => item.id === 'fountain-of-life')
+  assert.ok(record?.media.length === 1)
+  candidate.manifest.placeholder.altText = ` ${candidate.manifest.placeholder.altText} `
+  record.media[0].alt = candidate.manifest.placeholder.altText
+  candidate.manifestHash = hashOasisManifest(candidate.manifest)
+}, /trimmed string/u)
 assertAdversarialRejection('input manifestHash rejects before regex coercion', (candidate) => {
   candidate.manifestHash = { [Symbol.toPrimitive]: () => { throw new Error('manifest hash coercion reached') } }
 }, /manifest hash does not match/u)
@@ -330,6 +348,11 @@ for (const [field, mutate, expected] of publicMediaTextCases) {
     }, expected)
   }
 }
+assertAdversarialRejection('public media alt rejects surrounding whitespace', ({ records }) => {
+  const mappedRecord = records.find((record) => record.id === 'amphitheater')
+  assert.ok(mappedRecord?.media.length > 0)
+  mappedRecord.media[0].alt = ` ${mappedRecord.media[0].alt} `
+}, /trimmed string/u)
 
 assertAdversarialRejection('forbidden top-level sourceText', ({ records }) => { records[0].sourceText = 'private' }, /non-allow-listed fields/u)
 assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { records[0].levels[0].sourceText = 'private' }, /forbidden field: sourceText/u)
@@ -711,6 +734,7 @@ const adversarialSqlCases = new Map([
   ['invalid canonical route', ["r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'"]],
   ['record/media mismatch', ['Oasis public media does not match the approved manifest.']],
   ['public media text values use JSON strings', ["jsonb_typeof(media->'url') is distinct from 'string'", "jsonb_typeof(media->'alt') is distinct from 'string'", "jsonb_typeof(media->'role') is distinct from 'string'"]],
+  ['manifest and public-media alt text is trimmed', ["entry->>'altText' <> btrim(entry->>'altText')", "p_manifest#>>'{placeholder,altText}' <> btrim(p_manifest#>>'{placeholder,altText}')", "media->>'alt' <> btrim(media->>'alt')"]],
   ['placeholder exact metadata', ["media->>'alt' = p_manifest#>>'{placeholder,altText}'", "jsonb_typeof(media->'levelVariant') = 'null'", "media->'width' = p_manifest#>'{placeholder,width}'", "media->'height' = p_manifest#>'{placeholder,height}'"]],
   ['missing record exact placeholder cardinality', ['Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.']],
   ['extra or duplicate media', ['Oasis public media contains missing, extra or duplicate mappings.']],
@@ -756,13 +780,20 @@ for (const [name, guards] of adversarialSqlCases) {
 }
 assert.ok(pointerMutationIndex > migration.indexOf("jsonb_typeof(r->'publicationVersion') <> 'null'"))
 assert.ok(pointerMutationIndex > migration.indexOf('Oasis public media does not match the approved manifest.'))
-const publicMediaTextSemanticIndex = migration.indexOf("coalesce(media->>'alt', '')")
+const publicMediaTextSemanticIndex = migration.indexOf("coalesce(btrim(media->>'alt'), '')")
 for (const guard of [
   "jsonb_typeof(media->'url') is distinct from 'string'",
   "jsonb_typeof(media->'alt') is distinct from 'string'",
   "jsonb_typeof(media->'role') is distinct from 'string'",
 ]) {
   assert.ok(migration.indexOf(guard) > 0 && migration.indexOf(guard) < publicMediaTextSemanticIndex)
+}
+for (const trimGuard of [
+  "entry->>'altText' <> btrim(entry->>'altText')",
+  "p_manifest#>>'{placeholder,altText}' <> btrim(p_manifest#>>'{placeholder,altText}')",
+  "media->>'alt' <> btrim(media->>'alt')",
+]) {
+  assert.ok(migration.indexOf(trimGuard) > 0 && migration.indexOf(trimGuard) < pointerMutationIndex)
 }
 assert.ok(migration.indexOf('Oasis mapped-artwork and missing-artwork record IDs must be disjoint.') < migration.indexOf('public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash'))
 assert.ok(migration.indexOf('Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.') < migration.indexOf('public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash'))

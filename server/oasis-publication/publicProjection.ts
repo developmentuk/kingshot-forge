@@ -1057,6 +1057,7 @@ export function assertOasisPublicationPayload(input: {
   if (new Set(entries.map((entry) => entry?.privateSourceFilename)).size !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis private-source identities must be unique.')
   if (new Set(entries.map((entry) => entry?.publicDerivativePath)).size !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis derivative paths must be unique.')
   for (const entry of entries as Record<string, unknown>[]) {
+    assertTrimmedString(entry.altText, 'Oasis manifest entry.altText')
     if (typeof entry.recordId !== 'string' || typeof entry.privateSourceFilename !== 'string'
       || typeof entry.publicDerivativePath !== 'string' || typeof entry.privateDerivativePath !== 'string'
       || !entry.publicDerivativePath.startsWith(`media/oasis-island/${entry.recordId}/`)
@@ -1082,6 +1083,7 @@ export function assertOasisPublicationPayload(input: {
   if (manifest.missingArtworkRecordIds.some((recordId) => mappedArtworkRecordIds.has(recordId))) {
     throw new Error('Oasis mapped-artwork and missing-artwork record IDs must be disjoint.')
   }
+  assertTrimmedString(placeholder.altText, 'Oasis manifest.placeholder.altText')
   if (placeholder.publicDerivativePath !== 'media/oasis-island/shared/artwork-unavailable.webp'
     || placeholder.privateDerivativePath !== `fixtures/oasis-001a-publication/${placeholder.publicDerivativePath}`
     || typeof placeholder.derivativeChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(placeholder.derivativeChecksum)
