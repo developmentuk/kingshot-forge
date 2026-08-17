@@ -149,12 +149,11 @@ function assertAdversarialRejection(name, mutate, expected) {
   const candidate = {
     publicationId: built.publicationId,
     sourceFingerprint: manifest.sourceFingerprint,
-    manifestHash: '',
+    manifestHash: hashOasisManifest(candidateManifest),
     manifest: candidateManifest,
     records: candidateRecords,
   }
   mutate(candidate)
-  if (!candidate.manifestHash) candidate.manifestHash = hashOasisManifest(candidate.manifest)
   assert.throws(() => assertOasisPublicationPayload(candidate), expected, name)
 }
 
@@ -166,52 +165,67 @@ assertAdversarialRejection('mismatched source fingerprint', (candidate) => { can
 assertAdversarialRejection('wrong placeholder list', ({ manifest: value }) => { value.missingArtworkRecordIds[0] = 'not-approved' }, /missing-artwork IDs are invalid/u)
 assertAdversarialRejection('obsolete manifest contract', ({ manifest: value }) => { value.schemaVersion = 'oasis-media-manifest-v1' }, /v2 fingerprint contract/u)
 
-const nonStringManifestValues = [
+const nonStringTextValues = [
   ['number', 7],
   ['boolean', true],
   ['object', { value: 'text' }],
   ['array', ['text']],
   ['null', null],
 ]
-for (const [kind, replacement] of nonStringManifestValues) {
-  assertAdversarialRejection(`input sourceFingerprint rejects JSON ${kind}`, (candidate) => {
-    candidate.sourceFingerprint = structuredClone(replacement)
-  }, /source fingerprint does not match/u)
+const inputTextCases = [
+  ['input publicationId', (candidate) => candidate.publicationId, (candidate, replacement) => { candidate.publicationId = replacement }, /publication input text metadata/u],
+  ['input sourceFingerprint', (candidate) => candidate.sourceFingerprint, (candidate, replacement) => { candidate.sourceFingerprint = replacement }, /source fingerprint does not match/u],
+  ['input manifestHash', (candidate) => candidate.manifestHash, (candidate, replacement) => { candidate.manifestHash = replacement }, /manifest hash does not match/u],
+]
+for (const [field, readValue, mutate, expected] of inputTextCases) {
+  for (const [kind, replacement] of nonStringTextValues) {
+    assertAdversarialRejection(`${field} rejects JSON ${kind}`, (candidate) => {
+      mutate(candidate, structuredClone(replacement))
+    }, expected)
+  }
+  assertAdversarialRejection(`${field} rejects coercion-equivalent array`, (candidate) => {
+    mutate(candidate, [readValue(candidate)])
+  }, expected)
 }
 const manifestTextCases = [
-  ['top-level schemaVersion', (value, replacement) => { value.schemaVersion = replacement }, /v2 fingerprint contract/u],
-  ['top-level sourceFingerprintVersion', (value, replacement) => { value.sourceFingerprintVersion = replacement }, /v2 fingerprint contract/u],
-  ['top-level sourceFingerprint', (value, replacement) => { value.sourceFingerprint = replacement }, /source fingerprint does not match/u],
-  ['entry recordId', (value, replacement) => { value.entries[0].recordId = replacement }, /entry metadata|public media does not match/u],
-  ['entry privateSourceFilename', (value, replacement) => { value.entries[0].privateSourceFilename = replacement }, /entry metadata/u],
-  ['entry sourceChecksum', (value, replacement) => { value.entries[0].sourceChecksum = replacement }, /entry metadata/u],
-  ['entry publicDerivativePath', (value, replacement) => { value.entries[0].publicDerivativePath = replacement }, /entry metadata/u],
-  ['entry privateDerivativePath', (value, replacement) => { value.entries[0].privateDerivativePath = replacement }, /entry metadata/u],
-  ['entry derivativeChecksum', (value, replacement) => { value.entries[0].derivativeChecksum = replacement }, /entry metadata/u],
-  ['entry mediaRole', (value, replacement) => { value.entries[0].mediaRole = replacement }, /entry metadata/u],
-  ['entry altText', (value, replacement) => { value.entries[0].altText = replacement }, /entry metadata/u],
-  ['placeholder publicDerivativePath', (value, replacement) => { value.placeholder.publicDerivativePath = replacement }, /placeholder metadata/u],
-  ['placeholder privateDerivativePath', (value, replacement) => { value.placeholder.privateDerivativePath = replacement }, /placeholder metadata/u],
-  ['placeholder derivativeChecksum', (value, replacement) => { value.placeholder.derivativeChecksum = replacement }, /placeholder metadata/u],
-  ['placeholder altText', (value, replacement) => { value.placeholder.altText = replacement }, /placeholder metadata/u],
-  ['missingArtworkRecordIds member', (value, replacement) => { value.missingArtworkRecordIds[0] = replacement }, /missing-artwork IDs are invalid/u],
+  ['top-level schemaVersion', (value) => value.schemaVersion, (value, replacement) => { value.schemaVersion = replacement }, /v2 fingerprint contract/u],
+  ['top-level sourceFingerprintVersion', (value) => value.sourceFingerprintVersion, (value, replacement) => { value.sourceFingerprintVersion = replacement }, /v2 fingerprint contract/u],
+  ['top-level sourceFingerprint', (value) => value.sourceFingerprint, (value, replacement) => { value.sourceFingerprint = replacement }, /source fingerprint does not match/u],
+  ['entry recordId', (value) => value.entries[0].recordId, (value, replacement) => { value.entries[0].recordId = replacement }, /entry metadata/u],
+  ['entry privateSourceFilename', (value) => value.entries[0].privateSourceFilename, (value, replacement) => { value.entries[0].privateSourceFilename = replacement }, /entry metadata/u],
+  ['entry sourceChecksum', (value) => value.entries[0].sourceChecksum, (value, replacement) => { value.entries[0].sourceChecksum = replacement }, /entry metadata/u],
+  ['entry publicDerivativePath', (value) => value.entries[0].publicDerivativePath, (value, replacement) => { value.entries[0].publicDerivativePath = replacement }, /entry metadata/u],
+  ['entry privateDerivativePath', (value) => value.entries[0].privateDerivativePath, (value, replacement) => { value.entries[0].privateDerivativePath = replacement }, /entry metadata/u],
+  ['entry derivativeChecksum', (value) => value.entries[0].derivativeChecksum, (value, replacement) => { value.entries[0].derivativeChecksum = replacement }, /entry metadata/u],
+  ['entry mediaRole', (value) => value.entries[0].mediaRole, (value, replacement) => { value.entries[0].mediaRole = replacement }, /entry metadata/u],
+  ['entry altText', (value) => value.entries[0].altText, (value, replacement) => { value.entries[0].altText = replacement }, /entry metadata/u],
+  ['placeholder publicDerivativePath', (value) => value.placeholder.publicDerivativePath, (value, replacement) => { value.placeholder.publicDerivativePath = replacement }, /placeholder metadata/u],
+  ['placeholder privateDerivativePath', (value) => value.placeholder.privateDerivativePath, (value, replacement) => { value.placeholder.privateDerivativePath = replacement }, /placeholder metadata/u],
+  ['placeholder derivativeChecksum', (value) => value.placeholder.derivativeChecksum, (value, replacement) => { value.placeholder.derivativeChecksum = replacement }, /placeholder metadata/u],
+  ['placeholder altText', (value) => value.placeholder.altText, (value, replacement) => { value.placeholder.altText = replacement }, /placeholder metadata/u],
+  ['missingArtworkRecordIds member', (value) => value.missingArtworkRecordIds[0], (value, replacement) => { value.missingArtworkRecordIds[0] = replacement }, /missing-artwork IDs are invalid/u],
 ]
-for (const [field, mutate, expected] of manifestTextCases) {
-  for (const [kind, replacement] of nonStringManifestValues) {
+for (const [field, readValue, mutate, expected] of manifestTextCases) {
+  for (const [kind, replacement] of nonStringTextValues) {
     assertAdversarialRejection(`${field} rejects JSON ${kind}`, ({ manifest: value }) => mutate(value, structuredClone(replacement)), expected)
   }
+  assertAdversarialRejection(`${field} rejects coercion-equivalent array`, ({ manifest: value }) => {
+    mutate(value, [readValue(value)])
+  }, expected)
 }
-assertAdversarialRejection('entry altText rejects coercion-equivalent array', ({ manifest: value }) => {
-  value.entries[0].altText = [value.entries[0].altText]
-}, /entry metadata/u)
-assertAdversarialRejection('missingArtworkRecordIds member rejects coercion-equivalent array', ({ manifest: value }) => {
-  value.missingArtworkRecordIds[0] = [value.missingArtworkRecordIds[0]]
-}, /missing-artwork IDs are invalid/u)
 assertAdversarialRejection('sourceFingerprint rejects shared-reference coercion-equivalent array', (candidate) => {
   const shared = [candidate.sourceFingerprint]
   candidate.manifest.sourceFingerprint = shared
   candidate.sourceFingerprint = shared
 }, /source fingerprint does not match/u)
+assertAdversarialRejection('entry privateSourceFilename rejects shared-reference array before uniqueness', ({ manifest: value }) => {
+  const shared = [value.entries[0].privateSourceFilename]
+  value.entries[0].privateSourceFilename = shared
+  value.entries[1].privateSourceFilename = shared
+}, /entry metadata/u)
+assertAdversarialRejection('input manifestHash rejects before regex coercion', (candidate) => {
+  candidate.manifestHash = { [Symbol.toPrimitive]: () => { throw new Error('manifest hash coercion reached') } }
+}, /manifest hash does not match/u)
 
 assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { records[0].levels[0].sourceText = 'private' }, /forbidden field: sourceText/u)
 assertAdversarialRejection('forbidden nested verification', ({ records }) => { records[0].media[0].verification = { status: 'private' } }, /forbidden field: verification/u)

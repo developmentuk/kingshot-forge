@@ -847,16 +847,45 @@ export function assertOasisPublicationPayload(input: {
   records: readonly unknown[]
 }): void {
   const manifest = object(input.manifest)
-  if (!manifest || manifest.schemaVersion !== OASIS_MEDIA_MANIFEST_SCHEMA_VERSION
+  if (!manifest) throw new Error('Oasis manifest must use the v2 fingerprint contract.')
+  if (!Array.isArray(manifest.entries)) throw new Error('Oasis manifest requires exactly 111 entries.')
+  const entries = manifest.entries.map((value) => object(value))
+  if (entries.some((entry) => !entry)) throw new Error('Oasis manifest entries must be objects.')
+  if (!Array.isArray(manifest.missingArtworkRecordIds)) throw new Error('Oasis missing-artwork IDs are invalid.')
+  const placeholder = object(manifest.placeholder)
+  if (!placeholder) throw new Error('Oasis placeholder metadata is incomplete or invalid.')
+
+  // Phase 1: prove every raw textual input is a primitive string before semantic processing.
+  if (typeof input.publicationId !== 'string') throw new Error('Oasis publication input text metadata must use primitive strings.')
+  if (typeof manifest.schemaVersion !== 'string' || typeof manifest.sourceFingerprintVersion !== 'string') {
+    throw new Error('Oasis manifest must use the v2 fingerprint contract.')
+  }
+  if (typeof input.sourceFingerprint !== 'string' || typeof manifest.sourceFingerprint !== 'string') {
+    throw new Error('Oasis source fingerprint does not match the manifest.')
+  }
+  if (typeof input.manifestHash !== 'string') throw new Error('Oasis manifest hash does not match canonical content.')
+  if (entries.some((entry) => entry && (
+    typeof entry.recordId !== 'string' || typeof entry.privateSourceFilename !== 'string'
+    || typeof entry.sourceChecksum !== 'string' || typeof entry.publicDerivativePath !== 'string'
+    || typeof entry.privateDerivativePath !== 'string' || typeof entry.derivativeChecksum !== 'string'
+    || typeof entry.mediaRole !== 'string' || typeof entry.altText !== 'string'
+  ))) throw new Error('Oasis manifest entry metadata is incomplete or invalid.')
+  if (manifest.missingArtworkRecordIds.some((recordId) => typeof recordId !== 'string')) {
+    throw new Error('Oasis missing-artwork IDs are invalid.')
+  }
+  if (typeof placeholder.publicDerivativePath !== 'string' || typeof placeholder.privateDerivativePath !== 'string'
+    || typeof placeholder.derivativeChecksum !== 'string' || typeof placeholder.altText !== 'string') {
+    throw new Error('Oasis placeholder metadata is incomplete or invalid.')
+  }
+
+  // Phase 2: semantic validation may now compare, match, deduplicate, interpolate and hash text.
+  if (manifest.schemaVersion !== OASIS_MEDIA_MANIFEST_SCHEMA_VERSION
     || manifest.sourceFingerprintVersion !== OASIS_SOURCE_FINGERPRINT_VERSION) throw new Error('Oasis manifest must use the v2 fingerprint contract.')
-  if (typeof input.sourceFingerprint !== 'string' || typeof manifest.sourceFingerprint !== 'string'
-    || !/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')
+  if (!/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')
   if (manifest.sourceAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT || manifest.derivativeAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest counts are incomplete.')
   assertPositiveInteger(manifest.sourceAssetBytes, 'Oasis manifest.sourceAssetBytes')
   assertPositiveInteger(manifest.derivativeAssetBytes, 'Oasis manifest.derivativeAssetBytes')
-  if (!Array.isArray(manifest.entries) || manifest.entries.length !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest requires exactly 111 entries.')
-  const entries = manifest.entries.map((value) => object(value))
-  if (entries.some((entry) => !entry)) throw new Error('Oasis manifest entries must be objects.')
+  if (manifest.entries.length !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest requires exactly 111 entries.')
   if (new Set(entries.map((entry) => entry?.privateSourceFilename)).size !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis private-source identities must be unique.')
   if (new Set(entries.map((entry) => entry?.publicDerivativePath)).size !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis derivative paths must be unique.')
   for (const entry of entries as Record<string, unknown>[]) {
@@ -880,11 +909,8 @@ export function assertOasisPublicationPayload(input: {
   if (manifest.sourceAssetBytes !== sourceAssetBytes || manifest.derivativeAssetBytes !== derivativeAssetBytes) {
     throw new Error('Oasis manifest byte totals do not match its entries.')
   }
-  if (!Array.isArray(manifest.missingArtworkRecordIds)
-    || manifest.missingArtworkRecordIds.some((recordId) => typeof recordId !== 'string')
-    || [...manifest.missingArtworkRecordIds].sort().join('|') !== OASIS_MISSING_ARTWORK_RECORD_IDS.join('|')) throw new Error('Oasis missing-artwork IDs are invalid.')
-  const placeholder = object(manifest.placeholder)
-  if (!placeholder || placeholder.publicDerivativePath !== 'media/oasis-island/shared/artwork-unavailable.webp'
+  if ([...manifest.missingArtworkRecordIds].sort().join('|') !== OASIS_MISSING_ARTWORK_RECORD_IDS.join('|')) throw new Error('Oasis missing-artwork IDs are invalid.')
+  if (placeholder.publicDerivativePath !== 'media/oasis-island/shared/artwork-unavailable.webp'
     || placeholder.privateDerivativePath !== `fixtures/oasis-001a-publication/${placeholder.publicDerivativePath}`
     || typeof placeholder.derivativeChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(placeholder.derivativeChecksum)
     || typeof placeholder.derivativeBytes !== 'number' || !Number.isInteger(placeholder.derivativeBytes) || placeholder.derivativeBytes <= 0
