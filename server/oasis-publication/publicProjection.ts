@@ -849,7 +849,8 @@ export function assertOasisPublicationPayload(input: {
   const manifest = object(input.manifest)
   if (!manifest || manifest.schemaVersion !== OASIS_MEDIA_MANIFEST_SCHEMA_VERSION
     || manifest.sourceFingerprintVersion !== OASIS_SOURCE_FINGERPRINT_VERSION) throw new Error('Oasis manifest must use the v2 fingerprint contract.')
-  if (!/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')
+  if (typeof input.sourceFingerprint !== 'string' || typeof manifest.sourceFingerprint !== 'string'
+    || !/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')
   if (manifest.sourceAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT || manifest.derivativeAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest counts are incomplete.')
   assertPositiveInteger(manifest.sourceAssetBytes, 'Oasis manifest.sourceAssetBytes')
   assertPositiveInteger(manifest.derivativeAssetBytes, 'Oasis manifest.derivativeAssetBytes')

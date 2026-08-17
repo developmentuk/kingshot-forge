@@ -173,6 +173,11 @@ const nonStringManifestValues = [
   ['array', ['text']],
   ['null', null],
 ]
+for (const [kind, replacement] of nonStringManifestValues) {
+  assertAdversarialRejection(`input sourceFingerprint rejects JSON ${kind}`, (candidate) => {
+    candidate.sourceFingerprint = structuredClone(replacement)
+  }, /source fingerprint does not match/u)
+}
 const manifestTextCases = [
   ['top-level schemaVersion', (value, replacement) => { value.schemaVersion = replacement }, /v2 fingerprint contract/u],
   ['top-level sourceFingerprintVersion', (value, replacement) => { value.sourceFingerprintVersion = replacement }, /v2 fingerprint contract/u],
@@ -202,6 +207,11 @@ assertAdversarialRejection('entry altText rejects coercion-equivalent array', ({
 assertAdversarialRejection('missingArtworkRecordIds member rejects coercion-equivalent array', ({ manifest: value }) => {
   value.missingArtworkRecordIds[0] = [value.missingArtworkRecordIds[0]]
 }, /missing-artwork IDs are invalid/u)
+assertAdversarialRejection('sourceFingerprint rejects shared-reference coercion-equivalent array', (candidate) => {
+  const shared = [candidate.sourceFingerprint]
+  candidate.manifest.sourceFingerprint = shared
+  candidate.sourceFingerprint = shared
+}, /source fingerprint does not match/u)
 
 assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { records[0].levels[0].sourceText = 'private' }, /forbidden field: sourceText/u)
 assertAdversarialRejection('forbidden nested verification', ({ records }) => { records[0].media[0].verification = { status: 'private' } }, /forbidden field: verification/u)
