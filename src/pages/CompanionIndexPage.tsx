@@ -121,11 +121,29 @@ export default function CompanionIndexPage() {
               <p>Browse published hero roles, ratings, skills and progression guidance.</p>
             </div>
           </Link>
+        </div>
+      </section>
+
+      <section className="companion-family-grid" aria-labelledby="companion-guides-title">
+        <div className="companion-section-heading">
+          <div>
+            <p className="eyebrow">Featured guides</p>
+            <h2 id="companion-guides-title">Plan current heroes and events</h2>
+          </div>
+        </div>
+        <div className="companion-family-grid__items">
           <Link to="/guides/flamedragon-tyrant-event-guide" className="companion-family-card">
             <span aria-hidden="true">🐉</span>
             <div>
               <h3>Flamedragon Tyrant</h3>
               <p>Plan the event timeline, battlefield safety, F2P tasks, Palace strategy and rewards.</p>
+            </div>
+          </Link>
+          <Link to="/guides/kingshot-generation-6-heroes-yang-sophia-triton-guide" className="companion-family-card">
+            <span aria-hidden="true">⚔️</span>
+            <div>
+              <h3>Generation 6 Heroes</h3>
+              <p>Compare Yang, Sophia and Triton, including roles, build order and F2P priorities.</p>
             </div>
           </Link>
         </div>
