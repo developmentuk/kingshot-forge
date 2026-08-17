@@ -1047,6 +1047,7 @@ export function assertOasisPublicationPayload(input: {
   }
 
   // Phase 2: semantic validation may now compare, match, deduplicate, interpolate and hash text.
+  assertTrimmedString(input.publicationId, 'Oasis publicationId')
   if (manifest.schemaVersion !== OASIS_MEDIA_MANIFEST_SCHEMA_VERSION
     || manifest.sourceFingerprintVersion !== OASIS_SOURCE_FINGERPRINT_VERSION) throw new Error('Oasis manifest must use the v2 fingerprint contract.')
   if (!/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')

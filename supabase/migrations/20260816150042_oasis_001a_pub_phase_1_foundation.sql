@@ -118,6 +118,23 @@ begin
 end;
 $$;
 
+create or replace function public.oasis_js_trim(p_value text)
+returns text language sql immutable strict security invoker set search_path = pg_catalog as $$
+  select pg_catalog.btrim(
+    p_value,
+    pg_catalog.chr(9) || pg_catalog.chr(10) || pg_catalog.chr(11) ||
+    pg_catalog.chr(12) || pg_catalog.chr(13) || pg_catalog.chr(32) ||
+    pg_catalog.chr(160) || pg_catalog.chr(5760) ||
+    pg_catalog.chr(8192) || pg_catalog.chr(8193) || pg_catalog.chr(8194) ||
+    pg_catalog.chr(8195) || pg_catalog.chr(8196) || pg_catalog.chr(8197) ||
+    pg_catalog.chr(8198) || pg_catalog.chr(8199) || pg_catalog.chr(8200) ||
+    pg_catalog.chr(8201) || pg_catalog.chr(8202) ||
+    pg_catalog.chr(8232) || pg_catalog.chr(8233) ||
+    pg_catalog.chr(8239) || pg_catalog.chr(8287) ||
+    pg_catalog.chr(12288) || pg_catalog.chr(65279)
+  );
+$$;
+
 create or replace function public.oasis_stable_json(p_value jsonb)
 returns text language plpgsql immutable strict security invoker set search_path = pg_catalog as $$
 declare
@@ -180,6 +197,7 @@ $$;
 
 revoke all on function public.oasis_canonical_number(numeric) from public, anon, authenticated;
 revoke all on function public.oasis_positive_integer_json_number(jsonb) from public, anon, authenticated;
+revoke all on function public.oasis_js_trim(text) from public, anon, authenticated;
 revoke all on function public.oasis_stable_json(jsonb) from public, anon, authenticated;
 revoke all on function public.oasis_json_has_forbidden_key(jsonb) from public, anon, authenticated;
 revoke all on function public.oasis_manifest_sha256(jsonb) from public, anon, authenticated;
@@ -300,8 +318,10 @@ declare
 begin
   -- SECURITY DEFINER makes current_user the owner. The caller boundary is therefore
   -- the explicit EXECUTE revoke/grant below, with only service_role granted access.
-  if coalesce(btrim(p_publication_id), '') = '' or coalesce(btrim(p_actor_id), '') = ''
-     or coalesce(btrim(p_reason), '') = '' or coalesce(btrim(p_idempotency_key), '') = '' then
+  if coalesce(public.oasis_js_trim(p_publication_id), '') = ''
+     or p_publication_id <> public.oasis_js_trim(p_publication_id)
+     or coalesce(public.oasis_js_trim(p_actor_id), '') = ''
+     or coalesce(public.oasis_js_trim(p_reason), '') = '' or coalesce(public.oasis_js_trim(p_idempotency_key), '') = '' then
     raise exception 'Oasis publication identity, actor, reason and idempotency key are required.';
   end if;
   if p_schema_version <> 'oasis-public-projection-v2' then raise exception 'Unsupported Oasis public projection schema.'; end if;
@@ -372,7 +392,7 @@ begin
       or entry->>'mediaRole' not in ('catalogue', 'level')
       or (entry->>'mediaRole' = 'catalogue' and jsonb_typeof(entry->'levelVariant') <> 'null')
       or (entry->>'mediaRole' = 'level' and (jsonb_typeof(entry->'levelVariant') <> 'number' or (entry->>'levelVariant')::numeric <= 0 or (entry->>'levelVariant')::numeric <> trunc((entry->>'levelVariant')::numeric)))
-      or coalesce(btrim(entry->>'altText'), '') = '' or entry->>'altText' <> btrim(entry->>'altText')
+      or coalesce(public.oasis_js_trim(entry->>'altText'), '') = '' or entry->>'altText' <> public.oasis_js_trim(entry->>'altText')
   ) then raise exception 'Oasis manifest entry metadata is incomplete or invalid.'; end if;
   if (p_manifest->>'sourceAssetBytes')::numeric is distinct from (
        select sum((entry->>'sourceBytes')::numeric) from jsonb_array_elements(p_manifest->'entries') entry
@@ -420,8 +440,8 @@ begin
      or not ((p_manifest->'placeholder') ? 'derivativeBytes') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,derivativeBytes}') is distinct from true
      or not ((p_manifest->'placeholder') ? 'width') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,width}') is distinct from true
      or not ((p_manifest->'placeholder') ? 'height') or public.oasis_positive_integer_json_number(p_manifest#>'{placeholder,height}') is distinct from true
-     or coalesce(btrim(p_manifest#>>'{placeholder,altText}'), '') = ''
-     or p_manifest#>>'{placeholder,altText}' <> btrim(p_manifest#>>'{placeholder,altText}') then
+     or coalesce(public.oasis_js_trim(p_manifest#>>'{placeholder,altText}'), '') = ''
+     or p_manifest#>>'{placeholder,altText}' <> public.oasis_js_trim(p_manifest#>>'{placeholder,altText}') then
     raise exception 'Oasis placeholder metadata is incomplete or invalid.';
   end if;
   if jsonb_typeof(p_records) is distinct from 'array' or jsonb_array_length(p_records) <> 55 then raise exception 'Oasis publication requires exactly 55 public records.'; end if;
@@ -434,19 +454,19 @@ begin
       or jsonb_typeof(r->'schemaVersion') <> 'string' or r->>'schemaVersion' <> p_schema_version
       or jsonb_typeof(r->'status') <> 'string' or r->>'status' <> 'published'
       or jsonb_typeof(r->'id') <> 'string' or coalesce(r->>'id', '') !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'
-      or jsonb_typeof(r->'name') <> 'string' or coalesce(btrim(r->>'name'), '') = '' or r->>'name' <> btrim(r->>'name')
-      or jsonb_typeof(r->'recordType') <> 'string' or coalesce(btrim(r->>'recordType'), '') = '' or r->>'recordType' <> btrim(r->>'recordType')
+      or jsonb_typeof(r->'name') <> 'string' or coalesce(public.oasis_js_trim(r->>'name'), '') = '' or r->>'name' <> public.oasis_js_trim(r->>'name')
+      or jsonb_typeof(r->'recordType') <> 'string' or coalesce(public.oasis_js_trim(r->>'recordType'), '') = '' or r->>'recordType' <> public.oasis_js_trim(r->>'recordType')
       or jsonb_typeof(r->'aliases') <> 'array' or jsonb_typeof(r->'levels') <> 'array'
       or jsonb_typeof(r->'maxEffects') <> 'array' or jsonb_typeof(r->'media') <> 'array'
       or jsonb_typeof(r->'footprint') not in ('object', 'null')
       or jsonb_typeof(r->'unlock') not in ('object', 'null')
       or jsonb_typeof(r->'upgrade') not in ('object', 'null')
       or jsonb_typeof(r->'rarity') not in ('string', 'null')
-      or (jsonb_typeof(r->'rarity') = 'string' and (coalesce(btrim(r->>'rarity'), '') = '' or r->>'rarity' <> btrim(r->>'rarity')))
+      or (jsonb_typeof(r->'rarity') = 'string' and (coalesce(public.oasis_js_trim(r->>'rarity'), '') = '' or r->>'rarity' <> public.oasis_js_trim(r->>'rarity')))
       or jsonb_typeof(r->'availabilityCategory') not in ('string', 'null')
-      or (jsonb_typeof(r->'availabilityCategory') = 'string' and (coalesce(btrim(r->>'availabilityCategory'), '') = '' or r->>'availabilityCategory' <> btrim(r->>'availabilityCategory')))
+      or (jsonb_typeof(r->'availabilityCategory') = 'string' and (coalesce(public.oasis_js_trim(r->>'availabilityCategory'), '') = '' or r->>'availabilityCategory' <> public.oasis_js_trim(r->>'availabilityCategory')))
       or jsonb_typeof(r->'function') not in ('string', 'null')
-      or (jsonb_typeof(r->'function') = 'string' and (coalesce(btrim(r->>'function'), '') = '' or r->>'function' <> btrim(r->>'function')))
+      or (jsonb_typeof(r->'function') = 'string' and (coalesce(public.oasis_js_trim(r->>'function'), '') = '' or r->>'function' <> public.oasis_js_trim(r->>'function')))
       or jsonb_typeof(r->'typeLimit') not in ('number', 'null')
       or (case when jsonb_typeof(r->'typeLimit') = 'number' then (r->>'typeLimit')::numeric < 1 or (r->>'typeLimit')::numeric <> trunc((r->>'typeLimit')::numeric) else false end)
       or jsonb_typeof(r->'maxLevel') not in ('number', 'null')
@@ -466,8 +486,8 @@ begin
     where exists (
       select 1 from jsonb_array_elements(case when jsonb_typeof(r->'aliases') = 'array' then r->'aliases' else '[]'::jsonb end) alias_value
       where jsonb_typeof(alias_value) <> 'string'
-        or coalesce(btrim(alias_value#>>'{}'), '') = ''
-        or alias_value#>>'{}' <> btrim(alias_value#>>'{}')
+        or coalesce(public.oasis_js_trim(alias_value#>>'{}'), '') = ''
+        or alias_value#>>'{}' <> public.oasis_js_trim(alias_value#>>'{}')
     ) or (
       select count(*) <> count(distinct alias_value#>>'{}')
       from jsonb_array_elements(case when jsonb_typeof(r->'aliases') = 'array' then r->'aliases' else '[]'::jsonb end) alias_value
@@ -483,7 +503,7 @@ begin
       or jsonb_typeof(r#>'{footprint,height}') not in ('number', 'null')
       or (case when jsonb_typeof(r#>'{footprint,height}') = 'number' then (r#>>'{footprint,height}')::numeric < 1 or (r#>>'{footprint,height}')::numeric <> trunc((r#>>'{footprint,height}')::numeric) else false end)
       or jsonb_typeof(r#>'{footprint,display}') not in ('string', 'null')
-      or (jsonb_typeof(r#>'{footprint,display}') = 'string' and (coalesce(btrim(r#>>'{footprint,display}'), '') = '' or r#>>'{footprint,display}' <> btrim(r#>>'{footprint,display}')))
+      or (jsonb_typeof(r#>'{footprint,display}') = 'string' and (coalesce(public.oasis_js_trim(r#>>'{footprint,display}'), '') = '' or r#>>'{footprint,display}' <> public.oasis_js_trim(r#>>'{footprint,display}')))
     )
   ) then raise exception 'Oasis footprint values are incomplete or invalid.'; end if;
   if exists (
@@ -511,8 +531,8 @@ begin
     cross join lateral jsonb_array_elements(case when jsonb_typeof(r->'levels') = 'array' then r->'levels' else '[]'::jsonb end) level_value
     cross join lateral jsonb_array_elements(case when jsonb_typeof(level_value->'knownEffects') = 'array' then level_value->'knownEffects' else '[]'::jsonb end) effect
     where jsonb_typeof(effect) <> 'string'
-      or coalesce(btrim(effect#>>'{}'), '') = ''
-      or effect#>>'{}' <> btrim(effect#>>'{}')
+      or coalesce(public.oasis_js_trim(effect#>>'{}'), '') = ''
+      or effect#>>'{}' <> public.oasis_js_trim(effect#>>'{}')
   ) then raise exception 'Oasis known effects must contain non-empty trimmed strings.'; end if;
   if exists (
     select 1
@@ -523,12 +543,12 @@ begin
       or not (bonus_value ?& allowed_bonus_keys)
       or exists (select 1 from jsonb_object_keys(case when jsonb_typeof(bonus_value) = 'object' then bonus_value else '{}'::jsonb end) key where not key = any(allowed_bonus_keys))
       or jsonb_typeof(bonus_value->'label') not in ('string', 'null')
-      or (jsonb_typeof(bonus_value->'label') = 'string' and (coalesce(btrim(bonus_value->>'label'), '') = '' or bonus_value->>'label' <> btrim(bonus_value->>'label')))
+      or (jsonb_typeof(bonus_value->'label') = 'string' and (coalesce(public.oasis_js_trim(bonus_value->>'label'), '') = '' or bonus_value->>'label' <> public.oasis_js_trim(bonus_value->>'label')))
       or jsonb_typeof(bonus_value->'stat') not in ('string', 'null')
-      or (jsonb_typeof(bonus_value->'stat') = 'string' and (coalesce(btrim(bonus_value->>'stat'), '') = '' or bonus_value->>'stat' <> btrim(bonus_value->>'stat')))
+      or (jsonb_typeof(bonus_value->'stat') = 'string' and (coalesce(public.oasis_js_trim(bonus_value->>'stat'), '') = '' or bonus_value->>'stat' <> public.oasis_js_trim(bonus_value->>'stat')))
       or jsonb_typeof(bonus_value->'valuePct') not in ('number', 'null')
       or jsonb_typeof(bonus_value->'effect') not in ('string', 'null')
-      or (jsonb_typeof(bonus_value->'effect') = 'string' and (coalesce(btrim(bonus_value->>'effect'), '') = '' or bonus_value->>'effect' <> btrim(bonus_value->>'effect')))
+      or (jsonb_typeof(bonus_value->'effect') = 'string' and (coalesce(public.oasis_js_trim(bonus_value->>'effect'), '') = '' or bonus_value->>'effect' <> public.oasis_js_trim(bonus_value->>'effect')))
   ) then raise exception 'Oasis level bonuses are incomplete or invalid.'; end if;
   if exists (
     select 1
@@ -538,12 +558,12 @@ begin
       or not (bonus_value ?& allowed_bonus_keys)
       or exists (select 1 from jsonb_object_keys(case when jsonb_typeof(bonus_value) = 'object' then bonus_value else '{}'::jsonb end) key where not key = any(allowed_bonus_keys))
       or jsonb_typeof(bonus_value->'label') not in ('string', 'null')
-      or (jsonb_typeof(bonus_value->'label') = 'string' and (coalesce(btrim(bonus_value->>'label'), '') = '' or bonus_value->>'label' <> btrim(bonus_value->>'label')))
+      or (jsonb_typeof(bonus_value->'label') = 'string' and (coalesce(public.oasis_js_trim(bonus_value->>'label'), '') = '' or bonus_value->>'label' <> public.oasis_js_trim(bonus_value->>'label')))
       or jsonb_typeof(bonus_value->'stat') not in ('string', 'null')
-      or (jsonb_typeof(bonus_value->'stat') = 'string' and (coalesce(btrim(bonus_value->>'stat'), '') = '' or bonus_value->>'stat' <> btrim(bonus_value->>'stat')))
+      or (jsonb_typeof(bonus_value->'stat') = 'string' and (coalesce(public.oasis_js_trim(bonus_value->>'stat'), '') = '' or bonus_value->>'stat' <> public.oasis_js_trim(bonus_value->>'stat')))
       or jsonb_typeof(bonus_value->'valuePct') not in ('number', 'null')
       or jsonb_typeof(bonus_value->'effect') not in ('string', 'null')
-      or (jsonb_typeof(bonus_value->'effect') = 'string' and (coalesce(btrim(bonus_value->>'effect'), '') = '' or bonus_value->>'effect' <> btrim(bonus_value->>'effect')))
+      or (jsonb_typeof(bonus_value->'effect') = 'string' and (coalesce(public.oasis_js_trim(bonus_value->>'effect'), '') = '' or bonus_value->>'effect' <> public.oasis_js_trim(bonus_value->>'effect')))
   ) then raise exception 'Oasis maximum effects are incomplete or invalid.'; end if;
   if exists (
     select 1 from jsonb_array_elements(p_records) r
@@ -551,9 +571,9 @@ begin
       not (r->'unlock' ?& allowed_unlock_keys)
       or exists (select 1 from jsonb_object_keys(r->'unlock') key where not key = any(allowed_unlock_keys))
       or jsonb_typeof(r#>'{unlock,requirement}') not in ('string', 'null')
-      or (jsonb_typeof(r#>'{unlock,requirement}') = 'string' and (coalesce(btrim(r#>>'{unlock,requirement}'), '') = '' or r#>>'{unlock,requirement}' <> btrim(r#>>'{unlock,requirement}')))
+      or (jsonb_typeof(r#>'{unlock,requirement}') = 'string' and (coalesce(public.oasis_js_trim(r#>>'{unlock,requirement}'), '') = '' or r#>>'{unlock,requirement}' <> public.oasis_js_trim(r#>>'{unlock,requirement}')))
       or jsonb_typeof(r#>'{unlock,initialBlueprintPurchase}') not in ('string', 'null')
-      or (jsonb_typeof(r#>'{unlock,initialBlueprintPurchase}') = 'string' and (coalesce(btrim(r#>>'{unlock,initialBlueprintPurchase}'), '') = '' or r#>>'{unlock,initialBlueprintPurchase}' <> btrim(r#>>'{unlock,initialBlueprintPurchase}')))
+      or (jsonb_typeof(r#>'{unlock,initialBlueprintPurchase}') = 'string' and (coalesce(public.oasis_js_trim(r#>>'{unlock,initialBlueprintPurchase}'), '') = '' or r#>>'{unlock,initialBlueprintPurchase}' <> public.oasis_js_trim(r#>>'{unlock,initialBlueprintPurchase}')))
     )
   ) then raise exception 'Oasis unlock values are incomplete or invalid.'; end if;
   if exists (
@@ -562,13 +582,13 @@ begin
       not (r->'upgrade' ?& allowed_upgrade_keys)
       or exists (select 1 from jsonb_object_keys(r->'upgrade') key where not key = any(allowed_upgrade_keys))
       or jsonb_typeof(r#>'{upgrade,currency}') not in ('string', 'null')
-      or (jsonb_typeof(r#>'{upgrade,currency}') = 'string' and (coalesce(btrim(r#>>'{upgrade,currency}'), '') = '' or r#>>'{upgrade,currency}' <> btrim(r#>>'{upgrade,currency}')))
+      or (jsonb_typeof(r#>'{upgrade,currency}') = 'string' and (coalesce(public.oasis_js_trim(r#>>'{upgrade,currency}'), '') = '' or r#>>'{upgrade,currency}' <> public.oasis_js_trim(r#>>'{upgrade,currency}')))
       or jsonb_typeof(r#>'{upgrade,exchange}') not in ('string', 'null')
-      or (jsonb_typeof(r#>'{upgrade,exchange}') = 'string' and (coalesce(btrim(r#>>'{upgrade,exchange}'), '') = '' or r#>>'{upgrade,exchange}' <> btrim(r#>>'{upgrade,exchange}')))
+      or (jsonb_typeof(r#>'{upgrade,exchange}') = 'string' and (coalesce(public.oasis_js_trim(r#>>'{upgrade,exchange}'), '') = '' or r#>>'{upgrade,exchange}' <> public.oasis_js_trim(r#>>'{upgrade,exchange}')))
       or jsonb_typeof(r#>'{upgrade,generalBlueprintRefresh}') not in ('string', 'null')
-      or (jsonb_typeof(r#>'{upgrade,generalBlueprintRefresh}') = 'string' and (coalesce(btrim(r#>>'{upgrade,generalBlueprintRefresh}'), '') = '' or r#>>'{upgrade,generalBlueprintRefresh}' <> btrim(r#>>'{upgrade,generalBlueprintRefresh}')))
+      or (jsonb_typeof(r#>'{upgrade,generalBlueprintRefresh}') = 'string' and (coalesce(public.oasis_js_trim(r#>>'{upgrade,generalBlueprintRefresh}'), '') = '' or r#>>'{upgrade,generalBlueprintRefresh}' <> public.oasis_js_trim(r#>>'{upgrade,generalBlueprintRefresh}')))
       or jsonb_typeof(r#>'{upgrade,officiallyVerified}') not in ('string', 'null')
-      or (jsonb_typeof(r#>'{upgrade,officiallyVerified}') = 'string' and (coalesce(btrim(r#>>'{upgrade,officiallyVerified}'), '') = '' or r#>>'{upgrade,officiallyVerified}' <> btrim(r#>>'{upgrade,officiallyVerified}')))
+      or (jsonb_typeof(r#>'{upgrade,officiallyVerified}') = 'string' and (coalesce(public.oasis_js_trim(r#>>'{upgrade,officiallyVerified}'), '') = '' or r#>>'{upgrade,officiallyVerified}' <> public.oasis_js_trim(r#>>'{upgrade,officiallyVerified}')))
     )
   ) then raise exception 'Oasis upgrade values are incomplete or invalid.'; end if;
   if exists (
@@ -579,7 +599,7 @@ begin
       or jsonb_typeof(media->'url') is distinct from 'string'
       or jsonb_typeof(media->'alt') is distinct from 'string'
       or jsonb_typeof(media->'role') is distinct from 'string'
-      or coalesce(btrim(media->>'alt'), '') = '' or media->>'alt' <> btrim(media->>'alt')
+      or coalesce(public.oasis_js_trim(media->>'alt'), '') = '' or media->>'alt' <> public.oasis_js_trim(media->>'alt')
       or media->>'role' not in ('catalogue', 'level', 'placeholder')
       or jsonb_typeof(media->'width') <> 'number' or (media->>'width')::numeric <= 0
       or jsonb_typeof(media->'height') <> 'number' or (media->>'height')::numeric <= 0

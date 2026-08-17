@@ -238,6 +238,16 @@ for (const [field, readValue, mutate, expected] of inputTextCases) {
     mutate(candidate, [readValue(candidate)])
   }, expected)
 }
+for (const [name, padding] of [
+  ['surrounding spaces', ' '],
+  ['surrounding tabs', '\t'],
+  ['surrounding non-breaking spaces', '\u00a0'],
+]) {
+  assertAdversarialRejection(`input publicationId rejects self-consistent ${name}`, (candidate) => {
+    candidate.publicationId = `${padding}${candidate.publicationId}${padding}`
+    for (const record of candidate.records) record.publicationId = candidate.publicationId
+  }, /trimmed string/u)
+}
 const manifestTextCases = [
   ['top-level schemaVersion', (value) => value.schemaVersion, (value, replacement) => { value.schemaVersion = replacement }, /v2 fingerprint contract/u],
   ['top-level sourceFingerprintVersion', (value) => value.sourceFingerprintVersion, (value, replacement) => { value.sourceFingerprintVersion = replacement }, /v2 fingerprint contract/u],
@@ -352,6 +362,11 @@ assertAdversarialRejection('public media alt rejects surrounding whitespace', ({
   const mappedRecord = records.find((record) => record.id === 'amphitheater')
   assert.ok(mappedRecord?.media.length > 0)
   mappedRecord.media[0].alt = ` ${mappedRecord.media[0].alt} `
+}, /trimmed string/u)
+assertAdversarialRejection('public media alt rejects tab padding', ({ records }) => {
+  const mappedRecord = records.find((record) => record.id === 'amphitheater')
+  assert.ok(mappedRecord?.media.length > 0)
+  mappedRecord.media[0].alt = `\t${mappedRecord.media[0].alt}\t`
 }, /trimmed string/u)
 
 assertAdversarialRejection('forbidden top-level sourceText', ({ records }) => { records[0].sourceText = 'private' }, /non-allow-listed fields/u)
@@ -619,6 +634,12 @@ assert.doesNotMatch(read('shared/data-engine/datasets.ts'), /oasis-island/u)
 assert.doesNotMatch(read('server/search/runtime.ts'), /oasis-island/u)
 
 const migration = read('supabase/migrations/20260816150042_oasis_001a_pub_phase_1_foundation.sql')
+assert.match(migration, /create or replace function public\.oasis_js_trim\(p_value text\)/u)
+assert.match(migration, /select pg_catalog\.btrim\(/u)
+for (const codePoint of [9, 10, 11, 12, 13, 32, 160, 5760, 8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8232, 8233, 8239, 8287, 12288, 65279]) {
+  assert.ok(migration.includes(`pg_catalog.chr(${codePoint})`), `Oasis SQL trim helper is missing ECMAScript trim code point ${codePoint}`)
+}
+assert.equal(migration.match(/\bbtrim\(/gu)?.length, 1, 'only the explicit ECMAScript trim helper may call btrim directly')
 for (const required of [
   'oasis_publication_versions', 'oasis_publication_records', 'oasis_publication_current',
   'oasis_publication_audits', 'oasis_publication_search_refreshes', 'idempotency_key text not null unique',
@@ -628,6 +649,7 @@ for (const required of [
 ]) assert.match(migration, new RegExp(required.replace(/[()]/gu, '\\$&'), 'u'))
 assert.doesNotMatch(migration, /delete from public\.oasis_publication_versions|update public\.oasis_publication_versions/iu)
 for (const requiredBoundary of [
+  "p_publication_id <> public.oasis_js_trim(p_publication_id)",
   "jsonb_typeof(p_manifest) is distinct from 'object'",
   "jsonb_typeof(p_manifest->'schemaVersion') is distinct from 'string'",
   "jsonb_typeof(p_manifest->'sourceFingerprintVersion') is distinct from 'string'",
@@ -714,6 +736,7 @@ assert.ok(missingArtworkTypeGuard >= 0 && missingArtworkTypeGuard < missingArtwo
 assert.ok(placeholderTypeGuard >= 0 && placeholderTypeGuard < placeholderTextExtraction)
 
 const adversarialSqlCases = new Map([
+  ['padded publication identity', ["p_publication_id <> public.oasis_js_trim(p_publication_id)"]],
   ['empty manifest entries with declared count 111', ["jsonb_array_length(p_manifest->'entries') <> 111"]],
   ['duplicate derivative paths', ["count(distinct entry->>'publicDerivativePath')"]],
   ['duplicate private identities', ["count(distinct entry->>'privateSourceFilename')"]],
@@ -734,7 +757,7 @@ const adversarialSqlCases = new Map([
   ['invalid canonical route', ["r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'"]],
   ['record/media mismatch', ['Oasis public media does not match the approved manifest.']],
   ['public media text values use JSON strings', ["jsonb_typeof(media->'url') is distinct from 'string'", "jsonb_typeof(media->'alt') is distinct from 'string'", "jsonb_typeof(media->'role') is distinct from 'string'"]],
-  ['manifest and public-media alt text is trimmed', ["entry->>'altText' <> btrim(entry->>'altText')", "p_manifest#>>'{placeholder,altText}' <> btrim(p_manifest#>>'{placeholder,altText}')", "media->>'alt' <> btrim(media->>'alt')"]],
+  ['manifest and public-media alt text is trimmed', ["entry->>'altText' <> public.oasis_js_trim(entry->>'altText')", "p_manifest#>>'{placeholder,altText}' <> public.oasis_js_trim(p_manifest#>>'{placeholder,altText}')", "media->>'alt' <> public.oasis_js_trim(media->>'alt')"]],
   ['placeholder exact metadata', ["media->>'alt' = p_manifest#>>'{placeholder,altText}'", "jsonb_typeof(media->'levelVariant') = 'null'", "media->'width' = p_manifest#>'{placeholder,width}'", "media->'height' = p_manifest#>'{placeholder,height}'"]],
   ['missing record exact placeholder cardinality', ['Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.']],
   ['extra or duplicate media', ['Oasis public media contains missing, extra or duplicate mappings.']],
@@ -780,7 +803,7 @@ for (const [name, guards] of adversarialSqlCases) {
 }
 assert.ok(pointerMutationIndex > migration.indexOf("jsonb_typeof(r->'publicationVersion') <> 'null'"))
 assert.ok(pointerMutationIndex > migration.indexOf('Oasis public media does not match the approved manifest.'))
-const publicMediaTextSemanticIndex = migration.indexOf("coalesce(btrim(media->>'alt'), '')")
+const publicMediaTextSemanticIndex = migration.indexOf("coalesce(public.oasis_js_trim(media->>'alt'), '')")
 for (const guard of [
   "jsonb_typeof(media->'url') is distinct from 'string'",
   "jsonb_typeof(media->'alt') is distinct from 'string'",
@@ -789,9 +812,9 @@ for (const guard of [
   assert.ok(migration.indexOf(guard) > 0 && migration.indexOf(guard) < publicMediaTextSemanticIndex)
 }
 for (const trimGuard of [
-  "entry->>'altText' <> btrim(entry->>'altText')",
-  "p_manifest#>>'{placeholder,altText}' <> btrim(p_manifest#>>'{placeholder,altText}')",
-  "media->>'alt' <> btrim(media->>'alt')",
+  "entry->>'altText' <> public.oasis_js_trim(entry->>'altText')",
+  "p_manifest#>>'{placeholder,altText}' <> public.oasis_js_trim(p_manifest#>>'{placeholder,altText}')",
+  "media->>'alt' <> public.oasis_js_trim(media->>'alt')",
 ]) {
   assert.ok(migration.indexOf(trimGuard) > 0 && migration.indexOf(trimGuard) < pointerMutationIndex)
 }
@@ -807,6 +830,8 @@ assert.doesNotMatch(migration, /statement_timestamp\(\)|transaction_timestamp\(\
 const publicationLockIndex = migration.indexOf("perform pg_advisory_xact_lock(hashtext('forge-oasis-publication'))")
 const postLockClockIndex = migration.indexOf("publication_timestamp := date_trunc('milliseconds', clock_timestamp())")
 assert.ok(publicationLockIndex > 0 && postLockClockIndex > publicationLockIndex)
+const publicationIdTrimGuardIndex = migration.indexOf("p_publication_id <> public.oasis_js_trim(p_publication_id)")
+assert.ok(publicationIdTrimGuardIndex > 0 && publicationIdTrimGuardIndex < publicationLockIndex)
 assert.ok(migration.indexOf('submitted_content_hash := public.oasis_record_content_sha256(p_records)') < publicationLockIndex)
 assert.ok(migration.indexOf('Oasis manifest byte totals do not match its entries.') < publicationLockIndex)
 assert.equal(migration.match(/clock_timestamp\(\)/gu)?.length, 1)
