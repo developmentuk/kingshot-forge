@@ -121,6 +121,13 @@ export default function CompanionIndexPage() {
               <p>Browse published hero roles, ratings, skills and progression guidance.</p>
             </div>
           </Link>
+          <Link to="/guides/flamedragon-tyrant-event-guide" className="companion-family-card">
+            <span aria-hidden="true">🐉</span>
+            <div>
+              <h3>Flamedragon Tyrant</h3>
+              <p>Plan the event timeline, battlefield safety, F2P tasks, Palace strategy and rewards.</p>
+            </div>
+          </Link>
         </div>
       </section>
 
