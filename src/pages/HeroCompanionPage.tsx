@@ -10,6 +10,15 @@ import './HeroCompanionEnhancements.css'
 import './HeroCompanionMilestone3.css'
 import './HeroCompanionRatings.css'
 
+const GENERATION_6_GUIDE_PATH = '/guides/kingshot-generation-6-heroes-yang-sophia-triton-guide'
+const GENERATION_6_GUIDE_HEROES = new Set(['yang', 'sophia', 'triton'])
+
+function hasGeneration6Guide(hero: Hero) {
+  const slug = hero.slug?.toLowerCase() ?? ''
+  const id = hero.id.toLowerCase()
+  return hero.generation === 6 && (GENERATION_6_GUIDE_HEROES.has(slug) || GENERATION_6_GUIDE_HEROES.has(id))
+}
+
 function formatLabel(value: string | null) {
   if (!value) return 'Not available'
   return value.replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase())
@@ -146,6 +155,7 @@ function HeroCompanionDetail({ hero, heroes }: { hero: Hero; heroes: Hero[] }) {
     <section className="hero-companion-hero"><div className="hero-companion-hero__art"><HeroPortrait hero={hero} /><span className="hero-companion-generation">Generation {hero.generation ?? '—'}</span></div><div className="hero-companion-hero__content"><p className="eyebrow">Kingshot Companion</p><h1>{hero.name}</h1><p className="hero-companion-role"><RarityBadge rarity={hero.rarity} /> {formatLabel(hero.troop_type)} hero</p><p className="hero-companion-lead">{hero.description || 'A full Companion overview for this hero has not yet been published.'}</p><div className="hero-companion-tags" aria-label="Hero classification"><RarityBadge rarity={hero.rarity} /><span>{formatLabel(hero.troop_type)}</span><span>Generation {hero.generation ?? '—'}</span>{availability.map((item) => <span key={item}>{item}</span>)}</div></div></section>
     <nav className="hero-companion-jump-nav" aria-label="Hero guide sections"><a href="#ratings">Ratings</a><a href="#skills">Skills</a><a href="#guidance">Best use</a><a href="#formations">Formations</a><a href="#synergies">Synergies</a><a href="#progression">Progression</a></nav>
     <section className="hero-companion-summary" aria-label="Hero summary"><article className="hero-companion-summary__primary"><p className="eyebrow">Best use</p><h2>{hero.best_use || 'Guidance pending'}</h2><p>This recommendation reflects the currently published Forge assessment.</p></article><article><span>Troop type</span><strong>{formatLabel(hero.troop_type)}</strong></article><article><span>Rarity</span><strong><RarityBadge rarity={hero.rarity} /></strong></article><article><span>Availability</span><strong>{availability.length ? availability.join(' · ') : 'Standard availability'}</strong></article></section>
+    {hasGeneration6Guide(hero) && <section className="hero-companion-related-guide" aria-label="Generation 6 hero guide"><div><p className="eyebrow">Generation 6 guide</p><h2>Yang, Sophia &amp; Triton</h2><p>Compare acquisition, build order, battlefield roles, F2P priorities and the leading-vs-joining rally mechanic.</p></div><Link className="hero-companion-related-guide__link" to={GENERATION_6_GUIDE_PATH}>Read the complete Gen 6 guide <span aria-hidden="true">→</span></Link></section>}
     <section id="ratings" className="hero-companion-section hero-companion-section--ratings"><div className="hero-companion-section__heading hero-companion-ratings-heading"><div><p className="eyebrow">Forge assessment</p><h2>Best-use ratings</h2></div><p>Activity-specific ratings combine an easy five-star view with the published Forge tier and supporting guidance.</p></div><div className="hero-companion-ratings"><RatingCard label="PvP Rally Lead" value={hero.rally_tier} description="Value when leading an alliance rally in player-versus-player combat." /><RatingCard label="PvP Garrison Lead" value={hero.garrison_tier} description="Value when leading the defence of a city or structure." /><RatingCard label="Bear Rally Lead" value={hero.bear_tier} description="Value when leading an Alliance Bear Hunt rally." /><RatingCard label="PvP / Bear Joiner" value={hero.joiner_tier} description="Value when joining another player’s rally. Event-specific separation will follow governed editorial review." /></div></section>
     <section className="hero-companion-layout"><div className="hero-companion-main-column">
       <section id="guidance" className="hero-companion-panel"><div className="hero-companion-section__heading"><div><p className="eyebrow">Battle guidance</p><h2>How to use {hero.name}</h2></div></div><p className="hero-companion-copy">{hero.description || 'Detailed hero guidance has not yet been published.'}</p><div className="hero-companion-strength-grid"><article><h3>Strengths</h3><GuidanceList items={buildStrengths(hero)} /></article><article><h3>Weaknesses</h3><GuidanceList items={buildWeaknesses(hero)} /></article></div></section>
