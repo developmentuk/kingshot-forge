@@ -323,7 +323,6 @@ begin
     raise exception 'Unsupported Oasis media manifest or source-fingerprint schema.';
   end if;
   if p_source_fingerprint !~ '^[0-9a-f]{64}$' or p_manifest->>'sourceFingerprint' is distinct from p_source_fingerprint then raise exception 'Oasis source fingerprint does not match the manifest.'; end if;
-  if p_manifest_hash !~ '^[0-9a-f]{64}$' or public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash then raise exception 'Oasis manifest hash does not match canonical manifest content.'; end if;
   if not (p_manifest ? 'sourceAssetCount')
      or public.oasis_positive_integer_json_number(p_manifest->'sourceAssetCount') is distinct from true
      or (case when jsonb_typeof(p_manifest->'sourceAssetCount') = 'number' then (p_manifest->>'sourceAssetCount')::numeric end) is distinct from 111
@@ -393,6 +392,14 @@ begin
   if (select count(distinct value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> 6
      or (select array_agg(value order by value) from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds')) <> expected_missing_ids then
     raise exception 'Oasis missing-artwork IDs do not match the six approved records.';
+  end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(p_manifest->'entries') entry
+    join jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds') missing(record_id)
+      on missing.record_id = entry->>'recordId'
+  ) then
+    raise exception 'Oasis mapped-artwork and missing-artwork record IDs must be disjoint.';
   end if;
   if not (p_manifest ? 'placeholder') or jsonb_typeof(p_manifest->'placeholder') is distinct from 'object'
      or not ((p_manifest->'placeholder') ?& array[
@@ -590,6 +597,30 @@ begin
         )
       )
   ) then raise exception 'Oasis public media does not match the approved manifest.'; end if;
+  if exists (
+    select 1
+    from jsonb_array_elements_text(p_manifest->'missingArtworkRecordIds') missing(record_id)
+    where (
+      select count(*)
+      from jsonb_array_elements(p_records) r
+      cross join lateral jsonb_array_elements(r->'media') media
+      where r->>'id' = missing.record_id
+    ) <> 1
+    or (
+      select count(*)
+      from jsonb_array_elements(p_records) r
+      cross join lateral jsonb_array_elements(r->'media') media
+      where r->>'id' = missing.record_id
+        and media->>'role' = 'placeholder'
+        and media->>'url' = '/' || p_manifest#>>'{placeholder,publicDerivativePath}'
+        and media->>'alt' = p_manifest#>>'{placeholder,altText}'
+        and jsonb_typeof(media->'levelVariant') = 'null'
+        and media->'width' = p_manifest#>'{placeholder,width}'
+        and media->'height' = p_manifest#>'{placeholder,height}'
+    ) <> 1
+  ) then
+    raise exception 'Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.';
+  end if;
   if (select count(*) from jsonb_array_elements(p_records) r cross join lateral jsonb_array_elements(r->'media') media) <> 117
      or exists (
        select 1
@@ -615,6 +646,7 @@ begin
         and media->>'url' = '/' || p_manifest#>>'{placeholder,publicDerivativePath}'
     )
   ) then raise exception 'Every approved missing-artwork record requires the approved placeholder.'; end if;
+  if p_manifest_hash !~ '^[0-9a-f]{64}$' or public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash then raise exception 'Oasis manifest hash does not match canonical manifest content.'; end if;
   -- This computes and validates oasis-record-content-sha256-v2 before locking;
   -- oasis_stable_json rejects every out-of-contract number recursively.
   submitted_content_hash := public.oasis_record_content_sha256(p_records);

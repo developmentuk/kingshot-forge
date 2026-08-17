@@ -158,6 +158,56 @@ function assertAdversarialRejection(name, mutate, expected) {
   assert.throws(() => assertOasisPublicationPayload(candidate), expected, name)
 }
 
+function moveManifestEntryToMissingRecord(candidate, entryPredicate) {
+  const missingRecordId = 'construction-hut'
+  const entry = candidate.manifest.entries.find(entryPredicate)
+  assert.ok(entry, 'expected a governed manifest entry for the contradiction regression')
+  const donorRecord = candidate.records.find((record) => record.id === entry.recordId)
+  const missingRecord = candidate.records.find((record) => record.id === missingRecordId)
+  assert.ok(donorRecord && missingRecord)
+  const originalUrl = `/${entry.publicDerivativePath}`
+  const mediaIndex = donorRecord.media.findIndex((media) => media.url === originalUrl)
+  assert.ok(mediaIndex >= 0)
+  const [movedMedia] = donorRecord.media.splice(mediaIndex, 1)
+  entry.recordId = missingRecordId
+  entry.publicDerivativePath = entry.publicDerivativePath.replace(`/oasis-island/${donorRecord.id}/`, `/oasis-island/${missingRecordId}/`)
+  entry.privateDerivativePath = `fixtures/oasis-001a-publication/${entry.publicDerivativePath}`
+  movedMedia.url = `/${entry.publicDerivativePath}`
+  missingRecord.media.push(movedMedia)
+}
+
+assertAdversarialRejection('construction-hut rejects reassigned amphitheater artwork while still missing', (candidate) => {
+  moveManifestEntryToMissingRecord(candidate, (entry) => entry.recordId === 'amphitheater')
+}, /mapped-artwork and missing-artwork record IDs must be disjoint/u)
+assertAdversarialRejection('missing-artwork record rejects placeholder plus mapped catalogue artwork', (candidate) => {
+  moveManifestEntryToMissingRecord(candidate, (entry) => entry.mediaRole === 'catalogue')
+}, /mapped-artwork and missing-artwork record IDs must be disjoint/u)
+assertAdversarialRejection('missing-artwork record rejects placeholder plus level media', ({ records }) => {
+  const missingRecord = records.find((record) => record.id === 'construction-hut')
+  const levelMedia = records.flatMap((record) => record.media).find((media) => media.role === 'level')
+  missingRecord.media.push(structuredClone(levelMedia))
+}, /exactly the approved placeholder and no mapped artwork/u)
+assertAdversarialRejection('missing-artwork record rejects duplicate placeholder', ({ records }) => {
+  const missingRecord = records.find((record) => record.id === 'construction-hut')
+  missingRecord.media.push(structuredClone(missingRecord.media[0]))
+}, /exactly the approved placeholder and no mapped artwork/u)
+assertAdversarialRejection('missing-artwork record rejects missing placeholder', ({ records }) => {
+  records.find((record) => record.id === 'construction-hut').media = []
+}, /exactly the approved placeholder and no mapped artwork/u)
+
+const validMappedRecord = candidateRecords.find((record) => record.id === 'amphitheater')
+const validMissingRecord = candidateRecords.find((record) => record.id === 'construction-hut')
+assert.ok(validMappedRecord.media.length > 1 && !manifest.missingArtworkRecordIds.includes(validMappedRecord.id))
+assert.equal(validMissingRecord.media.length, 1)
+assert.equal(validMissingRecord.media[0].role, 'placeholder')
+assert.doesNotThrow(() => assertOasisPublicationPayload({
+  publicationId: built.publicationId,
+  sourceFingerprint: manifest.sourceFingerprint,
+  manifestHash: hashOasisManifest(manifest),
+  manifest,
+  records: candidateRecords,
+}))
+
 assertAdversarialRejection('empty manifest entries with declared count 111', ({ manifest: value }) => { value.entries = [] }, /exactly 111 entries/u)
 assertAdversarialRejection('duplicate derivative paths', ({ manifest: value }) => { value.entries[1].publicDerivativePath = value.entries[0].publicDerivativePath }, /derivative paths must be unique/u)
 assertAdversarialRejection('duplicate private identities', ({ manifest: value }) => { value.entries[1].privateSourceFilename = value.entries[0].privateSourceFilename }, /private-source identities must be unique/u)
@@ -271,14 +321,20 @@ assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { rec
 assertAdversarialRejection('forbidden nested verification', ({ records }) => { records[0].media[0].verification = { status: 'private' } }, /forbidden field: verification/u)
 assertAdversarialRejection('extra top-level record fields', ({ records }) => { records[0].unexpected = true }, /non-allow-listed fields/u)
 assertAdversarialRejection('invalid canonical route', ({ records }) => { records[0].canonicalRoute = '/wrong' }, /invalid canonical route/u)
-assertAdversarialRejection('record/media mismatch', ({ records }) => { records[0].media[0].url = '/media/oasis-island/wrong/catalogue.webp' }, /public media does not match/u)
+assertAdversarialRejection('record/media mismatch', ({ records }) => {
+  const mappedRecord = records.find((record) => record.media.some((media) => media.role === 'catalogue'))
+  assert.ok(mappedRecord, 'expected a mapped catalogue record for the generic media-mismatch regression')
+  const mappedMedia = mappedRecord.media.find((media) => media.role === 'catalogue')
+  assert.ok(mappedMedia)
+  mappedMedia.url = '/media/oasis-island/wrong/catalogue.webp'
+}, /public media does not match/u)
 const placeholderRecordIndex = built.records.findIndex((record) => record.id === 'fountain-of-life')
 const mappedRecordIndex = built.records.findIndex((record) => record.media.some((media) => media.role !== 'placeholder'))
-assertAdversarialRejection('placeholder wrong alt', ({ records }) => { records[placeholderRecordIndex].media[0].alt = 'Artwork missing' }, /public media does not match/u)
-assertAdversarialRejection('placeholder wrong role', ({ records }) => { records[placeholderRecordIndex].media[0].role = 'catalogue' }, /public media does not match/u)
+assertAdversarialRejection('placeholder wrong alt', ({ records }) => { records[placeholderRecordIndex].media[0].alt = 'Artwork missing' }, /exactly the approved placeholder and no mapped artwork/u)
+assertAdversarialRejection('placeholder wrong role', ({ records }) => { records[placeholderRecordIndex].media[0].role = 'catalogue' }, /exactly the approved placeholder and no mapped artwork/u)
 assertAdversarialRejection('placeholder wrong level variant', ({ records }) => { records[placeholderRecordIndex].media[0].levelVariant = 1 }, /levelVariant|public media does not match/u)
-assertAdversarialRejection('placeholder wrong width', ({ records }) => { records[placeholderRecordIndex].media[0].width += 1 }, /public media does not match/u)
-assertAdversarialRejection('placeholder wrong height', ({ records }) => { records[placeholderRecordIndex].media[0].height += 1 }, /public media does not match/u)
+assertAdversarialRejection('placeholder wrong width', ({ records }) => { records[placeholderRecordIndex].media[0].width += 1 }, /exactly the approved placeholder and no mapped artwork/u)
+assertAdversarialRejection('placeholder wrong height', ({ records }) => { records[placeholderRecordIndex].media[0].height += 1 }, /exactly the approved placeholder and no mapped artwork/u)
 assertAdversarialRejection('missing record arbitrary placeholder', ({ records }) => { records[placeholderRecordIndex].media[0].url = '/media/oasis-island/shared/arbitrary.webp' }, /planned Oasis WebP boundary|public media does not match/u)
 assertAdversarialRejection('nonmissing record placeholder', ({ records }) => { records[mappedRecordIndex].media = [structuredClone(built.records[placeholderRecordIndex].media[0])] }, /public media does not match/u)
 assertAdversarialRejection('duplicate media mapping', ({ records }) => { records[mappedRecordIndex].media.push(structuredClone(records[mappedRecordIndex].media[0])) }, /public media does not match/u)
@@ -633,12 +689,14 @@ const adversarialSqlCases = new Map([
   ['byte values wrong zero negative or fractional', ['public.oasis_positive_integer_json_number', 'Oasis manifest entry metadata is incomplete or invalid.']],
   ['inconsistent byte totals', ["sum((entry->>'sourceBytes')::numeric)", "sum((entry->>'derivativeBytes')::numeric)", 'Oasis manifest byte totals do not match its entries.']],
   ['wrong placeholder list', ['expected_missing_ids', 'array_agg(value order by value)']],
+  ['mapped and missing artwork record overlap', ['join jsonb_array_elements_text', 'Oasis mapped-artwork and missing-artwork record IDs must be disjoint.']],
   ['forbidden nested sourceText', ["'sourceText'", 'public.oasis_json_has_forbidden_key(r)']],
   ['forbidden nested verification', ["'verification'", 'public.oasis_json_has_forbidden_key(r)']],
   ['extra top-level record fields', ['jsonb_object_keys(case when jsonb_typeof(r)', 'allowed_record_keys']],
   ['invalid canonical route', ["r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'"]],
   ['record/media mismatch', ['Oasis public media does not match the approved manifest.']],
   ['placeholder exact metadata', ["media->>'alt' = p_manifest#>>'{placeholder,altText}'", "jsonb_typeof(media->'levelVariant') = 'null'", "media->'width' = p_manifest#>'{placeholder,width}'", "media->'height' = p_manifest#>'{placeholder,height}'"]],
+  ['missing record exact placeholder cardinality', ['Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.']],
   ['extra or duplicate media', ['Oasis public media contains missing, extra or duplicate mappings.']],
   ['publication identity mismatch', ["r->>'publicationId' <> p_publication_id"]],
   ['candidate numeric publication version', ["jsonb_typeof(r->'publicationVersion') <> 'null'"]],
@@ -682,6 +740,8 @@ for (const [name, guards] of adversarialSqlCases) {
 }
 assert.ok(pointerMutationIndex > migration.indexOf("jsonb_typeof(r->'publicationVersion') <> 'null'"))
 assert.ok(pointerMutationIndex > migration.indexOf('Oasis public media does not match the approved manifest.'))
+assert.ok(migration.indexOf('Oasis mapped-artwork and missing-artwork record IDs must be disjoint.') < migration.indexOf('public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash'))
+assert.ok(migration.indexOf('Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.') < migration.indexOf('public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash'))
 assert.ok(pointerMutationIndex > migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))
 assert.ok(migration.indexOf('select * into rollback_source') < migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))
 assert.ok(migration.indexOf('Rollback candidate does not match the referenced immutable publication.') < migration.indexOf('insert into public.oasis_publication_versions'))

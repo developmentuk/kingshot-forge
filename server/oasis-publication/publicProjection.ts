@@ -1078,6 +1078,10 @@ export function assertOasisPublicationPayload(input: {
     throw new Error('Oasis manifest byte totals do not match its entries.')
   }
   if ([...manifest.missingArtworkRecordIds].sort().join('|') !== OASIS_MISSING_ARTWORK_RECORD_IDS.join('|')) throw new Error('Oasis missing-artwork IDs are invalid.')
+  const mappedArtworkRecordIds = new Set((entries as Record<string, unknown>[]).map((entry) => entry.recordId as string))
+  if (manifest.missingArtworkRecordIds.some((recordId) => mappedArtworkRecordIds.has(recordId))) {
+    throw new Error('Oasis mapped-artwork and missing-artwork record IDs must be disjoint.')
+  }
   if (placeholder.publicDerivativePath !== 'media/oasis-island/shared/artwork-unavailable.webp'
     || placeholder.privateDerivativePath !== `fixtures/oasis-001a-publication/${placeholder.publicDerivativePath}`
     || typeof placeholder.derivativeChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(placeholder.derivativeChecksum)
@@ -1085,19 +1089,26 @@ export function assertOasisPublicationPayload(input: {
     || typeof placeholder.width !== 'number' || !Number.isInteger(placeholder.width) || placeholder.width <= 0
     || typeof placeholder.height !== 'number' || !Number.isInteger(placeholder.height) || placeholder.height <= 0
     || typeof placeholder.altText !== 'string' || !placeholder.altText) throw new Error('Oasis placeholder metadata is incomplete or invalid.')
-  if (!/^[0-9a-f]{64}$/u.test(input.manifestHash) || hashOasisManifest(input.manifest) !== input.manifestHash) throw new Error('Oasis manifest hash does not match canonical content.')
   if (!Array.isArray(input.records) || input.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis publication requires exactly 55 records.')
   for (const record of input.records) assertOasisPublicationCandidateRecord(record)
   const records = input.records as OasisPublicationCandidateRecord[]
   if (new Set(records.map((record) => record.id)).size !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis record IDs must be unique.')
   if (records.some((record) => record.publicationId !== input.publicationId)) throw new Error('Oasis record publication identity conflicts with the publication.')
+  const expectedPlaceholderIdentity = (recordId: string) => mediaIdentity(recordId, {
+    url: `/${input.manifest.placeholder.publicDerivativePath}`, alt: input.manifest.placeholder.altText, role: 'placeholder', levelVariant: null,
+    width: input.manifest.placeholder.width, height: input.manifest.placeholder.height,
+  })
+  for (const recordId of OASIS_MISSING_ARTWORK_RECORD_IDS) {
+    const record = records.find((candidate) => candidate.id === recordId)
+    if (!record || record.media.length !== 1 || mediaIdentity(recordId, record.media[0]) !== expectedPlaceholderIdentity(recordId)) {
+      throw new Error('Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.')
+    }
+  }
+  if (!/^[0-9a-f]{64}$/u.test(input.manifestHash) || hashOasisManifest(input.manifest) !== input.manifestHash) throw new Error('Oasis manifest hash does not match canonical content.')
   const expectedMedia = new Set((input.manifest.entries as OasisMediaManifestEntry[]).map((entry) => mediaIdentity(entry.recordId, {
     url: `/${entry.publicDerivativePath}`, alt: entry.altText, role: entry.mediaRole, levelVariant: entry.levelVariant, width: entry.width, height: entry.height,
   })))
-  for (const recordId of OASIS_MISSING_ARTWORK_RECORD_IDS) expectedMedia.add(mediaIdentity(recordId, {
-    url: `/${input.manifest.placeholder.publicDerivativePath}`, alt: input.manifest.placeholder.altText, role: 'placeholder', levelVariant: null,
-    width: input.manifest.placeholder.width, height: input.manifest.placeholder.height,
-  }))
+  for (const recordId of OASIS_MISSING_ARTWORK_RECORD_IDS) expectedMedia.add(expectedPlaceholderIdentity(recordId))
   const actualMediaIdentities = records.flatMap((record) => record.media.map((media) => mediaIdentity(record.id, media)))
   const actualMedia = new Set(actualMediaIdentities)
   if (actualMediaIdentities.length !== expectedMedia.size || actualMedia.size !== expectedMedia.size
