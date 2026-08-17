@@ -184,7 +184,7 @@ const manifestTextCases = [
   ['entry privateDerivativePath', (value, replacement) => { value.entries[0].privateDerivativePath = replacement }, /entry metadata/u],
   ['entry derivativeChecksum', (value, replacement) => { value.entries[0].derivativeChecksum = replacement }, /entry metadata/u],
   ['entry mediaRole', (value, replacement) => { value.entries[0].mediaRole = replacement }, /entry metadata/u],
-  ['entry altText', (value, replacement) => { value.entries[0].altText = replacement }, /public media does not match/u],
+  ['entry altText', (value, replacement) => { value.entries[0].altText = replacement }, /entry metadata/u],
   ['placeholder publicDerivativePath', (value, replacement) => { value.placeholder.publicDerivativePath = replacement }, /placeholder metadata/u],
   ['placeholder privateDerivativePath', (value, replacement) => { value.placeholder.privateDerivativePath = replacement }, /placeholder metadata/u],
   ['placeholder derivativeChecksum', (value, replacement) => { value.placeholder.derivativeChecksum = replacement }, /placeholder metadata/u],
@@ -196,6 +196,12 @@ for (const [field, mutate, expected] of manifestTextCases) {
     assertAdversarialRejection(`${field} rejects JSON ${kind}`, ({ manifest: value }) => mutate(value, structuredClone(replacement)), expected)
   }
 }
+assertAdversarialRejection('entry altText rejects coercion-equivalent array', ({ manifest: value }) => {
+  value.entries[0].altText = [value.entries[0].altText]
+}, /entry metadata/u)
+assertAdversarialRejection('missingArtworkRecordIds member rejects coercion-equivalent array', ({ manifest: value }) => {
+  value.missingArtworkRecordIds[0] = [value.missingArtworkRecordIds[0]]
+}, /missing-artwork IDs are invalid/u)
 
 assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { records[0].levels[0].sourceText = 'private' }, /forbidden field: sourceText/u)
 assertAdversarialRejection('forbidden nested verification', ({ records }) => { records[0].media[0].verification = { status: 'private' } }, /forbidden field: verification/u)

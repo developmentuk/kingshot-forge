@@ -850,7 +850,6 @@ export function assertOasisPublicationPayload(input: {
   if (!manifest || manifest.schemaVersion !== OASIS_MEDIA_MANIFEST_SCHEMA_VERSION
     || manifest.sourceFingerprintVersion !== OASIS_SOURCE_FINGERPRINT_VERSION) throw new Error('Oasis manifest must use the v2 fingerprint contract.')
   if (!/^[0-9a-f]{64}$/u.test(input.sourceFingerprint) || manifest.sourceFingerprint !== input.sourceFingerprint) throw new Error('Oasis source fingerprint does not match the manifest.')
-  if (!/^[0-9a-f]{64}$/u.test(input.manifestHash) || hashOasisManifest(input.manifest) !== input.manifestHash) throw new Error('Oasis manifest hash does not match canonical content.')
   if (manifest.sourceAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT || manifest.derivativeAssetCount !== OASIS_PRIVATE_SOURCE_MEDIA_COUNT) throw new Error('Oasis manifest counts are incomplete.')
   assertPositiveInteger(manifest.sourceAssetBytes, 'Oasis manifest.sourceAssetBytes')
   assertPositiveInteger(manifest.derivativeAssetBytes, 'Oasis manifest.derivativeAssetBytes')
@@ -866,6 +865,7 @@ export function assertOasisPublicationPayload(input: {
       || entry.privateDerivativePath !== `fixtures/oasis-001a-publication/${entry.publicDerivativePath}`
       || typeof entry.sourceChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(entry.sourceChecksum)
       || typeof entry.derivativeChecksum !== 'string' || !/^[0-9a-f]{64}$/u.test(entry.derivativeChecksum)
+      || typeof entry.altText !== 'string'
       || (entry.mediaRole !== 'catalogue' && entry.mediaRole !== 'level')
       || typeof entry.sourceBytes !== 'number' || !Number.isInteger(entry.sourceBytes) || entry.sourceBytes <= 0
       || typeof entry.derivativeBytes !== 'number' || !Number.isInteger(entry.derivativeBytes) || entry.derivativeBytes <= 0
@@ -880,6 +880,7 @@ export function assertOasisPublicationPayload(input: {
     throw new Error('Oasis manifest byte totals do not match its entries.')
   }
   if (!Array.isArray(manifest.missingArtworkRecordIds)
+    || manifest.missingArtworkRecordIds.some((recordId) => typeof recordId !== 'string')
     || [...manifest.missingArtworkRecordIds].sort().join('|') !== OASIS_MISSING_ARTWORK_RECORD_IDS.join('|')) throw new Error('Oasis missing-artwork IDs are invalid.')
   const placeholder = object(manifest.placeholder)
   if (!placeholder || placeholder.publicDerivativePath !== 'media/oasis-island/shared/artwork-unavailable.webp'
@@ -889,6 +890,7 @@ export function assertOasisPublicationPayload(input: {
     || typeof placeholder.width !== 'number' || !Number.isInteger(placeholder.width) || placeholder.width <= 0
     || typeof placeholder.height !== 'number' || !Number.isInteger(placeholder.height) || placeholder.height <= 0
     || typeof placeholder.altText !== 'string' || !placeholder.altText) throw new Error('Oasis placeholder metadata is incomplete or invalid.')
+  if (!/^[0-9a-f]{64}$/u.test(input.manifestHash) || hashOasisManifest(input.manifest) !== input.manifestHash) throw new Error('Oasis manifest hash does not match canonical content.')
   if (!Array.isArray(input.records) || input.records.length !== OASIS_PUBLIC_RECORD_COUNT) throw new Error('Oasis publication requires exactly 55 records.')
   for (const record of input.records) assertOasisPublicationCandidateRecord(record)
   const records = input.records as OasisPublicationCandidateRecord[]
