@@ -56,6 +56,7 @@ const built = buildOasisPublicDataset({
 })
 assert.deepEqual(built, fixture)
 assert.equal(built.recordCount, 55)
+assert.equal(built.recordContentHash, 'a4b8634f4a4004d75c7102273a1e7b9c500967b1d781ba0257b4646618cb7da2')
 assert.equal(manifest.schemaVersion, OASIS_MEDIA_MANIFEST_SCHEMA_VERSION)
 assert.equal(manifest.sourceFingerprintVersion, OASIS_SOURCE_FINGERPRINT_VERSION)
 assert.equal(manifest.sourceFingerprint, hashOasisSourceFingerprint({ records: source.buildings, media: manifest.entries }))
@@ -227,6 +228,45 @@ assertAdversarialRejection('input manifestHash rejects before regex coercion', (
   candidate.manifestHash = { [Symbol.toPrimitive]: () => { throw new Error('manifest hash coercion reached') } }
 }, /manifest hash does not match/u)
 
+let serializationHookReached = false
+assertAdversarialRejection('record text rejects before executing toJSON', ({ records }) => {
+  records[0].name = {
+    toJSON() {
+      serializationHookReached = true
+      throw new Error('record serialization hook reached')
+    },
+  }
+}, /trimmed string/u)
+assert.equal(serializationHookReached, false)
+
+for (const [kind, replacement] of nonStringTextValues) {
+  assertAdversarialRejection(`record name rejects ${kind} before semantic processing`, ({ records }) => {
+    records[0].name = structuredClone(replacement)
+  }, /trimmed string/u)
+}
+assertAdversarialRejection('record name rejects coercion-equivalent array', ({ records }) => {
+  records[0].name = [records[0].name]
+}, /trimmed string/u)
+
+const recordTextCases = [
+  ['alias member', (records) => { records.find((record) => record.aliases.length > 0).aliases[0] = 7 }],
+  ['footprint display', (records) => { records.find((record) => record.footprint).footprint.display = true }],
+  ['bonus label', (records) => { records.find((record) => record.levels.some((level) => level.bonuses.length > 0)).levels.find((level) => level.bonuses.length > 0).bonuses[0].label = { value: 'label' } }],
+  ['known-effect member', (records) => { records.find((record) => record.levels.some((level) => level.knownEffects.length > 0)).levels.find((level) => level.knownEffects.length > 0).knownEffects[0] = ['effect'] }],
+  ['unlock requirement', (records) => { records.find((record) => record.unlock).unlock.requirement = 7 }],
+  ['upgrade currency', (records) => { records.find((record) => record.upgrade).upgrade.currency = false }],
+  ['media URL', (records) => { records[0].media[0].url = { value: 'path' } }],
+  ['media alt text', (records) => { records[0].media[0].alt = [records[0].media[0].alt] }],
+  ['media role', (records) => { records[0].media[0].role = null }],
+  ['canonical route', (records) => { records[0].canonicalRoute = { value: 'route' } }],
+  ['trust label', (records) => { records[0].trustLabel = ['Mixed official and community evidence'] }],
+  ['publication ID', (records) => { records[0].publicationId = 7 }],
+]
+for (const [field, mutate] of recordTextCases) {
+  assertAdversarialRejection(`record ${field} rejects non-string value`, ({ records }) => mutate(records), /trimmed string/u)
+}
+
+assertAdversarialRejection('forbidden top-level sourceText', ({ records }) => { records[0].sourceText = 'private' }, /non-allow-listed fields/u)
 assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { records[0].levels[0].sourceText = 'private' }, /forbidden field: sourceText/u)
 assertAdversarialRejection('forbidden nested verification', ({ records }) => { records[0].media[0].verification = { status: 'private' } }, /forbidden field: verification/u)
 assertAdversarialRejection('extra top-level record fields', ({ records }) => { records[0].unexpected = true }, /non-allow-listed fields/u)

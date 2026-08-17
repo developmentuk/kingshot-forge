@@ -762,17 +762,186 @@ export function deriveOasisRollbackRecords(
   }))
 }
 
+function assertExactEnumerableDataKeys(
+  value: Record<string, unknown>,
+  expected: readonly string[],
+  path: string,
+): void {
+  const keys = Object.keys(value)
+  const missing = expected.filter((key) => !keys.includes(key))
+  if (missing.length > 0) {
+    if (path === 'Oasis public record') throw new Error(`Oasis public record is missing required fields: ${missing.join(', ')}`)
+    throw new Error(`${path} is missing required fields: ${missing.join(', ')}`)
+  }
+  const extra = keys.filter((key) => !expected.includes(key))
+  if (extra.length > 0) {
+    if (path === 'Oasis public record') throw new Error(`Oasis public record contains non-allow-listed fields: ${extra.join(', ')}`)
+    throw new Error(`${path} contains unexpected fields: ${extra.join(', ')}`)
+  }
+  for (const key of keys) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    if (!descriptor || !Object.hasOwn(descriptor, 'value')) {
+      throw new Error(`${path}.${key} must be an own enumerable data property.`)
+    }
+  }
+}
+
+function assertNoForbiddenPublicKeys(value: unknown, seen = new Set<object>()): void {
+  if (value === null || typeof value !== 'object') return
+  if (seen.has(value)) return
+  seen.add(value)
+  for (const key of Object.keys(value)) {
+    if ((OASIS_FORBIDDEN_PUBLIC_FIELDS as readonly string[]).includes(key)) {
+      throw new Error(`Oasis public record contains forbidden field: ${key}`)
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    if (!descriptor || !Object.hasOwn(descriptor, 'value')) {
+      throw new Error(`Oasis public record.${key} must be an own enumerable data property.`)
+    }
+    assertNoForbiddenPublicKeys(descriptor.value, seen)
+  }
+}
+
+function assertOasisPublicRecordStructure(record: Record<string, unknown>): void {
+  assertExactEnumerableDataKeys(record, OASIS_PUBLIC_RECORD_ALLOW_LIST, 'Oasis public record')
+  assertNoForbiddenPublicKeys(record)
+  if (!Array.isArray(record.aliases)) throw new Error('Oasis public record.aliases must be an array.')
+  const footprint = record.footprint === null ? null : object(record.footprint)
+  if (record.footprint !== null && !footprint) throw new Error('Oasis public record.footprint must be an object or null.')
+  if (footprint) assertExactEnumerableDataKeys(footprint, OASIS_PUBLIC_FOOTPRINT_KEYS, 'Oasis public record.footprint')
+  if (!Array.isArray(record.levels)) throw new Error('Oasis public record.levels must be an array.')
+  record.levels.forEach((value, levelIndex) => {
+    const level = object(value)
+    if (!level) throw new Error(`Oasis public record.levels[${levelIndex}] must be a non-null object.`)
+    assertExactEnumerableDataKeys(level, OASIS_PUBLIC_LEVEL_KEYS, `Oasis public record.levels[${levelIndex}]`)
+    if (!Array.isArray(level.bonuses)) throw new Error(`Oasis public record.levels[${levelIndex}].bonuses must be an array.`)
+    level.bonuses.forEach((bonusValue, bonusIndex) => {
+      const bonus = object(bonusValue)
+      if (!bonus) throw new Error(`Oasis public record.levels[${levelIndex}].bonuses[${bonusIndex}] must be a non-null object.`)
+      assertExactEnumerableDataKeys(bonus, OASIS_PUBLIC_BONUS_KEYS, `Oasis public record.levels[${levelIndex}].bonuses[${bonusIndex}]`)
+    })
+    if (!Array.isArray(level.knownEffects)) throw new Error(`Oasis public record.levels[${levelIndex}].knownEffects must be an array.`)
+  })
+  if (!Array.isArray(record.maxEffects)) throw new Error('Oasis public record.maxEffects must be an array.')
+  record.maxEffects.forEach((value, index) => {
+    const bonus = object(value)
+    if (!bonus) throw new Error(`Oasis public record.maxEffects[${index}] must be a non-null object.`)
+    assertExactEnumerableDataKeys(bonus, OASIS_PUBLIC_BONUS_KEYS, `Oasis public record.maxEffects[${index}]`)
+  })
+  const unlock = record.unlock === null ? null : object(record.unlock)
+  if (record.unlock !== null && !unlock) throw new Error('Oasis public record.unlock must be an object or null.')
+  if (unlock) assertExactEnumerableDataKeys(unlock, OASIS_PUBLIC_UNLOCK_KEYS, 'Oasis public record.unlock')
+  const upgrade = record.upgrade === null ? null : object(record.upgrade)
+  if (record.upgrade !== null && !upgrade) throw new Error('Oasis public record.upgrade must be an object or null.')
+  if (upgrade) assertExactEnumerableDataKeys(upgrade, OASIS_PUBLIC_UPGRADE_KEYS, 'Oasis public record.upgrade')
+  if (!Array.isArray(record.media)) throw new Error('Oasis public record.media must be an array.')
+  record.media.forEach((value, index) => {
+    const media = object(value)
+    if (!media) throw new Error(`Oasis public record.media[${index}] must be a non-null object.`)
+    assertExactEnumerableDataKeys(media, OASIS_PUBLIC_MEDIA_KEYS, `Oasis public record.media[${index}]`)
+  })
+}
+
+function assertRawString(value: unknown, path: string): asserts value is string {
+  if (typeof value !== 'string') throw new Error(`${path} must be a non-empty trimmed string.`)
+}
+
+function assertRawNullableString(value: unknown, path: string): asserts value is string | null {
+  if (value !== null) assertRawString(value, path)
+}
+
+function assertRawNullableNumber(value: unknown, path: string): asserts value is number | null {
+  if (value !== null && typeof value !== 'number') throw new Error(`${path} must be a finite number or null.`)
+}
+
+function assertRawNumber(value: unknown, path: string): asserts value is number {
+  if (typeof value !== 'number') throw new Error(`${path} must be a positive integer.`)
+}
+
+function assertRawTimestamp(value: unknown, path: string): asserts value is string {
+  if (typeof value !== 'string') throw new Error(`${path} must be a valid UTC timestamp.`)
+}
+
+function assertRawPublicBonus(value: unknown, path: string): void {
+  const bonus = value as Record<string, unknown>
+  assertRawNullableString(bonus.label, `${path}.label`)
+  assertRawNullableString(bonus.stat, `${path}.stat`)
+  assertRawNullableNumber(bonus.valuePct, `${path}.valuePct`)
+  assertRawNullableString(bonus.effect, `${path}.effect`)
+}
+
+function assertOasisPublicRecordRawValues(record: Record<string, unknown>, candidate: boolean): void {
+  assertRawString(record.schemaVersion, 'Oasis public record.schemaVersion')
+  assertRawString(record.id, 'Oasis public record.id')
+  assertRawString(record.name, 'Oasis public record.name')
+  ;(record.aliases as unknown[]).forEach((alias, index) => assertRawString(alias, `Oasis public record.aliases[${index}]`))
+  assertRawString(record.recordType, 'Oasis public record.recordType')
+  assertRawNullableString(record.rarity, 'Oasis public record.rarity')
+  assertRawNullableString(record.availabilityCategory, 'Oasis public record.availabilityCategory')
+  if (record.footprint !== null) {
+    const footprint = record.footprint as Record<string, unknown>
+    assertRawNullableNumber(footprint.width, 'Oasis public record.footprint.width')
+    assertRawNullableNumber(footprint.height, 'Oasis public record.footprint.height')
+    assertRawNullableString(footprint.display, 'Oasis public record.footprint.display')
+  }
+  assertRawNullableNumber(record.typeLimit, 'Oasis public record.typeLimit')
+  assertRawNullableNumber(record.maxLevel, 'Oasis public record.maxLevel')
+  assertRawNullableString(record.function, 'Oasis public record.function')
+  ;(record.levels as Record<string, unknown>[]).forEach((level, levelIndex) => {
+    const path = `Oasis public record.levels[${levelIndex}]`
+    assertRawNullableNumber(level.level, `${path}.level`)
+    assertRawNullableNumber(level.prosperity, `${path}.prosperity`)
+    assertRawNullableNumber(level.prosperityRequired, `${path}.prosperityRequired`)
+    assertRawNullableNumber(level.waterEssencePerHour, `${path}.waterEssencePerHour`)
+    ;(level.bonuses as unknown[]).forEach((bonus, bonusIndex) => assertRawPublicBonus(bonus, `${path}.bonuses[${bonusIndex}]`))
+    ;(level.knownEffects as unknown[]).forEach((effect, effectIndex) => assertRawString(effect, `${path}.knownEffects[${effectIndex}]`))
+    if (level.exactOutputKnown !== null && typeof level.exactOutputKnown !== 'boolean') {
+      throw new Error(`${path}.exactOutputKnown must be a boolean or null.`)
+    }
+  })
+  ;(record.maxEffects as unknown[]).forEach((bonus, index) => assertRawPublicBonus(bonus, `Oasis public record.maxEffects[${index}]`))
+  if (record.unlock !== null) {
+    const unlock = record.unlock as Record<string, unknown>
+    assertRawNullableString(unlock.requirement, 'Oasis public record.unlock.requirement')
+    assertRawNullableString(unlock.initialBlueprintPurchase, 'Oasis public record.unlock.initialBlueprintPurchase')
+  }
+  if (record.upgrade !== null) {
+    const upgrade = record.upgrade as Record<string, unknown>
+    assertRawNullableString(upgrade.currency, 'Oasis public record.upgrade.currency')
+    assertRawNullableString(upgrade.exchange, 'Oasis public record.upgrade.exchange')
+    assertRawNullableString(upgrade.generalBlueprintRefresh, 'Oasis public record.upgrade.generalBlueprintRefresh')
+    assertRawNullableString(upgrade.officiallyVerified, 'Oasis public record.upgrade.officiallyVerified')
+  }
+  assertRawNullableNumber(record.maxProsperity, 'Oasis public record.maxProsperity')
+  assertRawString(record.trustLabel, 'Oasis public record.trustLabel')
+  ;(record.media as Record<string, unknown>[]).forEach((media, index) => {
+    const path = `Oasis public record.media[${index}]`
+    assertRawString(media.url, `${path}.url`)
+    assertRawString(media.alt, `${path}.alt`)
+    assertRawString(media.role, `${path}.role`)
+    assertRawNullableNumber(media.levelVariant, `${path}.levelVariant`)
+    assertRawNumber(media.width, `${path}.width`)
+    assertRawNumber(media.height, `${path}.height`)
+  })
+  assertRawString(record.publicationId, 'Oasis public record.publicationId')
+  if (candidate) {
+    if (record.publicationVersion !== null || record.publishedAt !== null || record.updatedAt !== null) {
+      throw new Error('Oasis publication candidates must leave database-owned version and timestamps null.')
+    }
+  } else {
+    if (typeof record.publicationVersion !== 'number') throw new Error('Oasis public record has an invalid publication identity.')
+    assertRawTimestamp(record.publishedAt, 'Oasis public record.publishedAt')
+    assertRawTimestamp(record.updatedAt, 'Oasis public record.updatedAt')
+  }
+  assertRawString(record.canonicalRoute, 'Oasis public record.canonicalRoute')
+  assertRawString(record.status, 'Oasis public record.status')
+}
+
 export function assertOasisPublicRecord(value: unknown): asserts value is OasisPublicRecord {
   const record = object(value)
   if (!record) throw new Error('Oasis public record is not an object.')
-  const missing = (OASIS_PUBLIC_RECORD_ALLOW_LIST as readonly string[]).filter((key) => !Object.hasOwn(record, key))
-  if (missing.length > 0) throw new Error(`Oasis public record is missing required fields: ${missing.join(', ')}`)
-  const extra = Object.keys(record).filter((key) => !(OASIS_PUBLIC_RECORD_ALLOW_LIST as readonly string[]).includes(key))
-  if (extra.length > 0) throw new Error(`Oasis public record contains non-allow-listed fields: ${extra.join(', ')}`)
-  const serialized = JSON.stringify(record)
-  for (const field of OASIS_FORBIDDEN_PUBLIC_FIELDS) {
-    if (new RegExp(`"${field}"\\s*:`).test(serialized)) throw new Error(`Oasis public record contains forbidden field: ${field}`)
-  }
+  assertOasisPublicRecordStructure(record)
+  assertOasisPublicRecordRawValues(record, false)
   if (record.schemaVersion !== OASIS_PUBLIC_PROJECTION_SCHEMA_VERSION || record.status !== 'published') throw new Error('Oasis public record is not a published v2 projection.')
   if (typeof record.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(record.id)) throw new Error('Oasis public record has an invalid stable ID.')
   assertTrimmedString(record.name, `Oasis public record ${record.id}.name`)
@@ -820,9 +989,8 @@ export function assertOasisPublicRecord(value: unknown): asserts value is OasisP
 export function assertOasisPublicationCandidateRecord(value: unknown): asserts value is OasisPublicationCandidateRecord {
   const record = object(value)
   if (!record) throw new Error('Oasis publication candidate record is not an object.')
-  if (record.publicationVersion !== null || record.publishedAt !== null || record.updatedAt !== null) {
-    throw new Error('Oasis publication candidates must leave database-owned version and timestamps null.')
-  }
+  assertOasisPublicRecordStructure(record)
+  assertOasisPublicRecordRawValues(record, true)
   assertOasisPublicRecord({
     ...record,
     publicationVersion: 1,
