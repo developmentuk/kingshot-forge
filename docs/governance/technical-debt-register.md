@@ -1,6 +1,6 @@
 # Technical Debt Register
 
-Reviewed: 13 August 2026. Severity: P0 blocker, P1 high, P2 medium, P3 low.
+Reviewed: 16 August 2026. Severity: P0 blocker, P1 high, P2 medium, P3 low.
 
 Resolved historical findings remain in Git and release records; this register describes current actionable debt on the Version 1.1.0 candidate line.
 
@@ -10,8 +10,8 @@ Resolved historical findings remain in Git and release records; this register de
 | TD-022 | P1 | Pull requests | Seven legacy PRs are open and conflicting; several have already been superseded by later `main` work | Close as superseded/blocked or create a deliberately rebased replacement after evidence review | OPS-REBASE-001 |
 | TD-023 | P1 | Dataset publication | Buildings has complete live publication acceptance; most other standard datasets remain partial and Items remains read-only Admin Stage 1A | Select one dataset and complete its full governed vertical slice before expanding breadth | Milestone 2 |
 | TD-024 | P1 | External Player API | Century Games `/captcha` and `/player` routes are retired; legacy wrappers and supplied bot code cannot provide a safe read-only identity contract | Keep live lookup disabled; continue screenshot/hybrid claim verification until a current read-only contract is independently verified | Player Identity |
-| TD-025 | P1 | Oasis publication | OASIS-001A is merged source evidence but has no governed published projection, public media or Search publication | Deliver OASIS-001A-PUB without exposing staged evidence | Next product sprint |
-| TD-026 | P2 | Asset performance | Oasis header is approximately 7.4 MB and the retained scenic draft is approximately 8.4 MB | Resize/convert the published candidate and remove or archive unused runtime assets during OASIS-001A-PUB | OASIS-001A-PUB |
+| TD-025 | P1 | Oasis publication | Phase 1 now provides a reviewed-code candidate for the governed projection, migration, public media, fail-closed loader and inactive Search adapter; no migration is applied and no live publication or route exists | Complete Phase 2 application, first approved publication, activation and acceptance without exposing staged evidence | OASIS-001A-PUB Phase 2 |
+| TD-026 | P2 | Asset performance | Phase 1 replaces the 7,380,112-byte runtime header with a 400,100-byte WebP; the 8,371,031-byte scenic draft remains retained but unimported and outside the production bundle | Confirm the WebP visually during Phase 2 acceptance and keep the scenic draft private or remove it through an explicit governed decision | OASIS-001A-PUB Phase 2 |
 | TD-027 | P2 | Lint | Ten established React/Fast Refresh warnings remain | Resolve hook dependency and component-export warnings without behaviour drift | Version 1.1.x |
 | TD-028 | P2 | Runtime logs | Node 24 reports inherited `url.parse()` DEP0169 warnings on successful Vercel requests | Identify the owning dependency/runtime and remove the warning without changing API behaviour | OPS issue #35 |
 | TD-029 | P2 | Modularity | ADR-014 and modular companion governance are present but still owner-acceptance gated | Complete the read-only collision/ownership audit before any implementation movement | MOD-FOUND-001 |

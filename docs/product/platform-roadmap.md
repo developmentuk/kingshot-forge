@@ -6,7 +6,7 @@ Roadmap status is governed by milestone exit criteria, not elapsed time.
 
 OPS-REBASE-001 is the active release-control sprint. It reconciles security dependencies, documentation, semantic versioning and legacy pull requests after the accepted Companion, Forge Vision, authentication, observability, Player resilience, Island Route and Oasis foundation deliveries. No new product-domain expansion begins until this candidate passes the full gate and exact-head production acceptance.
 
-The next proposed product sprint is **OASIS-001A-PUB**: governed Oasis publication, optimised public media, public routes, Search integration and repeated desktop/mobile acceptance. My Island, profile buffs and calculator injection remain later slices.
+**OASIS-001A-PUB Phase 1 is implemented for review but not activated**: it proposes the governed publication schema, strict public projection, optimised public media, published-only loader, inactive Search adapter and a development-only acceptance harness. Phase 2 remains responsible for applying and accepting the migration, creating the first approved publication, registering published-only APIs and Search, exposing public routes/navigation, and repeating authenticated desktop/mobile acceptance. My Island, profile buffs and calculator injection remain later slices.
 
 ## Milestone 1 — Foundation — Complete
 
