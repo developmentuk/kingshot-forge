@@ -316,6 +316,21 @@ for (const [field, mutate] of recordTextCases) {
   assertAdversarialRejection(`record ${field} rejects non-string value`, ({ records }) => mutate(records), /trimmed string/u)
 }
 
+const publicMediaTextCases = [
+  ['url', (media, replacement) => { media.url = replacement }, /trimmed string/u],
+  ['alt', (media, replacement) => { media.alt = replacement }, /trimmed string/u],
+  ['role', (media, replacement) => { media.role = replacement }, /trimmed string/u],
+]
+for (const [field, mutate, expected] of publicMediaTextCases) {
+  for (const [kind, replacement] of nonStringTextValues) {
+    assertAdversarialRejection(`public media ${field} rejects JSON ${kind}`, ({ records }) => {
+      const mappedRecord = records.find((record) => record.id === 'amphitheater')
+      assert.ok(mappedRecord?.media.length > 0)
+      mutate(mappedRecord.media[0], structuredClone(replacement))
+    }, expected)
+  }
+}
+
 assertAdversarialRejection('forbidden top-level sourceText', ({ records }) => { records[0].sourceText = 'private' }, /non-allow-listed fields/u)
 assertAdversarialRejection('forbidden nested sourceText', ({ records }) => { records[0].levels[0].sourceText = 'private' }, /forbidden field: sourceText/u)
 assertAdversarialRejection('forbidden nested verification', ({ records }) => { records[0].media[0].verification = { status: 'private' } }, /forbidden field: verification/u)
@@ -695,6 +710,7 @@ const adversarialSqlCases = new Map([
   ['extra top-level record fields', ['jsonb_object_keys(case when jsonb_typeof(r)', 'allowed_record_keys']],
   ['invalid canonical route', ["r->>'canonicalRoute' <> '/oasis-island/buildings/' || r->>'id'"]],
   ['record/media mismatch', ['Oasis public media does not match the approved manifest.']],
+  ['public media text values use JSON strings', ["jsonb_typeof(media->'url') is distinct from 'string'", "jsonb_typeof(media->'alt') is distinct from 'string'", "jsonb_typeof(media->'role') is distinct from 'string'"]],
   ['placeholder exact metadata', ["media->>'alt' = p_manifest#>>'{placeholder,altText}'", "jsonb_typeof(media->'levelVariant') = 'null'", "media->'width' = p_manifest#>'{placeholder,width}'", "media->'height' = p_manifest#>'{placeholder,height}'"]],
   ['missing record exact placeholder cardinality', ['Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.']],
   ['extra or duplicate media', ['Oasis public media contains missing, extra or duplicate mappings.']],
@@ -740,6 +756,14 @@ for (const [name, guards] of adversarialSqlCases) {
 }
 assert.ok(pointerMutationIndex > migration.indexOf("jsonb_typeof(r->'publicationVersion') <> 'null'"))
 assert.ok(pointerMutationIndex > migration.indexOf('Oasis public media does not match the approved manifest.'))
+const publicMediaTextSemanticIndex = migration.indexOf("coalesce(media->>'alt', '')")
+for (const guard of [
+  "jsonb_typeof(media->'url') is distinct from 'string'",
+  "jsonb_typeof(media->'alt') is distinct from 'string'",
+  "jsonb_typeof(media->'role') is distinct from 'string'",
+]) {
+  assert.ok(migration.indexOf(guard) > 0 && migration.indexOf(guard) < publicMediaTextSemanticIndex)
+}
 assert.ok(migration.indexOf('Oasis mapped-artwork and missing-artwork record IDs must be disjoint.') < migration.indexOf('public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash'))
 assert.ok(migration.indexOf('Each Oasis missing-artwork record must contain exactly the approved placeholder and no mapped artwork.') < migration.indexOf('public.oasis_manifest_sha256(p_manifest) <> p_manifest_hash'))
 assert.ok(pointerMutationIndex > migration.indexOf('Rollback candidate does not match the referenced immutable publication.'))

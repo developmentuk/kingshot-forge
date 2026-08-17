@@ -575,6 +575,9 @@ begin
     where jsonb_typeof(media) <> 'object'
       or not (media ?& array['url', 'alt', 'role', 'levelVariant', 'width', 'height'])
       or exists (select 1 from jsonb_object_keys(media) key where not key = any(array['url', 'alt', 'role', 'levelVariant', 'width', 'height']))
+      or jsonb_typeof(media->'url') is distinct from 'string'
+      or jsonb_typeof(media->'alt') is distinct from 'string'
+      or jsonb_typeof(media->'role') is distinct from 'string'
       or coalesce(media->>'alt', '') = '' or media->>'role' not in ('catalogue', 'level', 'placeholder')
       or jsonb_typeof(media->'width') <> 'number' or (media->>'width')::numeric <= 0
       or jsonb_typeof(media->'height') <> 'number' or (media->>'height')::numeric <= 0
