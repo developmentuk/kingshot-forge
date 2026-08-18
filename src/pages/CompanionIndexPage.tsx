@@ -132,6 +132,13 @@ export default function CompanionIndexPage() {
           </div>
         </div>
         <div className="companion-family-grid__items">
+          <Link to="/guides/kingshot-viking-vengeance-event-guide" className="companion-family-card">
+            <span aria-hidden="true">🛡️</span>
+            <div>
+              <h3>Viking Vengeance</h3>
+              <p>Master all 20 waves, reinforcement scoring, HQ transitions, late-wave defence and alliance squad tactics.</p>
+            </div>
+          </Link>
           <Link to="/guides/flamedragon-tyrant-event-guide" className="companion-family-card">
             <span aria-hidden="true">🐉</span>
             <div>
