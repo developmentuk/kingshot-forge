@@ -44,7 +44,7 @@ export const mysticDivinationGuide: GuideArticleDefinition = {
       eyebrow: 'Escalating spend',
       title: 'Flip costs and reset costs',
       content: <>
-        <div className="guide-article__table-wrap"><table className="guide-article__table"><thead><tr><th>Flip</th><th>Flip cost</th><th>Cumulative</th><th>Manual reset</th><th>Flip + reset total</th></tr></thead><tbody>{flipCosts.map((row) => <tr key={row[0]}>{row.map((cell) => <td key={cell}>{cell}</td>)}</tr>)}</tbody></table></div>
+        <div className="guide-article__table-wrap"><table className="guide-article__table"><thead><tr><th>Flip</th><th>Flip cost</th><th>Cumulative</th><th>Manual reset</th><th>Flip + reset total</th></tr></thead><tbody>{flipCosts.map((row) => <tr key={row[0]}>{row.map((cell, index) => <td key={`${row[0]}-${index}`}>{cell}</td>)}</tr>)}</tbody></table></div>
         <p className="guide-article__callout"><strong>The cost curve is the whole event.</strong> The first five cards cost only 16 cumulative Tokens in the supplied table; cards six through ten consume another 80. That is why automatic full clears are inefficient unless the remaining board is genuinely valuable.</p>
       </>,
     },
