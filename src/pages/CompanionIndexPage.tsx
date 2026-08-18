@@ -132,6 +132,13 @@ export default function CompanionIndexPage() {
           </div>
         </div>
         <div className="companion-family-grid__items">
+          <Link to="/guides" className="companion-family-card">
+            <span aria-hidden="true">📚</span>
+            <div>
+              <h3>Guide Library</h3>
+              <p>Browse all published Forge strategy guides by event, system, play style, resource or tag.</p>
+            </div>
+          </Link>
           <Link to="/guides/kingshot-viking-vengeance-event-guide" className="companion-family-card">
             <span aria-hidden="true">🛡️</span>
             <div>
