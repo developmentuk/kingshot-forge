@@ -46,6 +46,8 @@ import HeroCompanionPage from "./pages/HeroCompanionPage";
 import Generation6HeroGuidePage from "./pages/Generation6HeroGuidePage";
 import FlamedragonTyrantGuidePage from "./pages/FlamedragonTyrantGuidePage";
 import VikingVengeanceGuidePage from "./pages/VikingVengeanceGuidePage";
+import GuidesHubPage from "./pages/GuidesHubPage";
+import GuideArticlePage from "./features/guides/GuideArticlePage";
 import CompanionIndexPage from "./pages/CompanionIndexPage";
 import CompanionItemPage from "./pages/CompanionItemPage";
 import SearchPage from "./features/search/SearchPage";
@@ -144,9 +146,11 @@ function App() {
         <Route path="join/my-application" element={<MyContributorApplicationPage />} />
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
+        <Route path="guides" element={<GuidesHubPage />} />
         <Route path="guides/kingshot-generation-6-heroes-yang-sophia-triton-guide" element={<Generation6HeroGuidePage />} />
         <Route path="guides/flamedragon-tyrant-event-guide" element={<FlamedragonTyrantGuidePage />} />
         <Route path="guides/kingshot-viking-vengeance-event-guide" element={<VikingVengeanceGuidePage />} />
+        <Route path="guides/:guideSlug" element={<GuideArticlePage />} />
 
         <Route path="operations" element={<WorkspaceRoute workspaceId="operations"><OperationsDashboardPage /></WorkspaceRoute>} />
         <Route path="operations/users" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="users.read"><UserManagementPage /></ProtectedRoute></WorkspaceRoute>} />
