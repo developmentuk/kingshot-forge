@@ -159,7 +159,7 @@ function App() {
         <Route path="operations/applications/:applicationId" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="applications.read"><ContributorApplicationDetailPage /></ProtectedRoute></WorkspaceRoute>} />
         <Route path="operations/roles" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Roles and Permissions" /></ProtectedRoute></WorkspaceRoute>} />
         <Route path="operations/audit-log" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Audit Log" /></ProtectedRoute></WorkspaceRoute>} />
-        <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Feature Flags" /></WorkspaceRoute>} />
+        <Route path="operations/feature-flags" element={<WorkspaceRoute workspaceId="operations"><ProtectedRoute permission="platform.users.manage"><OperationsStatusPage title="Feature Flags" /></ProtectedRoute></WorkspaceRoute>} />
         <Route path="contributor" element={<WorkspaceRoute workspaceId="contributor"><WorkspaceHomePage workspaceId="contributor" /></WorkspaceRoute>} />
         <Route path="contributor/drafts" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="My drafts" /></WorkspaceRoute>} />
         <Route path="contributor/submissions" element={<WorkspaceRoute workspaceId="contributor"><OperationsStatusPage title="Submission history" /></WorkspaceRoute>} />
