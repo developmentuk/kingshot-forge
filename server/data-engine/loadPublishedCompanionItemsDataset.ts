@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 
 import {
+  COMPANION_ITEM_DISPLAY_CORRECTIONS,
   COMPANION_ITEM_GAMEPLAY,
 } from '../../shared/companion/itemGameplayCatalogue.js'
 import {
@@ -19,11 +20,12 @@ export async function loadPublishedCompanionItemsDataset():
 Promise<DatasetLoadResult> {
   const records = COMPANION_ITEM_PROJECTION.map((record) => {
     const gameplay = COMPANION_ITEM_GAMEPLAY[record.key]
+    const displayCorrection = COMPANION_ITEM_DISPLAY_CORRECTIONS[record.key]
 
     return {
       ...record,
+      name: displayCorrection?.name ?? record.name,
       ...(gameplay ? {
-        name: gameplay.name ?? record.name,
         summary: gameplay.summary,
         category: gameplay.category ?? record.category,
         category_label: gameplay.categoryLabel ?? record.category_label,
@@ -36,7 +38,7 @@ Promise<DatasetLoadResult> {
       } : {}),
       aliases: unique([
         ...record.aliases,
-        ...(gameplay?.aliases ?? []),
+        ...(displayCorrection?.aliases ?? []),
       ]),
       tags: unique([
         ...record.tags,
