@@ -25,8 +25,10 @@ on:
       - 'src/pages/CompanionIndexPage.tsx'
       - 'src/pages/CompanionItemPage.tsx'
       - 'src/styles/companionIndex.css'
+      - 'src/styles/companionItemGameplay.css'
       - 'scripts/generate-companion-media-manifest.ps1'
       - 'scripts/test-companion-index.mjs'
+      - 'scripts/test-companion-gameplay-content.mjs'
       - 'scripts/test-companion-media.mjs'
       - 'scripts/test-search-experience.mjs'
       - 'docs/companion/**'
@@ -63,6 +65,9 @@ jobs:
 
       - name: Validate Companion Index projection and routes
         run: node --import tsx scripts/test-companion-index.mjs
+
+      - name: Validate recovered Companion gameplay content
+        run: node --import tsx scripts/test-companion-gameplay-content.mjs
 
       - name: Validate Companion media integrity
         run: node scripts/test-companion-media.mjs
