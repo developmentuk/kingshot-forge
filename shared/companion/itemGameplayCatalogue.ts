@@ -19,12 +19,14 @@ Readonly<Record<string, CompanionItemGameplayContent>> = Object.freeze({
   ...COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE3,
 })
 
-export const COMPANION_ITEM_DISPLAY_CORRECTIONS = Object.freeze({
-  'mark-of-valor-noble': {
-    name: 'Mark of Valor',
-    aliases: ['Mark Of Valor Noble'] as const,
-  },
-})
+export const COMPANION_ITEM_DISPLAY_CORRECTIONS:
+Readonly<Record<string, { name: string; aliases: readonly string[] }>> =
+  Object.freeze({
+    'mark-of-valor-noble': {
+      name: 'Mark of Valor',
+      aliases: ['Mark Of Valor Noble'] as const,
+    },
+  })
 
 export const COMPANION_ITEM_GAMEPLAY_PHASE1_KEYS = Object.freeze(
   Object.keys(COMPANION_ITEM_GAMEPLAY_CONTENT),
