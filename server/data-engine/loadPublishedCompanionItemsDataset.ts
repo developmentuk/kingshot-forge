@@ -23,6 +23,7 @@ Promise<DatasetLoadResult> {
     return {
       ...record,
       ...(gameplay ? {
+        name: gameplay.name ?? record.name,
         summary: gameplay.summary,
         category: gameplay.category ?? record.category,
         category_label: gameplay.categoryLabel ?? record.category_label,
@@ -33,7 +34,10 @@ Promise<DatasetLoadResult> {
         confidence_label:
           gameplay.confidenceLabel ?? record.confidence_label,
       } : {}),
-      aliases: [...record.aliases],
+      aliases: unique([
+        ...record.aliases,
+        ...(gameplay?.aliases ?? []),
+      ]),
       tags: unique([
         ...record.tags,
         ...(gameplay?.tags ?? []),
@@ -69,14 +73,14 @@ Promise<DatasetLoadResult> {
       dataset: 'items',
       title: 'Published Companion Items',
       description:
-        'Canonical Companion item projection with checksum-backed owner-approved media plus recovered gameplay content from governed Forge guides and datasets.',
+        'Canonical Companion item projection with checksum-backed owner-approved media plus governed and owner-verified gameplay content.',
       canonical:
         'docs/companion/assets/ITEM-ASSET-INTAKE-2026-08-03.json',
       updated: '2026-08-19',
       verified: 'partial',
       provenance: {
         intakeId: 'COMPANION-ITEM-ASSET-2026-08-03',
-        sourceType: 'owner-supplied governed intake plus governed Forge gameplay sources',
+        sourceType: 'owner-supplied governed intake plus governed Forge and owner-verified gameplay sources',
         publicationState: 'published-preview-candidate',
         mediaState: 'role-specific-static-webp',
         rightsBasis: 'owner_declared_creative_commons',
