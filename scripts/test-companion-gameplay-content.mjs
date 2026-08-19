@@ -75,11 +75,24 @@ for (const key of enrichmentKeys) {
     !record.summary.includes('Gameplay meaning, acquisition and strategic guidance require editorial research.'),
     `${key} must not retain the media-only placeholder summary`,
   )
+
+  const expectedConfidence = record.trust_state === 'verified'
+    || record.trust_state === 'confirmed'
+    ? 'dataset_verified'
+    : record.trust_state === 'provisional'
+      ? 'relationship_derived'
+      : 'experimental'
+  assert.equal(
+    record.confidence,
+    expectedConfidence,
+    `${key} machine confidence must agree with published trust state`,
+  )
 }
 
 for (const key of phase3NewKeys) {
   const record = byKey.get(key)
   assert.equal(record.trust_state, 'verified', `${key} must publish as owner-verified`)
+  assert.equal(record.confidence, 'dataset_verified', `${key} must publish verified machine confidence`)
   assert.ok(record.image_url, `${key} must already have governed Companion media`)
   assert.equal(record.media_state, 'published_preview_candidate')
 }
@@ -109,6 +122,7 @@ assert.ok(truegoldDust.gameplay.mechanics.some((fact) => /War Academy/i.test(fac
 
 const advancedTeleporter = byKey.get('advanced-teleporter')
 assert.equal(advancedTeleporter.trust_state, 'verified')
+assert.equal(advancedTeleporter.confidence, 'dataset_verified')
 assert.ok(advancedTeleporter.gameplay.mechanics.some((fact) => /manually choose/i.test(fact)))
 assert.ok(advancedTeleporter.gameplay.strategy.some((fact) => /Swordland/i.test(fact)))
 
@@ -176,4 +190,4 @@ const mithril = byKey.get('mithril')
 assert.equal(mithril.forge_id, 'item.mithril')
 assert.ok(!byKey.has('mythril'))
 
-console.log('Companion gameplay content recovery validated (75 enriched / 75 canonical items; 26 newly owner-verified; 0 research-needed gameplay gaps).')
+console.log('Companion gameplay content recovery validated (75 enriched / 75 canonical items; trust/confidence aligned; 26 newly owner-verified; 0 research-needed gameplay gaps).')
