@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto'
 
 import {
+  COMPANION_ITEM_GAMEPLAY,
+} from '../../shared/companion/itemGameplayCatalogue.js'
+import {
   COMPANION_ITEM_PROJECTION,
 } from '../../shared/companion/itemProjection.js'
-import {
-  COMPANION_ITEM_GAMEPLAY_CONTENT,
-} from '../../shared/companion/itemGameplayContent.js'
 
 import type {
   DatasetLoadResult,
@@ -18,7 +18,7 @@ function unique(values: readonly string[]): string[] {
 export async function loadPublishedCompanionItemsDataset():
 Promise<DatasetLoadResult> {
   const records = COMPANION_ITEM_PROJECTION.map((record) => {
-    const gameplay = COMPANION_ITEM_GAMEPLAY_CONTENT[record.key]
+    const gameplay = COMPANION_ITEM_GAMEPLAY[record.key]
 
     return {
       ...record,
@@ -82,7 +82,7 @@ Promise<DatasetLoadResult> {
         rightsBasis: 'owner_declared_creative_commons',
         recordCount: records.length,
         gameplayEnrichmentCount: Object.keys(
-          COMPANION_ITEM_GAMEPLAY_CONTENT,
+          COMPANION_ITEM_GAMEPLAY,
         ).length,
       },
     },
