@@ -49,6 +49,10 @@ export default function CompanionIndexPage() {
       item.categoryLabel,
       item.summary,
       item.trustLabel,
+      ...item.gameplay.mechanics,
+      ...item.gameplay.acquisition,
+      ...item.gameplay.usage,
+      ...item.gameplay.strategy,
       ...item.tags,
     ])
   }), [category, items, query, trust])
@@ -72,8 +76,9 @@ export default function CompanionIndexPage() {
           <h1>One connected index for Kingshot knowledge</h1>
           <p>
             Browse canonical Forge destinations, item identities and the
-            published systems that use them. Unsupported facts remain visibly
-            unavailable rather than being guessed.
+            published systems that use them. Governed gameplay detail is shown
+            when Forge has supporting evidence; unsupported facts are omitted
+            rather than guessed.
           </p>
         </div>
         <dl className="companion-index-hero__facts">
@@ -170,8 +175,9 @@ export default function CompanionIndexPage() {
             <h2 id="companion-items-title">Items and resources</h2>
           </div>
           <p>
-            Approved preview media is checksum-backed. Gameplay facts remain
-            explicitly research-needed where the intake does not support them.
+            Approved media and recovered gameplay knowledge share the same
+            canonical item record. Mechanics, acquisition, usage and strategy
+            are published only where a governed Forge source supports them.
           </p>
         </div>
 
@@ -237,35 +243,44 @@ export default function CompanionIndexPage() {
             </p>
             {filtered.length ? (
               <div className="companion-item-grid">
-                {filtered.map((item) => (
-                  <Link
-                    key={item.key}
-                    to={item.canonicalUrl}
-                    className="companion-item-card"
-                  >
-                    <div className="companion-item-card__media">
-                      <CompanionItemMedia
-                        imageUrl={item.imageUrl}
-                        alt={item.imageAltText || `${item.name} item artwork`}
-                        role={item.mediaRole}
-                        compact={item.mediaRole === 'compact_icon'}
-                      />
-                    </div>
-                    <div className="companion-item-card__body">
-                      <div className="companion-item-card__meta">
-                        <span>{item.categoryLabel}</span>
-                        <span className={`companion-trust companion-trust--${item.trustState}`}>
-                          {item.trustLabel}
-                        </span>
+                {filtered.map((item) => {
+                  const gameplayFactCount = item.gameplay.mechanics.length
+                    + item.gameplay.acquisition.length
+                    + item.gameplay.usage.length
+                    + item.gameplay.strategy.length
+
+                  return (
+                    <Link
+                      key={item.key}
+                      to={item.canonicalUrl}
+                      className="companion-item-card"
+                    >
+                      <div className="companion-item-card__media">
+                        <CompanionItemMedia
+                          imageUrl={item.imageUrl}
+                          alt={item.imageAltText || `${item.name} item artwork`}
+                          role={item.mediaRole}
+                          compact={item.mediaRole === 'compact_icon'}
+                        />
                       </div>
-                      <h3>{item.name}</h3>
-                      <p>{item.summary}</p>
-                      <small>
-                        {item.relationships.length} governed connection{item.relationships.length === 1 ? '' : 's'}
-                      </small>
-                    </div>
-                  </Link>
-                ))}
+                      <div className="companion-item-card__body">
+                        <div className="companion-item-card__meta">
+                          <span>{item.categoryLabel}</span>
+                          <span className={`companion-trust companion-trust--${item.trustState}`}>
+                            {item.trustLabel}
+                          </span>
+                        </div>
+                        <h3>{item.name}</h3>
+                        <p>{item.summary}</p>
+                        <small>
+                          {gameplayFactCount > 0
+                            ? `${gameplayFactCount} published gameplay fact${gameplayFactCount === 1 ? '' : 's'}`
+                            : `${item.relationships.length} governed connection${item.relationships.length === 1 ? '' : 's'}`}
+                        </small>
+                      </div>
+                    </Link>
+                  )
+                })}
               </div>
             ) : (
               <div className="companion-index-empty">
@@ -289,15 +304,15 @@ export default function CompanionIndexPage() {
           </div>
           <div>
             <dt>Confirmed</dt>
-            <dd>A published Forge dataset supports the current item relationship.</dd>
+            <dd>A published Forge dataset or governed source supports the current item facts.</dd>
           </div>
           <div>
             <dt>Provisional</dt>
-            <dd>The relationship is supported, but the complete description is not yet published.</dd>
+            <dd>Published evidence supports the shown facts, but complete item coverage is still being recovered.</dd>
           </div>
           <div>
             <dt>Research needed</dt>
-            <dd>Important source or usage details still require editorial verification.</dd>
+            <dd>The identity/media is governed, but the approved gameplay detail has not yet been recovered into the published record.</dd>
           </div>
         </dl>
       </section>

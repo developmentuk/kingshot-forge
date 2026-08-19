@@ -59,6 +59,34 @@ export default function CompanionItemPage() {
     )
   }
 
+  const gameplaySections = [
+    {
+      key: 'mechanics',
+      eyebrow: 'How it works',
+      title: 'Mechanics',
+      items: item.gameplay.mechanics,
+    },
+    {
+      key: 'acquisition',
+      eyebrow: 'Where it comes from',
+      title: 'How to get it',
+      items: item.gameplay.acquisition,
+    },
+    {
+      key: 'usage',
+      eyebrow: 'Progression use',
+      title: 'How to use it',
+      items: item.gameplay.usage,
+    },
+    {
+      key: 'strategy',
+      eyebrow: 'Player planning',
+      title: 'Strategy',
+      items: item.gameplay.strategy,
+    },
+  ].filter((section) => section.items.length > 0)
+  const hasGameplay = gameplaySections.length > 0
+
   return (
     <main className="companion-item-page">
       <nav className="companion-breadcrumbs" aria-label="Breadcrumb">
@@ -115,6 +143,24 @@ export default function CompanionItemPage() {
             </div>
           </section>
 
+          {gameplaySections.map((section) => (
+            <section
+              key={section.key}
+              className="companion-item-panel"
+              aria-labelledby={`item-${section.key}-title`}
+            >
+              <div className="companion-section-heading">
+                <div>
+                  <p className="eyebrow">{section.eyebrow}</p>
+                  <h2 id={`item-${section.key}-title`}>{section.title}</h2>
+                </div>
+              </div>
+              <ul className="companion-item-fact-list">
+                {section.items.map((fact) => <li key={fact}>{fact}</li>)}
+              </ul>
+            </section>
+          ))}
+
           <section className="companion-item-panel" aria-labelledby="item-connections-title">
             <div className="companion-section-heading">
               <div>
@@ -165,14 +211,15 @@ export default function CompanionItemPage() {
             <div className="companion-section-heading">
               <div>
                 <p className="eyebrow">Truth boundary</p>
-                <h2 id="item-unknown-title">Not yet published</h2>
+                <h2 id="item-unknown-title">
+                  {hasGameplay ? 'What remains unpublished' : 'Not yet published'}
+                </h2>
               </div>
             </div>
             <p>
-              Forge has not published unsupported drop rates, pack values,
-              unlock dates, costs or strategy claims for this item. Those
-              details remain unavailable until evidence and editorial review
-              support them.
+              {hasGameplay
+                ? 'Forge publishes only the evidence-backed gameplay facts shown above. Unsupported drop rates, pack values, unlock dates, costs or strategy claims remain omitted until the governed source supports them.'
+                : 'Forge has not yet recovered approved gameplay detail for this item beyond its canonical identity and media. Drop rates, pack values, unlock dates, costs and strategy claims remain unavailable rather than being guessed.'}
             </p>
           </section>
         </div>
@@ -187,7 +234,7 @@ export default function CompanionItemPage() {
                 <dd><code>{item.forgeId}</code></dd>
               </div>
               <div>
-                <dt>Source</dt>
+                <dt>Identity/media source</dt>
                 <dd>{item.sourceName}</dd>
               </div>
               <div>
@@ -207,6 +254,16 @@ export default function CompanionItemPage() {
                 <dd>{item.rightsStatus.replaceAll('_', ' ')}</dd>
               </div>
             </dl>
+            {item.gameplay.sources.length > 0 && (
+              <>
+                <h3>Gameplay sources</h3>
+                <ul className="companion-item-source-list">
+                  {item.gameplay.sources.map((source) => (
+                    <li key={source}><code>{source}</code></li>
+                  ))}
+                </ul>
+              </>
+            )}
             <p className="companion-item-rights-note">{item.rightsNote}</p>
           </section>
 
