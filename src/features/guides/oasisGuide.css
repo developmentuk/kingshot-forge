@@ -1,0 +1,7 @@
+.guide-article--oasis {
+  --guide-accent: #86efac;
+  --guide-accent-soft: rgba(34, 197, 94, 0.13);
+  --guide-accent-border: rgba(134, 239, 172, 0.27);
+  --guide-hero-a: rgba(18, 62, 45, 0.98);
+  --guide-hero-b: rgba(8, 22, 24, 0.99);
+}
