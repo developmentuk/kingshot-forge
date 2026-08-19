@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-governor-gear-upgrade-cost-guide',
+    path: '/guides/kingshot-governor-gear-upgrade-cost-guide',
+    title: 'Kingshot Governor Gear: Complete Upgrade Cost & Progression Guide',
+    shortTitle: 'Governor Gear',
+    summary: 'Plan all 58 Governor Gear steps from Green to Red T6 with Satin, Gilded Threads, Artisan’s Vision, stat milestones, power and confidence.',
+    icon: '⚒️',
+    type: 'System guide',
+    tags: ['Governor Gear', 'Satin', 'Gilded Threads', 'Artisan’s Vision', 'Red T6', 'gear', 'F2P', 'Alliance Brawl', 'KvK', 'resource management', 'power'],
+  },
+  {
     slug: 'kingshot-truegold-tempered-truegold-building-guide',
     path: '/guides/kingshot-truegold-tempered-truegold-building-guide',
     title: 'Kingshot Truegold & Tempered Truegold: TG1–TG8 Building Cost Guide',
