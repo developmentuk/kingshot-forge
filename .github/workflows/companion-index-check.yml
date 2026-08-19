@@ -25,7 +25,6 @@ on:
       - 'src/pages/CompanionIndexPage.tsx'
       - 'src/pages/CompanionItemPage.tsx'
       - 'src/styles/companionIndex.css'
-      - 'src/styles/companionItemGameplay.css'
       - 'scripts/generate-companion-media-manifest.ps1'
       - 'scripts/test-companion-index.mjs'
       - 'scripts/test-companion-gameplay-content.mjs'
@@ -33,6 +32,7 @@ on:
       - 'scripts/test-search-experience.mjs'
       - 'docs/companion/**'
       - 'docs/releases/COMPANION-INDEX-001.md'
+      - 'docs/releases/COMPANION-ITEMS-CONTENT-RECOVERY-001.md'
       - '.github/workflows/companion-index-check.yml'
 
 permissions:
