@@ -44,6 +44,11 @@ for (const key of enrichmentKeys) {
   const content = COMPANION_ITEM_GAMEPLAY[key]
   assert.ok(content.summary.trim(), `${key} gameplay content must have a summary`)
   assert.ok(content.sources.length > 0, `${key} gameplay content must name at least one governed source`)
+  const gameplayFactCount = (content.mechanics?.length ?? 0)
+    + (content.acquisition?.length ?? 0)
+    + (content.usage?.length ?? 0)
+    + (content.strategy?.length ?? 0)
+  assert.ok(gameplayFactCount > 0, `${key} must publish at least one substantive gameplay fact`)
 }
 
 for (const key of phase3NewKeys) {
@@ -75,6 +80,12 @@ for (const key of enrichmentKeys) {
     !record.summary.includes('Gameplay meaning, acquisition and strategic guidance require editorial research.'),
     `${key} must not retain the media-only placeholder summary`,
   )
+
+  const publishedFactCount = record.gameplay.mechanics.length
+    + record.gameplay.acquisition.length
+    + record.gameplay.usage.length
+    + record.gameplay.strategy.length
+  assert.ok(publishedFactCount > 0, `${key} must retain at least one published gameplay fact`)
 
   const expectedConfidence = record.trust_state === 'verified'
     || record.trust_state === 'confirmed'
@@ -190,4 +201,4 @@ const mithril = byKey.get('mithril')
 assert.equal(mithril.forge_id, 'item.mithril')
 assert.ok(!byKey.has('mythril'))
 
-console.log('Companion gameplay content recovery validated (75 enriched / 75 canonical items; trust/confidence aligned; 26 newly owner-verified; 0 research-needed gameplay gaps).')
+console.log('Companion gameplay content recovery validated (75 enriched / 75 canonical items; substantive facts present; trust/confidence aligned; 26 newly owner-verified; 0 research-needed gameplay gaps).')
