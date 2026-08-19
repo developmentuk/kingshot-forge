@@ -5,7 +5,12 @@ import {
   COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE2,
 } from './itemGameplayRecoveryPhase2.js'
 
-export const COMPANION_ITEM_GAMEPLAY = Object.freeze({
+import type {
+  CompanionItemGameplayContent,
+} from './itemGameplayContent.js'
+
+export const COMPANION_ITEM_GAMEPLAY:
+Readonly<Record<string, CompanionItemGameplayContent>> = Object.freeze({
   ...COMPANION_ITEM_GAMEPLAY_CONTENT,
   ...COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE2,
 })
