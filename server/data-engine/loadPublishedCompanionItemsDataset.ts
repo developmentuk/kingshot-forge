@@ -9,11 +9,31 @@ import {
 } from '../../shared/companion/itemProjection.js'
 
 import type {
+  CompanionItemRecord,
+} from '../../shared/companion/itemProjection.js'
+import type {
   DatasetLoadResult,
 } from './runner.js'
 
 function unique(values: readonly string[]): string[] {
   return [...new Set(values)]
+}
+
+function confidenceForTrust(
+  state: string | undefined,
+  fallback: CompanionItemRecord['confidence'],
+): CompanionItemRecord['confidence'] {
+  switch (state) {
+    case 'verified':
+    case 'confirmed':
+      return 'dataset_verified'
+    case 'provisional':
+      return 'relationship_derived'
+    case 'research_needed':
+      return 'experimental'
+    default:
+      return fallback
+  }
 }
 
 export async function loadPublishedCompanionItemsDataset():
@@ -33,6 +53,7 @@ Promise<DatasetLoadResult> {
         trust_label: gameplay.trustLabel ?? record.trust_label,
         verification_note:
           gameplay.verificationNote ?? record.verification_note,
+        confidence: confidenceForTrust(gameplay.trustState, record.confidence),
         confidence_label:
           gameplay.confidenceLabel ?? record.confidence_label,
       } : {}),
