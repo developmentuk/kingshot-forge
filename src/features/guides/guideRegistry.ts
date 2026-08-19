@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-troop-training-t1-t5-cost-time-guide',
+    path: '/guides/kingshot-troop-training-t1-t5-cost-time-guide',
+    title: 'Kingshot Troop Training: T1–T5 Cost, Time & Event-Point Guide',
+    shortTitle: 'Troop Training',
+    summary: 'Compare the supplied estimated T1–T5 Infantry, Lancer and Marksman costs, training times and calculator-default event points.',
+    icon: '🪖',
+    type: 'System guide',
+    tags: ['troops', 'troop training', 'T1', 'T5', 'Infantry', 'Lancer', 'Marksman', 'training time', 'KvK', 'HoG', 'TSG', 'resource management'],
+  },
+  {
     slug: 'kingshot-hero-xp-shard-progression-guide',
     path: '/guides/kingshot-hero-xp-shard-progression-guide',
     title: 'Kingshot Hero Progression: Lv.1–80 XP & Shard Cost Guide',
