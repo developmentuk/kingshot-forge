@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-export type GuideTheme = 'ice' | 'royal' | 'ocean' | 'mystic' | 'war' | 'ember' | 'polar'
+export type GuideTheme = 'ice' | 'royal' | 'ocean' | 'mystic' | 'war' | 'ember' | 'polar' | 'oasis'
 
 export type GuideConnection = {
   label: string
@@ -38,6 +38,6 @@ export type GuideRegistryEntry = {
   shortTitle: string
   summary: string
   icon: string
-  type: 'Event guide' | 'Hero guide'
+  type: 'Event guide' | 'Hero guide' | 'System guide'
   tags: string[]
 }
