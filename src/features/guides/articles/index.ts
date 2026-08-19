@@ -3,6 +3,7 @@ import { allianceBrawlGuide } from './allianceBrawl'
 import { champagneFairGuide } from './champagneFair'
 import { fishingTournamentGuide } from './fishingTournament'
 import { generation7HeroesGuide } from './generation7Heroes'
+import { governorGearGuide } from './governorGear'
 import { kingdomOfPowerGuide } from './kingdomOfPower'
 import { mastersGuide } from './masters'
 import { mysticDivinationGuide } from './mysticDivination'
@@ -23,6 +24,7 @@ const guideArticles: GuideArticleDefinition[] = [
   mastersGuide,
   generation7HeroesGuide,
   truegoldProgressionGuide,
+  governorGearGuide,
 ]
 
 export const guideArticlesBySlug: Record<string, GuideArticleDefinition> = Object.fromEntries(
