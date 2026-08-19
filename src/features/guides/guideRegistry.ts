@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-generation-7-heroes-ava-charles-wee-woo-guide',
+    path: '/guides/kingshot-generation-7-heroes-ava-charles-wee-woo-guide',
+    title: 'Kingshot Generation 7 Heroes: Ava, Charles & Wee & Woo Skill Guide',
+    shortTitle: 'Generation 7 Heroes',
+    summary: 'Compare Ava, Charles and Wee & Woo using Forge’s supplied Gen 7 skill verification and editorial review data, with source limits clearly preserved.',
+    icon: '🦸',
+    type: 'Hero guide',
+    tags: ['heroes', 'Generation 7', 'Ava', 'Charles', 'Wee & Woo', 'skill guide', 'damage amplification', 'defence', 'rallies', 'PvP'],
+  },
+  {
     slug: 'kingshot-masters-master-academy-guide',
     path: '/guides/kingshot-masters-master-academy-guide',
     title: 'Kingshot Masters: Master Academy, Affinity & Upgrade Priority Guide',
