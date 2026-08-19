@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-governor-charms-upgrade-cost-guide',
+    path: '/guides/kingshot-governor-charms-upgrade-cost-guide',
+    title: 'Kingshot Governor Charms: Lv.1–22 Cost, Stats & Power Guide',
+    shortTitle: 'Governor Charms',
+    summary: 'Plan all 22 Governor Charm levels with Charm Guides, Charm Designs, cumulative stat milestones, power gains and source confidence.',
+    icon: '✨',
+    type: 'System guide',
+    tags: ['Governor Charms', 'Charm Guides', 'Charm Designs', 'Lv.22', 'stats', 'power', 'F2P', 'Alliance Brawl', 'KvK', 'resource management'],
+  },
+  {
     slug: 'kingshot-governor-gear-upgrade-cost-guide',
     path: '/guides/kingshot-governor-gear-upgrade-cost-guide',
     title: 'Kingshot Governor Gear: Complete Upgrade Cost & Progression Guide',
