@@ -53,6 +53,18 @@ The gameplay catalogue can publish:
 
 The published `items` dataset merges the combined gameplay catalogue at load time.
 
+## Merge-readiness correction
+
+The merge-readiness review identified one internal contract inconsistency before merge: gameplay enrichment updated the public `trust_state` and confidence label but initially left the original machine-readable `confidence` value unchanged. Media-derived records could therefore have published `trust_state: verified` while still carrying `confidence: experimental`.
+
+The loader now derives machine confidence consistently from the effective gameplay trust state:
+
+- `verified` and `confirmed` → `dataset_verified`;
+- `provisional` → `relationship_derived`;
+- `research_needed` → `experimental`.
+
+The regression suite locks this agreement for every enriched item. It also now requires every one of the 75 enriched identities to publish at least one substantive fact across Mechanics, Acquisition, Usage or Strategy; a summary/source pointer alone cannot satisfy gameplay coverage.
+
 ## Phase 3 owner verification
 
 The final owner-verification source is persisted at:
@@ -169,8 +181,10 @@ This remains a governed recovery/integration change. Phase 3 facts are explicitl
 - the combined gameplay catalogue is exactly 75 identities;
 - the projection remains exactly 75 records;
 - every canonical record publishes structured gameplay/source fields;
+- every enriched identity publishes at least one substantive Mechanics, Acquisition, Usage or Strategy fact;
+- each record's machine-readable `confidence` agrees with its effective published trust state;
 - no record retains the media-only placeholder summary;
-- all 26 newly owner-verified records publish with `verified` trust state and existing governed media;
+- all 26 newly owner-verified records publish with `verified` trust state, `dataset_verified` machine confidence and existing governed media;
 - the Advanced/Alliance Teleporter distinction is locked;
 - Cesare's Aid Chest limits/reward facts are locked;
 - Mark of Valor keeps its stable Forge ID while publishing the corrected player-facing name;
