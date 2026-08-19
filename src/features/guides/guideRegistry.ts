@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-masters-master-academy-guide',
+    path: '/guides/kingshot-masters-master-academy-guide',
+    title: 'Kingshot Masters: Master Academy, Affinity & Upgrade Priority Guide',
+    shortTitle: 'Masters',
+    summary: 'Compare all six current Masters, their Affinity bonuses, F2P priorities, Manuscript investment and event specialisations.',
+    icon: '📜',
+    type: 'System guide',
+    tags: ['Masters', 'Master Academy', 'Affinity', 'Manuscripts', 'F2P', 'Pan', 'Valora', 'Roman', 'Cassia', 'Guinevere', 'Wilson', 'Bear Hunt', 'Swordland', 'Alliance events'],
+  },
+  {
     slug: 'kingshot-oasis-island-player-guide',
     path: '/guides/kingshot-oasis-island-player-guide',
     title: 'Kingshot Oasis Island: Complete Player & Progression Guide',
