@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-hero-xp-shard-progression-guide',
+    path: '/guides/kingshot-hero-xp-shard-progression-guide',
+    title: 'Kingshot Hero Progression: Lv.1–80 XP & Shard Cost Guide',
+    shortTitle: 'Hero Progression',
+    summary: 'Plan hero levels 1–80 with the supplied XP curve, deployment-capacity confidence boundary and clearly separated shard estimates.',
+    icon: '📈',
+    type: 'System guide',
+    tags: ['heroes', 'Hero XP', 'hero shards', 'Lv.80', 'star-up', 'deployment capacity', 'F2P', 'progression', 'resource management'],
+  },
+  {
     slug: 'kingshot-war-academy-research-truegold-dust-guide',
     path: '/guides/kingshot-war-academy-research-truegold-dust-guide',
     title: 'Kingshot War Academy: Research, Truegold Dust & T11 Guide',
