@@ -12,6 +12,7 @@ import { oasisIslandGuide } from './oasisIsland'
 import { swordlandGuide } from './swordland'
 import { truegoldProgressionGuide } from './truegoldProgression'
 import { twinStarAdventureGuide } from './twinStarAdventure'
+import { vipProgressionGuide } from './vipProgression'
 
 const guideArticles: GuideArticleDefinition[] = [
   champagneFairGuide,
@@ -27,6 +28,7 @@ const guideArticles: GuideArticleDefinition[] = [
   truegoldProgressionGuide,
   governorGearGuide,
   governorCharmsGuide,
+  vipProgressionGuide,
 ]
 
 export const guideArticlesBySlug: Record<string, GuideArticleDefinition> = Object.fromEntries(

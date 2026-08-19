@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-vip-1-12-xp-gem-cost-guide',
+    path: '/guides/kingshot-vip-1-12-xp-gem-cost-guide',
+    title: 'Kingshot VIP 1–12: VIP XP & Gem-Equivalent Cost Guide',
+    shortTitle: 'VIP Progression',
+    summary: 'Plan VIP 1–12 with the supplied VIP XP requirements, exact 1:2 Gem conversion and an explicit boundary around unsupported benefits.',
+    icon: '👑',
+    type: 'System guide',
+    tags: ['VIP', 'VIP 12', 'VIP XP', 'Gems', 'progression', 'gem budgeting', 'resource planning'],
+  },
+  {
     slug: 'kingshot-governor-charms-upgrade-cost-guide',
     path: '/guides/kingshot-governor-charms-upgrade-cost-guide',
     title: 'Kingshot Governor Charms: Lv.1–22 Cost, Stats & Power Guide',
