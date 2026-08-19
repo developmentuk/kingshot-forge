@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-oasis-island-player-guide',
+    path: '/guides/kingshot-oasis-island-player-guide',
+    title: 'Kingshot Oasis Island: Complete Player & Progression Guide',
+    shortTitle: 'Oasis Island',
+    summary: 'Plan Water Essence, Prosperity, Fountain and Reservoir progression, cactus clearing, treasure routes, building buffs and Golden Sunset.',
+    icon: '🌴',
+    type: 'System guide',
+    tags: ['Oasis Island', 'Water Essence', 'Prosperity', 'Fountain of Life', 'Reservoir', 'F2P', 'buildings', 'buffs', 'route planning', 'Golden Sunset'],
+  },
+  {
     slug: 'kingshot-kingdom-of-power-kvk-guide',
     path: '/guides/kingshot-kingdom-of-power-kvk-guide',
     title: 'Kingshot Kingdom of Power (KvK): Complete Prep & Battle Guide',
