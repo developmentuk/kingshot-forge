@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-truegold-tempered-truegold-building-guide',
+    path: '/guides/kingshot-truegold-tempered-truegold-building-guide',
+    title: 'Kingshot Truegold & Tempered Truegold: TG1–TG8 Building Cost Guide',
+    shortTitle: 'Truegold Progression',
+    summary: 'Plan TG1–TG8 building costs with governed Truegold and Tempered Truegold requirements, confidence notes and connected event timing.',
+    icon: '🔥',
+    type: 'System guide',
+    tags: ['Truegold', 'Tempered Truegold', 'TG1', 'TG6', 'TG8', 'buildings', 'Building Planner', 'KvK', 'Alliance Brawl', 'resource management', 'F2P'],
+  },
+  {
     slug: 'kingshot-generation-7-heroes-ava-charles-wee-woo-guide',
     path: '/guides/kingshot-generation-7-heroes-ava-charles-wee-woo-guide',
     title: 'Kingshot Generation 7 Heroes: Ava, Charles & Wee & Woo Skill Guide',
