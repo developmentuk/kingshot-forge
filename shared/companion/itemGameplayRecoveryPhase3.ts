@@ -18,15 +18,13 @@ const verified = (
 
 export const COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE3:
 Readonly<Record<string, CompanionItemGameplayContent>> = {
-  // Phase 3 intentionally overrides the earlier provisional Advanced Teleporter
-  // entry so the verified distinction from Alliance Teleporter is explicit.
   'advanced-teleporter': verified({
     summary:
       'A city-mobility item that lets the player manually choose a destination on the kingdom map before relocating the city.',
     category: 'teleporter',
     categoryLabel: 'Teleporter',
     verificationNote:
-      'The project owner verified the manual destination-selection function in game and online. This explicitly distinguishes Advanced Teleporter from Alliance Teleporter.',
+      'Owner verification explicitly distinguishes Advanced Teleporter manual destination selection from Alliance Teleporter.',
     mechanics: [
       'Allows the player to manually choose a destination on the kingdom map for city relocation.',
       'This manual-location function belongs to Advanced Teleporter, not Alliance Teleporter.',
@@ -47,7 +45,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'teleporter',
     categoryLabel: 'Teleporter',
     verificationNote:
-      'The project owner verified in game and online that Alliance Teleporter moves the town close to the Alliance Leader and does not provide manual map-location selection.',
+      'Owner verification confirms Alliance Teleporter relocates close to the Alliance Leader and does not provide manual map-location selection.',
     mechanics: [
       'Moves the town/city directly close to the Alliance Leader (R5) on the kingdom map.',
       'It does not let the player manually choose any location on the map; that is the Advanced Teleporter function.',
@@ -61,17 +59,17 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
 
   'ceasers-aid-chest': verified({
     summary:
-      'A Cesare’s Fury assistance chest earned for helping an ally defeat their Cesare Target, with a verified guaranteed speedup reward plus additional listed drop chances.',
+      'A Cesare’s Fury assistance chest earned for helping an ally defeat their Cesare Target.',
     category: 'event_reward_chest',
     categoryLabel: 'Event reward chest',
     verificationNote:
-      'The project owner verified the Cesare’s Fury assistance limits, chest contents and probabilities in game and online on 19 August 2026.',
+      'Owner verification confirms the assistance limits, contents and listed probabilities.',
     mechanics: [
       'Assisting an ally with their Cesare Target can award this chest up to 7 times per day and 21 chests across the event.',
       'Verified contents: 1 Mythic General Hero Shard (5%), 1 Epic General Hero Shard (20%), 100 Gems (25%), 1h General Speedup (20%), and 2 × 5m General Speedups (100%).',
     ],
     acquisition: [
-      'Earned during Cesare’s Fury by assisting an ally in defeating their Cesare Target, subject to the verified daily and event assistance limits.',
+      'Earned during Cesare’s Fury by assisting an ally in defeating their Cesare Target, subject to the verified daily and event limits.',
     ],
     usage: [
       'Open as a Cesare’s Fury reward chest for the listed shard, Gem and speedup rewards.',
@@ -86,7 +84,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'event_currency',
     categoryLabel: 'Event currency',
     verificationNote:
-      'The project owner verified the Swordland Summit prediction and Prediction Shop uses in game and online.',
+      'Owner verification confirms the Swordland Summit prediction and Prediction Shop uses.',
     mechanics: [
       'Used during Swordland Summit to predict a Match/Champion winner.',
       'Can instead be exchanged for rare items in the event Prediction Shop.',
@@ -104,7 +102,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'event_consumable',
     categoryLabel: 'Event consumable',
     verificationNote:
-      'The project owner verified the one-hour voyage-duration reduction in game and online.',
+      'Owner verification confirms the one-hour voyage-duration reduction.',
     mechanics: [
       'Shortens the active voyage duration by 1 hour during supported maritime/voyage events.',
     ],
@@ -116,12 +114,10 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
   }),
 
   'copper-horn': verified({
-    summary:
-      'A resident Master gift that grants +10 Affinity.',
+    summary: 'A resident Master gift that grants +10 Affinity.',
     category: 'master_gift',
     categoryLabel: 'Master gift',
-    verificationNote:
-      'The project owner verified the +10 Affinity value in game and online.',
+    verificationNote: 'Owner verification confirms the +10 Affinity value.',
     mechanics: [
       'Gifting a Copper Horn to a resident Master grants +10 Affinity.',
     ],
@@ -138,7 +134,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'event_key',
     categoryLabel: 'Event key',
     verificationNote:
-      'The project owner verified both the Buccaneer Bounty chest-opening use and key carry-over behaviour in game and online.',
+      'Owner verification confirms the Buccaneer Bounty chest-opening use and key carry-over behaviour.',
     mechanics: [
       'Unlocks event chests during Buccaneer Bounty.',
       'Unused Corsair Keys carry over to later Buccaneer Bounty event runs.',
@@ -159,7 +155,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'hero_gear_chest',
     categoryLabel: 'Hero Gear chest',
     verificationNote:
-      'The project owner verified the selection function and current Arena/event/pack acquisition routes in game and online.',
+      'Owner verification confirms the selection function and current Arena/event/pack acquisition routes.',
     mechanics: [
       'Allows selection of an exact Mythic (gold-tier) Hero Gear piece.',
       'Removes the random-drop uncertainty associated with non-selectable gear rewards.',
@@ -176,12 +172,10 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
   }),
 
   'elite-spices': verified({
-    summary:
-      'A high-value resident Master gift that grants +1,000 Affinity.',
+    summary: 'A high-value resident Master gift that grants +1,000 Affinity.',
     category: 'master_gift',
     categoryLabel: 'Master gift',
-    verificationNote:
-      'The project owner verified the +1,000 Affinity value in game and online.',
+    verificationNote: 'Owner verification confirms the +1,000 Affinity value.',
     mechanics: [
       'Gifting Elite Spices to a resident Master grants +1,000 Affinity.',
     ],
@@ -198,7 +192,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'governor_gear_chest',
     categoryLabel: 'Governor Gear material chest',
     verificationNote:
-      'The project owner verified the chest contents and current acquisition examples in game and online.',
+      'Owner verification confirms the chest contents and current acquisition examples.',
     mechanics: [
       'Contains Artisan’s Vision ×1, Gilded Threads ×4 and Satin ×400.',
     ],
@@ -219,7 +213,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'account_item',
     categoryLabel: 'Account item',
     verificationNote:
-      'The project owner verified the rename flow, 3–16 character rule, permitted standard characters and current Gem/Alliance Shop costs in game and online.',
+      'Owner verification confirms the rename flow, 3–16 character rule, permitted standard characters and current Gem/Alliance Shop costs.',
     mechanics: [
       'Current rename flow: Profile (top-left avatar) → Pencil Edit Icon → Enter New Name → Confirm.',
       'Verified name length is 3 to 16 characters, with standard letters, numbers and spaces permitted.',
@@ -236,12 +230,11 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
   }),
 
   'growth-manual': verified({
-    summary:
-      'A Pet progression resource used to level and advance Pets.',
+    summary: 'A Pet progression resource used to level and advance Pets.',
     category: 'pet_material',
     categoryLabel: 'Pet material',
     verificationNote:
-      'The project owner verified the Pet progression use and listed acquisition routes in game and online.',
+      'Owner verification confirms the Pet progression use and listed acquisition routes.',
     mechanics: [
       'Used to level up and advance Pets.',
     ],
@@ -263,7 +256,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'alliance_material',
     categoryLabel: 'Alliance material',
     verificationNote:
-      'The project owner verified the Intel Mission source, Bear Trap donation use and Level 5 +25% maximum attack-damage buff in game and online.',
+      'Owner verification confirms the Intel Mission source, Bear Trap donation use and Level 5 +25% maximum attack-damage buff.',
     mechanics: [
       'Donated to upgrade the Alliance Bear Trap/Pitfall building.',
       'Bear Trap upgrades increase the overall attack-damage buff against the beast for alliance members, reaching +25% at Level 5.',
@@ -284,7 +277,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'event_currency',
     categoryLabel: 'Event currency',
     verificationNote:
-      'The project owner verified the Swordland Summit prediction and shop uses in game and online.',
+      'Owner verification confirms the Swordland Summit prediction and shop uses.',
     mechanics: [
       'Used to predict match outcomes during Swordland Summit.',
       'Can be spent in the Prediction Shop for rewards.',
@@ -302,7 +295,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'event_currency',
     categoryLabel: 'Event currency',
     verificationNote:
-      'The project owner verified its Truegold Refinement sources, carry-over behaviour and exchange use in game and online.',
+      'Owner verification confirms the Truegold Refinement sources, carry-over behaviour and exchange use.',
     mechanics: [
       'Obtained during Truegold Refinement and retained in inventory between refinement cycles if unused.',
       'Exchanged for actual Truegold used by high-level Town Center and late-game building upgrades.',
@@ -321,14 +314,12 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
   }),
 
   'mark-of-valor-noble': verified({
-    name: 'Mark of Valor',
-    aliases: ['Mark Of Valor Noble'],
     summary:
       'A generation-locked Hall of Heroes currency used to summon generation-exclusive Mythic Heroes or redeem eligible past-generation shards.',
     category: 'event_currency',
     categoryLabel: 'Event currency',
     verificationNote:
-      'The project owner verified the Hall of Heroes use and generation-lock rules in game and online. The legacy identity key is retained, but `Noble` is not part of the player-facing item name.',
+      'Owner verification confirms the Hall of Heroes use and generation-lock rules. The legacy identity key remains stable, while the player-facing name is corrected separately to Mark of Valor.',
     mechanics: [
       'Spent during Hall of Heroes to summon/unlock generation-exclusive Mythic Heroes or redeem eligible past-generation shards.',
       'Marks are generation-locked: for example, Gen 1 Marks cannot be used directly on Gen 2 or Gen 3 Hero Banners.',
@@ -350,7 +341,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'shop_currency',
     categoryLabel: 'Shop currency',
     verificationNote:
-      'The project owner verified the current acquisition routes and the discount-saving strategy in game and online.',
+      'Owner verification confirms the acquisition routes and current discount-saving strategy.',
     mechanics: [
       'Used exclusively in the Mystery Shop.',
     ],
@@ -374,7 +365,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'decoration_material',
     categoryLabel: 'Decoration material',
     verificationNote:
-      'The project owner verified the 10:1 conversion and current source examples in game and online.',
+      'Owner verification confirms the 10:1 conversion and current source examples.',
     mechanics: [
       'Used for high-tier Mythic Decoration progression on Daybreak Island.',
       'Verified conversion rate: 10 components = 1 tier unit / upgrade piece.',
@@ -396,7 +387,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'pet_material',
     categoryLabel: 'Pet material',
     verificationNote:
-      'The project owner verified the cap-break use, acquisition routes and custom-chest quantity in game and online.',
+      'Owner verification confirms the cap-break use, acquisition routes and custom-chest quantity.',
     mechanics: [
       'Required to break through major Pet level caps, including the verified Level 10 → 11 example.',
     ],
@@ -420,7 +411,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'event_currency',
     categoryLabel: 'Event currency',
     verificationNote:
-      'The project owner verified the earning method, non-persistence and automatic conversion behaviour in game and online.',
+      'Owner verification confirms the earning method, non-persistence and automatic conversion behaviour.',
     mechanics: [
       'Earned by opening Buccaneer Bounty chests with Corsair Keys.',
       'Pearls do not carry over between event runs.',
@@ -442,7 +433,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'recruitment_item',
     categoryLabel: 'Recruitment item',
     verificationNote:
-      'The project owner verified the Advanced Recruitment function and listed acquisition routes in game and online.',
+      'Owner verification confirms the Advanced Recruitment function and listed acquisition routes.',
     mechanics: [
       'Consumes one Platinum Key to execute an Advanced Recruitment at the Recruit Hall.',
       'Advanced Recruitment can award hero shards, Hero XP, skill manuals and speedups.',
@@ -463,7 +454,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'pet_material',
     categoryLabel: 'Pet material',
     verificationNote:
-      'The project owner verified the milestone use, shop/event sources and custom-chest quantity in game and online.',
+      'Owner verification confirms the milestone use, shop/event sources and custom-chest quantity.',
     mechanics: [
       'Required for Pet promotion at major thresholds every 10 levels.',
       'Supports progression into higher Pet skill tiers.',
@@ -481,12 +472,11 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
   }),
 
   'silver-goblet': verified({
-    summary:
-      'A luxury resident Master gift that grants +100 Affinity.',
+    summary: 'A luxury resident Master gift that grants +100 Affinity.',
     category: 'master_gift',
     categoryLabel: 'Master gift',
     verificationNote:
-      'The project owner verified the +100 Affinity value and current source examples in game and online.',
+      'Owner verification confirms the +100 Affinity value and current source examples.',
     mechanics: [
       'Gifting a Silver Goblet to a resident Master grants +100 Affinity.',
     ],
@@ -506,7 +496,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'recovery_item',
     categoryLabel: 'Troop recovery item',
     verificationNote:
-      'The project owner verified the Enlistment Office use, Infirmary-full activation context, up-to-70% recovery mechanic and wait bypass in game and online.',
+      'Owner verification confirms the Enlistment Office use, Infirmary-full activation context, up-to-70% recovery mechanic and wait bypass.',
     mechanics: [
       'Used at the Enlistment Office to recover eligible lost troops immediately instead of waiting for natural Loyalty Point accumulation.',
       'The Enlistment recovery mechanic activates when the Infirmary reaches maximum capacity during battle and can save up to 70% of lost troops.',
@@ -525,7 +515,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'transfer_item',
     categoryLabel: 'Kingdom Transfer item',
     verificationNote:
-      'The project owner verified the current 1–50 pass range, power/Governor Gear dependency and Alliance Shop/pack sources in game and online.',
+      'Owner verification confirms the current 1–50 pass range, power/Governor Gear dependency and Alliance Shop/pack sources.',
     mechanics: [
       'Required to migrate the town to another kingdom during Kingdom Transfer.',
       'Current requirement ranges from 1 to 50 passes based on overall Account Power / Governor Gear statistics.',
@@ -550,7 +540,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'event_currency',
     categoryLabel: 'Trial currency',
     verificationNote:
-      'The project owner verified the Town Center unlock, stage-clear earning method and representative Trial Shop rewards in game and online.',
+      'Owner verification confirms the Town Center unlock, stage-clear earning method and representative Trial Shop rewards.',
     mechanics: [
       'Earned from clearing Mystic Trial stages.',
       'Mystic Trial unlocks at Town Center Level 19.',
@@ -568,7 +558,7 @@ Readonly<Record<string, CompanionItemGameplayContent>> = {
     category: 'event_material',
     categoryLabel: 'Event material',
     verificationNote:
-      'The project owner verified the Champion’s Way source, Cesare’s Elite Rebel use and carry-over behaviour in game and online.',
+      'Owner verification confirms the Champion’s Way source, Cesare’s Elite Rebel use and carry-over behaviour.',
     mechanics: [
       'Dropped by defeating standard beasts on the world map during Champion’s Way.',
       'Used to summon and rally Cesare’s Elite Rebels.',
