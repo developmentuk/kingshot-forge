@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { guideArticlesBySlug } from './articles'
 import './guideArticle.css'
+import './oasisGuide.css'
 
 const connectionLabels = {
   guide: 'Related guide',
