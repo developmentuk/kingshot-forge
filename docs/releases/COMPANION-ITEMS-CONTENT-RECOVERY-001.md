@@ -130,6 +130,7 @@ This change does not expand or renumber the existing media-derived identity set.
 - `item.mithril` remains the canonical identity.
 - `item.mythril` is forbidden.
 - Existing approved media/checksum mappings are not replaced.
+- Records keep their existing media/no-media state; Phase 3 specifically confirms media for all 26 identities it adds.
 - All 75 records remain visible.
 - Gameplay completion does not imply that every earlier Phase 1/2 fact has the same trust label; each record retains the trust state supported by its source.
 
