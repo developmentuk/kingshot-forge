@@ -4,6 +4,14 @@ import type {
   CompanionItemTrustState,
 } from '../../../shared/companion/itemProjection'
 
+export type CompanionItemGameplayView = {
+  mechanics: string[]
+  acquisition: string[]
+  usage: string[]
+  strategy: string[]
+  sources: string[]
+}
+
 export type CompanionItemViewRecord = {
   id: string
   key: string
@@ -30,6 +38,7 @@ export type CompanionItemViewRecord = {
   mediaWidth: number | null
   mediaHeight: number | null
   relationships: CompanionItemRelationship[]
+  gameplay: CompanionItemGameplayView
   canonicalUrl: string
   tags: string[]
   confidenceLabel: string
@@ -71,6 +80,26 @@ function list(value: unknown): string[] {
       .map((item) => item.trim())
       .filter(Boolean)
     : []
+}
+
+function gameplay(value: unknown): CompanionItemGameplayView {
+  if (!isObject(value)) {
+    return {
+      mechanics: [],
+      acquisition: [],
+      usage: [],
+      strategy: [],
+      sources: [],
+    }
+  }
+
+  return {
+    mechanics: list(value.mechanics),
+    acquisition: list(value.acquisition),
+    usage: list(value.usage),
+    strategy: list(value.strategy),
+    sources: list(value.sources),
+  }
 }
 
 function trustState(value: unknown): CompanionItemTrustState {
@@ -150,6 +179,7 @@ export function normaliseCompanionItems(
       mediaWidth: typeof candidate.media_width === 'number' ? candidate.media_width : null,
       mediaHeight: typeof candidate.media_height === 'number' ? candidate.media_height : null,
       relationships: relationships(candidate.companion_relationships),
+      gameplay: gameplay(candidate.gameplay),
       canonicalUrl: text(candidate.canonical_url)
         || `/companion/items/${encodeURIComponent(key)}`,
       tags: list(candidate.tags),
