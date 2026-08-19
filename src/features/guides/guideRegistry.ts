@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-war-academy-research-truegold-dust-guide',
+    path: '/guides/kingshot-war-academy-research-truegold-dust-guide',
+    title: 'Kingshot War Academy: Research, Truegold Dust & T11 Guide',
+    shortTitle: 'War Academy',
+    summary: 'Plan the supplied 30-technology War Academy tree with troop-specific research, Truegold Dust, resources, time and T11 unlock paths.',
+    icon: '🧪',
+    type: 'System guide',
+    tags: ['War Academy', 'Truegold Dust', 'T11', 'research', 'Infantry', 'Cavalry', 'Archer', 'troops', 'KvK', 'Alliance Brawl', 'resource management'],
+  },
+  {
     slug: 'kingshot-vip-1-12-xp-gem-cost-guide',
     path: '/guides/kingshot-vip-1-12-xp-gem-cost-guide',
     title: 'Kingshot VIP 1–12: VIP XP & Gem-Equivalent Cost Guide',
