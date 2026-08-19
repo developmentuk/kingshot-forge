@@ -4,15 +4,25 @@ import {
 import {
   COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE2,
 } from './itemGameplayRecoveryPhase2.js'
+import {
+  COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE3,
+} from './itemGameplayRecoveryPhase3.js'
 
 import type {
   CompanionItemGameplayContent,
 } from './itemGameplayContent.js'
 
+export type CompanionItemGameplayCatalogueEntry =
+  CompanionItemGameplayContent & {
+    name?: string
+    aliases?: readonly string[]
+  }
+
 export const COMPANION_ITEM_GAMEPLAY:
-Readonly<Record<string, CompanionItemGameplayContent>> = Object.freeze({
+Readonly<Record<string, CompanionItemGameplayCatalogueEntry>> = Object.freeze({
   ...COMPANION_ITEM_GAMEPLAY_CONTENT,
   ...COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE2,
+  ...COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE3,
 })
 
 export const COMPANION_ITEM_GAMEPLAY_PHASE1_KEYS = Object.freeze(
@@ -21,4 +31,8 @@ export const COMPANION_ITEM_GAMEPLAY_PHASE1_KEYS = Object.freeze(
 
 export const COMPANION_ITEM_GAMEPLAY_PHASE2_KEYS = Object.freeze(
   Object.keys(COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE2),
+)
+
+export const COMPANION_ITEM_GAMEPLAY_PHASE3_KEYS = Object.freeze(
+  Object.keys(COMPANION_ITEM_GAMEPLAY_RECOVERY_PHASE3),
 )
