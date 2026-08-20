@@ -7,6 +7,7 @@ import { generation7HeroesGuide } from './generation7Heroes'
 import { governorCharmsGuide } from './governorCharms'
 import { governorGearGuide } from './governorGear'
 import { heroProgressionGuide } from './heroProgression'
+import { heroRoleTierGuide } from './heroRoleTier'
 import { kingdomOfPowerGuide } from './kingdomOfPower'
 import { kvkScoringGuide } from './kvkScoring'
 import { mastersGuide } from './masters'
@@ -37,6 +38,7 @@ const guideArticles: GuideArticleDefinition[] = [
   vipProgressionGuide,
   warAcademyGuide,
   heroProgressionGuide,
+  heroRoleTierGuide,
   troopTrainingGuide,
   buildingProgressionGuide,
 ]

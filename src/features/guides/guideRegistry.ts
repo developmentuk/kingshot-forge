@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-heroes-gen1-gen6-role-tier-reference',
+    path: '/guides/kingshot-heroes-gen1-gen6-role-tier-reference',
+    title: 'Kingshot Heroes Gen 1–6: Role, Tier & F2P Reference',
+    shortTitle: 'Heroes Gen 1–6',
+    summary: 'Compare the supplied 27-hero Gen 1–6 roster by verified identity fields and clearly separated editorial Rally, Garrison, Bear and Joiner tiers.',
+    icon: '🦸',
+    type: 'Hero guide',
+    tags: ['heroes', 'Generation 1', 'Generation 6', 'tier list', 'rally', 'garrison', 'Bear Hunt', 'joiner', 'F2P', 'Infantry', 'Cavalry', 'Archer'],
+  },
+  {
     slug: 'kingshot-kvk-preparation-scoring-guide',
     path: '/guides/kingshot-kvk-preparation-scoring-guide',
     title: 'Kingshot KvK Preparation: Complete 5-Day Scoring Reference',
