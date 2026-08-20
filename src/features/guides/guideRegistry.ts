@@ -8,7 +8,7 @@ export const guideRegistry: GuideRegistryEntry[] = [
     shortTitle: 'KvK Prep Scoring',
     summary: 'Use all 32 supplied KvK Preparation scoring rows across five days, with repeated-resource opportunities and explicit source-confidence boundaries.',
     icon: '📊',
-    type: 'Event reference',
+    type: 'Event guide',
     tags: ['KvK', 'Kingdom of Power', 'prep', 'scoring', 'Truegold', 'Charms', 'Mithril', 'Forgehammer', 'Hero Roulette', 'troops', 'Intel Missions', 'resource management'],
   },
   {
