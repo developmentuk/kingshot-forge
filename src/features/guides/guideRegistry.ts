@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-hero-gear-ascension-imbuement-guide',
+    path: '/guides/kingshot-hero-gear-ascension-imbuement-guide',
+    title: 'Kingshot Hero Gear Ascension & Imbuement: Mithril Progression Guide',
+    shortTitle: 'Hero Gear Ascension',
+    summary: 'Understand the current official Hero Gear Ascension and Imbuement rules, Mithril checkpoints, material boundaries and safe upgrade planning.',
+    icon: '⚔️',
+    type: 'System guide',
+    tags: ['Hero Gear', 'Gear Ascension', 'Gear Imbuement', 'Mithril', 'Mythic Gear', 'Legendary Gear', 'Enhancement Level', 'Mastery Level', 'heroes', 'progression', 'F2P', 'resource management'],
+  },
+  {
     slug: 'kingshot-mystic-trial-guide',
     path: '/guides/kingshot-mystic-trial-guide',
     title: 'Kingshot Mystic Trial: Zones, Raid, Trial Crystals & Formation Guide',
