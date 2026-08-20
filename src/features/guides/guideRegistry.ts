@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-kingdom-transfer-guide',
+    path: '/guides/kingshot-kingdom-transfer-guide',
+    title: 'Kingshot Kingdom Transfer: Eligibility, Transfer Passes & Move Checklist',
+    shortTitle: 'Kingdom Transfer',
+    summary: 'Check transfer eligibility, Power Cap rules, Transfer Pass costs, invite types, kingdom quotas and the permanent-move checklist before changing Kingdom.',
+    icon: '🌍',
+    type: 'Event guide',
+    tags: ['Kingdom Transfer', 'Transfer Pass', 'Power Cap', 'Special Invite', 'Ordinary Invite', 'Leading Kingdom', 'Transfer Hub', 'Kingdom', 'resources', 'F2P'],
+  },
+  {
     slug: 'kingshot-tri-alliance-clash-guide',
     path: '/guides/kingshot-tri-alliance-clash-guide',
     title: 'Kingshot Tri-Alliance Clash: Registration, Matchmaking & Battlefield Strategy Guide',
