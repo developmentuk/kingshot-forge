@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-mystic-trial-guide',
+    path: '/guides/kingshot-mystic-trial-guide',
+    title: 'Kingshot Mystic Trial: Zones, Raid, Trial Crystals & Formation Guide',
+    shortTitle: 'Mystic Trial',
+    summary: 'Use the six Mystic Trial zones as a weekly account check, unlock Raid, spend Trial Crystals carefully and tune formations with official rules separated from community starting ratios.',
+    icon: '🔮',
+    type: 'System guide',
+    tags: ['Mystic Trial', 'Trial Crystal', 'Raid', 'Coliseum', 'Forest of Life', 'Crystal Cave', 'Knowledge Nexus', 'Molten Fort', 'Radiant Spire', 'Hero Gear', 'Governor Charms', 'Governor Gear', 'War Academy', 'F2P'],
+  },
+  {
     slug: 'kingshot-kingdom-transfer-guide',
     path: '/guides/kingshot-kingdom-transfer-guide',
     title: 'Kingshot Kingdom Transfer: Eligibility, Transfer Passes & Move Checklist',
@@ -126,7 +136,7 @@ export const guideRegistry: GuideRegistryEntry[] = [
     path: '/guides/kingshot-governor-gear-upgrade-cost-guide',
     title: 'Kingshot Governor Gear: Complete Upgrade Cost & Progression Guide',
     shortTitle: 'Governor Gear',
-    summary: 'Plan all 58 Governor Gear steps from Green to Red T6 with Satin, Gilded Threads, Artisan’s Vision, stat milestones, power and confidence.',
+    summary: 'Plan all 58 Governor Gear steps from Green to Red T6 with Satin, Gilded Threads and Artisan’s Vision costs, cumulative Attack/Defence bonuses, per-piece power and source confidence.',
     icon: '⚒️',
     type: 'System guide',
     tags: ['Governor Gear', 'Satin', 'Gilded Threads', 'Artisan’s Vision', 'Red T6', 'gear', 'F2P', 'Alliance Brawl', 'KvK', 'resource management', 'power'],
