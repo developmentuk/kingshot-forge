@@ -16,6 +16,7 @@ import { mastersGuide } from './masters'
 import { mysticDivinationGuide } from './mysticDivination'
 import { oasisIslandGuide } from './oasisIsland'
 import { swordlandGuide } from './swordland'
+import { triAllianceClashGuide } from './triAllianceClash'
 import { troopTrainingGuide } from './troopTraining'
 import { truegoldProgressionGuide } from './truegoldProgression'
 import { twinStarAdventureGuide } from './twinStarAdventure'
@@ -23,6 +24,7 @@ import { vipProgressionGuide } from './vipProgression'
 import { warAcademyGuide } from './warAcademy'
 
 const guideArticles: GuideArticleDefinition[] = [
+  triAllianceClashGuide,
   hallOfGovernorsGuide,
   bearHuntGuide,
   champagneFairGuide,

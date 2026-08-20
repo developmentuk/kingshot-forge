@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-tri-alliance-clash-guide',
+    path: '/guides/kingshot-tri-alliance-clash-guide',
+    title: 'Kingshot Tri-Alliance Clash: Registration, Matchmaking & Battlefield Strategy Guide',
+    shortTitle: 'Tri-Alliance Clash',
+    summary: 'Prepare both legions, understand official matchmaking, conserve battlefield energy and coordinate lanes, Garrisons and the Temple of Tides.',
+    icon: '⚔️',
+    type: 'Event guide',
+    tags: ['Tri-Alliance Clash', 'alliance', 'PvP', 'Temple of Tides', 'Garrisons', 'legions', 'matchmaking', 'energy', 'battlefield', 'F2P', 'rallies', 'map control'],
+  },
+  {
     slug: 'kingshot-hall-of-governors-hog-guide',
     path: '/guides/kingshot-hall-of-governors-hog-guide',
     title: 'Kingshot Hall of Governors (HoG): Stages, Scoring & Stockpile Guide',
