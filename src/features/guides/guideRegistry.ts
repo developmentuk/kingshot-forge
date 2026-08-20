@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-hall-of-governors-hog-guide',
+    path: '/guides/kingshot-hall-of-governors-hog-guide',
+    title: 'Kingshot Hall of Governors (HoG): Stages, Scoring & Stockpile Guide',
+    shortTitle: 'Hall of Governors',
+    summary: 'Plan HoG 1–5 stages, current troop and hero scoring, Amadeus/Hilde cycles and stage-specific resource stockpiles with live-ops caveats.',
+    icon: '🏆',
+    type: 'Event guide',
+    tags: ['Hall of Governors', 'HoG', 'Amadeus', 'Hilde', 'Hero Roulette', 'troops', 'Governor Gear', 'Governor Charms', 'Forgehammer', 'Widgets', 'speedups', 'F2P', 'leaderboard', 'resource management'],
+  },
+  {
     slug: 'kingshot-bear-hunt-alliance-rally-guide',
     path: '/guides/kingshot-bear-hunt-alliance-rally-guide',
     title: 'Kingshot Bear Hunt: Rally, Joiner & Alliance Strategy Guide',
