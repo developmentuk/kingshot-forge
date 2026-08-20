@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-mystic-trial-guide',
+    path: '/guides/kingshot-mystic-trial-guide',
+    title: 'Kingshot Mystic Trial: Zones, Raid, Trial Crystals & Formation Guide',
+    shortTitle: 'Mystic Trial',
+    summary: 'Use the six Mystic Trial zones as a weekly account check, unlock Raid, spend Trial Crystals carefully and tune formations with official rules separated from community starting ratios.',
+    icon: '🔮',
+    type: 'System guide',
+    tags: ['Mystic Trial', 'Trial Crystal', 'Raid', 'Coliseum', 'Forest of Life', 'Crystal Cave', 'Knowledge Nexus', 'Molten Fort', 'Radiant Spire', 'Hero Gear', 'Governor Charms', 'Governor Gear', 'War Academy', 'F2P'],
+  },
+  {
     slug: 'kingshot-kingdom-transfer-guide',
     path: '/guides/kingshot-kingdom-transfer-guide',
     title: 'Kingshot Kingdom Transfer: Eligibility, Transfer Passes & Move Checklist',

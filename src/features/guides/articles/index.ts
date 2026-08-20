@@ -15,6 +15,7 @@ import { kingdomTransferGuide } from './kingdomTransfer'
 import { kvkScoringGuide } from './kvkScoring'
 import { mastersGuide } from './masters'
 import { mysticDivinationGuide } from './mysticDivination'
+import { mysticTrialGuide } from './mysticTrial'
 import { oasisIslandGuide } from './oasisIsland'
 import { swordlandGuide } from './swordland'
 import { triAllianceClashGuide } from './triAllianceClash'
@@ -25,6 +26,7 @@ import { vipProgressionGuide } from './vipProgression'
 import { warAcademyGuide } from './warAcademy'
 
 const guideArticles: GuideArticleDefinition[] = [
+  mysticTrialGuide,
   kingdomTransferGuide,
   triAllianceClashGuide,
   hallOfGovernorsGuide,
