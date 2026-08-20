@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-kvk-preparation-scoring-guide',
+    path: '/guides/kingshot-kvk-preparation-scoring-guide',
+    title: 'Kingshot KvK Preparation: Complete 5-Day Scoring Reference',
+    shortTitle: 'KvK Prep Scoring',
+    summary: 'Use all 32 supplied KvK Preparation scoring rows across five days, with repeated-resource opportunities and explicit source-confidence boundaries.',
+    icon: '📊',
+    type: 'Event guide',
+    tags: ['KvK', 'Kingdom of Power', 'prep', 'scoring', 'Truegold', 'Charms', 'Mithril', 'Forgehammer', 'Hero Roulette', 'troops', 'Intel Missions', 'resource management'],
+  },
+  {
     slug: 'kingshot-building-upgrade-cost-time-guide',
     path: '/guides/kingshot-building-upgrade-cost-time-guide',
     title: 'Kingshot Buildings: Lv.1–30 Upgrade Cost & Time Guide',

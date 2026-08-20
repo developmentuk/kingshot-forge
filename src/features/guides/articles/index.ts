@@ -8,6 +8,7 @@ import { governorCharmsGuide } from './governorCharms'
 import { governorGearGuide } from './governorGear'
 import { heroProgressionGuide } from './heroProgression'
 import { kingdomOfPowerGuide } from './kingdomOfPower'
+import { kvkScoringGuide } from './kvkScoring'
 import { mastersGuide } from './masters'
 import { mysticDivinationGuide } from './mysticDivination'
 import { oasisIslandGuide } from './oasisIsland'
@@ -24,6 +25,7 @@ const guideArticles: GuideArticleDefinition[] = [
   fishingTournamentGuide,
   mysticDivinationGuide,
   kingdomOfPowerGuide,
+  kvkScoringGuide,
   allianceBrawlGuide,
   twinStarAdventureGuide,
   oasisIslandGuide,
