@@ -7,6 +7,7 @@ import { fishingTournamentGuide } from './fishingTournament'
 import { generation7HeroesGuide } from './generation7Heroes'
 import { governorCharmsGuide } from './governorCharms'
 import { governorGearGuide } from './governorGear'
+import { hallOfGovernorsGuide } from './hallOfGovernors'
 import { heroProgressionGuide } from './heroProgression'
 import { heroRoleTierGuide } from './heroRoleTier'
 import { kingdomOfPowerGuide } from './kingdomOfPower'
@@ -22,6 +23,7 @@ import { vipProgressionGuide } from './vipProgression'
 import { warAcademyGuide } from './warAcademy'
 
 const guideArticles: GuideArticleDefinition[] = [
+  hallOfGovernorsGuide,
   bearHuntGuide,
   champagneFairGuide,
   swordlandGuide,
