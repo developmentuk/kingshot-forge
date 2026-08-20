@@ -11,6 +11,7 @@ import { hallOfGovernorsGuide } from './hallOfGovernors'
 import { heroProgressionGuide } from './heroProgression'
 import { heroRoleTierGuide } from './heroRoleTier'
 import { kingdomOfPowerGuide } from './kingdomOfPower'
+import { kingdomTransferGuide } from './kingdomTransfer'
 import { kvkScoringGuide } from './kvkScoring'
 import { mastersGuide } from './masters'
 import { mysticDivinationGuide } from './mysticDivination'
@@ -24,6 +25,7 @@ import { vipProgressionGuide } from './vipProgression'
 import { warAcademyGuide } from './warAcademy'
 
 const guideArticles: GuideArticleDefinition[] = [
+  kingdomTransferGuide,
   triAllianceClashGuide,
   hallOfGovernorsGuide,
   bearHuntGuide,
