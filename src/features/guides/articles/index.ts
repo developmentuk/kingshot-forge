@@ -1,5 +1,6 @@
 import type { GuideArticleDefinition } from '../guideTypes'
 import { allianceBrawlGuide } from './allianceBrawl'
+import { buildingProgressionGuide } from './buildingProgression'
 import { champagneFairGuide } from './champagneFair'
 import { fishingTournamentGuide } from './fishingTournament'
 import { generation7HeroesGuide } from './generation7Heroes'
@@ -35,6 +36,7 @@ const guideArticles: GuideArticleDefinition[] = [
   warAcademyGuide,
   heroProgressionGuide,
   troopTrainingGuide,
+  buildingProgressionGuide,
 ]
 
 export const guideArticlesBySlug: Record<string, GuideArticleDefinition> = Object.fromEntries(
