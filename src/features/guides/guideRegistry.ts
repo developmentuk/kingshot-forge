@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-building-upgrade-cost-time-guide',
+    path: '/guides/kingshot-building-upgrade-cost-time-guide',
+    title: 'Kingshot Buildings: Lv.1–30 Upgrade Cost & Time Guide',
+    shortTitle: 'Building Progression',
+    summary: 'Plan Town Center, War Academy, Barracks, Infirmary and Storehouse upgrades from Lv.1 to Lv.30 with source-governed costs and raw build times.',
+    icon: '🏰',
+    type: 'System guide',
+    tags: ['buildings', 'Town Center', 'War Academy', 'Barracks', 'Infirmary', 'Storehouse', 'Lv.30', 'Building Planner', 'resources', 'build time', 'KvK', 'Alliance Brawl'],
+  },
+  {
     slug: 'kingshot-troop-training-t1-t5-cost-time-guide',
     path: '/guides/kingshot-troop-training-t1-t5-cost-time-guide',
     title: 'Kingshot Troop Training: T1–T5 Cost, Time & Event-Point Guide',
