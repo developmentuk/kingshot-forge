@@ -136,7 +136,7 @@ export const guideRegistry: GuideRegistryEntry[] = [
     path: '/guides/kingshot-governor-gear-upgrade-cost-guide',
     title: 'Kingshot Governor Gear: Complete Upgrade Cost & Progression Guide',
     shortTitle: 'Governor Gear',
-    summary: 'Plan all 58 Governor Gear steps from Green to Red T6 with Satin, Gilded Threads and Artisan’s Vision costs, cumulative Attack/Defence bonuses, per-piece power and source confidence.',
+    summary: 'Plan all 58 Governor Gear steps from Green to Red T6 with Satin, Gilded Threads, Artisan’s Vision, stat milestones, power and confidence.',
     icon: '⚒️',
     type: 'System guide',
     tags: ['Governor Gear', 'Satin', 'Gilded Threads', 'Artisan’s Vision', 'Red T6', 'gear', 'F2P', 'Alliance Brawl', 'KvK', 'resource management', 'power'],
