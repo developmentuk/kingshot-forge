@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-bear-hunt-alliance-rally-guide',
+    path: '/guides/kingshot-bear-hunt-alliance-rally-guide',
+    title: 'Kingshot Bear Hunt: Rally, Joiner & Alliance Strategy Guide',
+    shortTitle: 'Bear Hunt',
+    summary: 'Run a cleaner Bear Hunt with official cooldown and alliance rules separated from community rally, joiner, formation and staggered-wave strategy.',
+    icon: '🐻',
+    type: 'Event guide',
+    tags: ['Bear Hunt', 'Bear Trap', 'Raging Bear', 'alliance', 'rallies', 'joiners', 'heroes', 'Forgehammer', 'Valora', 'F2P', 'staggered rallies'],
+  },
+  {
     slug: 'kingshot-heroes-gen1-gen6-role-tier-reference',
     path: '/guides/kingshot-heroes-gen1-gen6-role-tier-reference',
     title: 'Kingshot Heroes Gen 1–6: Role, Tier & F2P Reference',

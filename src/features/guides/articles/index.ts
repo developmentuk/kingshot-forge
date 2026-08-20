@@ -1,5 +1,6 @@
 import type { GuideArticleDefinition } from '../guideTypes'
 import { allianceBrawlGuide } from './allianceBrawl'
+import { bearHuntGuide } from './bearHunt'
 import { buildingProgressionGuide } from './buildingProgression'
 import { champagneFairGuide } from './champagneFair'
 import { fishingTournamentGuide } from './fishingTournament'
@@ -21,6 +22,7 @@ import { vipProgressionGuide } from './vipProgression'
 import { warAcademyGuide } from './warAcademy'
 
 const guideArticles: GuideArticleDefinition[] = [
+  bearHuntGuide,
   champagneFairGuide,
   swordlandGuide,
   fishingTournamentGuide,
