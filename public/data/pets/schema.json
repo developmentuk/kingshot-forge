@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksforge.app/data/pets/schema.json",
+  "title": "Kingshot Forge PETS-001A split dataset contract",
+  "description": "Schema definitions for the PETS-001A metadata, compact pet identity and shared progression curve documents.",
+  "$defs": {
+    "levelRow": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 2, "maximum": 100 },
+        { "type": "integer", "minimum": 0 },
+        { "type": ["integer", "null"], "minimum": 0 },
+        { "type": ["integer", "null"], "minimum": 0 },
+        { "type": ["integer", "null"], "minimum": 0 }
+      ],
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "skillRow": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 1, "maximum": 10 },
+        { "type": "string", "minLength": 1 },
+        { "type": ["string", "null"] }
+      ],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "media": {
+      "type": "object",
+      "required": ["status", "path", "filename", "originalFilename", "rights", "sprite"],
+      "properties": {
+        "status": { "enum": ["available", "pending"] },
+        "path": { "type": ["string", "null"] },
+        "filename": { "type": ["string", "null"] },
+        "originalFilename": { "type": ["string", "null"] },
+        "rights": { "type": ["string", "null"] },
+        "sprite": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "array",
+              "prefixItems": [
+                { "type": "integer", "minimum": 0, "maximum": 3 },
+                { "type": "integer", "minimum": 0, "maximum": 3 }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "pet": {
+      "type": "object",
+      "required": ["key", "name", "gen", "max", "unlock", "summary", "skill", "notes", "media", "curve"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string", "minLength": 1 },
+        "gen": { "type": "integer", "minimum": 1, "maximum": 7 },
+        "max": { "enum": [50, 60, 70, 80, 100] },
+        "unlock": {
+          "type": "array",
+          "prefixItems": [
+            { "type": "string", "minLength": 1 },
+            { "type": ["integer", "null"] },
+            { "const": "community_observation" }
+          ],
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "summary": { "type": ["string", "null"] },
+        "skill": {
+          "type": "object",
+          "required": ["name", "description", "cooldown", "effect", "progression"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "cooldown": { "type": ["string", "null"] },
+            "effect": { "type": ["string", "null"] },
+            "progression": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/skillRow" } }
+          },
+          "additionalProperties": false
+        },
+        "notes": { "type": "array", "items": { "type": "string" } },
+        "media": { "$ref": "#/$defs/media" },
+        "curve": { "enum": ["max-50", "max-60", "max-70", "max-80", "max-100"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}
