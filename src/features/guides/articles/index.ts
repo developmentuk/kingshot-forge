@@ -18,6 +18,7 @@ import { mastersGuide } from './masters'
 import { mysticDivinationGuide } from './mysticDivination'
 import { mysticTrialGuide } from './mysticTrial'
 import { oasisIslandGuide } from './oasisIsland'
+import { petSystemGuide } from './petSystem'
 import { swordlandGuide } from './swordland'
 import { triAllianceClashGuide } from './triAllianceClash'
 import { troopTrainingGuide } from './troopTraining'
@@ -27,6 +28,7 @@ import { vipProgressionGuide } from './vipProgression'
 import { warAcademyGuide } from './warAcademy'
 
 const guideArticles: GuideArticleDefinition[] = [
+  petSystemGuide,
   heroGearAscensionGuide,
   mysticTrialGuide,
   kingdomTransferGuide,

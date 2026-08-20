@@ -2,6 +2,16 @@ import type { GuideRegistryEntry } from './guideTypes'
 
 export const guideRegistry: GuideRegistryEntry[] = [
   {
+    slug: 'kingshot-pet-system-refinement-guide',
+    path: '/guides/kingshot-pet-system-refinement-guide',
+    title: 'Kingshot Pets: Unlocks, Refinement, Taming Marks & F2P Guide',
+    shortTitle: 'Pet System',
+    summary: 'Understand official Pet access, daily limits, material roles and refinement safeguards, with community unlock timelines kept clearly separate.',
+    icon: '🐾',
+    type: 'System guide',
+    tags: ['Pets', 'Pet System', 'Pet Food', 'Taming Marks', 'Common Taming Mark', 'Advanced Taming Mark', 'Growth Manual', 'Nutrient Potion', 'Promotion Medallion', 'refinement', 'F2P', 'KvK', 'resource management'],
+  },
+  {
     slug: 'kingshot-hero-gear-ascension-imbuement-guide',
     path: '/guides/kingshot-hero-gear-ascension-imbuement-guide',
     title: 'Kingshot Hero Gear Ascension & Imbuement: Mithril Progression Guide',
