@@ -126,6 +126,13 @@ export default function CompanionIndexPage() {
               <p>Browse published hero roles, ratings, skills and progression guidance.</p>
             </div>
           </Link>
+          <Link to="/companion/pets" className="companion-family-card">
+            <span aria-hidden="true">🐾</span>
+            <div>
+              <h3>Pet Companion</h3>
+              <p>Browse all 14 governed Pet identities, skills, progression curves, refinement coverage and cleared artwork.</p>
+            </div>
+          </Link>
         </div>
       </section>
 
