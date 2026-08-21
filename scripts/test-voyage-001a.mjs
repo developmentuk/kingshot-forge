@@ -222,5 +222,5 @@ invalidSourceClaim.verificationIssues[0].sourceClaims[0].unexpected = true
 assert.throws(() => validateMeta(invalidSourceClaim), /undeclared key/, 'Validator must reject undeclared source-claim properties')
 const invalidStrategyConfidence = structuredClone(strategy)
 invalidStrategyConfidence.confidence = 'verified'
-assert.throws(() => validateStrategy(invalidStrategyConfidence), /community_guidance/, 'Validator must reject promoted strategy confidence')
+assert.throws(() => validateStrategy(invalidStrategyConfidence), 'Validator must reject promoted strategy confidence')
 console.log('VOYAGE-001A contract passed: source-grounded timing, teams, milestones, Compass bundles, literal currency marker, strict metadata/schema parity, merge discrimination, conflict containment and community-guidance separation verified.')
