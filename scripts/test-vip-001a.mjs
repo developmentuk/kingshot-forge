@@ -7,14 +7,20 @@ const readJson = (path) => JSON.parse(readFileSync(resolve(root, path), 'utf8'))
 const meta = readJson('public/data/vip/meta.json')
 const levels = readJson('public/data/vip/levels.json')
 const schema = readJson('public/data/vip/schema.json')
+const progressionSource = readJson('server/data-engine/source-assets/vip/vip-progression-baseline.json')
 
 assert.equal(meta._meta.datasetId, 'kingshot-vip')
 assert.equal(meta._meta.schemaVersion, '1.0.0')
 assert.equal(levels.length, 12)
 assert.deepEqual(levels.map((row) => row.level), Array.from({ length: 12 }, (_, index) => index + 1))
 
-const expectedXp = [0, 2500, 5000, 12500, 30000, 40000, 60000, 100000, 350000, 600000, 1200000, 2400000]
-assert.deepEqual(levels.map((row) => row.xpToReach), expectedXp)
+assert.equal(progressionSource._meta.dataset, 'kingshot-vip')
+assert.equal(progressionSource._meta.provenance.verified, '2026-06-18')
+assert.deepEqual(
+  levels.map((row) => ({ level: row.level, xpToReach: row.xpToReach, gemsEquivalent: row.gemsEquivalent })),
+  progressionSource.vipLevels,
+  'Public VIP progression must remain identical to the preserved supporting source baseline',
+)
 for (const row of levels) {
   assert.equal(row.gemsEquivalent, row.xpToReach * 2, `VIP ${row.level} Gem equivalent must remain 2x VIP XP`)
   assert.equal(row.specialPack.vipXp.totalXp, row.specialPack.vipXp.quantity * row.specialPack.vipXp.unitXp, `VIP ${row.level} Special Pack VIP XP total must match source units`)
