@@ -1,0 +1,82 @@
+{
+  "_meta": {
+    "dataset": "kingshot-vip",
+    "title": "Kingshot VIP Levels",
+    "description": "VIP XP required to reach each level (1–12) and the gem-equivalent cost. 1 VIP point = 2 gems.",
+    "count": 12,
+    "provenance": {
+      "sources": [
+        "kingshot.net/vip-calculator"
+      ],
+      "confidence": "scored",
+      "accuracyScore": 90,
+      "verified": "2026-06-18",
+      "note": "VIP XP per level cross-checked + confirmed across multiple sources (kingshot.net, kingshotmastery, lootbar, ldshop). 1 VIP point = 2 gems. Score 90 (Confirmed)."
+    },
+    "license": "CC-BY-4.0 — attribute to https://kingshotpro.com",
+    "canonical": "https://kingshotpro.com/data/vip.json",
+    "updated": "2026-06-14"
+  },
+  "vipLevels": [
+    {
+      "level": 1,
+      "xpToReach": 0,
+      "gemsEquivalent": 0
+    },
+    {
+      "level": 2,
+      "xpToReach": 2500,
+      "gemsEquivalent": 5000
+    },
+    {
+      "level": 3,
+      "xpToReach": 5000,
+      "gemsEquivalent": 10000
+    },
+    {
+      "level": 4,
+      "xpToReach": 12500,
+      "gemsEquivalent": 25000
+    },
+    {
+      "level": 5,
+      "xpToReach": 30000,
+      "gemsEquivalent": 60000
+    },
+    {
+      "level": 6,
+      "xpToReach": 40000,
+      "gemsEquivalent": 80000
+    },
+    {
+      "level": 7,
+      "xpToReach": 60000,
+      "gemsEquivalent": 120000
+    },
+    {
+      "level": 8,
+      "xpToReach": 100000,
+      "gemsEquivalent": 200000
+    },
+    {
+      "level": 9,
+      "xpToReach": 350000,
+      "gemsEquivalent": 700000
+    },
+    {
+      "level": 10,
+      "xpToReach": 600000,
+      "gemsEquivalent": 1200000
+    },
+    {
+      "level": 11,
+      "xpToReach": 1200000,
+      "gemsEquivalent": 2400000
+    },
+    {
+      "level": 12,
+      "xpToReach": 2400000,
+      "gemsEquivalent": 4800000
+    }
+  ]
+}
