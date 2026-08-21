@@ -74,6 +74,35 @@ for (const name of [
 assert.equal(schema.$defs?.pet?.additionalProperties, false)
 assert.equal(schema.$defs?.media?.additionalProperties, false)
 assert.deepEqual(schema.$defs?.pet?.properties?.curve?.enum, curveKeys)
+assert.deepEqual(
+  schema.$defs?.sequentialSkillRows?.prefixItems?.map((entry) => entry.allOf?.[1]?.prefixItems?.[0]?.const),
+  Array.from({ length: 10 }, (_, index) => index + 1),
+  'Published schema must pin skill progression rows to sequential skill levels 1-10',
+)
+assert.deepEqual(
+  schema.$defs?.sequentialLevelRows?.prefixItems?.map((entry) => entry.allOf?.[1]?.prefixItems?.[0]?.const),
+  Array.from({ length: 99 }, (_, index) => index + 2),
+  'Published schema must pin progression rows to sequential levels 2-100',
+)
+const petSchemaVariants = schema.$defs?.pet?.allOf?.[0]?.oneOf
+assert.equal(petSchemaVariants?.length, curveKeys.length, 'Published pet schema must discriminate every governed max/curve pair')
+for (const [index, key] of curveKeys.entries()) {
+  const max = expectedMax.get(key)
+  const variant = petSchemaVariants[index]
+  assert.equal(variant?.properties?.max?.const, max, `Pet schema variant ${key} must pin max ${max}`)
+  assert.equal(variant?.properties?.curve?.const, key, `Pet schema variant ${key} must pin curve ${key}`)
+  assert.equal(variant?.properties?.skill?.properties?.progression?.minItems, max / 10, `Pet schema variant ${key} must pin skill row count`)
+  assert.equal(variant?.properties?.skill?.properties?.progression?.maxItems, max / 10, `Pet schema variant ${key} must pin skill row count`)
+}
+const curveSchemaVariants = schema.$defs?.progressionCurveDocument?.allOf?.[0]?.oneOf
+assert.equal(curveSchemaVariants?.length, curveKeys.length, 'Published curve schema must discriminate every governed max level')
+for (const [index, key] of curveKeys.entries()) {
+  const max = expectedMax.get(key)
+  const variant = curveSchemaVariants[index]
+  assert.equal(variant?.properties?.max?.const, max, `Curve schema variant ${key} must pin max ${max}`)
+  assert.equal(variant?.properties?.rows?.minItems, max - 1, `Curve schema variant ${key} must pin exact row count`)
+  assert.equal(variant?.properties?.rows?.maxItems, max - 1, `Curve schema variant ${key} must pin exact row count`)
+}
 
 const pets = readJson(resolve(dataRoot, 'pets.json'))
 assert.equal(pets.length, 14)
