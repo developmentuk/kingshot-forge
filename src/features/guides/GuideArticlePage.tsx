@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import VoyageOfLightGuidePage from '../../pages/VoyageOfLightGuidePage'
 import { guideArticlesBySlug } from './articles'
 import './guideArticle.css'
 import './oasisGuide.css'
@@ -14,14 +15,17 @@ const connectionLabels = {
 
 export default function GuideArticlePage() {
   const { guideSlug = '' } = useParams()
+  const isVoyageGuide = guideSlug === 'kingshot-voyage-of-light-guide'
   const article = guideArticlesBySlug[guideSlug]
 
   useEffect(() => {
-    if (!article) return undefined
+    if (isVoyageGuide || !article) return undefined
     const previousTitle = document.title
     document.title = `${article.title} | Kingshot Forge`
     return () => { document.title = previousTitle }
-  }, [article])
+  }, [article, isVoyageGuide])
+
+  if (isVoyageGuide) return <VoyageOfLightGuidePage />
 
   if (!article) {
     return (
