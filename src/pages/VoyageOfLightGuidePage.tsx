@@ -1,79 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { parseVoyageGuideData, type Team, type VoyageGuideData, type VoyageStrategy } from '../features/guides/voyageGuideData'
 import { calculateVoyagePlan } from '../features/guides/voyagePlanner'
 import './VoyageOfLightGuidePage.css'
-
-type Reward = { itemKey: string; label: string; quantity: number }
-type Milestone = { voyages: number; rewards: Reward[] }
-type Team = {
-  team: number
-  unlock: { kind: string; amount: number; currency: string | null }
-  status: 'source_supported' | 'source_claimed_unverified'
-}
-type TreasureTier = { key: string; name: string; terminal: boolean }
-type MergeRule = {
-  from: string
-  count: number
-  outcome: { kind: 'fixed'; to: string } | null
-  status: 'source_supported' | 'conflicted'
-  verificationIssueId?: string
-}
-type VoyageEvent = {
-  eventKey: string
-  phases: {
-    activeVoyaging: { durationDaysApprox: number; dispatchAllowed: boolean }
-    collectionWindow: { durationDays: number; dispatchAllowed: boolean; treasureOpenAllowed: boolean; treasureMergeAllowed: boolean; autoOpenUnopenedAtEnd: boolean }
-  }
-  voyage: { durationHours: number; treasuresPerCompletedVoyage: number }
-  compass: { hoursReducedPerCompass: number; completeAllAvailable: boolean }
-  teams: Team[]
-  treasureTiers: TreasureTier[]
-  mergeRules: MergeRule[]
-  milestones: Milestone[]
-  compassBundles: { packKey: string; label: string; compasses: number }[]
-}
-type VerificationIssue = { id: string; summary: string; canonicalAction: string }
-type VoyageMeta = {
-  _meta: { datasetId: string; trust: { strategy: string; treasureMergePremiumOutcome: string } }
-  verificationIssues: VerificationIssue[]
-}
-type VoyageStrategy = {
-  confidence: 'community_guidance'
-  principles: { key: string; text: string }[]
-  playerProfiles: { profile: 'f2p' | 'low_spender' | 'heavy_spender'; guidance: string[] }[]
-  dailyRoutine: { morning: string[]; midday: string[]; beforeBed: string[] }
-}
-type VoyageGuideData = { event: VoyageEvent; meta: VoyageMeta; strategy: VoyageStrategy }
 
 async function fetchJson(path: string): Promise<unknown> {
   const response = await fetch(path, { headers: { accept: 'application/json' } })
   if (!response.ok) throw new Error(`Unable to load governed Voyage data (${response.status}).`)
   return response.json()
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-}
-
-function parseVoyageGuideData(eventValue: unknown, metaValue: unknown, strategyValue: unknown): VoyageGuideData {
-  if (!isRecord(eventValue) || eventValue.eventKey !== 'voyage-of-light') throw new Error('Voyage event data failed its identity check.')
-  if (!isRecord(eventValue.voyage) || eventValue.voyage.durationHours !== 8) throw new Error('Voyage duration is outside the governed contract.')
-  if (!isRecord(eventValue.compass) || eventValue.compass.hoursReducedPerCompass !== 1) throw new Error('Compass timing is outside the governed contract.')
-  if (!Array.isArray(eventValue.teams) || eventValue.teams.length !== 4) throw new Error('Voyage team coverage is incomplete.')
-  if (!Array.isArray(eventValue.milestones) || eventValue.milestones.length !== 7) throw new Error('Voyage milestone coverage is incomplete.')
-  if (!Array.isArray(eventValue.mergeRules) || eventValue.mergeRules.length !== 2) throw new Error('Voyage merge rules are incomplete.')
-  const premiumRule = eventValue.mergeRules[1]
-  if (!isRecord(premiumRule) || premiumRule.status !== 'conflicted' || premiumRule.outcome !== null) throw new Error('The unresolved Premium merge outcome was unexpectedly canonicalised.')
-
-  if (!isRecord(metaValue) || !isRecord(metaValue._meta) || metaValue._meta.datasetId !== 'kingshot-voyage-of-light') throw new Error('Voyage metadata failed its identity check.')
-  if (!Array.isArray(metaValue.verificationIssues) || metaValue.verificationIssues.length !== 3) throw new Error('Voyage verification issues are incomplete.')
-  if (!isRecord(strategyValue) || strategyValue.confidence !== 'community_guidance') throw new Error('Voyage strategy trust classification is invalid.')
-
-  return {
-    event: eventValue as VoyageEvent,
-    meta: metaValue as VoyageMeta,
-    strategy: strategyValue as VoyageStrategy,
-  }
 }
 
 function formatProfile(value: VoyageStrategy['playerProfiles'][number]['profile']): string {
