@@ -1,0 +1,40 @@
+name: VIP Data validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'public/data/vip/**'
+      - 'server/data-engine/source-assets/vip/**'
+      - 'scripts/test-vip-001a.mjs'
+      - 'docs/releases/VIP-001A-VIP-PROGRESSION-FOUNDATION.md'
+      - '.github/workflows/vip-data-validation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vip-data-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate VIP-001A governed data contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate VIP-001A contract
+        run: node scripts/test-vip-001a.mjs
