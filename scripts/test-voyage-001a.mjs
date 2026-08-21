@@ -51,7 +51,7 @@ const teams = [
   [1, 'free', 0, null, 'source_supported'],
   [2, 'gems', 2000, 'gems', 'source_claimed_unverified'],
   [3, 'gems', 10000, 'gems', 'source_claimed_unverified'],
-  [4, 'paid_bundle', 5, 'USD', 'source_claimed_unverified'],
+  [4, 'paid_bundle', 5, '$', 'source_claimed_unverified'],
 ]
 const tiers = [
   ['common', 'Common Tidal Treasure', false],
@@ -204,6 +204,7 @@ assert.deepEqual(schema.$defs?.metaDocument?.properties?.verificationIssues?.pre
 assert.deepEqual(schema.$defs?.milestones?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.voyages?.const), milestones.map(([voyages]) => voyages), 'Published schema must pin milestone order and thresholds')
 assert.deepEqual(schema.$defs?.teams?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.team?.const), [1, 2, 3, 4], 'Published schema must pin team order')
 assert.deepEqual(schema.$defs?.mergeRules?.prefixItems?.[0]?.allOf?.[1]?.not?.required, ['verificationIssueId'], 'Published schema must forbid verificationIssueId on the source-supported Common merge rule')
+assert.equal(schema.$defs?.teams?.prefixItems?.[3]?.allOf?.[1]?.properties?.unlock?.properties?.currency?.const, '$', 'Published schema must preserve the literal source currency marker for Team 4')
 const invalidPremiumOutcome = structuredClone(event)
 invalidPremiumOutcome.mergeRules[1].outcome = { kind: 'fixed', to: 'majestic' }
 assert.throws(() => validateEvent(invalidPremiumOutcome), /deepStrictEqual|Expected values to be strictly deep-equal/, 'Validator must reject canonicalisation of the conflicted Premium merge outcome')
@@ -222,4 +223,4 @@ assert.throws(() => validateMeta(invalidSourceClaim), /undeclared key/, 'Validat
 const invalidStrategyConfidence = structuredClone(strategy)
 invalidStrategyConfidence.confidence = 'verified'
 assert.throws(() => validateStrategy(invalidStrategyConfidence), /community_guidance/, 'Validator must reject promoted strategy confidence')
-console.log('VOYAGE-001A contract passed: source-grounded timing, teams, milestones, Compass bundles, strict metadata/schema parity, merge discrimination, conflict containment and community-guidance separation verified.')
+console.log('VOYAGE-001A contract passed: source-grounded timing, teams, milestones, Compass bundles, literal currency marker, strict metadata/schema parity, merge discrimination, conflict containment and community-guidance separation verified.')
