@@ -92,8 +92,10 @@ for (const pet of pets) {
 assert.equal(spriteCoordinates.size, 13)
 assert.deepEqual(pendingPets, ['Ironclad War Bear'])
 
+const curves = new Map()
 for (const key of curveKeys) {
   const curve = readJson(resolve(dataRoot, `${key}.json`))
+  curves.set(key, curve)
   const max = expectedMax.get(key)
   assert.equal(curve.max, max)
   assert.equal(curve.rows.length, max - 1, `${key} must include every level from 2 through ${max}`)
@@ -108,6 +110,25 @@ for (const key of curveKeys) {
   const milestones = curve.rows.filter((row) => row[0] % 10 === 0)
   assert.equal(milestones.length, max / 10)
   assert.equal(milestones.at(-1)?.[0], max)
+}
+
+const aggregatePetFoodClaim = /(?:~\s*)?([\d,]+)\s+Pet Food/iu
+const aggregateScope = /\b(?:total|to max|levels?\s+\d+\s*[-–]\s*\d+)\b/iu
+for (const pet of pets) {
+  const curve = curves.get(pet.curve)
+  assert.ok(curve, `Missing governed progression curve for ${pet.name}`)
+  const governedPetFoodTotal = curve.rows.reduce((total, row) => total + row[1], 0)
+
+  for (const note of pet.notes) {
+    const claim = note.match(aggregatePetFoodClaim)
+    if (!claim || !aggregateScope.test(note)) continue
+    const claimedPetFoodTotal = Number(claim[1].replaceAll(',', ''))
+    assert.equal(
+      claimedPetFoodTotal,
+      governedPetFoodTotal,
+      `${pet.name} aggregate Pet Food claim must match ${pet.curve}`,
+    )
+  }
 }
 
 const max50 = readJson(resolve(dataRoot, 'max-50.json'))
