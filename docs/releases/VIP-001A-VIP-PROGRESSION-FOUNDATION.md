@@ -10,7 +10,7 @@ Create a governed public VIP dataset for Kingshot Forge covering VIP Levels 1–
 
 Primary source: owner-supplied `VIP dataset.docx`, received 21 August 2026.
 
-Supporting progression source: existing `vip(1).json` (`kingshot-vip`), whose embedded provenance references the Kingshot VIP calculator and prior cross-checking. VIP-001A uses this supporting dataset for the structured `xpToReach`/Gem-equivalent baseline and the owner document for benefits/bundles/packs.
+Supporting progression source: existing `vip(1).json` (`kingshot-vip`), whose embedded provenance references the Kingshot VIP calculator and prior cross-checking. Its exact JSON is preserved in-repository as `server/data-engine/source-assets/vip/vip-progression-baseline.json`. VIP-001A uses that preserved source for the structured `xpToReach`/Gem-equivalent baseline and the owner document for benefits/bundles/packs.
 
 The owner document's F2P timing estimates remain `community_guidance`. Currency is not inferred where the detailed pack rows give only an amount.
 
@@ -19,6 +19,7 @@ The owner document's F2P timing estimates remain `community_guidance`. Currency 
 - `public/data/vip/meta.json` — provenance, trust boundary and explicit verification issues.
 - `public/data/vip/levels.json` — 12 sequential VIP records.
 - `public/data/vip/schema.json` — closed structural contract for metadata and level documents.
+- `server/data-engine/source-assets/vip/vip-progression-baseline.json` — preserved supporting progression evidence, not a public runtime contract.
 
 `levels.json` intentionally does not publish a cumulative VIP XP total because the supplied sources disagree about the meaning of the 2,400,000 VIP 12 figure.
 
@@ -45,7 +46,7 @@ The detailed VIP 7–12 pack rows total 975 Amadeus Shards. Later prose states 1
 `scripts/test-vip-001a.mjs` verifies:
 
 - exactly 12 sequential VIP levels;
-- the existing structured XP baseline for VIP 1–12;
+- the public VIP progression remains byte-semantically identical to the preserved structured source baseline for Level/XP/Gem fields;
 - Gem equivalents remain exactly 2× VIP XP;
 - Helga is the Special Pack shard hero for VIP 1–6 and Amadeus for VIP 7–12;
 - detailed Helga shard rows total 1,055;
