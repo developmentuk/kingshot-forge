@@ -17,16 +17,14 @@ const assertExactKeys = (value, keys, label) => {
 }
 const assertString = (value, label) => assert.equal(typeof value === 'string' && value.length > 0, true, `${label} must be a non-empty string`)
 const assertInteger = (value, label, minimum = 0) => assert.equal(Number.isInteger(value) && value >= minimum, true, `${label} must be an integer >= ${minimum}`)
-const assertNullableInteger = (value, label, minimum = 0) => {
-  if (value !== null) assertInteger(value, label, minimum)
-}
+const assertNullableInteger = (value, label, minimum = 0) => { if (value !== null) assertInteger(value, label, minimum) }
 const assertNullableNumber = (value, label, minimum = 0) => {
   if (value !== null) assert.equal(typeof value === 'number' && Number.isFinite(value) && value >= minimum, true, `${label} must be null or a finite number >= ${minimum}`)
 }
 
 const validateBenefit = (benefit, label) => {
   assertExactKeys(benefit, ['key', 'label', 'value', 'unit', 'status'], label)
-  assert.match(benefit.key, /^[a-z0-9-]+$/, `${label}.key must use governed key syntax`)
+  assert.match(benefit.key, /^[a-z0-9_]+$/, `${label}.key must use governed snake_case syntax`)
   assertString(benefit.label, `${label}.label`)
   assert.ok(['percent', 'resources', 'additional_slots', 'hours'].includes(benefit.unit), `${label}.unit is unsupported`)
   assert.ok(['source_supported', 'conflicted'].includes(benefit.status), `${label}.status is unsupported`)
@@ -36,7 +34,7 @@ const validateBenefit = (benefit, label) => {
 
 const validateBundleItem = (item, label) => {
   assertExactKeys(item, ['itemKey', 'label', 'quantity', 'rarity'], label)
-  assert.match(item.itemKey, /^[a-z0-9-]+$/, `${label}.itemKey must use governed key syntax`)
+  assert.match(item.itemKey, /^[a-z0-9-]+$/, `${label}.itemKey must use governed kebab-case syntax`)
   assertString(item.label, `${label}.label`)
   assertInteger(item.quantity, `${label}.quantity`, 1)
   assert.ok(item.rarity === null || ['rare', 'epic', 'mythic'].includes(item.rarity), `${label}.rarity is unsupported`)
@@ -142,7 +140,6 @@ assert.deepEqual(
 
 assert.equal(levels.slice(0, 6).reduce((sum, row) => sum + row.specialPack.heroShards.quantity, 0), 1055)
 assert.equal(levels.slice(6).reduce((sum, row) => sum + row.specialPack.heroShards.quantity, 0), 975)
-
 assert.equal(levels[7].specialPack.priceAmount, null, 'VIP 8 price must remain unresolved while source claims conflict')
 const vip12Attack = levels[11].benefits.find((benefit) => benefit.key === 'squad_attack')
 const vip12Health = levels[11].benefits.find((benefit) => benefit.key === 'squad_health')
@@ -152,7 +149,6 @@ assert.equal(levels[11].benefits.find((benefit) => benefit.key === 'squad_lethal
 
 const issueIds = new Set(meta.verificationIssues.map((issue) => issue.id))
 for (const id of ['vip8-special-pack-price', 'vip12-squad-attack-health', 'vip12-cumulative-xp-wording', 'amadeus-shard-aggregate']) assert(issueIds.has(id), `Missing verification issue ${id}`)
-
 for (const level of [1, 2, 3, 4, 5]) {
   assert.equal(levels[level - 1].specialPack.savingPercent, null)
   assert.equal(levels[level - 1].specialPack.topupPoints, null)
@@ -160,6 +156,7 @@ for (const level of [1, 2, 3, 4, 5]) {
 for (const level of [7, 11, 12]) assert.equal(levels[level - 1].specialPack.topupPoints, null)
 
 assert.deepEqual(schema.oneOf?.map((entry) => entry.$ref), ['#/$defs/metaDocument', '#/$defs/levelsDocument'])
+assert.equal(schema.$defs?.benefit?.properties?.key?.pattern, '^[a-z0-9_]+$', 'Published schema must allow governed snake_case benefit keys')
 assert.equal(schema.$defs?.vipLevel?.additionalProperties, false)
 assert.equal(schema.$defs?.specialPack?.additionalProperties, false)
 assert.equal(schema.$defs?.ownerSource?.additionalProperties, false)
@@ -173,15 +170,12 @@ assert.deepEqual(schema.$defs?.levelsDocument?.prefixItems?.map((entry) => entry
 const extraFieldMutation = structuredClone(levels[0])
 extraFieldMutation.unexpected = true
 assert.throws(() => validateVipLevel(extraFieldMutation, 1), /governed keys/, 'Validator must reject undeclared level properties')
-
 const wrongTypeMutation = structuredClone(levels[1])
 wrongTypeMutation.xpToReach = '2500'
 assert.throws(() => validateVipLevel(wrongTypeMutation, 2), /integer/, 'Validator must reject primitive-type coercion')
-
 const conflictedValueMutation = structuredClone(levels[11])
 conflictedValueMutation.benefits.find((benefit) => benefit.key === 'squad_attack').value = 12
 assert.throws(() => validateVipLevel(conflictedValueMutation, 12), /conflicted value must remain null/, 'Validator must reject canonical values on conflicted benefits')
-
 const metaExtraFieldMutation = structuredClone(meta)
 metaExtraFieldMutation._meta.unexpected = true
 assert.throws(() => validateMeta(metaExtraFieldMutation), /governed keys/, 'Validator must reject undeclared metadata properties')
