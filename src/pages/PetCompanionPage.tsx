@@ -1,134 +1,34 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import {
+  loadPetDataset,
+  type Pet,
+  type PetDataset,
+} from '../features/companion/pets/petData'
 import './PetCompanionPage.css'
-
-type PetMedia = {
-  status: 'available' | 'pending'
-  path: string | null
-  filename: string | null
-  originalFilename: string | null
-  rights: string | null
-}
-
-type PetSkillProgressionRow = {
-  level: number
-  effect: string
-  description?: string
-}
-
-type PetLevelRow = {
-  level: number
-  petFood: number
-  growthManual: number | null
-  nutrientPotion: number | null
-  promotionMedallion: number | null
-}
-
-type Pet = {
-  key: string
-  name: string
-  generation: number
-  maxLevel: number
-  unlock: {
-    label: string
-    approxDays: number | null
-    confidence: string
-  }
-  summary: string | null
-  skill: {
-    name: string
-    description: string
-    cooldown: string | null
-    effect: string | null
-    progression: PetSkillProgressionRow[]
-  }
-  progressionCurve: string
-  notes: string[]
-  media: PetMedia
-}
-
-type ProgressionCurve = {
-  key: string
-  maxLevel: number
-  levelProgression: PetLevelRow[]
-  advancementMilestones: PetLevelRow[]
-  sourceAdvancementSummary: Record<string, string | null>[]
-  sourceRepresentative: string
-}
-
-type RefinementThreshold = {
-  pets: string[]
-  gray: string
-  green: string
-  blue: string
-  purple: string
-  gold: string
-  confidence: string
-}
-
-type PetDataset = {
-  _meta: {
-    schemaVersion: string
-    datasetId: string
-    title: string
-    description: string
-    source: {
-      filename: string
-      basis: string
-      received: string
-      terminology: string
-    }
-    media: {
-      archive: string
-      received: string
-      available: number
-      pending: string[]
-      rightsStatement: string
-    }
-    coverage: {
-      petCount: number
-      generations: number[]
-      minMaxLevel: number
-      maxMaxLevel: number
-    }
-  }
-  progressionCurves: Record<string, ProgressionCurve>
-  pets: Pet[]
-  refinement: {
-    stats: string[]
-    rarityOrder: string[]
-    thresholds: RefinementThreshold[]
-    guidance: string[]
-    confidence: string
-  }
-  strategy: {
-    f2pPriority: string[]
-    spenderPriority: string[]
-    sourceNotes: string[]
-    confidence: string
-  }
-}
-
-function isPetDataset(value: unknown): value is PetDataset {
-  if (!value || typeof value !== 'object') return false
-  const candidate = value as Partial<PetDataset>
-  return candidate._meta?.datasetId === 'kingshot-pets'
-    && candidate._meta?.schemaVersion === '1.0.0'
-    && Array.isArray(candidate.pets)
-    && candidate.pets.length === 14
-    && typeof candidate.progressionCurves === 'object'
-    && candidate.progressionCurves !== null
-}
 
 function formatNumber(value: number | null) {
   return value === null ? '—' : new Intl.NumberFormat('en-GB').format(value)
 }
 
 function PetArtwork({ pet, compact = false }: { pet: Pet; compact?: boolean }) {
+  const sprite = pet.media.sprite
+  const hasArtwork = pet.media.status === 'available' && pet.media.path && sprite
+
   return (
     <div className={`pet-companion-art${compact ? ' pet-companion-art--compact' : ''}`}>
-      {pet.media.path
-        ? <img src={pet.media.path} alt={`${pet.name} pet artwork`} />
+      {hasArtwork
+        ? (
+            <div
+              className="pet-companion-art__sprite"
+              role="img"
+              aria-label={`${pet.name} pet artwork`}
+              style={{
+                backgroundImage: `url(${pet.media.path})`,
+                backgroundPosition: `${(sprite[0] / 3) * 100}% ${(sprite[1] / 3) * 100}%`,
+              }}
+            />
+          )
         : <div className="pet-companion-art__placeholder"><span aria-hidden="true">🐾</span><small>Artwork pending</small></div>}
     </div>
   )
@@ -365,13 +265,8 @@ export default function PetCompanionPage() {
 
   useEffect(() => {
     let cancelled = false
-    fetch('/data/pets.json')
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`Pet dataset request failed (${response.status})`)
-        const payload: unknown = await response.json()
-        if (!isPetDataset(payload)) throw new Error('Pet dataset failed its published schema boundary')
-        return payload
-      })
+    setError(null)
+    loadPetDataset()
       .then((payload) => { if (!cancelled) setDataset(payload) })
       .catch((reason: unknown) => { if (!cancelled) setError(reason instanceof Error ? reason.message : 'Pet dataset unavailable') })
     return () => { cancelled = true }
