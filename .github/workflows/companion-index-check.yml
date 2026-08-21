@@ -38,6 +38,7 @@ on:
       - 'docs/companion/**'
       - 'docs/releases/COMPANION-INDEX-001.md'
       - 'docs/releases/COMPANION-ITEMS-CONTENT-RECOVERY-001.md'
+      - 'docs/releases/PETS-001A-PET-COMPANION-FOUNDATION.md'
       - '.github/workflows/companion-index-check.yml'
 
 permissions:
