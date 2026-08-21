@@ -3,7 +3,16 @@
   "$id": "https://ksforge.app/data/pets/schema.json",
   "title": "Kingshot Forge PETS-001A split dataset contract",
   "description": "Schema definitions for the PETS-001A metadata, compact pet identity and shared progression curve documents.",
+  "oneOf": [
+    { "$ref": "#/$defs/metadataDocument" },
+    { "$ref": "#/$defs/petsDocument" },
+    { "$ref": "#/$defs/progressionCurveDocument" }
+  ],
   "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
     "levelRow": {
       "type": "array",
       "prefixItems": [
@@ -20,11 +29,20 @@
       "type": "array",
       "prefixItems": [
         { "type": "integer", "minimum": 1, "maximum": 10 },
-        { "type": "string", "minLength": 1 },
-        { "type": ["string", "null"] }
+        { "$ref": "#/$defs/nonEmptyString" },
+        { "type": ["string", "null"], "minLength": 1 }
       ],
       "minItems": 3,
       "maxItems": 3
+    },
+    "spriteCoordinate": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 0, "maximum": 3 },
+        { "type": "integer", "minimum": 0, "maximum": 3 }
+      ],
+      "minItems": 2,
+      "maxItems": 2
     },
     "media": {
       "type": "object",
@@ -38,16 +56,51 @@
         "sprite": {
           "oneOf": [
             { "type": "null" },
+            { "$ref": "#/$defs/spriteCoordinate" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
             {
-              "type": "array",
-              "prefixItems": [
-                { "type": "integer", "minimum": 0, "maximum": 3 },
-                { "type": "integer", "minimum": 0, "maximum": 3 }
-              ],
-              "minItems": 2,
-              "maxItems": 2
+              "properties": {
+                "status": { "const": "available" },
+                "path": { "const": "/media/pets/pets-sprite.webp" },
+                "filename": { "const": "pets-sprite.webp" },
+                "originalFilename": { "type": "string", "minLength": 1, "pattern": "\\.png$" },
+                "rights": { "type": "string", "minLength": 1 },
+                "sprite": { "$ref": "#/$defs/spriteCoordinate" }
+              }
+            },
+            {
+              "properties": {
+                "status": { "const": "pending" },
+                "path": { "type": "null" },
+                "filename": { "type": "null" },
+                "originalFilename": { "type": "null" },
+                "rights": { "type": "null" },
+                "sprite": { "type": "null" }
+              }
             }
           ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "skill": {
+      "type": "object",
+      "required": ["name", "description", "cooldown", "effect", "progression"],
+      "properties": {
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "description": { "$ref": "#/$defs/nonEmptyString" },
+        "cooldown": { "type": ["string", "null"], "minLength": 1 },
+        "effect": { "type": ["string", "null"], "minLength": 1 },
+        "progression": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/skillRow" }
         }
       },
       "additionalProperties": false
@@ -57,35 +110,197 @@
       "required": ["key", "name", "gen", "max", "unlock", "summary", "skill", "notes", "media", "curve"],
       "properties": {
         "key": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-        "name": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
         "gen": { "type": "integer", "minimum": 1, "maximum": 7 },
         "max": { "enum": [50, 60, 70, 80, 100] },
         "unlock": {
           "type": "array",
           "prefixItems": [
-            { "type": "string", "minLength": 1 },
-            { "type": ["integer", "null"] },
+            { "$ref": "#/$defs/nonEmptyString" },
+            { "type": ["integer", "null"], "minimum": 0 },
             { "const": "community_observation" }
           ],
           "minItems": 3,
           "maxItems": 3
         },
-        "summary": { "type": ["string", "null"] },
-        "skill": {
-          "type": "object",
-          "required": ["name", "description", "cooldown", "effect", "progression"],
-          "properties": {
-            "name": { "type": "string", "minLength": 1 },
-            "description": { "type": "string", "minLength": 1 },
-            "cooldown": { "type": ["string", "null"] },
-            "effect": { "type": ["string", "null"] },
-            "progression": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/skillRow" } }
-          },
-          "additionalProperties": false
+        "summary": { "type": ["string", "null"], "minLength": 1 },
+        "skill": { "$ref": "#/$defs/skill" },
+        "notes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
         },
-        "notes": { "type": "array", "items": { "type": "string" } },
         "media": { "$ref": "#/$defs/media" },
         "curve": { "enum": ["max-50", "max-60", "max-70", "max-80", "max-100"] }
+      },
+      "additionalProperties": false
+    },
+    "petsDocument": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": { "$ref": "#/$defs/pet" }
+    },
+    "source": {
+      "type": "object",
+      "required": ["filename", "basis", "received", "terminology"],
+      "properties": {
+        "filename": { "$ref": "#/$defs/nonEmptyString" },
+        "basis": { "$ref": "#/$defs/nonEmptyString" },
+        "received": { "$ref": "#/$defs/nonEmptyString" },
+        "terminology": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "mediaCoverage": {
+      "type": "object",
+      "required": ["archive", "received", "available", "pending", "rightsStatement"],
+      "properties": {
+        "archive": { "$ref": "#/$defs/nonEmptyString" },
+        "received": { "$ref": "#/$defs/nonEmptyString" },
+        "available": { "type": "integer", "minimum": 0 },
+        "pending": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "rightsStatement": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "datasetCoverage": {
+      "type": "object",
+      "required": ["petCount", "generations", "minMaxLevel", "maxMaxLevel"],
+      "properties": {
+        "petCount": { "const": 14 },
+        "generations": {
+          "type": "array",
+          "prefixItems": [
+            { "const": 1 },
+            { "const": 2 },
+            { "const": 3 },
+            { "const": 4 },
+            { "const": 5 },
+            { "const": 6 },
+            { "const": 7 }
+          ],
+          "minItems": 7,
+          "maxItems": 7
+        },
+        "minMaxLevel": { "const": 50 },
+        "maxMaxLevel": { "const": 100 }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["schemaVersion", "datasetId", "title", "description", "source", "media", "coverage"],
+      "properties": {
+        "schemaVersion": { "const": "1.0.0" },
+        "datasetId": { "const": "kingshot-pets" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "description": { "$ref": "#/$defs/nonEmptyString" },
+        "source": { "$ref": "#/$defs/source" },
+        "media": { "$ref": "#/$defs/mediaCoverage" },
+        "coverage": { "$ref": "#/$defs/datasetCoverage" }
+      },
+      "additionalProperties": false
+    },
+    "refinementThreshold": {
+      "type": "object",
+      "required": ["pets", "gray", "green", "blue", "purple", "gold", "confidence"],
+      "properties": {
+        "pets": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "gray": { "$ref": "#/$defs/nonEmptyString" },
+        "green": { "$ref": "#/$defs/nonEmptyString" },
+        "blue": { "$ref": "#/$defs/nonEmptyString" },
+        "purple": { "$ref": "#/$defs/nonEmptyString" },
+        "gold": { "$ref": "#/$defs/nonEmptyString" },
+        "confidence": { "const": "community_guidance" }
+      },
+      "additionalProperties": false
+    },
+    "refinement": {
+      "type": "object",
+      "required": ["stats", "rarityOrder", "thresholds", "guidance", "confidence"],
+      "properties": {
+        "stats": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "rarityOrder": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "thresholds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/refinementThreshold" }
+        },
+        "guidance": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "confidence": { "const": "community_guidance" }
+      },
+      "additionalProperties": false
+    },
+    "strategy": {
+      "type": "object",
+      "required": ["f2pPriority", "spenderPriority", "sourceNotes", "confidence"],
+      "properties": {
+        "f2pPriority": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "spenderPriority": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "sourceNotes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "confidence": { "const": "community_guidance" }
+      },
+      "additionalProperties": false
+    },
+    "curveFiles": {
+      "type": "object",
+      "required": ["max-50", "max-60", "max-70", "max-80", "max-100"],
+      "properties": {
+        "max-50": { "const": "/data/pets/max-50.json" },
+        "max-60": { "const": "/data/pets/max-60.json" },
+        "max-70": { "const": "/data/pets/max-70.json" },
+        "max-80": { "const": "/data/pets/max-80.json" },
+        "max-100": { "const": "/data/pets/max-100.json" }
+      },
+      "additionalProperties": false
+    },
+    "metadataDocument": {
+      "type": "object",
+      "required": ["_meta", "refinement", "strategy", "curveFiles"],
+      "properties": {
+        "_meta": { "$ref": "#/$defs/metadata" },
+        "refinement": { "$ref": "#/$defs/refinement" },
+        "strategy": { "$ref": "#/$defs/strategy" },
+        "curveFiles": { "$ref": "#/$defs/curveFiles" }
+      },
+      "additionalProperties": false
+    },
+    "progressionCurveDocument": {
+      "type": "object",
+      "required": ["max", "rep", "rows"],
+      "properties": {
+        "max": { "enum": [50, 60, 70, 80, 100] },
+        "rep": { "$ref": "#/$defs/nonEmptyString" },
+        "rows": {
+          "type": "array",
+          "minItems": 49,
+          "maxItems": 99,
+          "items": { "$ref": "#/$defs/levelRow" }
+        }
       },
       "additionalProperties": false
     }

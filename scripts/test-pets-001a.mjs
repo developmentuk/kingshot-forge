@@ -45,6 +45,32 @@ assert.equal(metaDocument.strategy.confidence, 'community_guidance')
 
 const schema = readJson(resolve(dataRoot, 'schema.json'))
 assert.equal(schema.$id, 'https://ksforge.app/data/pets/schema.json')
+const canonicalDocumentDefs = ['metadataDocument', 'petsDocument', 'progressionCurveDocument']
+assert.deepEqual(
+  schema.oneOf,
+  canonicalDocumentDefs.map((name) => ({ $ref: `#/$defs/${name}` })),
+  'Published schema root must select exactly the three canonical PETS document contracts',
+)
+for (const name of canonicalDocumentDefs) {
+  assert.ok(schema.$defs?.[name], `Published schema root references missing $defs.${name}`)
+}
+for (const name of [
+  'metadataDocument',
+  'metadata',
+  'source',
+  'mediaCoverage',
+  'datasetCoverage',
+  'refinement',
+  'refinementThreshold',
+  'strategy',
+  'curveFiles',
+  'pet',
+  'skill',
+  'media',
+  'progressionCurveDocument',
+]) {
+  assert.equal(schema.$defs?.[name]?.additionalProperties, false, `$defs.${name} must remain a closed object contract`)
+}
 assert.equal(schema.$defs?.pet?.additionalProperties, false)
 assert.equal(schema.$defs?.media?.additionalProperties, false)
 assert.deepEqual(schema.$defs?.pet?.properties?.curve?.enum, curveKeys)
