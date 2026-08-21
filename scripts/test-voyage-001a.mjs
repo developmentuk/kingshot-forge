@@ -203,6 +203,7 @@ assert.deepEqual(Object.fromEntries(Object.entries(schema.$defs?.trust?.properti
 assert.deepEqual(schema.$defs?.metaDocument?.properties?.verificationIssues?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.id?.const), verificationIssueIds, 'Published schema must pin verification issue IDs and order')
 assert.deepEqual(schema.$defs?.milestones?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.voyages?.const), milestones.map(([voyages]) => voyages), 'Published schema must pin milestone order and thresholds')
 assert.deepEqual(schema.$defs?.teams?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.team?.const), [1, 2, 3, 4], 'Published schema must pin team order')
+assert.deepEqual(schema.$defs?.mergeRules?.prefixItems?.[0]?.allOf?.[1]?.not?.required, ['verificationIssueId'], 'Published schema must forbid verificationIssueId on the source-supported Common merge rule')
 const invalidPremiumOutcome = structuredClone(event)
 invalidPremiumOutcome.mergeRules[1].outcome = { kind: 'fixed', to: 'majestic' }
 assert.throws(() => validateEvent(invalidPremiumOutcome), /deepStrictEqual|Expected values to be strictly deep-equal/, 'Validator must reject canonicalisation of the conflicted Premium merge outcome')
@@ -221,4 +222,4 @@ assert.throws(() => validateMeta(invalidSourceClaim), /undeclared key/, 'Validat
 const invalidStrategyConfidence = structuredClone(strategy)
 invalidStrategyConfidence.confidence = 'verified'
 assert.throws(() => validateStrategy(invalidStrategyConfidence), /community_guidance/, 'Validator must reject promoted strategy confidence')
-console.log('VOYAGE-001A contract passed: source-grounded timing, teams, milestones, Compass bundles, strict metadata/schema parity, conflict containment and community-guidance separation verified.')
+console.log('VOYAGE-001A contract passed: source-grounded timing, teams, milestones, Compass bundles, strict metadata/schema parity, merge discrimination, conflict containment and community-guidance separation verified.')
