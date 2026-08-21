@@ -9,6 +9,15 @@ const levels = readJson('public/data/vip/levels.json')
 const schema = readJson('public/data/vip/schema.json')
 const progressionSource = readJson('server/data-engine/source-assets/vip/vip-progression-baseline.json')
 
+const governedTrust = {
+  benefits: 'source_governed_except_explicit_conflicts',
+  dailyBundles: 'owner_supplied_source',
+  specialPacks: 'owner_supplied_source_except_explicit_conflicts',
+  estimatedF2pTime: 'community_guidance',
+  currency: 'not_explicit_in_detailed_pack_rows',
+  cumulativeVipXp: 'not_published_pending_reconciliation',
+}
+
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
 const assertRecord = (value, label) => assert.equal(isRecord(value), true, `${label} must be an object`)
 const assertExactKeys = (value, keys, label) => {
@@ -113,7 +122,7 @@ const validateMeta = (document) => {
   assertExactKeys(document._meta.coverage, ['levels', 'minLevel', 'maxLevel', 'dailyBundleLevels', 'specialPackLevels'], 'VIP coverage')
   assert.deepEqual(document._meta.coverage, { levels: 12, minLevel: 1, maxLevel: 12, dailyBundleLevels: 12, specialPackLevels: 12 })
   assertExactKeys(document._meta.trust, ['benefits', 'dailyBundles', 'specialPacks', 'estimatedF2pTime', 'currency', 'cumulativeVipXp'], 'VIP trust boundary')
-  for (const value of Object.values(document._meta.trust)) assertString(value, 'VIP trust value')
+  assert.deepEqual(document._meta.trust, governedTrust, 'VIP trust boundary must match the published schema constants')
   assert.equal(Array.isArray(document.verificationIssues) && document.verificationIssues.length >= 1, true, 'VIP metadata must retain verification issues')
   document.verificationIssues.forEach((issue, index) => {
     const label = `verificationIssues[${index}]`
@@ -163,6 +172,11 @@ assert.equal(schema.$defs?.ownerSource?.additionalProperties, false)
 assert.equal(schema.$defs?.supportingSource?.additionalProperties, false)
 assert.equal(schema.$defs?.coverage?.additionalProperties, false)
 assert.equal(schema.$defs?.trust?.additionalProperties, false)
+assert.deepEqual(
+  Object.fromEntries(Object.entries(schema.$defs?.trust?.properties ?? {}).map(([key, definition]) => [key, definition.const])),
+  governedTrust,
+  'Validator trust constants must remain identical to the published schema constants',
+)
 assert.equal(schema.$defs?.benefit?.allOf?.[0]?.oneOf?.length, 2, 'Published schema must bind benefit status to canonical/null value state')
 assert.equal(schema.$defs?.vipLevel?.allOf?.[0]?.oneOf?.length, 2, 'Published schema must bind Helga/Amadeus shard tracks to VIP level bands')
 assert.deepEqual(schema.$defs?.levelsDocument?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.level?.const), Array.from({ length: 12 }, (_, index) => index + 1))
@@ -179,5 +193,8 @@ assert.throws(() => validateVipLevel(conflictedValueMutation, 12), /conflicted v
 const metaExtraFieldMutation = structuredClone(meta)
 metaExtraFieldMutation._meta.unexpected = true
 assert.throws(() => validateMeta(metaExtraFieldMutation), /governed keys/, 'Validator must reject undeclared metadata properties')
+const invalidTrustMutation = structuredClone(meta)
+invalidTrustMutation._meta.trust.benefits = 'totally_invalid_contract_value'
+assert.throws(() => validateMeta(invalidTrustMutation), /published schema constants/, 'Validator must reject trust classifications that violate the published schema')
 
-console.log('VIP-001A contract passed: 12 governed levels, strict primitive/object shape checks, progression source binding, benefit/bundle/pack structure and explicit conflict containment verified.')
+console.log('VIP-001A contract passed: 12 governed levels, strict primitive/object shape checks, exact schema trust constants, progression source binding, benefit/bundle/pack structure and explicit conflict containment verified.')
