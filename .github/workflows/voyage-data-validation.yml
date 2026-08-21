@@ -9,6 +9,7 @@ on:
       - 'public/data/voyage-of-light/**'
       - 'server/data-engine/source-assets/voyage-of-light/**'
       - 'src/features/guides/GuideArticlePage.tsx'
+      - 'src/features/guides/voyageGuideData.ts'
       - 'src/features/guides/voyagePlanner.ts'
       - 'src/pages/GuidesHubPage.tsx'
       - 'src/pages/VoyageOfLightGuidePage.tsx'
