@@ -16,7 +16,14 @@ const assertExactKeys = (value, keys, label) => {
   assertRecord(value, label)
   assert.deepEqual(Object.keys(value).sort(), [...keys].sort(), `${label} must contain only governed keys`)
 }
+const assertAllowedKeys = (value, keys, label) => {
+  assertRecord(value, label)
+  for (const key of Object.keys(value)) assert.ok(keys.includes(key), `${label} contains undeclared key ${key}`)
+}
 const assertString = (value, label) => assert.equal(typeof value === 'string' && value.length > 0, true, `${label} must be a non-empty string`)
+const assertIntegerRange = (value, label, minimum, maximum = Number.MAX_SAFE_INTEGER) => {
+  assert.equal(Number.isInteger(value) && value >= minimum && value <= maximum, true, `${label} must be an integer from ${minimum} to ${maximum}`)
+}
 
 const trust = {
   coreTiming: 'owner_supplied_source',
@@ -26,6 +33,11 @@ const trust = {
   treasureMergePremiumOutcome: 'not_published_pending_reconciliation',
   strategy: 'community_guidance',
 }
+const verificationIssueIds = [
+  'premium-merge-outcome',
+  'daily-free-compass-wording',
+  'auto-voyage-speedup-wording',
+]
 const milestones = [
   [1, 'gear-boost-custom-chest', 'Gear Boost Custom Chest', 1],
   [5, 'forgehammer', 'Forgehammer', 12],
@@ -55,6 +67,22 @@ const bundles = [
   ['team-4-backpack', 'Team 4 Backpack', 60],
 ]
 
+const validateSourceClaim = (claim, label) => {
+  const allowedKeys = ['location', 'meaning', 'exquisitePercent', 'majesticPercent', 'outcomes', 'text', 'hoursReducedPerCompass', 'resource']
+  assertAllowedKeys(claim, allowedKeys, label)
+  assertString(claim.location, `${label}.location`)
+  assertString(claim.meaning, `${label}.meaning`)
+  if ('exquisitePercent' in claim) assertIntegerRange(claim.exquisitePercent, `${label}.exquisitePercent`, 0, 100)
+  if ('majesticPercent' in claim) assertIntegerRange(claim.majesticPercent, `${label}.majesticPercent`, 0, 100)
+  if ('outcomes' in claim) {
+    assert.equal(Array.isArray(claim.outcomes) && claim.outcomes.length === 2, true, `${label}.outcomes must contain exactly two governed entries`)
+    for (const [index, outcome] of claim.outcomes.entries()) assert.ok(['exquisite', 'majestic'].includes(outcome), `${label}.outcomes[${index}] is unsupported`)
+  }
+  if ('text' in claim) assertString(claim.text, `${label}.text`)
+  if ('hoursReducedPerCompass' in claim) assertIntegerRange(claim.hoursReducedPerCompass, `${label}.hoursReducedPerCompass`, 1)
+  if ('resource' in claim) assertString(claim.resource, `${label}.resource`)
+}
+
 const validateMeta = (doc) => {
   assertExactKeys(doc, ['_meta', 'verificationIssues'], 'Voyage metadata document')
   assertExactKeys(doc._meta, ['schemaVersion', 'datasetId', 'title', 'description', 'sources', 'coverage', 'trust'], 'Voyage metadata core')
@@ -80,17 +108,9 @@ const validateMeta = (doc) => {
     assert.equal(issue.status, 'open')
     for (const key of ['field', 'summary', 'canonicalAction']) assertString(issue[key], `${label}.${key}`)
     assert.equal(Array.isArray(issue.sourceClaims) && issue.sourceClaims.length >= 2, true, `${label}.sourceClaims must preserve competing evidence`)
-    for (const [claimIndex, claim] of issue.sourceClaims.entries()) {
-      assertRecord(claim, `${label}.sourceClaims[${claimIndex}]`)
-      assertString(claim.location, `${label}.sourceClaims[${claimIndex}].location`)
-      assertString(claim.meaning, `${label}.sourceClaims[${claimIndex}].meaning`)
-    }
+    issue.sourceClaims.forEach((claim, claimIndex) => validateSourceClaim(claim, `${label}.sourceClaims[${claimIndex}]`))
   }
-  assert.deepEqual(doc.verificationIssues.map((issue) => issue.id), [
-    'premium-merge-outcome',
-    'daily-free-compass-wording',
-    'auto-voyage-speedup-wording',
-  ])
+  assert.deepEqual(doc.verificationIssues.map((issue) => issue.id), verificationIssueIds)
 }
 
 const validateEvent = (doc) => {
@@ -173,10 +193,14 @@ assert.equal(Array.isArray(evidence.claims) && evidence.claims.length >= 10, tru
 const evidenceIds = new Set(evidence.claims.map((claim) => claim.id))
 for (const id of ['event-active-days', 'collection-window', 'voyage-duration', 'compass-hour', 'team-2-cost', 'team-3-cost', 'team-4-cost', 'common-merge', 'premium-merge-random', 'premium-merge-choice', 'milestones', 'compass-packs']) assert(evidenceIds.has(id), `Missing source evidence claim ${id}`)
 assert.deepEqual(schema.oneOf?.map((entry) => entry.$ref), ['#/$defs/metaDocument', '#/$defs/eventDocument', '#/$defs/strategyDocument'])
-for (const key of ['metaDocument', 'metaCore', 'ownerSource', 'coverage', 'trust', 'verificationIssue', 'sourceClaim', 'eventDocument', 'activePhase', 'collectionPhase', 'unlock', 'team', 'treasureTier', 'mergeRule', 'milestone', 'reward', 'compassBundle', 'strategyDocument', 'strategyPrinciple', 'playerProfile', 'dailyRoutine']) {
+for (const key of ['metaDocument', 'metaCore', 'ownerSource', 'coverage', 'trust', 'verificationIssue', 'sourceClaim', 'eventDocument', 'activePhase', 'collectionPhase', 'unlock', 'team', 'treasureTier', 'fixedMergeOutcome', 'mergeRule', 'milestone', 'reward', 'compassBundle', 'strategyDocument', 'strategyPrinciple', 'playerProfile', 'dailyRoutine']) {
   assert.equal(schema.$defs?.[key]?.additionalProperties, false, `Published schema definition ${key} must remain closed`)
 }
+assert.equal(schema.$defs?.eventDocument?.properties?.phases?.additionalProperties, false, 'Published event phases contract must remain closed')
+assert.equal(schema.$defs?.eventDocument?.properties?.voyage?.additionalProperties, false, 'Published voyage timing contract must remain closed')
+assert.equal(schema.$defs?.eventDocument?.properties?.compass?.additionalProperties, false, 'Published Compass contract must remain closed')
 assert.deepEqual(Object.fromEntries(Object.entries(schema.$defs?.trust?.properties ?? {}).map(([key, definition]) => [key, definition.const])), trust, 'Validator trust constants must remain identical to published schema constants')
+assert.deepEqual(schema.$defs?.metaDocument?.properties?.verificationIssues?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.id?.const), verificationIssueIds, 'Published schema must pin verification issue IDs and order')
 assert.deepEqual(schema.$defs?.milestones?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.voyages?.const), milestones.map(([voyages]) => voyages), 'Published schema must pin milestone order and thresholds')
 assert.deepEqual(schema.$defs?.teams?.prefixItems?.map((entry) => entry.allOf?.[1]?.properties?.team?.const), [1, 2, 3, 4], 'Published schema must pin team order')
 const invalidPremiumOutcome = structuredClone(event)
@@ -191,7 +215,10 @@ assert.throws(() => validateMeta(invalidTrust), /governed constants/, 'Validator
 const invalidExtraField = structuredClone(event)
 invalidExtraField.unexpected = true
 assert.throws(() => validateEvent(invalidExtraField), /governed keys/, 'Validator must reject undeclared event properties')
+const invalidSourceClaim = structuredClone(meta)
+invalidSourceClaim.verificationIssues[0].sourceClaims[0].unexpected = true
+assert.throws(() => validateMeta(invalidSourceClaim), /undeclared key/, 'Validator must reject undeclared source-claim properties')
 const invalidStrategyConfidence = structuredClone(strategy)
 invalidStrategyConfidence.confidence = 'verified'
 assert.throws(() => validateStrategy(invalidStrategyConfidence), /community_guidance/, 'Validator must reject promoted strategy confidence')
-console.log('VOYAGE-001A contract passed: source-grounded timing, teams, milestones, Compass bundles, strict conflict containment and community-guidance separation verified.')
+console.log('VOYAGE-001A contract passed: source-grounded timing, teams, milestones, Compass bundles, strict metadata/schema parity, conflict containment and community-guidance separation verified.')
