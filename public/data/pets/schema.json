@@ -35,6 +35,129 @@
       "minItems": 3,
       "maxItems": 3
     },
+    "sequentialSkillRows": {
+      "type": "array",
+      "prefixItems": [
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 1 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 2 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 3 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 4 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 5 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 6 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 7 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 8 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 9 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/skillRow" }, { "prefixItems": [{ "const": 10 }] }] }
+      ],
+      "minItems": 1,
+      "maxItems": 10
+    },
+    "sequentialLevelRows": {
+      "type": "array",
+      "prefixItems": [
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 2 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 3 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 4 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 5 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 6 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 7 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 8 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 9 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 10 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 11 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 12 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 13 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 14 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 15 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 16 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 17 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 18 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 19 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 20 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 21 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 22 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 23 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 24 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 25 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 26 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 27 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 28 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 29 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 30 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 31 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 32 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 33 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 34 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 35 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 36 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 37 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 38 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 39 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 40 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 41 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 42 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 43 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 44 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 45 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 46 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 47 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 48 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 49 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 50 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 51 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 52 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 53 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 54 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 55 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 56 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 57 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 58 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 59 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 60 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 61 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 62 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 63 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 64 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 65 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 66 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 67 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 68 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 69 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 70 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 71 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 72 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 73 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 74 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 75 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 76 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 77 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 78 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 79 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 80 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 81 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 82 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 83 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 84 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 85 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 86 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 87 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 88 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 89 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 90 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 91 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 92 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 93 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 94 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 95 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 96 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 97 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 98 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 99 }] }] },
+        { "allOf": [{ "$ref": "#/$defs/levelRow" }, { "prefixItems": [{ "const": 100 }] }] }
+      ],
+      "minItems": 49,
+      "maxItems": 99
+    },
     "spriteCoordinate": {
       "type": "array",
       "prefixItems": [
@@ -96,12 +219,7 @@
         "description": { "$ref": "#/$defs/nonEmptyString" },
         "cooldown": { "type": ["string", "null"], "minLength": 1 },
         "effect": { "type": ["string", "null"], "minLength": 1 },
-        "progression": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 10,
-          "items": { "$ref": "#/$defs/skillRow" }
-        }
+        "progression": { "$ref": "#/$defs/sequentialSkillRows" }
       },
       "additionalProperties": false
     },
@@ -132,6 +250,47 @@
         "media": { "$ref": "#/$defs/media" },
         "curve": { "enum": ["max-50", "max-60", "max-70", "max-80", "max-100"] }
       },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "max": { "const": 50 },
+                "curve": { "const": "max-50" },
+                "skill": { "properties": { "progression": { "minItems": 5, "maxItems": 5 } } }
+              }
+            },
+            {
+              "properties": {
+                "max": { "const": 60 },
+                "curve": { "const": "max-60" },
+                "skill": { "properties": { "progression": { "minItems": 6, "maxItems": 6 } } }
+              }
+            },
+            {
+              "properties": {
+                "max": { "const": 70 },
+                "curve": { "const": "max-70" },
+                "skill": { "properties": { "progression": { "minItems": 7, "maxItems": 7 } } }
+              }
+            },
+            {
+              "properties": {
+                "max": { "const": 80 },
+                "curve": { "const": "max-80" },
+                "skill": { "properties": { "progression": { "minItems": 8, "maxItems": 8 } } }
+              }
+            },
+            {
+              "properties": {
+                "max": { "const": 100 },
+                "curve": { "const": "max-100" },
+                "skill": { "properties": { "progression": { "minItems": 10, "maxItems": 10 } } }
+              }
+            }
+          ]
+        }
+      ],
       "additionalProperties": false
     },
     "petsDocument": {
@@ -295,13 +454,19 @@
       "properties": {
         "max": { "enum": [50, 60, 70, 80, 100] },
         "rep": { "$ref": "#/$defs/nonEmptyString" },
-        "rows": {
-          "type": "array",
-          "minItems": 49,
-          "maxItems": 99,
-          "items": { "$ref": "#/$defs/levelRow" }
-        }
+        "rows": { "$ref": "#/$defs/sequentialLevelRows" }
       },
+      "allOf": [
+        {
+          "oneOf": [
+            { "properties": { "max": { "const": 50 }, "rows": { "minItems": 49, "maxItems": 49 } } },
+            { "properties": { "max": { "const": 60 }, "rows": { "minItems": 59, "maxItems": 59 } } },
+            { "properties": { "max": { "const": 70 }, "rows": { "minItems": 69, "maxItems": 69 } } },
+            { "properties": { "max": { "const": 80 }, "rows": { "minItems": 79, "maxItems": 79 } } },
+            { "properties": { "max": { "const": 100 }, "rows": { "minItems": 99, "maxItems": 99 } } }
+          ]
+        }
+      ],
       "additionalProperties": false
     }
   }
