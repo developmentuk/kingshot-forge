@@ -8,8 +8,16 @@ on:
     paths:
       - 'public/data/voyage-of-light/**'
       - 'server/data-engine/source-assets/voyage-of-light/**'
+      - 'src/features/guides/GuideArticlePage.tsx'
+      - 'src/features/guides/voyageGuideData.ts'
+      - 'src/features/guides/voyagePlanner.ts'
+      - 'src/pages/GuidesHubPage.tsx'
+      - 'src/pages/VoyageOfLightGuidePage.tsx'
+      - 'src/pages/VoyageOfLightGuidePage.css'
       - 'scripts/test-voyage-001a.mjs'
+      - 'scripts/test-voyage-001b.mjs'
       - 'docs/releases/VOYAGE-001A-VOYAGE-OF-LIGHT-FOUNDATION.md'
+      - 'docs/releases/VOYAGE-001B-PLAYER-GUIDE-PLANNER.md'
       - '.github/workflows/voyage-data-validation.yml'
 
 permissions:
@@ -21,7 +29,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate VOYAGE-001A governed data contract
+    name: Validate VOYAGE-001A/001B contracts
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -36,5 +44,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Validate VOYAGE-001A contract
+      - name: Validate VOYAGE-001A data contract
         run: node scripts/test-voyage-001a.mjs
+
+      - name: Validate VOYAGE-001B player guide and planner
+        run: node --experimental-strip-types scripts/test-voyage-001b.mjs

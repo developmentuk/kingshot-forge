@@ -1,7 +1,22 @@
 import { useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { allGuideTags, guideRegistry } from '../features/guides/guideRegistry'
+import { guideRegistry } from '../features/guides/guideRegistry'
+import type { GuideRegistryEntry } from '../features/guides/guideTypes'
 import '../features/guides/guideArticle.css'
+
+const voyageGuide: GuideRegistryEntry = {
+  slug: 'kingshot-voyage-of-light-guide',
+  path: '/guides/kingshot-voyage-of-light-guide',
+  title: 'Kingshot Voyage of Light: Milestones, Compasses & Planner Guide',
+  shortTitle: 'Voyage of Light',
+  summary: 'Plan Voyager Team uptime, Compass use and milestone progress from Forge’s governed Voyage dataset, with disputed treasure mechanics kept visibly unresolved.',
+  icon: '⛵',
+  type: 'Event guide',
+  tags: ['Voyage of Light', 'Voyager Teams', 'Compasses', 'Tidal Treasure', 'Forgehammer', 'Gear Boost Custom Chest', 'F2P', 'milestones', 'resource management'],
+}
+
+const guideCatalogue = [voyageGuide, ...guideRegistry]
+const guideTags = [...new Set(guideCatalogue.flatMap((guide) => guide.tags))].sort((left, right) => left.localeCompare(right))
 
 export default function GuidesHubPage() {
   const [params, setParams] = useSearchParams()
@@ -14,7 +29,7 @@ export default function GuidesHubPage() {
     return () => { document.title = previousTitle }
   }, [])
 
-  const filtered = useMemo(() => guideRegistry.filter((guide) => {
+  const filtered = useMemo(() => guideCatalogue.filter((guide) => {
     if (activeTag && !guide.tags.includes(activeTag)) return false
     if (!query) return true
     const haystack = [guide.title, guide.shortTitle, guide.summary, guide.type, ...guide.tags]
@@ -52,7 +67,7 @@ export default function GuidesHubPage() {
         <h1>Connected strategy guides for Kingshot</h1>
         <p className="guides-hub__lead">Browse Forge guides by event, system, hero, play style or resource. Every new article uses tags for discovery and links back into relevant Companion items, Hero Companion pages, tools and related guides.</p>
         <div className="guides-hub__tag-list" aria-label="Popular guide tags">
-          {allGuideTags.slice(0, 18).map((tag) => (
+          {guideTags.slice(0, 18).map((tag) => (
             <button key={tag} type="button" aria-pressed={activeTag === tag} onClick={() => setTag(tag)}>{tag}</button>
           ))}
         </div>
@@ -68,7 +83,7 @@ export default function GuidesHubPage() {
           </label>
           {(query || activeTag) && <button type="button" onClick={clearFilters}>Clear filters</button>}
         </div>
-        <p className="guides-hub__count" aria-live="polite">{filtered.length} of {guideRegistry.length} published guides{activeTag ? ` tagged “${activeTag}”` : ''}</p>
+        <p className="guides-hub__count" aria-live="polite">{filtered.length} of {guideCatalogue.length} published guides{activeTag ? ` tagged “${activeTag}”` : ''}</p>
 
         {filtered.length ? (
           <div className="guides-hub__grid">
