@@ -52,6 +52,14 @@ It derives:
 
 The page explicitly labels the elapsed-time figure as an idealised planning estimate. It assumes selected teams remain continuously available and are dispatched together with no downtime. Compass coverage is shown as voyage-hours rather than falsely claiming a guaranteed real-world completion time.
 
+## Runtime data boundary
+
+`src/features/guides/voyageGuideData.ts` is the shared fail-closed boundary between the public JSON and React rendering. The page does not cast unvalidated JSON directly into UI types.
+
+Before data reaches the page it validates the nested fields the UI consumes, including phase/timing primitives, four ordered team rows and unlock values, treasure tiers, both merge rules, all seven ordered milestones and their reward rows, Compass bundles, metadata trust fields and verification issues, strategy principles, player profiles and daily-routine strings.
+
+Malformed nested rows therefore fail into the page’s governed unavailable state rather than reaching rendering code and causing a runtime exception.
+
 ## Trust boundary
 
 VOYAGE-001B does not change any VOYAGE-001A source classifications.
@@ -65,7 +73,7 @@ In particular:
 - the disputed 75% / 25% probability is not published on the player page;
 - no Auto-Voyage or normal-speedup interaction is introduced.
 
-The player loader fails closed if the governed eight-hour voyage, one-hour Compass rule, four-team coverage, seven milestones, conflicted Premium rule, dataset identity or strategy trust classification changes unexpectedly.
+The player loader fails closed if the governed eight-hour voyage, one-hour Compass rule, four-team coverage, seven milestones, conflicted Premium rule, dataset identity, metadata trust boundary, nested player-visible values or strategy classification change unexpectedly.
 
 ## Validation
 
@@ -73,10 +81,12 @@ The player loader fails closed if the governed eight-hour voyage, one-hour Compa
 
 - milestone-planner arithmetic for one-team and four-team plans;
 - already-completed targets collapse to zero remaining work;
-- unsafe/negative inputs are sanitised;
-- the guide loads all three governed public documents;
-- the player loader rejects unexpected Premium canonicalisation;
-- strategy confidence remains `community_guidance`;
+- unsafe/negative planner inputs are sanitised;
+- the actual three governed public documents pass the shared runtime parser;
+- malformed nested team unlocks, milestone rewards and treasure tiers are rejected;
+- unexpected Premium canonicalisation is rejected;
+- malformed verification metadata and strategy guidance are rejected;
+- the guide loads all three governed public documents through the shared parser;
 - the disputed `75%` claim is absent from the player page;
 - the planning-assumption disclosure remains present;
 - the generic guide route resolves the Voyage page;
