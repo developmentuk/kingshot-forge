@@ -43,6 +43,7 @@ import PublicPlayerProgressionPage from "./pages/PublicPlayerProgressionPage";
 import HeroShowcaseEditorPage from "./pages/HeroShowcaseEditorPage";
 import HeroCollectionPage from "./pages/HeroCollectionPage";
 import HeroCompanionPage from "./pages/HeroCompanionPage";
+import PetCompanionPage from "./pages/PetCompanionPage";
 import Generation6HeroGuidePage from "./pages/Generation6HeroGuidePage";
 import FlamedragonTyrantGuidePage from "./pages/FlamedragonTyrantGuidePage";
 import VikingVengeanceGuidePage from "./pages/VikingVengeanceGuidePage";
@@ -146,6 +147,8 @@ function App() {
         <Route path="join/my-application" element={<MyContributorApplicationPage />} />
         <Route path="companion/heroes" element={<HeroCompanionPage />} />
         <Route path="companion/heroes/:heroId" element={<HeroCompanionPage />} />
+        <Route path="companion/pets" element={<PetCompanionPage />} />
+        <Route path="companion/pets/:petKey" element={<PetCompanionPage />} />
         <Route path="guides" element={<GuidesHubPage />} />
         <Route path="guides/kingshot-generation-6-heroes-yang-sophia-triton-guide" element={<Generation6HeroGuidePage />} />
         <Route path="guides/flamedragon-tyrant-event-guide" element={<FlamedragonTyrantGuidePage />} />
