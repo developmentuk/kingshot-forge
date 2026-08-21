@@ -1,0 +1,196 @@
+.voyage-guide {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1rem 0 4rem;
+}
+
+.voyage-guide__breadcrumbs {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.voyage-guide__hero,
+.voyage-guide__panel,
+.voyage-guide__source,
+.voyage-guide__status {
+  border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+  border-radius: 1rem;
+  background: var(--surface-1, rgba(16,24,40,0.9));
+}
+
+.voyage-guide__hero {
+  padding: clamp(1.5rem, 4vw, 3rem);
+  margin-bottom: 1rem;
+}
+
+.voyage-guide__hero h1,
+.voyage-guide__panel h2 {
+  margin-top: 0.25rem;
+}
+
+.voyage-guide__hero > p:last-of-type {
+  max-width: 75ch;
+}
+
+.voyage-guide__tags,
+.voyage-guide__tiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.voyage-guide__tags span,
+.voyage-guide__tiers span {
+  border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.voyage-guide__source,
+.voyage-guide__status {
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.voyage-guide__panel {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  margin-top: 1rem;
+}
+
+.voyage-guide__planner-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.voyage-guide__planner-grid label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.voyage-guide__planner-grid input,
+.voyage-guide__planner-grid select {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-2, rgba(255,255,255,0.05));
+  color: inherit;
+}
+
+.voyage-guide__result-grid,
+.voyage-guide__cards,
+.voyage-guide__profiles,
+.voyage-guide__issues {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.voyage-guide__result-grid article,
+.voyage-guide__cards article,
+.voyage-guide__profiles article,
+.voyage-guide__issues article {
+  border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+  border-radius: 0.85rem;
+  padding: 1rem;
+  background: var(--surface-2, rgba(255,255,255,0.04));
+}
+
+.voyage-guide__result-grid article {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.voyage-guide__result-grid strong {
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+  line-height: 1;
+}
+
+.voyage-guide__result-grid span,
+.voyage-guide__planner-note {
+  font-size: 0.9rem;
+  color: var(--text-muted, #aab3c2);
+}
+
+.voyage-guide__planner-note {
+  margin-top: 1rem;
+}
+
+.voyage-guide__team-number {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #aab3c2);
+}
+
+.voyage-guide__warning {
+  margin-top: 1rem;
+  border-left: 4px solid currentColor;
+  border-radius: 0.6rem;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 184, 77, 0.08);
+}
+
+.voyage-guide__table-wrap {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.voyage-guide table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.voyage-guide th,
+.voyage-guide td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.1));
+}
+
+.voyage-guide__profiles,
+.voyage-guide__issues {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.voyage-guide__profiles ul {
+  margin: 0.75rem 0 0;
+  padding-left: 1.2rem;
+}
+
+@media (max-width: 900px) {
+  .voyage-guide__planner-grid,
+  .voyage-guide__result-grid,
+  .voyage-guide__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .voyage-guide__profiles,
+  .voyage-guide__issues {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .voyage-guide {
+    width: min(100% - 1rem, 1180px);
+  }
+
+  .voyage-guide__planner-grid,
+  .voyage-guide__result-grid,
+  .voyage-guide__cards {
+    grid-template-columns: 1fr;
+  }
+}
