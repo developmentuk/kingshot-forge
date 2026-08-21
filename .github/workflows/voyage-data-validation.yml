@@ -1,0 +1,40 @@
+name: Voyage of Light data validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'public/data/voyage-of-light/**'
+      - 'server/data-engine/source-assets/voyage-of-light/**'
+      - 'scripts/test-voyage-001a.mjs'
+      - 'docs/releases/VOYAGE-001A-VOYAGE-OF-LIGHT-FOUNDATION.md'
+      - '.github/workflows/voyage-data-validation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: voyage-data-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate VOYAGE-001A governed data contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate VOYAGE-001A contract
+        run: node scripts/test-voyage-001a.mjs
