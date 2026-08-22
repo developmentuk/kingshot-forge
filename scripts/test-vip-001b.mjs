@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { guideRegistry } from '../src/features/guides/guideRegistry.ts'
 import { parseVipGuideData } from '../src/features/guides/vipGuideData.ts'
 import { calculateVipPlan } from '../src/features/guides/vipPlanner.ts'
 
@@ -70,4 +71,11 @@ assert(panel.includes("'/data/vip/meta.json'"), 'Planner must load governed VIP 
 assert(panel.includes('currency not stated'), 'Planner must not infer Special Pack currency.')
 assert(panel.includes('rarity not stated'), 'Planner must render nullable bundle rarity as an honest unknown state, not the literal value null.')
 
-console.log('VIP-001B guide and planner contracts passed: governed runtime parsing, derived progression maths, benefit comparison and conflict containment verified.')
+const vipRegistryEntry = guideRegistry.find((entry) => entry.slug === 'kingshot-vip-1-12-xp-gem-cost-guide')
+assert(vipRegistryEntry, 'VIP guide must remain registered in the Guides catalogue.')
+assert.equal(vipRegistryEntry.title, 'Kingshot VIP 1–12: Benefits, Rewards, Packs & Progression Planner')
+assert.equal(vipRegistryEntry.summary, 'Compare VIP 1–12 progression, governed benefits, daily free bundles and Special Packs with source conflicts kept explicit.')
+assert.deepEqual(vipRegistryEntry.tags, ['VIP', 'VIP 12', 'VIP XP', 'Gems', 'benefits', 'daily rewards', 'Special Packs', 'Helga', 'Amadeus', 'progression', 'resource planning'])
+assert(!vipRegistryEntry.summary.includes('unsupported benefits'), 'Guide registry must not retain the obsolete unsupported-benefits description.')
+
+console.log('VIP-001B guide and planner contracts passed: governed runtime parsing, derived progression maths, catalogue parity, benefit comparison and conflict containment verified.')

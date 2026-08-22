@@ -134,12 +134,12 @@ export const guideRegistry: GuideRegistryEntry[] = [
   {
     slug: 'kingshot-vip-1-12-xp-gem-cost-guide',
     path: '/guides/kingshot-vip-1-12-xp-gem-cost-guide',
-    title: 'Kingshot VIP 1–12: VIP XP & Gem-Equivalent Cost Guide',
+    title: 'Kingshot VIP 1–12: Benefits, Rewards, Packs & Progression Planner',
     shortTitle: 'VIP Progression',
-    summary: 'Plan VIP 1–12 with the supplied VIP XP requirements, exact 1:2 Gem conversion and an explicit boundary around unsupported benefits.',
+    summary: 'Compare VIP 1–12 progression, governed benefits, daily free bundles and Special Packs with source conflicts kept explicit.',
     icon: '👑',
     type: 'System guide',
-    tags: ['VIP', 'VIP 12', 'VIP XP', 'Gems', 'progression', 'gem budgeting', 'resource planning'],
+    tags: ['VIP', 'VIP 12', 'VIP XP', 'Gems', 'benefits', 'daily rewards', 'Special Packs', 'Helga', 'Amadeus', 'progression', 'resource planning'],
   },
   {
     slug: 'kingshot-governor-charms-upgrade-cost-guide',

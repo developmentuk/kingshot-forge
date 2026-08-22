@@ -14,6 +14,7 @@ on:
       - 'public/data/vip/**'
       - 'server/data-engine/source-assets/vip/**'
       - 'src/features/guides/articles/vipProgression.tsx'
+      - 'src/features/guides/guideRegistry.ts'
       - 'src/features/guides/VipPlannerPanel.tsx'
       - 'src/features/guides/VipPlannerPanel.css'
       - 'src/features/guides/vipGuideData.ts'
