@@ -11,6 +11,10 @@ import {
   previewDataset,
 } from '../../server/data-engine/runner.js'
 
+import {
+  readSingleQueryParameter,
+} from '../../server/http/requestQuery.js'
+
 const SUPPORTED_DATASETS =
   new Set<DatasetKey>([
     'heroes',
@@ -29,7 +33,7 @@ const SUPPORTED_DATASETS =
   ])
 
 function readDatasetKey(
-  value: string | string[] | undefined,
+  value: string | null,
 ): DatasetKey | null {
   if (typeof value !== 'string') {
     return null
@@ -57,8 +61,9 @@ export default async function handler(
     return
   }
 
-  const dataset =
-    readDatasetKey(request.query.dataset)
+  const dataset = readDatasetKey(
+    readSingleQueryParameter(request.url, 'dataset'),
+  )
 
   if (!dataset) {
     response.status(400).json({
