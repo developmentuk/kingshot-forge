@@ -14,6 +14,7 @@ on:
       - 'public/data/pets/**'
       - 'public/media/pets/**'
       - 'src/features/companion/pets/**'
+      - 'src/features/guides/articles/petSystem.tsx'
       - 'src/pages/PetCompanionPage.tsx'
       - 'src/pages/PetCompanionPage.css'
       - 'scripts/test-pets-001a.mjs'
