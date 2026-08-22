@@ -14,8 +14,9 @@ Existing routes remain unchanged:
 
 - `/companion/pets`
 - `/companion/pets/:petKey`
+- `/guides/kingshot-pet-system-refinement-guide`
 
-The planner is embedded in each existing pet detail page. No duplicate Pet route or standalone calculator route is introduced.
+The planner is embedded in each existing pet detail page. The existing Pet System guide links directly to the Pet Companion and planner. No duplicate Pet route or standalone calculator route is introduced.
 
 ## Planner contract
 
@@ -57,7 +58,11 @@ Using the governed `max-50` curve:
 - Lv.20 → Lv.50 = 24,100 Pet Food + 195 Growth Manuals + 60 Nutrient Potions + 10 Promotion Medallions.
 - Lv.50 → Lv.50 = zero materials.
 
-The focused regression also verifies input sanitisation and that the existing Pet Companion detail surface actually consumes the pure planner.
+Using the governed `max-100` curve:
+
+- Lv.90 → Lv.100 = 212,500 Pet Food + 730 Growth Manuals + 135 Nutrient Potions + 100 Promotion Medallions.
+
+The focused regression also verifies input sanitisation, that the existing Pet Companion detail surface consumes the pure planner, and that the Pet System guide links directly to `/companion/pets`.
 
 ## Release gate
 
