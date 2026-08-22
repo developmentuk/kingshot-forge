@@ -1,5 +1,14 @@
 import type { VipBenefit, VipLevel } from './vipGuideData'
 
+export type VipBenefitChange = {
+  key: string
+  label: string
+  unit: VipBenefit['unit']
+  status: VipBenefit['status']
+  fromValue: number | null
+  toValue: number | null
+}
+
 export type VipPlan = {
   currentLevel: number
   targetLevel: number
@@ -7,14 +16,7 @@ export type VipPlan = {
   requiredVipXp: number
   gemEquivalent: number
   target: VipLevel
-  benefitChanges: Array<{
-    key: string
-    label: string
-    unit: VipBenefit['unit']
-    status: VipBenefit['status']
-    fromValue: number | null
-    toValue: number | null
-  }>
+  benefitChanges: VipBenefitChange[]
 }
 
 function clampLevel(value: number): number {
@@ -34,18 +36,35 @@ export function calculateVipPlan(levels: VipLevel[], currentLevelValue: number, 
     : []
 
   const currentBenefits = new Map(levels[currentLevel - 1]?.benefits.map((benefit) => [benefit.key, benefit]) ?? [])
-  const benefitChanges = targetLevel > currentLevel
-    ? target.benefits.flatMap((benefit) => {
+  const benefitChanges: VipBenefitChange[] = []
+
+  if (targetLevel > currentLevel) {
+    for (const benefit of target.benefits) {
       const current = currentBenefits.get(benefit.key)
       if (benefit.status === 'conflicted') {
-        return [{ key: benefit.key, label: benefit.label, unit: benefit.unit, status: benefit.status, fromValue: current?.value ?? null, toValue: null }]
+        benefitChanges.push({
+          key: benefit.key,
+          label: benefit.label,
+          unit: benefit.unit,
+          status: benefit.status,
+          fromValue: current?.value ?? null,
+          toValue: null,
+        })
+        continue
       }
+
       if (!current || current.status !== benefit.status || current.value !== benefit.value) {
-        return [{ key: benefit.key, label: benefit.label, unit: benefit.unit, status: benefit.status, fromValue: current?.value ?? null, toValue: benefit.value }]
+        benefitChanges.push({
+          key: benefit.key,
+          label: benefit.label,
+          unit: benefit.unit,
+          status: benefit.status,
+          fromValue: current?.value ?? null,
+          toValue: benefit.value,
+        })
       }
-      return []
-    })
-    : []
+    }
+  }
 
   return {
     currentLevel,
