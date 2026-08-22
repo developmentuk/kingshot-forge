@@ -15,6 +15,10 @@ import {
   loadCanonicalHeroSkillsDataset,
 } from "../../server/data-engine/loadCanonicalHeroSkillsDataset.js";
 
+import {
+  readSingleQueryParameter,
+} from "../../server/http/requestQuery.js";
+
 const SUPPORTED_DATASETS = new Set<PublishedDatasetKey>([
   "heroes",
   "hero-skills",
@@ -34,7 +38,7 @@ const SUPPORTED_DATASETS = new Set<PublishedDatasetKey>([
 ]);
 
 function readDatasetKey(
-  value: string | string[] | undefined,
+  value: string | null,
 ): PublishedDatasetKey | null {
   if (typeof value !== "string") {
     return null;
@@ -63,7 +67,7 @@ export default async function handler(
   }
 
   const dataset = readDatasetKey(
-    request.query.dataset,
+    readSingleQueryParameter(request.url, "dataset"),
   );
 
   if (!dataset) {
