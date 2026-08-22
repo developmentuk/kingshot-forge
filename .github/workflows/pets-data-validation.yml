@@ -1,0 +1,83 @@
+name: Pets Data validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - main
+    paths:
+      - 'public/data/pets/**'
+      - 'public/media/pets/**'
+      - 'src/features/companion/pets/**'
+      - 'src/pages/PetCompanionPage.tsx'
+      - 'src/pages/PetCompanionPage.css'
+      - 'scripts/test-pets-001a.mjs'
+      - 'scripts/test-pets-001b.mjs'
+      - 'docs/releases/PETS-001B-UPGRADE-PLANNER.md'
+      - '.github/workflows/pets-data-validation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pets-data-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate PETS-001A/001B contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate PETS-001A data contract
+        run: node scripts/test-pets-001a.mjs
+
+      - name: Validate PETS-001B upgrade planner
+        run: node --experimental-strip-types scripts/test-pets-001b.mjs
+
+  final-aegis:
+    name: Final AEGIS integration gate
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify exact PR diff whitespace
+        run: git diff --check "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+
+      - name: Run mandatory AEGIS integration gate
+        run: npm run check
