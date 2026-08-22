@@ -13,8 +13,16 @@ on:
     paths:
       - 'public/data/vip/**'
       - 'server/data-engine/source-assets/vip/**'
+      - 'src/features/guides/articles/vipProgression.tsx'
+      - 'src/features/guides/guideRegistry.ts'
+      - 'src/features/guides/VipPlannerPanel.tsx'
+      - 'src/features/guides/VipPlannerPanel.css'
+      - 'src/features/guides/vipGuideData.ts'
+      - 'src/features/guides/vipPlanner.ts'
       - 'scripts/test-vip-001a.mjs'
+      - 'scripts/test-vip-001b.mjs'
       - 'docs/releases/VIP-001A-VIP-PROGRESSION-FOUNDATION.md'
+      - 'docs/releases/VIP-001B-BENEFITS-REWARDS-PLANNER.md'
       - '.github/workflows/vip-data-validation.yml'
 
 permissions:
@@ -26,7 +34,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate VIP-001A governed data contract
+    name: Validate VIP-001A/001B contracts
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -42,8 +50,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Validate VIP-001A contract
+      - name: Validate VIP-001A data contract
         run: node scripts/test-vip-001a.mjs
+
+      - name: Validate VIP-001B guide and planner
+        run: node --experimental-strip-types scripts/test-vip-001b.mjs
 
   final-aegis:
     name: Final AEGIS integration gate

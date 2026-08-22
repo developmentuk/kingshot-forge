@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
 import type { GuideArticleDefinition } from '../guideTypes'
+import VipPlannerPanel from '../VipPlannerPanel'
 
 const vipRows = [
   ['1', '0', '0'],
@@ -18,98 +18,94 @@ const vipRows = [
 
 export const vipProgressionGuide: GuideArticleDefinition = {
   slug: 'kingshot-vip-1-12-xp-gem-cost-guide',
-  title: 'Kingshot VIP 1–12: VIP XP & Gem-Equivalent Cost Guide',
+  title: 'Kingshot VIP 1–12: Benefits, Rewards, Packs & Progression Planner',
   shortTitle: 'VIP Progression',
   eyebrow: 'System Guide · VIP',
-  summary: 'Plan VIP 1–12 using the supplied VIP XP requirements and exact 1 VIP point = 2 gems conversion, with source limits kept explicit.',
-  intro: 'Kingshot Forge’s supplied VIP dataset contains one narrow but useful progression truth: the VIP XP recorded for Levels 1–12 and the exact gem-equivalent conversion at 2 gems for every 1 VIP point. It does not contain a VIP benefits, rewards or unlock table, so this guide stays focused on cost planning rather than inventing what each level grants.',
+  summary: 'Compare VIP 1–12 progression, governed benefits, daily free bundles and Special Packs with source conflicts kept explicit.',
+  intro: 'Kingshot Forge now has a governed VIP 1–12 contract covering progression requirements, active benefits, daily free bundles and one-time Special Pack contents. Use the planner below to compare your current level with a target while keeping disputed VIP 8 and VIP 12 claims visibly unresolved.',
   theme: 'royal',
-  tags: ['VIP', 'VIP 12', 'VIP XP', 'Gems', 'progression', 'gem budgeting', 'resource planning'],
-  sourceNote: 'This article uses the supplied `kingshot-vip` dataset, updated 14 June 2026 and verified 18 June 2026. Its provenance note records an accuracy score of 90 and says the VIP XP values were cross-checked across kingshot.net, Kingshot Mastery, LootBar and LDShop. The dataset explicitly states the conversion rule: 1 VIP point = 2 gems.',
-  alert: <><strong>This is a cost guide, not a benefits guide.</strong> The supplied dataset does not define the buffs, daily rewards, unlocks, free chests or other benefits attached to VIP Levels 1–12. Forge therefore does not publish those claims here.</>,
+  tags: ['VIP', 'VIP 12', 'VIP XP', 'Gems', 'benefits', 'daily rewards', 'Special Packs', 'Helga', 'Amadeus', 'progression', 'resource planning'],
+  sourceNote: 'This guide uses the governed VIP-001A public dataset. VIP XP/Gem-equivalent rows come from the preserved structured baseline; benefits, daily bundles and Special Pack contents come from the owner-supplied VIP dataset. F2P timing remains community guidance, pack currency is not inferred, and four explicit source conflicts remain open.',
+  alert: <><strong>Do not read the planner total as a canonical cumulative VIP XP figure.</strong> It is a derived sum of the published per-level requirements between your selected levels. The supplied source conflicts over VIP 12 cumulative wording, so Forge deliberately publishes no cumulative field.</>,
   connections: [
-    { kind: 'item', label: 'Governor Rename Card', description: 'A separate governed Companion record showing another current Gem decision: the card avoids the normal 400-Gem rename cost.', to: '/companion/items/governor-rename-card' },
-    { kind: 'guide', label: 'Governor Gear', description: 'Compare another long-term account progression system with a fully governed material ladder.', to: '/guides/kingshot-governor-gear-upgrade-cost-guide' },
+    { kind: 'guide', label: 'Governor Gear', description: 'Compare VIP investment with another long-term account progression system.', to: '/guides/kingshot-governor-gear-upgrade-cost-guide' },
     { kind: 'guide', label: 'Governor Charms', description: 'Plan the separate Lv.1–22 Charm material and stat progression ladder.', to: '/guides/kingshot-governor-charms-upgrade-cost-guide' },
-    { kind: 'guide', label: 'Truegold Progression', description: 'Compare VIP gem planning with the governed TG1–TG8 building progression system.', to: '/guides/kingshot-truegold-tempered-truegold-building-guide' },
+    { kind: 'guide', label: 'Truegold Progression', description: 'Compare VIP planning with the governed TG1–TG8 building progression system.', to: '/guides/kingshot-truegold-tempered-truegold-building-guide' },
   ],
   sections: [
     {
-      id: 'conversion', eyebrow: 'Core rule', title: 'The dataset uses a fixed 1:2 VIP-to-Gem conversion',
+      id: 'planner', eyebrow: 'Interactive comparison', title: 'Plan from your current VIP level to a target',
+      content: <VipPlannerPanel />,
+    },
+    {
+      id: 'progression', eyebrow: 'Published progression', title: 'VIP 1–12 per-level XP and Gem-equivalent rows',
       content: <>
-        <p>The supplied source defines <strong>1 VIP point = 2 gems</strong>. Every gem-equivalent value in the table is therefore exactly double its corresponding VIP XP figure.</p>
-        <div className="guide-article__grid guide-article__grid--four">
-          <article className="guide-article__card"><strong>12</strong><h3>VIP levels</h3><p>The source covers VIP 1 through VIP 12.</p></article>
-          <article className="guide-article__card"><strong>2×</strong><h3>Gem conversion</h3><p>Two gems for every one VIP point.</p></article>
-          <article className="guide-article__card"><strong>90</strong><h3>Source score</h3><p>The supplied provenance marks this dataset at accuracy score 90.</p></article>
-          <article className="guide-article__card"><strong>VIP 12</strong><h3>Top supplied level</h3><p>The source does not extend beyond Level 12.</p></article>
-        </div>
+        <p>Each row below is the published requirement associated with that VIP level. The Gem-equivalent value remains exactly <strong>2 Gems per 1 VIP point</strong>.</p>
+        <div className="guide-article__table-wrap"><table className="guide-article__table"><thead><tr><th>VIP level</th><th>Published XP requirement</th><th>Gem equivalent</th></tr></thead><tbody>{vipRows.map((row) => <tr key={row[0]}>{row.map((cell, index) => <td key={`${row[0]}-${index}`}>{cell}</td>)}</tr>)}</tbody></table></div>
+        <p className="guide-article__callout"><strong>Planner rule:</strong> when you compare two levels, Forge sums only the published rows above your current level through the selected target. That derived sum is useful for planning but is not stored or presented as a canonical cumulative field.</p>
       </>,
     },
     {
-      id: 'table', eyebrow: 'All supplied rows', title: 'VIP 1–12 XP and Gem-equivalent table',
-      content: <>
-        <p>The values below are copied from the supplied dataset. Forge has not reinterpreted them as benefit values, event costs or recommended Gem spending.</p>
-        <div className="guide-article__table-wrap"><table className="guide-article__table"><thead><tr><th>VIP level</th><th>XP recorded to reach level</th><th>Gem equivalent</th></tr></thead><tbody>{vipRows.map((row) => <tr key={row[0]}>{row.map((cell, index) => <td key={`${row[0]}-${index}`}>{cell}</td>)}</tr>)}</tbody></table></div>
-      </>,
-    },
-    {
-      id: 'curve', eyebrow: 'Planning view', title: 'Where the supplied cost curve becomes steep',
-      content: <>
-        <p>The table is relatively compact through VIP 8, where the source row is 100,000 VIP XP / 200,000 gems. The next four supplied levels rise sharply:</p>
-        <ul>
-          <li><strong>VIP 9:</strong> 350,000 VIP XP / 700,000 gems.</li>
-          <li><strong>VIP 10:</strong> 600,000 VIP XP / 1,200,000 gems.</li>
-          <li><strong>VIP 11:</strong> 1,200,000 VIP XP / 2,400,000 gems.</li>
-          <li><strong>VIP 12:</strong> 2,400,000 VIP XP / 4,800,000 gems.</li>
-        </ul>
-        <p className="guide-article__callout"><strong>Planning interpretation:</strong> the gem-equivalent column tells you the mathematical value of the recorded VIP XP at the source’s 1:2 conversion. It does not say spending Gems is the best or only way to gain VIP XP.</p>
-      </>,
-    },
-    {
-      id: 'budgeting', eyebrow: 'Gem budgeting', title: 'Do not confuse “gem equivalent” with “recommended spend”',
-      content: <>
-        <p>The supplied data is a conversion table. It does not describe VIP XP acquisition routes, free daily VIP gain, paid packs, subscriptions, events or the relative value of spending Gems elsewhere.</p>
-        <p>That means Forge can safely answer “what Gem value corresponds to this VIP XP row?” but not “should I spend Gems to reach this VIP level?” from this dataset alone.</p>
-        <p>For a separate governed Gem-use example, the <Link className="guide-article__link" to="/companion/items/governor-rename-card">Governor Rename Card</Link> record documents a current 400-Gem rename alternative when no card is available. That is a different system and is linked only to help players think about competing Gem uses.</p>
-      </>,
-    },
-    {
-      id: 'limits', eyebrow: 'Source boundary', title: 'What this VIP dataset does not establish',
+      id: 'benefits', eyebrow: 'Benefit landmarks', title: 'Where the governed VIP rows become more significant',
       content: <>
         <ul>
-          <li>No VIP benefit or buff list.</li>
-          <li>No daily chest/reward table.</li>
-          <li>No construction, training, march, combat or resource bonuses.</li>
-          <li>No VIP activation duration or subscription mechanics.</li>
-          <li>No acquisition-rate table for free or paid VIP XP.</li>
-          <li>No levels beyond VIP 12.</li>
+          <li><strong>VIP 4:</strong> the governed row includes Construction Speed +10%.</li>
+          <li><strong>VIP 5:</strong> the governed row includes +1 Formation.</li>
+          <li><strong>VIP 6:</strong> the governed row includes +1 March Queue alongside +1 Formation.</li>
+          <li><strong>VIP 8:</strong> the governed row reaches +2 Formations, Resource Production Speed +16% and Storehouse Capacity +700,000.</li>
+          <li><strong>VIP 9:</strong> the governed row includes Squads’ Defence +10% and Construction Speed +20%.</li>
+          <li><strong>VIP 10:</strong> the governed row includes Squads’ Attack +12%, Squads’ Defence +12% and a 48-hour Custom Avatar Upload Cooldown Reduction.</li>
+          <li><strong>VIP 11:</strong> Attack, Defence and Health are all source-supported at +14%.</li>
+          <li><strong>VIP 12:</strong> Defence +16% and Lethality +16% are published, while Attack and Health remain unresolved because the supplied source conflicts.</li>
         </ul>
-        <p>Those details need a separate governed source before Forge should publish them.</p>
       </>,
     },
     {
-      id: 'checklist', eyebrow: 'Before spending', title: 'VIP planning checklist',
+      id: 'daily-bundles', eyebrow: 'Daily value', title: 'Daily free bundles scale from Rare to Mythic materials',
+      content: <>
+        <p>The governed contract contains a daily free bundle for every VIP level. Early rows focus on Rare and Epic Skill Books/Manuals and General Hero Shards; later rows move into Mythic General Hero Shards and Mythic Skill materials.</p>
+        <p>VIP 12 additionally includes three Lucky Hero Gear Chests in its daily bundle. Use the target-level panel above for the exact source-governed contents of any selected tier.</p>
+      </>,
+    },
+    {
+      id: 'special-packs', eyebrow: 'One-time packs', title: 'Special Packs contain Gems, hero shards, XP and speedups',
+      content: <>
+        <p>VIP 1–6 Special Packs use Helga Shards; VIP 7–12 use Amadeus Shards. The public contract also carries listed Gems, VIP XP, Hero XP, construction/research/training speedups and Alliance Gift tier.</p>
+        <p>Where the supplied detailed rows do not state a currency, Forge shows the numeric price but does not label it USD or any other currency. VIP 8 is stricter: its price remains completely unresolved because two source sections disagree.</p>
+      </>,
+    },
+    {
+      id: 'conflicts', eyebrow: 'Verification boundary', title: 'Four claims remain deliberately unresolved',
       content: <>
         <ol>
-          <li>Find your target VIP level in the 1–12 source table.</li>
-          <li>Read the recorded VIP XP requirement rather than estimating from a neighbouring tier.</li>
-          <li>Use the exact ×2 conversion only when you need the Gem-equivalent value.</li>
-          <li>Do not treat the equivalent as a recommendation to spend that many Gems.</li>
-          <li>Check other planned Gem uses before making an irreversible spend.</li>
-          <li>If you need VIP benefits or acquisition routes, wait for a source that explicitly governs those mechanics rather than relying on this cost dataset.</li>
+          <li><strong>VIP 8 pack price:</strong> detailed and later prose disagree, so no canonical price is published.</li>
+          <li><strong>VIP 12 Attack and Health:</strong> competing percentages remain null/conflicted.</li>
+          <li><strong>VIP 12 cumulative XP wording:</strong> Forge publishes per-level requirements only and derives comparison totals at runtime.</li>
+          <li><strong>Amadeus shard aggregate:</strong> detailed VIP 7–12 rows total 975, while later prose gives conflicting aggregate figures; Forge publishes the individual rows, not an aggregate.</li>
+        </ol>
+      </>,
+    },
+    {
+      id: 'checklist', eyebrow: 'Planning safely', title: 'VIP planning checklist',
+      content: <>
+        <ol>
+          <li>Select your current and target VIP level in the planner.</li>
+          <li>Use the derived XP/Gem totals as planning arithmetic, not as a stored cumulative field.</li>
+          <li>Compare the target row’s active benefits and daily bundle before deciding whether the progression matters to you.</li>
+          <li>Treat F2P timing as community guidance rather than a guaranteed schedule.</li>
+          <li>Do not infer a currency for Special Pack prices.</li>
+          <li>Where the page says “unresolved”, wait for verification rather than choosing the more attractive source claim.</li>
         </ol>
       </>,
     },
     {
       id: 'faq', eyebrow: 'Quick answers', title: 'VIP progression FAQ',
       content: <>
-        <h3>How many VIP levels are in the supplied Forge dataset?</h3><p>12, covering VIP 1 through VIP 12.</p>
-        <h3>What conversion does the source use?</h3><p>1 VIP point = 2 gems.</p>
-        <h3>What is the VIP 8 row?</h3><p>100,000 VIP XP and a 200,000-gem equivalent.</p>
-        <h3>What is the VIP 10 row?</h3><p>600,000 VIP XP and a 1,200,000-gem equivalent.</p>
-        <h3>What is the VIP 12 row?</h3><p>2,400,000 VIP XP and a 4,800,000-gem equivalent.</p>
-        <h3>Does this guide tell me what VIP 12 gives?</h3><p>No. The supplied dataset contains costs, not a governed benefit table, so Forge does not invent VIP-level rewards or buffs here.</p>
+        <h3>Does Forge now publish VIP benefits?</h3><p>Yes. VIP-001A governs the benefits, daily free bundles and Special Pack rows for VIP 1–12, except fields explicitly retained as source conflicts.</p>
+        <h3>What conversion does the progression source use?</h3><p>1 VIP point = 2 Gems.</p>
+        <h3>Is the planner’s total cumulative VIP XP?</h3><p>No. It is a derived sum of published per-level requirements between the two selected levels.</p>
+        <h3>What does VIP 12 give for Attack and Health?</h3><p>Forge does not publish a canonical value yet because the source gives conflicting percentages.</p>
+        <h3>What is the VIP 8 Special Pack price?</h3><p>Unresolved. The supplied source conflicts, so Forge does not choose one figure.</p>
       </>,
     },
   ],
