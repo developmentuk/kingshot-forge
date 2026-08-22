@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireForgeActor, type ForgeActor } from '../server/auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../server/database/supabaseAdmin.js'
+import { readSingleQueryParameter } from '../server/http/requestQuery.js'
 import { validateTextArtwork, type TextArtworkValidationIssue } from '../shared/domains/art-studio/textValidation.js'
 import { analyseText, hashText, repairText, RENDER_PROFILES, sha256Text, type RepairOperation } from '../shared/domains/art-studio/rendering.js'
 import { inspectTextProvenance } from '../shared/domains/art-studio/textProvenance.js'
@@ -173,7 +174,7 @@ async function moderateSubmission(request: VercelRequest, response: VercelRespon
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
-  const action = typeof request.query.action === 'string' ? request.query.action : 'gallery'
+  const action = readSingleQueryParameter(request.url, 'action') ?? 'gallery'
   try {
     if (request.method === 'GET' && action === 'gallery') return await gallery(response)
     if (request.method === 'GET' && action === 'mine') return await mine(request, response)
