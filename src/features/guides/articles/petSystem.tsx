@@ -29,7 +29,7 @@ export const petSystemGuide: GuideArticleDefinition = {
   sourceNote: 'Fresh official verification completed 20 August 2026 against the current Century Games / Kingshot Help Center Pet System section. Official material confirms the Town Center Lv.18 plus server-age access gate; a current capture count of 3 Pets following the latest update; 2 tame/feed attempts per Pet daily; simultaneous Pet Skills; the six current Pet-item functions; and refinement safeguards including irreversible replacement choices and Total-Power-based warning behaviour. Century Games does not publish one fixed server-day unlock table. Approximate Day 55/72/113/197 rollout ranges and F2P priority commentary come from current July 2026 community guides and are therefore presented only as observational planning guidance.',
   alert: <><strong>Do not treat community unlock days as official timers.</strong> Century Games only says the Pet feature and later Pet availability depend on server age. Also treat refinement carefully: consumed items are not returned, and the official Help Center says refinement is irreversible once replacement is confirmed.</>,
   connections: [
-    { kind: 'tool', label: 'Companion Items', description: 'Use Forge Companion to look up Pet materials and connected progression resources as they are governed.', to: '/companion' },
+    { kind: 'tool', label: 'Pet Companion & Upgrade Planner', description: 'Browse all 14 governed Pets and calculate exact current-to-target Pet Food and advancement-material requirements.', to: '/companion/pets' },
     { kind: 'guide', label: 'KvK Prep Scoring', description: 'Forge’s governed KvK scoring source includes Pet advancement and Taming Mark opportunities on Prep Days 3 and 5.', to: '/guides/kingshot-kvk-preparation-scoring-guide' },
     { kind: 'guide', label: 'Hero Progression', description: 'Balance Pet investment against Hero XP and shard progression instead of treating every account system in isolation.', to: '/guides/kingshot-hero-xp-shard-progression-guide' },
     { kind: 'guide', label: 'Governor Charms', description: 'Compare another long-term account-stat system before deciding where scarce progression materials should go.', to: '/guides/kingshot-governor-charms-upgrade-cost-guide' },
@@ -60,6 +60,7 @@ export const petSystemGuide: GuideArticleDefinition = {
         <p>Do not treat every Pet item as interchangeable. The current Help Center assigns each material to a specific progression layer.</p>
         <div className="guide-article__table-wrap"><table className="guide-article__table"><thead><tr><th>Material</th><th>Official function</th></tr></thead><tbody>{materialRows.map(([material, use]) => <tr key={material}><td>{material}</td><td>{use}</td></tr>)}</tbody></table></div>
         <p className="guide-article__callout"><strong>Planning implication:</strong> Pet Food, Taming Marks and Potential materials solve different problems. Saving one category does not automatically prepare the others.</p>
+        <p>Use the <Link to="/companion/pets">Pet Companion & Upgrade Planner</Link> to open any governed Pet and calculate the exact Pet Food, Growth Manual, Nutrient Potion and Promotion Medallion requirements between two published levels.</p>
       </>,
     },
     {
