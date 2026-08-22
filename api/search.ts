@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { readSingleQueryParameter } from '../server/http/requestQuery.js'
 import { getSearchIndexCache } from '../server/search/runtime.js'
 import { PUBLISHED_DATASET_KEYS } from '../shared/data-engine/datasets.js'
 import type { SearchQuery } from '../shared/search/index.js'
@@ -7,24 +8,34 @@ const MAX_QUERY_LENGTH = 200
 const MAX_RESULTS = 100
 const MAX_TRAVERSAL_DEPTH = 2
 
-function list(value: string | string[] | undefined): string[] | undefined {
+function list(value: string | null): string[] | undefined {
   if (typeof value !== 'string') return undefined
   const items = value.split(',').map((item) => item.trim()).filter(Boolean)
   return items.length ? items : undefined
 }
 
 export function parseQuery(request: VercelRequest): SearchQuery {
-  const text = typeof request.query.q === 'string' ? request.query.q.trim() : undefined
+  const textValue = readSingleQueryParameter(request.url, 'q')
+  const text = typeof textValue === 'string' ? textValue.trim() : undefined
   if (text && text.length > MAX_QUERY_LENGTH) throw new SearchRequestError('query_too_long', 'Search queries must be 200 characters or fewer.')
-  const datasets = list(request.query.dataset)
+  const datasets = list(readSingleQueryParameter(request.url, 'dataset'))
   if (datasets?.some((dataset) => !PUBLISHED_DATASET_KEYS.includes(dataset as typeof PUBLISHED_DATASET_KEYS[number]))) throw new SearchRequestError('invalid_dataset', 'One or more dataset filters are invalid.')
-  const limitRaw = typeof request.query.limit === 'string' ? request.query.limit : undefined
+  const limitRaw = readSingleQueryParameter(request.url, 'limit') ?? undefined
   const limit = limitRaw ? Number(limitRaw) : 50
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_RESULTS) throw new SearchRequestError('invalid_limit', 'Result limits must be an integer from 1 to 100.')
-  const depthRaw = typeof request.query.depth === 'string' ? request.query.depth : undefined
+  const depthRaw = readSingleQueryParameter(request.url, 'depth') ?? undefined
   const relationshipDepth = depthRaw ? Number(depthRaw) : undefined
   if (relationshipDepth !== undefined && (!Number.isInteger(relationshipDepth) || relationshipDepth < 1 || relationshipDepth > MAX_TRAVERSAL_DEPTH)) throw new SearchRequestError('invalid_depth', 'Relationship depth must be an integer from 1 to 2.')
-  return { text, keywords: list(request.query.keyword), tags: list(request.query.tag), datasets, relationshipFrom: typeof request.query.relationshipFrom === 'string' ? request.query.relationshipFrom : undefined, relationshipDepth, limit, permissions: { userId: null } }
+  return {
+    text,
+    keywords: list(readSingleQueryParameter(request.url, 'keyword')),
+    tags: list(readSingleQueryParameter(request.url, 'tag')),
+    datasets,
+    relationshipFrom: readSingleQueryParameter(request.url, 'relationshipFrom') ?? undefined,
+    relationshipDepth,
+    limit,
+    permissions: { userId: null },
+  }
 }
 
 export class SearchRequestError extends Error { constructor(readonly code: string, message: string) { super(message) } }

@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
+import { readSingleQueryParameter } from '../../server/http/requestQuery.js'
 import { assignRole, changeAccountStatus, getUserDetail, linkManagedPlayer, listUsers, lookupManagedPlayer, UserManagementError, roleCatalogue, revokeRole } from '../../server/identity/userManagementService.js'
 
 function body(request: VercelRequest) { return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {} }
@@ -8,17 +9,17 @@ function fail(response: VercelResponse, status: number, message: string) { respo
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
   try {
     const actor = await requireForgeActor(request)
-    const userId = typeof request.query.userId === 'string' ? request.query.userId : null
-    const action = typeof request.query.action === 'string' ? request.query.action : null
+    const userId = readSingleQueryParameter(request.url, 'userId')
+    const action = readSingleQueryParameter(request.url, 'action')
     if (request.method === 'GET' && action === 'roles') { response.status(200).json({ status: 'success', data: roleCatalogue(actor) }); return }
     if (request.method === 'GET' && userId) { response.status(200).json({ status: 'success', data: await getUserDetail(actor, userId) }); return }
     if (request.method === 'GET') {
       response.status(200).json({ status: 'success', data: await listUsers(actor, {
-        search: typeof request.query.search === 'string' ? request.query.search : undefined,
-        role: typeof request.query.role === 'string' ? request.query.role : undefined,
-        status: typeof request.query.status === 'string' ? request.query.status : undefined,
-        page: typeof request.query.page === 'string' ? request.query.page : undefined,
-        pageSize: typeof request.query.pageSize === 'string' ? request.query.pageSize : undefined,
+        search: readSingleQueryParameter(request.url, 'search') ?? undefined,
+        role: readSingleQueryParameter(request.url, 'role') ?? undefined,
+        status: readSingleQueryParameter(request.url, 'status') ?? undefined,
+        page: readSingleQueryParameter(request.url, 'page') ?? undefined,
+        pageSize: readSingleQueryParameter(request.url, 'pageSize') ?? undefined,
       }) }); return
     }
     if (request.method === 'POST' && userId) {

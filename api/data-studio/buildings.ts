@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { buildingsContract } from '../../shared/data-pipeline/buildingsContract.js'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../../server/database/supabaseAdmin.js'
+import { readSingleQueryParameter } from '../../server/http/requestQuery.js'
 import { withWarningId } from '../../shared/data-pipeline/warningIdentity.js'
 
 type SheetRows = Record<string, Record<string, unknown>[]>
@@ -14,7 +15,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const actor = await requireForgeActor(request)
     const supabase = getSupabaseAdmin()
-    const requestedRunId = typeof request.query.runId === 'string' ? request.query.runId : undefined
+    const requestedRunId = readSingleQueryParameter(request.url, 'runId') ?? undefined
     if (request.method === 'GET') {
       if (!actor.permissionKeys.includes('cms.view')) {
         fail(response, 403, 'Your Forge role cannot view dataset imports.')

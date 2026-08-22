@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor, type ForgeActor } from '../server/auth/requireForgeActor.js'
 import { autoRedeemPolicy, getAdminGiftCodeCatalogue, getAdminGiftCodeMetrics, getAutoRedeemContext, getProviderOperations, grantConsent, redeemAvailable, redeemControlledValidationCode, redemptionHistory, revokeConsent, setProviderOperations } from '../server/giftcodes/autoRedeemService.js'
+import { readSingleQueryParameter } from '../server/http/requestQuery.js'
 
 function body(request: VercelRequest) { return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {} }
 function fail(response: VercelResponse, status: number, message: string) { response.status(status).json({ status: 'error', message }) }
@@ -9,8 +10,8 @@ function requireActiveAccount(actor: ForgeActor) {
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
+  const action = readSingleQueryParameter(request.url, 'action') ?? 'context'
   try {
-    const action = typeof request.query.action === 'string' ? request.query.action : 'context'
     if (request.method === 'GET' && action === 'policy') { response.status(200).json({ status: 'success', data: autoRedeemPolicy }); return }
     if (request.method === 'GET' && action === 'context') {
       const actor = await requireForgeActor(request)
@@ -54,7 +55,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   } catch (error) {
     if (error instanceof ForgeAuthenticationError) { fail(response, error.statusCode, error.message); return }
     const statusCode = typeof error === 'object' && error && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500
-    console.error('[giftcodes]', { method: request.method, action: request.query.action, name: error instanceof Error ? error.name : 'UnknownError' })
+    console.error('[giftcodes]', { method: request.method, action, name: error instanceof Error ? error.name : 'UnknownError' })
     fail(response, statusCode, statusCode === 500 ? 'The Gift Centre service is temporarily unavailable.' : error instanceof Error ? error.message : 'The request could not be completed.')
   }
 }

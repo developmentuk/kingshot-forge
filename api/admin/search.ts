@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor, type ForgeActorRole } from '../../server/auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../../server/database/supabaseAdmin.js'
+import { readSingleQueryParameter } from '../../server/http/requestQuery.js'
 import { canManageSearch, resolveSearchPermissionContext, SearchSimulationError } from '../../server/search/admin.js'
 import { getSearchIndexCache, getSearchRefreshService, invalidateSearchIndex } from '../../server/search/runtime.js'
 import { getSearchProjectionRepository } from '../../server/search/repository.js'
@@ -24,7 +25,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
 }
 
 async function handleQuery(request: VercelRequest, response: VercelResponse, actor: Parameters<typeof resolveSearchPermissionContext>[0]): Promise<void> {
-  const query = parseQuery(request); const simulatedRole = typeof request.query.simulate === 'string' ? request.query.simulate : undefined
+  const query = parseQuery(request); const simulatedRole = readSingleQueryParameter(request.url, 'simulate') ?? undefined
   const permissions = await resolveSearchPermissionContext(actor, simulatedRole, async (role) => loadRolePermissions(role))
   if (simulatedRole) await getSearchProjectionRepository().recordPermissionSimulation({ real_actor_id: actor.userId, simulated_role: simulatedRole, simulated_permissions: permissions.permissions ?? [], occurred_at: new Date().toISOString() })
   const result = await getSearchIndexCache().query({ ...query, permissions })

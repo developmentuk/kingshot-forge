@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor, type ForgeActor } from '../server/auth/requireForgeActor.js'
+import { readSingleQueryParameter } from '../server/http/requestQuery.js'
 import { VisionEvidenceStorageError } from '../server/vision/evidenceStorageService.js'
 import { createSupabaseVisionEvidenceStorageService } from '../server/vision/evidence/supabaseVisionEvidenceRuntime.js'
 import { isUuid, isVisionEvidenceMimeType, type VisionEvidenceActor, type VisionEvidencePurpose } from '../shared/platform/vision/evidenceStorageContracts.js'
@@ -15,7 +16,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const actor = await requireForgeActor(request)
     const body = request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {}
-    const action = typeof body.action === 'string' ? body.action : typeof request.query.action === 'string' ? request.query.action : ''
+    const action = typeof body.action === 'string' ? body.action : readSingleQueryParameter(request.url, 'action') ?? ''
     if (request.method !== 'POST' || !ACTIONS.has(action)) { response.setHeader('Allow', 'POST'); response.status(405).json({ status: 'error', message: 'A supported POST evidence action is required.' }); return }
     const service = createSupabaseVisionEvidenceStorageService()
     const data = await dispatch(service, toEvidenceActor(actor), action, body)
