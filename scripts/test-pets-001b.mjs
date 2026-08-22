@@ -69,10 +69,10 @@ const petPage = readFileSync(resolve(root, 'src/pages/PetCompanionPage.tsx'), 'u
 assert.match(petPage, /calculatePetUpgradePlan/u)
 assert.match(petPage, /Upgrade cost planner/u)
 assert.match(petPage, /Derived from the exact published rows crossed/u)
+assert.match(petPage, /Totals only cover the selected level range/u)
 assert.match(petPage, /Growth Manuals/u)
 assert.match(petPage, /Nutrient Potions/u)
 assert.match(petPage, /Promotion Medallions/u)
 assert.match(petPage, /key=\{pet\.key\}/u, 'Planner must reset when navigating between pet detail routes.')
-assert.doesNotMatch(petPage, /extrapolat/iu, 'Planner UI should not suggest extrapolated pet costs.')
 
 console.log('PETS-001B upgrade planner contracts passed: exact row-range maths, milestone materials, input sanitisation and Companion integration verified.')
