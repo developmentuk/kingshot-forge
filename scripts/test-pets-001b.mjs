@@ -4,30 +4,34 @@ import { resolve } from 'node:path'
 import { calculatePetUpgradePlan } from '../src/features/companion/pets/petPlanner.ts'
 
 const root = process.cwd()
-const rawCurve = JSON.parse(readFileSync(resolve(root, 'public/data/pets/max-50.json'), 'utf8'))
-const curve = {
-  key: 'max-50',
-  maxLevel: rawCurve.max,
-  sourceRepresentative: rawCurve.rep,
-  levelProgression: rawCurve.rows.map(([level, petFood, growthManual, nutrientPotion, promotionMedallion]) => ({
-    level,
-    petFood,
-    growthManual,
-    nutrientPotion,
-    promotionMedallion,
-  })),
-  advancementMilestones: rawCurve.rows
-    .filter(([level]) => level % 10 === 0)
-    .map(([level, petFood, growthManual, nutrientPotion, promotionMedallion]) => ({
+
+function loadCurve(filename, key) {
+  const rawCurve = JSON.parse(readFileSync(resolve(root, `public/data/pets/${filename}`), 'utf8'))
+  return {
+    key,
+    maxLevel: rawCurve.max,
+    sourceRepresentative: rawCurve.rep,
+    levelProgression: rawCurve.rows.map(([level, petFood, growthManual, nutrientPotion, promotionMedallion]) => ({
       level,
       petFood,
       growthManual,
       nutrientPotion,
       promotionMedallion,
     })),
+    advancementMilestones: rawCurve.rows
+      .filter(([level]) => level % 10 === 0)
+      .map(([level, petFood, growthManual, nutrientPotion, promotionMedallion]) => ({
+        level,
+        petFood,
+        growthManual,
+        nutrientPotion,
+        promotionMedallion,
+      })),
+  }
 }
 
-assert.deepEqual(calculatePetUpgradePlan(curve, 1, 20), {
+const max50 = loadCurve('max-50.json', 'max-50')
+assert.deepEqual(calculatePetUpgradePlan(max50, 1, 20), {
   currentLevel: 1,
   targetLevel: 20,
   levelsCrossed: 19,
@@ -38,7 +42,7 @@ assert.deepEqual(calculatePetUpgradePlan(curve, 1, 20), {
   promotionMedallion: 0,
 })
 
-assert.deepEqual(calculatePetUpgradePlan(curve, 20, 50), {
+assert.deepEqual(calculatePetUpgradePlan(max50, 20, 50), {
   currentLevel: 20,
   targetLevel: 50,
   levelsCrossed: 30,
@@ -49,7 +53,7 @@ assert.deepEqual(calculatePetUpgradePlan(curve, 20, 50), {
   promotionMedallion: 10,
 })
 
-assert.deepEqual(calculatePetUpgradePlan(curve, 50, 50), {
+assert.deepEqual(calculatePetUpgradePlan(max50, 50, 50), {
   currentLevel: 50,
   targetLevel: 50,
   levelsCrossed: 0,
@@ -60,10 +64,22 @@ assert.deepEqual(calculatePetUpgradePlan(curve, 50, 50), {
   promotionMedallion: 0,
 })
 
-const sanitised = calculatePetUpgradePlan(curve, -10, 999)
+const sanitised = calculatePetUpgradePlan(max50, -10, 999)
 assert.equal(sanitised.currentLevel, 1)
 assert.equal(sanitised.targetLevel, 50)
 assert.equal(sanitised.petFood, 29033)
+
+const max100 = loadCurve('max-100.json', 'max-100')
+assert.deepEqual(calculatePetUpgradePlan(max100, 90, 100), {
+  currentLevel: 90,
+  targetLevel: 100,
+  levelsCrossed: 10,
+  milestoneLevels: [100],
+  petFood: 212500,
+  growthManual: 730,
+  nutrientPotion: 135,
+  promotionMedallion: 100,
+})
 
 const petPage = readFileSync(resolve(root, 'src/pages/PetCompanionPage.tsx'), 'utf8')
 assert.match(petPage, /calculatePetUpgradePlan/u)
@@ -75,4 +91,9 @@ assert.match(petPage, /Nutrient Potions/u)
 assert.match(petPage, /Promotion Medallions/u)
 assert.match(petPage, /key=\{pet\.key\}/u, 'Planner must reset when navigating between pet detail routes.')
 
-console.log('PETS-001B upgrade planner contracts passed: exact row-range maths, milestone materials, input sanitisation and Companion integration verified.')
+const petGuide = readFileSync(resolve(root, 'src/features/guides/articles/petSystem.tsx'), 'utf8')
+assert.match(petGuide, /Pet Companion & Upgrade Planner/u)
+assert.match(petGuide, /to: '\/companion\/pets'/u)
+assert.match(petGuide, /<Link to="\/companion\/pets">Pet Companion & Upgrade Planner<\/Link>/u)
+
+console.log('PETS-001B upgrade planner contracts passed: exact Lv.50/Lv.100 row-range maths, milestone materials, input sanitisation and guide-to-Companion integration verified.')
