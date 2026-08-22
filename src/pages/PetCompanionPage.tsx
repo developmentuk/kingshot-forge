@@ -4,7 +4,9 @@ import {
   loadPetDataset,
   type Pet,
   type PetDataset,
+  type ProgressionCurve,
 } from '../features/companion/pets/petData'
+import { calculatePetUpgradePlan } from '../features/companion/pets/petPlanner'
 import './PetCompanionPage.css'
 
 function formatNumber(value: number | null) {
@@ -31,6 +33,59 @@ function PetArtwork({ pet, compact = false }: { pet: Pet; compact?: boolean }) {
           )
         : <div className="pet-companion-art__placeholder"><span aria-hidden="true">🐾</span><small>Artwork pending</small></div>}
     </div>
+  )
+}
+
+function PetUpgradePlanner({ pet, curve }: { pet: Pet; curve: ProgressionCurve }) {
+  const [currentLevel, setCurrentLevel] = useState(1)
+  const [targetLevel, setTargetLevel] = useState(Math.min(20, curve.maxLevel))
+  const levels = useMemo(() => Array.from({ length: curve.maxLevel }, (_, index) => index + 1), [curve.maxLevel])
+  const plan = useMemo(() => calculatePetUpgradePlan(curve, currentLevel, targetLevel), [curve, currentLevel, targetLevel])
+
+  function changeCurrentLevel(nextLevel: number) {
+    setCurrentLevel(nextLevel)
+    if (targetLevel < nextLevel) setTargetLevel(nextLevel)
+  }
+
+  function changeTargetLevel(nextLevel: number) {
+    setTargetLevel(Math.max(currentLevel, nextLevel))
+  }
+
+  return (
+    <section className="pet-companion-panel pet-upgrade-planner">
+      <div className="pet-companion-section-heading">
+        <div><p className="eyebrow">Progression planning</p><h2>Upgrade cost planner</h2></div>
+        <p>Choose a current and target level for {pet.name}. Derived from the exact published rows crossed for the shared Lv.{curve.maxLevel} progression curve.</p>
+      </div>
+
+      <div className="pet-upgrade-planner__controls">
+        <label>
+          <span>Current level</span>
+          <select value={currentLevel} onChange={(event) => changeCurrentLevel(Number(event.target.value))}>
+            {levels.map((level) => <option key={level} value={level}>Lv.{level}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>Target level</span>
+          <select value={targetLevel} onChange={(event) => changeTargetLevel(Number(event.target.value))}>
+            {levels.map((level) => <option key={level} value={level}>Lv.{level}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div className="pet-upgrade-planner__summary" aria-live="polite">
+        <article><span>Pet Food</span><strong>{formatNumber(plan.petFood)}</strong></article>
+        <article><span>Growth Manuals</span><strong>{formatNumber(plan.growthManual)}</strong></article>
+        <article><span>Nutrient Potions</span><strong>{formatNumber(plan.nutrientPotion)}</strong></article>
+        <article><span>Promotion Medallions</span><strong>{formatNumber(plan.promotionMedallion)}</strong></article>
+      </div>
+
+      <div className="pet-upgrade-planner__footer">
+        <span>{plan.levelsCrossed} level requirement{plan.levelsCrossed === 1 ? '' : 's'} crossed</span>
+        <span>{plan.milestoneLevels.length ? `Advancement milestones: ${plan.milestoneLevels.map((level) => `Lv.${level}`).join(', ')}` : 'No advancement milestone crossed'}</span>
+      </div>
+      <p className="pet-companion-muted">Totals only cover the selected level range. Blank advancement fields in the published source contribute zero to that material total.</p>
+    </section>
   )
 }
 
@@ -164,6 +219,8 @@ function PetDetail({ dataset, pet }: { dataset: PetDataset; pet: Pet }) {
 
       <section className="pet-companion-layout">
         <div className="pet-companion-main-column">
+          <PetUpgradePlanner key={pet.key} pet={pet} curve={curve} />
+
           <section className="pet-companion-panel">
             <div className="pet-companion-section-heading">
               <div><p className="eyebrow">Skill progression</p><h2>{pet.skill.name}</h2></div>
