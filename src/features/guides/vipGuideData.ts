@@ -10,7 +10,7 @@ export type VipBundleItem = {
   itemKey: string
   label: string
   quantity: number
-  rarity: 'rare' | 'epic' | 'mythic'
+  rarity: 'rare' | 'epic' | 'mythic' | null
 }
 export type VipSpecialPack = {
   gems: number
@@ -80,10 +80,20 @@ function requireInteger(value: unknown, label: string): number {
   return Number(value)
 }
 
+function requirePositiveInteger(value: unknown, label: string): number {
+  if (!Number.isInteger(value) || Number(value) < 1) throw new Error(`${label} must be a positive integer.`)
+  return Number(value)
+}
+
 function requireNullableNumber(value: unknown, label: string): number | null {
   if (value === null) return null
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) throw new Error(`${label} must be null or a non-negative number.`)
   return value
+}
+
+function requireNullableInteger(value: unknown, label: string): number | null {
+  if (value === null) return null
+  return requireInteger(value, label)
 }
 
 function validateBenefit(value: unknown, label: string): VipBenefit {
@@ -102,20 +112,20 @@ function validateBenefit(value: unknown, label: string): VipBenefit {
 function validateBundleItem(value: unknown, label: string): VipBundleItem {
   const item = requireRecord(value, label)
   const rarity = item.rarity
-  if (rarity !== 'rare' && rarity !== 'epic' && rarity !== 'mythic') throw new Error(`${label}.rarity is invalid.`)
+  if (rarity !== null && rarity !== 'rare' && rarity !== 'epic' && rarity !== 'mythic') throw new Error(`${label}.rarity is invalid.`)
   return {
     itemKey: requireString(item.itemKey, `${label}.itemKey`),
     label: requireString(item.label, `${label}.label`),
-    quantity: requireInteger(item.quantity, `${label}.quantity`),
+    quantity: requirePositiveInteger(item.quantity, `${label}.quantity`),
     rarity,
   }
 }
 
 function validateXpBlock(value: unknown, label: string): VipSpecialPack['vipXp'] {
   const block = requireRecord(value, label)
-  const quantity = requireInteger(block.quantity, `${label}.quantity`)
-  const unitXp = requireInteger(block.unitXp, `${label}.unitXp`)
-  const totalXp = requireInteger(block.totalXp, `${label}.totalXp`)
+  const quantity = requirePositiveInteger(block.quantity, `${label}.quantity`)
+  const unitXp = requirePositiveInteger(block.unitXp, `${label}.unitXp`)
+  const totalXp = requirePositiveInteger(block.totalXp, `${label}.totalXp`)
   if (quantity * unitXp !== totalXp) throw new Error(`${label}.totalXp must equal quantity × unitXp.`)
   return { quantity, unitXp, totalXp }
 }
@@ -128,9 +138,11 @@ function validateSpecialPack(value: unknown, level: number): VipSpecialPack {
   if (heroShards.hero !== expectedHero) throw new Error(`${label} must use ${expectedHero} shards.`)
   const speedups = requireRecord(pack.speedupsHours, `${label}.speedupsHours`)
   if (pack.priceCurrency !== null) throw new Error(`${label}.priceCurrency must remain null because the source does not state a currency.`)
+  const allianceGiftTier = requirePositiveInteger(pack.allianceGiftTier, `${label}.allianceGiftTier`)
+  if (allianceGiftTier > 5) throw new Error(`${label}.allianceGiftTier must remain between 1 and 5.`)
   return {
     gems: requireInteger(pack.gems, `${label}.gems`),
-    heroShards: { hero: expectedHero, quantity: requireInteger(heroShards.quantity, `${label}.heroShards.quantity`) },
+    heroShards: { hero: expectedHero, quantity: requirePositiveInteger(heroShards.quantity, `${label}.heroShards.quantity`) },
     vipXp: validateXpBlock(pack.vipXp, `${label}.vipXp`),
     heroXp: validateXpBlock(pack.heroXp, `${label}.heroXp`),
     speedupsHours: {
@@ -138,11 +150,11 @@ function validateSpecialPack(value: unknown, level: number): VipSpecialPack {
       research: requireInteger(speedups.research, `${label}.speedupsHours.research`),
       training: requireInteger(speedups.training, `${label}.speedupsHours.training`),
     },
-    allianceGiftTier: requireInteger(pack.allianceGiftTier, `${label}.allianceGiftTier`),
+    allianceGiftTier,
     priceAmount: requireNullableNumber(pack.priceAmount, `${label}.priceAmount`),
     priceCurrency: null,
-    savingPercent: requireNullableNumber(pack.savingPercent, `${label}.savingPercent`),
-    topupPoints: pack.topupPoints === null ? null : requireInteger(pack.topupPoints, `${label}.topupPoints`),
+    savingPercent: requireNullableInteger(pack.savingPercent, `${label}.savingPercent`),
+    topupPoints: requireNullableInteger(pack.topupPoints, `${label}.topupPoints`),
   }
 }
 
@@ -160,8 +172,8 @@ function validateLevel(value: unknown, expectedLevel: number): VipLevel {
     estimatedF2pTime = { text: requireString(estimate.text, `VIP ${expectedLevel}.estimatedF2pTime.text`), confidence: 'community_guidance' }
   }
 
-  if (!Array.isArray(row.benefits) || row.benefits.length === 0) throw new Error(`VIP ${expectedLevel}.benefits must be a non-empty array.`)
-  if (!Array.isArray(row.dailyFreeBundle) || row.dailyFreeBundle.length === 0) throw new Error(`VIP ${expectedLevel}.dailyFreeBundle must be a non-empty array.`)
+  if (!Array.isArray(row.benefits) || row.benefits.length < 2) throw new Error(`VIP ${expectedLevel}.benefits must contain at least two entries.`)
+  if (!Array.isArray(row.dailyFreeBundle) || row.dailyFreeBundle.length < 2) throw new Error(`VIP ${expectedLevel}.dailyFreeBundle must contain at least two entries.`)
 
   return {
     level: expectedLevel,
