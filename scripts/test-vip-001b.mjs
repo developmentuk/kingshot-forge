@@ -68,5 +68,6 @@ assert(!article.includes('does not contain a VIP benefits'), 'Obsolete no-benefi
 assert(panel.includes("'/data/vip/levels.json'"), 'Planner must load governed VIP levels at runtime.')
 assert(panel.includes("'/data/vip/meta.json'"), 'Planner must load governed VIP metadata at runtime.')
 assert(panel.includes('currency not stated'), 'Planner must not infer Special Pack currency.')
+assert(panel.includes('rarity not stated'), 'Planner must render nullable bundle rarity as an honest unknown state, not the literal value null.')
 
 console.log('VIP-001B guide and planner contracts passed: governed runtime parsing, derived progression maths, benefit comparison and conflict containment verified.')

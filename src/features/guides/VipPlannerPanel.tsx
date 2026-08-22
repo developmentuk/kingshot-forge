@@ -87,7 +87,7 @@ export default function VipPlannerPanel() {
       <div className="vip-planner__columns">
         <section>
           <h3>VIP {plan.targetLevel} daily free bundle</h3>
-          <ul className="vip-planner__list">{plan.target.dailyFreeBundle.map((item) => <li key={item.itemKey}><strong>{item.label}</strong><span>×{item.quantity} · {item.rarity}</span></li>)}</ul>
+          <ul className="vip-planner__list">{plan.target.dailyFreeBundle.map((item) => <li key={item.itemKey}><strong>{item.label}</strong><span>×{item.quantity} · {item.rarity ?? 'rarity not stated'}</span></li>)}</ul>
         </section>
 
         <section>
