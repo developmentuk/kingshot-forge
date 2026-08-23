@@ -24,7 +24,7 @@ security definer
 set search_path = public
 as $$
 declare
-  profile_id uuid;
+  saved_profile_id uuid;
 begin
   if target_howler_skill_level not between 1 and 8 then
     raise exception 'Invalid Howler skill level' using errcode = '22023';
@@ -54,7 +54,7 @@ begin
     howler_skill_level = excluded.howler_skill_level,
     share_with_alliance = excluded.share_with_alliance,
     updated_at = now()
-  returning id into profile_id;
+  returning id into saved_profile_id;
 
   insert into public.castle_command_profile_targets (
     profile_id,
@@ -62,17 +62,17 @@ begin
     normal_seconds,
     howler_seconds
   ) values
-    (profile_id, 'castle', castle_normal_seconds, castle_howler_seconds),
-    (profile_id, 'north', north_normal_seconds, north_howler_seconds),
-    (profile_id, 'east', east_normal_seconds, east_howler_seconds),
-    (profile_id, 'south', south_normal_seconds, south_howler_seconds),
-    (profile_id, 'west', west_normal_seconds, west_howler_seconds)
+    (saved_profile_id, 'castle', castle_normal_seconds, castle_howler_seconds),
+    (saved_profile_id, 'north', north_normal_seconds, north_howler_seconds),
+    (saved_profile_id, 'east', east_normal_seconds, east_howler_seconds),
+    (saved_profile_id, 'south', south_normal_seconds, south_howler_seconds),
+    (saved_profile_id, 'west', west_normal_seconds, west_howler_seconds)
   on conflict (profile_id, target) do update set
     normal_seconds = excluded.normal_seconds,
     howler_seconds = excluded.howler_seconds,
     updated_at = now();
 
-  return profile_id;
+  return saved_profile_id;
 end;
 $$;
 
