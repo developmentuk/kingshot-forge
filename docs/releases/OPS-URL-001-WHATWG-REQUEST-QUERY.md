@@ -12,7 +12,7 @@ Close GitHub issue #35 by removing Kingshot Forge's reliance on the legacy Verce
 
 The warning has repeatedly appeared on successful `GET /api/data-engine/dataset` requests in Vercel production runtime logs. The affected requests still return HTTP 200, so this is operational/security-hygiene debt rather than a current availability failure.
 
-Forge first-party source contains no direct `url.parse()` call. Investigation instead identified API handlers that read `VercelRequest.query`. Vercel's own serverless-function query parser historically used `url.parse(request.url, true)` and was later migrated upstream to the WHATWG `URL` API to silence DEP0169 on cold starts.
+Forge first-party source contains no direct `url.parse()` call. Investigation instead identified first-party request handlers that read `VercelRequest.query`. Vercel's own serverless-function query parser historically used `url.parse(request.url, true)` and was later migrated upstream to the WHATWG `URL` API to silence DEP0169 on cold starts.
 
 Forge's lockfile already resolves `@vercel/node` newer than that upstream correction. OPS-URL-001 therefore removes the application dependency on the request-query getter itself rather than performing an unsupported runtime downgrade or meaningless dependency bump.
 
@@ -29,17 +29,31 @@ The helper:
 - preserves an explicitly empty parameter as an empty string;
 - performs no network access.
 
-Known API consumers are migrated from `request.query` to the shared helper:
+All first-party request-query consumers discovered by the repository-wide scan are migrated from `request.query` to the shared helper, including:
 
-- `/api/data-engine/dataset`
-- `/api/data-engine/preview`
-- `/api/art-studio`
+- Data Engine dataset and preview;
+- Search and Admin Search;
+- Art Studio;
+- Buildings Data Studio and Buildings publication;
+- Editorial record;
+- Entity resolve and validate;
+- Giftcodes;
+- Operations applications and users;
+- Contributor applications;
+- Vision evidence;
+- public Player Identity lookup and Player Support lookup through `server/player-identity/http.ts`.
+
+The final Player Identity correction followed an exact-head Codex P1 finding which identified `request.query.alias` and `request.query.caseId` outside the original `api/`-only guard.
 
 ## Behaviour preservation
 
 Dataset endpoints continue to reject missing, unsupported or duplicated `dataset` parameters with their existing HTTP 400 response.
 
 Art Studio continues to default to the `gallery` action when `action` is absent or duplicated. An explicitly empty `action` remains an unsupported action and therefore follows the existing method-not-allowed path.
+
+Public Player Identity continues to reject an absent or unusable alias. Duplicated aliases now fail closed through the shared single-value parser instead of entering the Vercel request-query getter.
+
+Player Support continues to inspect a supplied single case ID and list support cases when no single case ID is available. Duplicated case IDs therefore behave as absent rather than selecting an arbitrary duplicate value.
 
 No route names, response shapes, data contracts, authentication rules or publication behaviour are changed.
 
@@ -51,9 +65,11 @@ No route names, response shapes, data contracts, authentication rules or publica
 - encoded values;
 - duplicate fail-closed semantics;
 - empty-value behaviour;
-- the dataset, preview and Art Studio integrations;
-- every TypeScript file below `api/` is free of `request.query` / `req.query` access;
+- the dataset, preview, Art Studio and Player Identity integrations;
+- every TypeScript file below both `api/` and `server/` is free of `request.query` / `req.query` access;
 - first-party TypeScript below `api/` and `server/` contains no legacy `url.parse()` call/import pattern.
+
+The focused OPS workflow is triggered by changes anywhere below `api/` or `server/`, preventing server-side request-query consumers from bypassing the guard.
 
 ## Release gate
 
@@ -76,7 +92,8 @@ After an owner-authorised merge and the automatic production deployment, accepta
 - `/api/data-engine/dataset?dataset=buildings` remains HTTP 200;
 - `/api/data-engine/dataset?dataset=vip` remains HTTP 200;
 - the public `/api/art-studio` gallery path returns its expected successful response;
-- after those requests, exact-deployment runtime logs contain no new `[DEP0169]` / `url.parse()` warning.
+- the public Player Identity and Player Support request paths do not re-enter `VercelRequest.query`;
+- after fresh requests, exact-deployment runtime logs contain no new `[DEP0169]` / `url.parse()` warning.
 
 If the warning persists after Forge no longer accesses `VercelRequest.query`, the release must not claim the issue fixed. The residual warning must instead be classified as platform/transitive and investigated separately.
 

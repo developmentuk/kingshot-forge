@@ -26,6 +26,9 @@ assert.equal(readSingleQueryParameter('/api/art-studio?action=', 'action'), '')
 assert.equal(readSingleQueryParameter('/api/art-studio?action=queue', 'action'), 'queue')
 assert.equal(readSingleQueryParameter('/api/art-studio?action=queue&action=gallery', 'action'), null)
 assert.equal(readSingleQueryParameter('/api/art-studio?action=queue', ''), null)
+assert.equal(readSingleQueryParameter('/api/player/public?alias=alpha', 'alias'), 'alpha')
+assert.equal(readSingleQueryParameter('/api/player/public?alias=alpha&alias=beta', 'alias'), null)
+assert.equal(readSingleQueryParameter('/api/player/support?caseId=case-1', 'caseId'), 'case-1')
 
 function collectTypeScriptFiles(directory) {
   const files = []
@@ -38,7 +41,12 @@ function collectTypeScriptFiles(directory) {
 }
 
 const apiFiles = collectTypeScriptFiles(resolve(root, 'api'))
-const legacyQueryUsers = apiFiles
+const serverFiles = collectTypeScriptFiles(resolve(root, 'server'))
+const firstPartyRequestFiles = [
+  ...apiFiles,
+  ...serverFiles,
+]
+const legacyQueryUsers = firstPartyRequestFiles
   .filter((path) => /\b(?:request|req)\.query\b/u.test(readFileSync(path, 'utf8')))
   .map((path) => path.slice(root.length + 1).replaceAll('\\', '/'))
 
@@ -48,11 +56,7 @@ assert.deepEqual(
   `VercelRequest.query must not be used because it can enter the legacy url.parse() path: ${legacyQueryUsers.join(', ')}`,
 )
 
-const firstPartyServerFiles = [
-  ...apiFiles,
-  ...collectTypeScriptFiles(resolve(root, 'server')),
-]
-const legacyUrlUsers = firstPartyServerFiles
+const legacyUrlUsers = firstPartyRequestFiles
   .filter((path) => {
     const source = readFileSync(path, 'utf8')
     return /\burl\.parse\s*\(/u.test(source)
@@ -69,9 +73,12 @@ assert.deepEqual(
 const datasetRoute = readFileSync(resolve(root, 'api/data-engine/dataset.ts'), 'utf8')
 const previewRoute = readFileSync(resolve(root, 'api/data-engine/preview.ts'), 'utf8')
 const artStudioRoute = readFileSync(resolve(root, 'api/art-studio.ts'), 'utf8')
+const playerIdentityHttp = readFileSync(resolve(root, 'server/player-identity/http.ts'), 'utf8')
 
 assert.match(datasetRoute, /readSingleQueryParameter\(request\.url, "dataset"\)/u)
 assert.match(previewRoute, /readSingleQueryParameter\(request\.url, 'dataset'\)/u)
 assert.match(artStudioRoute, /readSingleQueryParameter\(request\.url, 'action'\) \?\? 'gallery'/u)
+assert.match(playerIdentityHttp, /readSingleQueryParameter\(request\.url, "alias"\)/u)
+assert.match(playerIdentityHttp, /readSingleQueryParameter\(request\.url, "caseId"\)/u)
 
-console.log('OPS-URL-001 request query contracts passed: WHATWG parsing, duplicate fail-closed semantics and zero VercelRequest.query usage verified.')
+console.log('OPS-URL-001 request query contracts passed: WHATWG parsing, duplicate fail-closed semantics and zero VercelRequest.query usage across api/server verified.')

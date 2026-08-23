@@ -12,7 +12,7 @@ on:
       - main
     paths:
       - 'api/**'
-      - 'server/http/**'
+      - 'server/**'
       - 'scripts/test-ops-url-001.mjs'
       - 'docs/releases/OPS-URL-001-WHATWG-REQUEST-QUERY.md'
       - '.github/workflows/ops-url-validation.yml'

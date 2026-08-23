@@ -7,6 +7,7 @@ import type {
   PlayerSupportCaseId,
   PublicPlayerAlias,
 } from "../../shared/domains/player-identity/index.js"
+import { readSingleQueryParameter } from "../http/requestQuery.js"
 import type { PlayerIdentityRuntime } from "./runtime.js"
 
 function sendResult(response: VercelResponse, result: PlayerIdentityOperationResult<unknown>): void {
@@ -74,7 +75,7 @@ export async function handlePlayerIdentityRequest(runtime: PlayerIdentityRuntime
 
 export async function handlePublicPlayerRequest(runtime: PlayerIdentityRuntime, request: VercelRequest, response: VercelResponse): Promise<void> {
   if (request.method !== "GET") { response.status(405).json({ status: "error", code: "operation_not_supported" }); return }
-  const alias = Array.isArray(request.query.alias) ? request.query.alias[0] : request.query.alias
+  const alias = readSingleQueryParameter(request.url, "alias")
   if (!alias) { sendResult(response, { ok: false, code: "alias_invalid" }); return }
   sendResult(response, await runtime.identity.readPublic(alias as PublicPlayerAlias))
 }
@@ -83,7 +84,7 @@ export async function handlePlayerSupportRequest(runtime: PlayerIdentityRuntime,
   if (!runtime.flags.ui || !runtime.flags.supportTools) { sendResult(response, { ok: false, code: "feature_disabled" }); return }
   const actor = await runtime.resolveActor(request)
   if (request.method !== "GET") { sendResult(response, { ok: false, code: runtime.flags.persistence ? "operation_not_supported" : "persistence_disabled" }); return }
-  const caseId = Array.isArray(request.query.caseId) ? request.query.caseId[0] : request.query.caseId
+  const caseId = readSingleQueryParameter(request.url, "caseId")
   sendResult(response, caseId ? await runtime.support.inspect(actor, caseId as PlayerSupportCaseId) : await runtime.support.list(actor))
 }
 
