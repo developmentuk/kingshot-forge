@@ -26,7 +26,12 @@ function testCountdownPhases() {
     buildCastleCommandCountdown(new Date(now + 10_000), now),
     { phase: 'waiting', deltaMilliseconds: 10_000, display: '0:10' },
   )
-  assert.equal(buildCastleCommandCountdown(new Date(now + 3_000), now).display, 'START NOW')
+  assert.deepEqual(
+    buildCastleCommandCountdown(new Date(now + 3_000), now),
+    { phase: 'waiting', deltaMilliseconds: 3_000, display: '0:03' },
+  )
+  assert.equal(buildCastleCommandCountdown(new Date(now), now).display, 'START NOW')
+  assert.equal(buildCastleCommandCountdown(new Date(now - 4_000), now).display, 'START NOW')
   assert.equal(buildCastleCommandCountdown(new Date(now - 7_000), now).display, 'LATE 0:07')
 }
 
