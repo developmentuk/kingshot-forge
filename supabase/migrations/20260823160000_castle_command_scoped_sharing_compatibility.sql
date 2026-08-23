@@ -34,14 +34,25 @@ begin
   end if;
 
   if target_share_with_alliance then
-    select count(*)::integer, min(membership.alliance_id)
-      into current_alliance_count, resolved_alliance_id
+    select count(*)::integer
+      into current_alliance_count
     from public.alliance_memberships membership
     where membership.user_id = auth.uid()
       and membership.status = 'current'::public.alliance_membership_status;
 
-    if current_alliance_count <> 1 or resolved_alliance_id is null then
+    if current_alliance_count <> 1 then
       raise exception 'Castle Command sharing requires exactly one current alliance' using errcode = '22023';
+    end if;
+
+    select membership.alliance_id
+      into resolved_alliance_id
+    from public.alliance_memberships membership
+    where membership.user_id = auth.uid()
+      and membership.status = 'current'::public.alliance_membership_status
+    limit 1;
+
+    if resolved_alliance_id is null then
+      raise exception 'Castle Command sharing requires a current alliance' using errcode = '22023';
     end if;
   else
     resolved_alliance_id := null;
