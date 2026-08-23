@@ -59,7 +59,7 @@ export function buildCastleCommandCountdown(
 
   const deltaMilliseconds = targetMs - serverNowMs
 
-  if (deltaMilliseconds > 5_000) {
+  if (deltaMilliseconds > 0) {
     return {
       phase: 'waiting',
       deltaMilliseconds,
