@@ -167,6 +167,30 @@ The final relevant lock directions are intentionally one-way:
 
 Profile save paths never lock Castle sessions, so waiting between assignment (`session → membership → profile`) and profile save (`membership → profile`) cannot form a reverse session/profile cycle.
 
+### Finding F12 — durable write authority could outlive manager revocation and raw session lifecycle writes remained exposed
+
+The post-F11 release audit of exact head `73aa1639ef7cd45f7353468dfa8adc36ebb0af77` found two related final-boundary issues before that head could be accepted:
+
+- the inherited 001B session table still granted authenticated `UPDATE` and `DELETE`, so an authorised client could bypass the named lifecycle RPC and destructive session history remained exposed to direct DML;
+- durable manager paths relied on non-locking `can_manage_castle_command(...)` checks. A Forge global role downgrade, alliance-admin revocation or `can_manage_events` removal could therefore commit after authorization was read but before a Castle write reached storage.
+
+Correction: `20260823164000_castle_command_write_authority_boundary.sql`.
+
+The final write boundary keeps direct session creation because creation is already constrained by RLS plus the server-owned planning/identity/timestamp trigger, but authenticated session `UPDATE` and `DELETE` are revoked and their write policies are removed. Session lifecycle changes therefore remain available only through the governed SECURITY DEFINER lifecycle path; authenticated session deletion is forbidden.
+
+Every durable Castle write is then re-authorized at the table boundary. The internal manager guard locks the caller's Forge `profiles` role row first and, when global admin/owner authority is absent, locks the exact qualifying `alliance_admins` event-management row. Revocation or permission changes therefore linearize before or after the Castle write; they cannot commit in the middle and leave a stale-authority mutation behind.
+
+Final table-boundary authority is:
+
+- session creation: locked Forge/event-manager authority;
+- session lifecycle: locked Forge/event-manager authority or locked current deputy membership;
+- assignment and deputy-grant persistence: locked Forge/event-manager authority only;
+- tactical plan/version persistence: locked Forge/event-manager authority or locked current deputy membership;
+- acknowledgement `waiting` reset persistence: locked Forge/event-manager authority or locked current deputy membership;
+- acknowledgement READY/SENT persistence: locked exact current participant membership tied to the target assignment.
+
+The write guards also re-lock the session row before dependent-table writes and reject closed-session mutation, so stale pre-write authorization must fail/roll back rather than commit after lifecycle or authority changes.
+
 ## Production containment — CONFIRMED
 
 Read-only Supabase checks during 001F confirm Castle Command remains unactivated:
@@ -202,7 +226,7 @@ Required alliance/player columns exist with the expected broad types. Production
 
 ## Final migration dependency order
 
-The final integration candidate contains **20 Castle Command migrations**. They must be applied in this exact filename order and must not be selectively skipped:
+The final integration candidate contains **21 Castle Command migrations**. They must be applied in this exact filename order and must not be selectively skipped:
 
 1. `20260823120400_castle_command_session_foundation.sql`
 2. `20260823121800_castle_command_atomic_profile_save.sql`
@@ -224,6 +248,7 @@ The final integration candidate contains **20 Castle Command migrations**. They 
 18. `20260823162500_castle_command_assignment_profile_serialization.sql`
 19. `20260823163000_castle_command_membership_transition_serialization.sql`
 20. `20260823163500_castle_command_deputy_consent_serialization.sql`
+21. `20260823164000_castle_command_write_authority_boundary.sql`
 
 The earlier migrations describe the incremental implementation history. The 001F migrations are required release corrections and define the final active authority/privacy/concurrency behaviour. Production must never be accepted in a partially-applied state.
 
@@ -231,13 +256,13 @@ The earlier migrations describe the incremental implementation history. The 001F
 
 `scripts/test-castle-command-001f.mjs` is part of the existing Castle Command step in `vision-integration-check.yml`.
 
-It guards current-membership authority, column minimisation, server-owned session creation, exact alliance-scoped sharing consent, assignment scope, closed-session immutability, production-compatible tactical JSON validation, acknowledgement-transition serialization, assignment/profile-save serialization, membership-transition serialization for assignment/acknowledgement/deputy/tactical writes, deputy lifecycle/reset serialization, sharing-consent serialization in both RPC shapes, client projection boundaries, documented migration order, explicit production STOP state and permanent CI inclusion.
+It guards current-membership authority, column minimisation, server-owned session creation, exact alliance-scoped sharing consent, assignment scope, closed-session immutability, production-compatible tactical JSON validation, acknowledgement-transition serialization, assignment/profile-save serialization, membership-transition serialization for assignment/acknowledgement/deputy/tactical writes, deputy lifecycle/reset serialization, sharing-consent serialization in both RPC shapes, final manager-role/event-grant write serialization, raw session lifecycle/delete revocation, table-boundary participant/deputy/manager authority, client projection boundaries, documented migration order, explicit production STOP state and permanent CI inclusion.
 
 ## Review gate — STILL BLOCKING
 
 Forge governance requires Review before Merge.
 
-At the original 001F preflight, PRs #89–#93 had zero submitted reviews and zero review threads/comments. The 001F full-stack release review found F1–F6. After those corrections, exact head `71c4008a2da405ff9341ed834ddb18cabe4984f6` passed the full A–F CI suite, but its fresh independent Codex review returned F7/P1. After F7, exact head `68274954e576b4a5fecb4938709d303995cd3f66` passed the full A–F CI suite, but its fresh independent Codex re-review returned F8/P1. After F8, exact head `fd6e81e6e91a513571e4f3ab74f74c981c2bd73e` passed the full A–F CI suite, but its fresh independent Codex review returned F9/P1. After F9, exact head `6c9e587d3c46723287fdf5216be7ef5e7e50d299` passed the full A–F CI suite, but its fresh independent Codex review returned F10/P1 and F11/P2. All four validated heads are superseded for release purposes.
+At the original 001F preflight, PRs #89–#93 had zero submitted reviews and zero review threads/comments. The 001F full-stack release review found F1–F6. After those corrections, exact head `71c4008a2da405ff9341ed834ddb18cabe4984f6` passed the full A–F CI suite, but its fresh independent Codex review returned F7/P1. After F7, exact head `68274954e576b4a5fecb4938709d303995cd3f66` passed the full A–F CI suite, but its fresh independent Codex re-review returned F8/P1. After F8, exact head `fd6e81e6e91a513571e4f3ab74f74c981c2bd73e` passed the full A–F CI suite, but its fresh independent Codex review returned F9/P1. After F9, exact head `6c9e587d3c46723287fdf5216be7ef5e7e50d299` passed the full A–F CI suite, but its fresh independent Codex review returned F10/P1 and F11/P2. Exact head `73aa1639ef7cd45f7353468dfa8adc36ebb0af77` then passed the full A–F CI suite for F10/F11, but the subsequent internal release-boundary audit found F12 before that head could be accepted. All five validated heads are superseded for release purposes.
 
 The corrected exact 001F head must now:
 
@@ -281,11 +306,11 @@ Verify only intentionally shared timing is visible through the projection, no se
 
 ### Assigned participant
 
-Verify Live Room works only while current membership remains, READY/SENT transitions are constrained and serialize with both lifecycle and membership changes, shared tactical plan is read-only and assignment changes invalidate prior acknowledgement.
+Verify Live Room works only while current membership remains, READY/SENT transitions are constrained and serialize with both lifecycle and membership changes, shared tactical plan is read-only, assignment changes invalidate prior acknowledgement and table-boundary READY/SENT authority remains tied to the caller's exact assigned Player Account.
 
 ### Event manager
 
-Verify server-owned planning-state session creation, scoped eligible assignment, observed server-derived timing, assignment snapshots serialize with profile consent/timing saves and target membership changes, lifecycle/ack controls only while open, deputy appointment serializes with target membership, tactical publication serializes with all assigned memberships, and optimistic version conflict handling remains intact.
+Verify server-owned planning-state session creation, direct session lifecycle `UPDATE`/`DELETE` denial, scoped eligible assignment, observed server-derived timing, assignment snapshots serialize with profile consent/timing saves and target membership changes, lifecycle/ack controls only while open, deputy appointment serializes with target membership, tactical publication serializes with all assigned memberships, optimistic version conflict handling remains intact, and concurrent Forge role downgrade / alliance-admin revoke / `can_manage_events` removal cannot be followed by a stale-authority Castle mutation.
 
 ### Deputy
 
@@ -303,28 +328,30 @@ After schema activation and role acceptance:
 2. owner explicitly shares timing with current alliance;
 3. concurrent sharing opt-in and owner membership removal are exercised; the save must either commit before removal or fail after the committed non-current state and must not leave stale armed consent;
 4. event manager creates a future Castle session;
-5. manager assigns multiple players across Castle and turret targets;
-6. concurrent owner timing edit/share opt-out and manager assignment are exercised; the assignment must either serialize before the owner save or re-validate the committed post-save state and must never persist stale consent/timing snapshots after the save;
-7. concurrent target-membership removal and manager assignment are exercised; the assignment must either commit before the removal or fail after re-validating the committed non-current membership state;
-8. participants independently enter Live Room;
-9. manager appoints one assigned deputy, including a concurrent target-membership removal check;
-10. participants mark READY, including a concurrent participant-membership removal check;
-11. manager publishes tactical plan v1 while assigned-membership transition checks are exercised;
-12. deputy publishes v2 with a controlled change;
-13. stale v1 client attempts save and receives conflict instead of overwrite;
-14. manager changes a material assignment and prior READY is invalidated;
-15. concurrent deputy membership removal with deputy session-start/close and acknowledgement-reset attempts is exercised; no deputy mutation may persist after a committed removal;
-16. session starts;
-17. countdown is checked immediately before and at exact launch time;
-18. SENT cannot occur before READY or before active session;
-19. simultaneous / staggered / multi-wave plans are exercised;
-20. counter mode requires an explicit operator-observed anchor;
-21. concurrent participant READY/SENT and manager close are exercised and serialize without post-close mutation or backward acknowledgement transition;
-22. Realtime loss produces stale-sync warning and pauses trusted audio cues;
-23. session closes and cannot be reopened;
-24. assignment removal, participant acknowledgement mutation and acknowledgement reset fail after close;
-25. old tactical history remains immutable;
-26. battle summary reports only Forge-owned coordination facts and makes no combat-result claim.
+5. direct authenticated session lifecycle UPDATE and DELETE attempts fail;
+6. manager assigns multiple players across Castle and turret targets;
+7. concurrent manager role/event-grant revocation and a durable Castle manager mutation are exercised; the mutation must commit before revocation or fail after the committed revoke and must never persist afterwards from stale authority;
+8. concurrent owner timing edit/share opt-out and manager assignment are exercised; the assignment must either serialize before the owner save or re-validate the committed post-save state and must never persist stale consent/timing snapshots after the save;
+9. concurrent target-membership removal and manager assignment are exercised; the assignment must either commit before the removal or fail after re-validating the committed non-current membership state;
+10. participants independently enter Live Room;
+11. manager appoints one assigned deputy, including a concurrent target-membership removal check;
+12. participants mark READY, including a concurrent participant-membership removal check;
+13. manager publishes tactical plan v1 while assigned-membership transition checks are exercised;
+14. deputy publishes v2 with a controlled change;
+15. stale v1 client attempts save and receives conflict instead of overwrite;
+16. manager changes a material assignment and prior READY is invalidated;
+17. concurrent deputy membership removal with deputy session-start/close and acknowledgement-reset attempts is exercised; no deputy mutation may persist after a committed removal;
+18. session starts;
+19. countdown is checked immediately before and at exact launch time;
+20. SENT cannot occur before READY or before active session;
+21. simultaneous / staggered / multi-wave plans are exercised;
+22. counter mode requires an explicit operator-observed anchor;
+23. concurrent participant READY/SENT and manager close are exercised and serialize without post-close mutation or backward acknowledgement transition;
+24. Realtime loss produces stale-sync warning and pauses trusted audio cues;
+25. session closes and cannot be reopened;
+26. assignment removal, participant acknowledgement mutation and acknowledgement reset fail after close;
+27. old tactical history remains immutable;
+28. battle summary reports only Forge-owned coordination facts and makes no combat-result claim.
 
 No actual Kingshot rally or combat action is required for this acceptance; it is a Forge coordination simulation.
 
