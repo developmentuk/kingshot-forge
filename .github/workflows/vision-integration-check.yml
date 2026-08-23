@@ -114,6 +114,7 @@ jobs:
           node --import tsx scripts/test-castle-command-001d.mjs
           node --import tsx scripts/test-castle-command-001e.mjs
           node --import tsx scripts/test-castle-command-001f.mjs
+          node --import tsx scripts/test-castle-command-001f-f13.mjs
 
       - name: Test Vision platform contracts
         run: node --import tsx scripts/test-forge-vision-platform.mjs
