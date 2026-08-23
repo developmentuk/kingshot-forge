@@ -2,7 +2,7 @@
 
 Status: **production schema activated / authenticated acceptance in progress**
 
-This addendum records the membership-term consent and explicit alliance-scope corrections, followed by the owner-authorised production schema activation and alliance-authority execute hotfix discovered during real authenticated preview testing.
+This addendum records the membership-term consent and explicit alliance-scope corrections, followed by the owner-authorised production schema activation and runtime permission hotfixes discovered during real authenticated acceptance.
 
 ## F20 / P2 — sharing consent survived a completed membership term
 
@@ -58,9 +58,34 @@ The hotfix:
 
 Post-hotfix verification confirmed `authenticated` can execute both helpers without `42501`, while `anon` remains denied.
 
-## Final release chain
+## Runtime acceptance permission finding
 
-The production-aligned candidate now contains **29 ordered Castle Command migrations**. The latest is:
+A rollback-only authenticated profile-save smoke test then reached the Castle profile RLS boundary and exposed the same pre-existing privilege-contract mismatch for `public.current_user_role()`:
+
+`42501 permission denied for function current_user_role`
+
+Production inspection confirmed:
+
+- `public.current_user_role()` is SECURITY DEFINER;
+- it returns only the current caller's Forge role from `public.profiles`;
+- multiple authenticated RLS policies already call it, including the final Castle profile and target owner-read policies;
+- production currently grants EXECUTE only to `postgres` and `service_role`, so those authenticated policies cannot evaluate successfully.
+
+The source candidate therefore adds the narrow runtime permission migration:
+
+`20260823200500_castle_command_current_user_role_execute_hotfix.sql`
+
+It grants EXECUTE to `authenticated` and explicitly keeps `anon` denied. This migration is **not yet applied to production**; production remains at 29 Castle migrations until the owner explicitly authorises this additional hotfix.
+
+A complete authenticated-RLS helper sweep also identified `public.can_manage_transfer_window(uuid)` with the same legacy mismatch. That helper is outside Castle Command and is deliberately excluded from this Castle release; it should be handled separately.
+
+## Release chain
+
+The current source candidate contains **30 ordered Castle Command migrations**. The latest source migration is:
+
+`20260823200500_castle_command_current_user_role_execute_hotfix.sql`
+
+Production currently contains 29 Castle migrations, ending with:
 
 `20260823185129_castle_command_alliance_authority_execute_hotfix.sql`
 
@@ -75,15 +100,24 @@ Completed:
 - Castle Command production schema activation;
 - all eight Castle tables present;
 - Castle private Realtime receive/presence policies present;
-- production migration ledger includes all 28 governed migrations plus the authority execute hotfix;
+- production migration ledger includes all 28 governed migrations plus alliance-authority hotfix #29;
 - authenticated alliance-authority helper execution verified;
-- anonymous execution remains denied.
+- ordinary current member verified unable to gain Castle manager authority;
+- anonymous execution remains denied;
+- final 29-migration source head passed full Forge CI before the new runtime permission finding;
+- production Castle tables remain free of persistent acceptance/test rows.
+
+Current blocker:
+
+- authenticated profile save/load reaches `current_user_role()` through owner-read RLS and fails with `42501` until migration #30 is authorised and applied.
 
 Still required before merge/release completion:
 
-- real authenticated Castle Command profile save/load acceptance after the hotfix;
+- validate the 30-migration source candidate;
+- explicit owner authorisation before applying migration #30 to production;
+- rerun rollback-only and real UI profile save/load acceptance after migration #30;
 - manager/deputy/assigned/unassigned/former-member role acceptance;
 - READY/SENT and tactical-plan acceptance;
 - private Realtime channel acceptance;
-- final source candidate validation for the 29-migration production-aligned branch;
+- fresh final exact-head review;
 - merge remains owner-controlled.
