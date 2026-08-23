@@ -40,10 +40,12 @@ function testStaleState() {
 async function testMigrationAndClientContracts() {
   const migrationPath = resolve(process.cwd(), 'supabase/migrations/20260823132500_castle_command_live_command_room.sql')
   const hardeningPath = resolve(process.cwd(), 'supabase/migrations/20260823133600_castle_command_live_authority_hardening.sql')
+  const resetPath = resolve(process.cwd(), 'supabase/migrations/20260823134100_castle_command_assignment_ack_reset.sql')
   const servicePath = resolve(process.cwd(), 'src/features/castle-command/castleCommandLiveService.ts')
-  const [sql, hardeningSql, service] = await Promise.all([
+  const [sql, hardeningSql, resetSql, service] = await Promise.all([
     readFile(migrationPath, 'utf8'),
     readFile(hardeningPath, 'utf8'),
+    readFile(resetPath, 'utf8'),
     readFile(servicePath, 'utf8'),
   ])
 
@@ -78,6 +80,9 @@ async function testMigrationAndClientContracts() {
   )
   assert.ok(hardeningSql.includes('revoke update, delete on public.castle_command_sessions from authenticated;'))
   assert.ok(hardeningSql.includes('volatile'))
+  assert.ok(resetSql.includes('create or replace function public.reset_castle_command_ack_on_assignment_change()'))
+  assert.ok(resetSql.includes('delete from public.castle_command_session_acknowledgements acknowledgement'))
+  assert.ok(resetSql.includes('create trigger castle_command_assignment_reset_ack'))
   assert.ok(service.includes('private: true'))
   assert.ok(service.includes(".on('presence'"))
   assert.ok(service.includes(".on('broadcast'"))
