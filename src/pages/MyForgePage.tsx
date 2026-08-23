@@ -50,6 +50,7 @@ export default function MyForgePage() {
       <ToolCard to="/my-forge/player-identity" icon="passport" title="Player Passport" copy="Your full player record" />
       <ToolCard to="/my-forge/profile" icon="link" title="Edit Passport" copy="Update your player fields" />
       <ToolCard to="/my-forge/progression" icon="progress" title="Personal Progression" copy="Track saved snapshots" />
+      <ToolCard to="/my-forge/castle-command" icon="progress" title="Castle Command" copy="Plan Castle and turret rally timing" badge="New" />
       <ToolCard to="/my-forge/heroes" icon="hero" title="Hero Showcase" copy="Curate six featured heroes" />
       <ToolCard to="/my-forge/transfer-profile" icon="transfer" title="Transfer Profile" copy="Optional transfer planning" badge="Optional" />
     </div></DashboardCard>
