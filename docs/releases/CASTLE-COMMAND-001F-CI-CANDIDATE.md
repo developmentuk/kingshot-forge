@@ -1,34 +1,33 @@
 # CASTLE-COMMAND-001F — Final CI Candidate Procedure
 
-This file records the deliberate CI-only `main` retarget for PR #94 after correction of F12, the final durable write-authority boundary found by the post-F11 release audit.
+This file records the deliberate CI-only `main` retarget for PR #94 after correction of fresh independent Codex finding F13/P1.
 
-Candidate parent before this exact-head evidence commit:
+Candidate parent before this evidence commit:
 
-`040d93855977119b3b5f38590b88d25ba627914f`
+`ce20a5f79476a1dcbe4be962b277c88db2910319`
 
 The resulting commit is the frozen corrected CASTLE-COMMAND-001F candidate to be validated against the canonical `main` baseline `40c581eb20fa145c20efe0634b3e07e9c273a581`.
 
-The final governed migration chain contains **21 Castle Command migrations**. The latest release-hardening migration is:
+The governed release chain now contains **22 Castle Command migrations**. The latest release-hardening migration is:
 
-`20260823164000_castle_command_write_authority_boundary.sql`
+`20260823164500_castle_command_authority_record_serialization.sql`
 
-It closes F12 by:
+F13 closes the remaining authority-record concurrency boundary identified by exact-head review:
 
-- revoking authenticated raw `UPDATE` and `DELETE` on `castle_command_sessions` and removing those write policies;
-- keeping server-constrained planning-state session creation while re-locking event-manager authority at the insert boundary;
-- locking the caller's Forge role row and exact qualifying `alliance_admins` event-management row before durable manager writes;
-- enforcing locked manager authority on assignment/deputy persistence;
-- enforcing locked manager-or-deputy authority on session lifecycle and tactical persistence;
-- enforcing locked command authority for acknowledgement reset and exact locked participant authority for READY/SENT;
-- re-locking the session row and rejecting dependent-table writes after close.
+- deputy authority locks both current membership and the exact deputy grant row;
+- participant authority locks both current membership and the exact assignment row;
+- tactical-version persistence locks concrete assignment rows in deterministic assignment-ID order, rebuilds the canonical snapshot after locking and fails with SQLSTATE `40001` if the snapshot changed;
+- null-auth service/migration child-row writes deliberately do not acquire the Castle session row, avoiding a reverse `child row -> session` lock cycle.
 
-This sits on top of F7 acknowledgement serialization, F8 assignment/profile serialization, F9 membership-sensitive write serialization, and F10/F11 deputy/consent serialization.
+The authoritative F13 release-order/review addendum is:
+
+`docs/releases/CASTLE-COMMAND-001F-F13-RELEASE-ADDENDUM.md`
 
 No Castle Command production migration, Realtime policy, production data mutation or merge is authorised by this CI retarget.
 
 Required validation on the exact resulting head:
 
-- permanent Castle Command tests 001A–001F, including F7–F12 serialization/write-boundary contracts and the 21-migration governed order;
+- permanent Castle Command tests 001A–001F plus the focused F13 authority-record regression and governed 22-migration order;
 - full Vision integration validation;
 - Buildings Companion validation;
 - Companion Index validation;
@@ -38,6 +37,6 @@ Required validation on the exact resulting head:
 
 Validation results are to be recorded in PR #94 metadata/comment after the workflows finish rather than by another source commit, so the validated head remains exact.
 
-After validation, PR #94 must be restored to its 001E stacked base. F8–F11 remain review-gated and F12 must be included in a fresh independent exact-head Codex pass before any blocker is treated as cleared.
+After validation, PR #94 must be restored to its 001E stacked base. F8–F13 review threads remain review-gated until a fresh exact-head Codex pass confirms the corrected candidate.
 
-Production activation remains STOPPED pending clean independent exact-head review and real authenticated manager/deputy/assigned/unassigned/former-member/unauthenticated Realtime and role acceptance.
+Production activation remains **STOPPED** pending clean independent exact-head review and real authenticated manager/deputy/assigned/unassigned/former-member/unauthenticated Realtime and role acceptance.
