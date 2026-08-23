@@ -134,6 +134,11 @@ async function testFinalMigrationSequenceIsDocumented() {
   assert.ok(release.includes('**STOP. Do not apply Castle Command migrations to production yet.**'))
 }
 
+async function testPermanentGateIncludes001F() {
+  const workflow = await read('.github/workflows/vision-integration-check.yml')
+  assert.ok(workflow.includes('node --import tsx scripts/test-castle-command-001f.mjs'))
+}
+
 await testCurrentMembershipAuthority()
 await testPrivacyAndCreationIntegrity()
 await testAllianceScopedConsent()
@@ -141,4 +146,5 @@ await testTacticalPostgresCompatibility()
 await testClosedHistoryImmutability()
 await testClientProjectionBoundary()
 await testFinalMigrationSequenceIsDocumented()
+await testPermanentGateIncludes001F()
 console.log('CASTLE-COMMAND-001F tests passed')
