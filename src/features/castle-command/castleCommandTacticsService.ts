@@ -8,10 +8,7 @@ type DatabaseErrorLike = {
 export type CastleCommandSessionAuthority = 'manager' | 'deputy' | 'participant' | 'denied'
 
 export type CastleCommandDeputyRecord = {
-  sessionId: string
   playerAccountId: string
-  grantedBy: string
-  createdAt: string
 }
 
 export type CastleCommandTacticsResult<T> =
@@ -24,6 +21,7 @@ function isSchemaUnavailable(error: unknown): boolean {
   const message = candidate.message?.toLowerCase() ?? ''
   return message.includes('castle_command_session_deput')
     || message.includes('get_castle_command_session_authority')
+    || message.includes('list_castle_command_session_deputies')
     || message.includes('set_castle_command_session_deputy')
 }
 
@@ -55,10 +53,9 @@ export async function getCastleCommandSessionAuthority(
 export async function loadCastleCommandSessionDeputies(
   sessionId: string,
 ): Promise<CastleCommandTacticsResult<CastleCommandDeputyRecord[]>> {
-  const result = await supabase
-    .from('castle_command_session_deputies')
-    .select('session_id, player_account_id, granted_by, created_at')
-    .eq('session_id', sessionId)
+  const result = await supabase.rpc('list_castle_command_session_deputies', {
+    target_session_id: sessionId,
+  })
 
   if (result.error) {
     if (isSchemaUnavailable(result.error)) return { status: 'unavailable', data: null }
@@ -67,12 +64,10 @@ export async function loadCastleCommandSessionDeputies(
 
   return {
     status: 'ready',
-    data: (result.data ?? []).map((row) => ({
-      sessionId: row.session_id,
-      playerAccountId: row.player_account_id,
-      grantedBy: row.granted_by,
-      createdAt: row.created_at,
-    })),
+    data: (result.data ?? []).flatMap((row) => {
+      const playerAccountId = row?.player_account_id
+      return typeof playerAccountId === 'string' ? [{ playerAccountId }] : []
+    }),
   }
 }
 
