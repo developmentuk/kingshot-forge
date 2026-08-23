@@ -35,10 +35,13 @@ function loadInputs(playerId: string): Inputs {
   try {
     const value = JSON.parse(localStorage.getItem(storageKey(playerId)) ?? 'null') as Partial<Inputs> | null
     if (!value) return emptyInputs()
-    return Object.fromEntries(CASTLE_COMMAND_TARGETS.map(({ id }) => [id, {
-      normal: typeof value[id]?.normal === 'string' ? value[id]?.normal : '',
-      howler: typeof value[id]?.howler === 'string' ? value[id]?.howler : '',
-    }])) as Inputs
+    return Object.fromEntries(CASTLE_COMMAND_TARGETS.map(({ id }) => {
+      const stored = value[id]
+      return [id, {
+        normal: typeof stored?.normal === 'string' ? stored.normal : '',
+        howler: typeof stored?.howler === 'string' ? stored.howler : '',
+      }]
+    })) as Inputs
   } catch {
     return emptyInputs()
   }
@@ -95,7 +98,7 @@ export default function CastleCommandPage() {
   const level = howler?.levels.find((item) => item.level === howlerLevel)
 
   if (authLoading || loadingPlayerAccount) return <main className="castle-command"><h1>Preparing Forge Castle Command…</h1></main>
-  if (!user) return <main className="castle-command"><section className="castle-command__notice"><p className="eyebrow">Sign in required</p><h1>Forge Castle Command</h1><p>This Kingshot timing tool is available only to signed-in Forge users.</p><button className="button" onClick={() => void signInWithGoogle()}>Sign in with Google</button></section></main>
+  if (!user) return <main className="castle-command"><section className="castle-command__notice"><p className="eyebrow">Sign in required</p><h1>Forge Castle Command</h1><p>This Kingshot timing tool is available only to signed-in Forge users.</p><button className="button" type="button" onClick={() => void signInWithGoogle()}>Sign in with Google</button></section></main>
   if (playerIdentityError) return <main className="castle-command"><section className="castle-command__notice"><h1>Player Passport unavailable</h1><p>{playerIdentityError}</p></section></main>
   if (!playerAccount) return <main className="castle-command"><section className="castle-command__notice"><p className="eyebrow">Player Passport required</p><h1>Link your Kingshot player first</h1><p>Your linked player supplies the Player Name and ID for this private tool.</p><Link className="button" to="/my-forge">Open My Forge</Link></section></main>
 
@@ -111,8 +114,8 @@ export default function CastleCommandPage() {
         <div className="castle-command__time-head"><span>Target</span><span>Normal</span><span>Howler observed</span></div>
         {CASTLE_COMMAND_TARGETS.map((item) => <div className="castle-command__time-row" key={item.id}>
           <button type="button" className={target === item.id ? 'is-active' : ''} onClick={() => setTarget(item.id)}>{item.label}</button>
-          <input aria-label={`${item.label} normal march time`} placeholder="1:05" value={inputs[item.id].normal} onChange={(event) => setInputs((current) => ({ ...current, [item.id]: { ...current[item.id], normal: event.target.value } }))} />
-          <input aria-label={`${item.label} Howler march time`} placeholder="0:55" value={inputs[item.id].howler} onChange={(event) => setInputs((current) => ({ ...current, [item.id]: { ...current[item.id], howler: event.target.value } }))} />
+          <input inputMode="numeric" aria-label={`${item.label} normal march time`} placeholder="1:05" value={inputs[item.id].normal} onChange={(event) => setInputs((current) => ({ ...current, [item.id]: { ...current[item.id], normal: event.target.value } }))} />
+          <input inputMode="numeric" aria-label={`${item.label} Howler march time`} placeholder="0:55" value={inputs[item.id].howler} onChange={(event) => setInputs((current) => ({ ...current, [item.id]: { ...current[item.id], howler: event.target.value } }))} />
         </div>)}
       </div>
       <p className="castle-command__hint">Use the exact times shown by Kingshot. Moving your city can make saved times stale.</p>
