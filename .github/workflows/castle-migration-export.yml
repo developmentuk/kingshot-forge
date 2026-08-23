@@ -1,11 +1,11 @@
 name: Castle migration export
 
 on:
-  push:
+  pull_request:
     branches:
       - castle-command-preview
     paths:
-      - '.github/workflows/castle-migration-export.yml'
+      - '.github/CastleExport.trigger'
 
 permissions:
   contents: read
