@@ -30,6 +30,7 @@ export type CastleCommandCloudProfile = {
 }
 
 export type CastleCommandAllianceProfile = {
+  id: string
   playerAccountId: string
   playerId: string
   playerName: string
@@ -198,6 +199,7 @@ export async function listCastleCommandAllianceProfiles(
     }
 
     const current = grouped.get(row.player_account_id) ?? {
+      id: row.player_account_id,
       playerAccountId: row.player_account_id,
       playerId: row.player_id,
       playerName: row.player_name,
