@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { usePlayerIdentity } from '../../context/PlayerIdentityContext'
 import { loadPetDataset } from '../companion/pets/petData'
+import CastleCommandCloudWorkspace from './CastleCommandCloudWorkspace'
 import { getHowlerDefinition, type HowlerDefinition } from './howlerData'
 import {
   buildLaunchTiming,
@@ -138,6 +139,20 @@ export default function CastleCommandPage() {
       {timing ? <div className="castle-command__result"><div><span>Start Kingshot rally</span><strong>{formatClockTime(timing.rallyStartAt)}</strong></div><div><span>March begins</span><strong>{formatClockTime(timing.marchDepartureAt)}</strong></div><div><span>Impact</span><strong>{formatClockTime(timing.impactAt)}</strong></div></div> : <p>Enter a valid march time to calculate the schedule.</p>}
     </section>
 
-    <footer className="castle-command__footer"><Link to="/my-forge">← Back to My Forge</Link><span>CASTLE-COMMAND-001A · personal timing foundation</span></footer>
+    <CastleCommandCloudWorkspace
+      userId={user.id}
+      playerAccountId={playerAccount.id}
+      timings={profile}
+      howlerSkillLevel={howlerLevel}
+      onImportCloudProfile={(cloudProfile) => {
+        setHowlerLevel(cloudProfile.howlerSkillLevel)
+        setInputs(Object.fromEntries(CASTLE_COMMAND_TARGETS.map(({ id }) => [id, {
+          normal: cloudProfile.timings[id].normalSeconds === null ? '' : formatMarchDuration(cloudProfile.timings[id].normalSeconds),
+          howler: cloudProfile.timings[id].howlerSeconds === null ? '' : formatMarchDuration(cloudProfile.timings[id].howlerSeconds),
+        }])) as Inputs)
+      }}
+    />
+
+    <footer className="castle-command__footer"><Link to="/my-forge">← Back to My Forge</Link><span>CASTLE-COMMAND-001B · persistent profiles & session foundation</span></footer>
   </main>
 }
