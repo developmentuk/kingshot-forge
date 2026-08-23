@@ -160,6 +160,7 @@ export async function saveCastleCommandCloudProfile(input: {
   userId: string
   howlerSkillLevel: number
   shareWithAlliance: boolean
+  sharedAllianceId: string | null
   timings: MarchTimeProfile
 }): Promise<CastleCommandCloudResult<CastleCommandCloudProfile>> {
   void input.userId
@@ -167,6 +168,7 @@ export async function saveCastleCommandCloudProfile(input: {
     target_player_account_id: input.playerAccountId,
     target_howler_skill_level: input.howlerSkillLevel,
     target_share_with_alliance: input.shareWithAlliance,
+    target_shared_alliance_id: input.shareWithAlliance ? input.sharedAllianceId : null,
     castle_normal_seconds: input.timings.castle.normalSeconds,
     castle_howler_seconds: input.timings.castle.howlerSeconds,
     north_normal_seconds: input.timings.north.normalSeconds,
