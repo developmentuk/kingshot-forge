@@ -71,6 +71,21 @@ async function testAllianceScopedConsent() {
   ]) assert.ok(assignment.includes(required), `001F assignment scope hardening missing ${required}`)
 }
 
+async function testTacticalPostgresCompatibility() {
+  const sql = await read('supabase/migrations/20260823161000_castle_command_tactical_json_compatibility.sql')
+
+  for (const required of [
+    'from jsonb_object_keys(wave);',
+    'wave_key_count <> 3',
+    "Castle Command tactical plan contains a player who is no longer a current alliance member",
+    'session_impact_at_snapshot',
+    'rally_preparation_seconds_snapshot',
+    "raise exception 'Castle Command tactical plan version conflict' using errcode = '40001'",
+  ]) assert.ok(sql.includes(required), `001F tactical compatibility hardening missing ${required}`)
+
+  assert.equal(sql.includes('jsonb_object_length'), false, 'final tactical save RPC must not use unsupported jsonb_object_length')
+}
+
 async function testClientProjectionBoundary() {
   const service = await read('src/features/castle-command/castleCommandCloudService.ts')
 
@@ -85,5 +100,6 @@ async function testClientProjectionBoundary() {
 await testCurrentMembershipAuthority()
 await testPrivacyAndCreationIntegrity()
 await testAllianceScopedConsent()
+await testTacticalPostgresCompatibility()
 await testClientProjectionBoundary()
 console.log('CASTLE-COMMAND-001F tests passed')
