@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 async function read(path) {
@@ -56,6 +56,12 @@ const service = await read('src/features/castle-command/castleCommandCloudServic
 assert.ok(service.includes("supabase.rpc('save_castle_command_profile'"), 'client save must use governed profile-save RPC')
 assert.equal(/\.from\(['"]castle_command_profiles['"]\)[\s\S]{0,400}\.(?:insert|update|upsert)\(/.test(service), false, 'client must not raw-write Castle profiles')
 assert.equal(/\.from\(['"]castle_command_profile_targets['"]\)[\s\S]{0,400}\.(?:insert|update|upsert|delete)\(/.test(service), false, 'client must not raw-write Castle timing rows')
+
+const migrationFiles = (await readdir(resolve(process.cwd(), 'supabase/migrations')))
+  .filter((name) => name.includes('_castle_command_') && name.endsWith('.sql'))
+  .sort()
+assert.equal(migrationFiles.length, 27, 'Castle Command release chain must contain exactly 27 ordered migrations')
+assert.equal(migrationFiles.at(-1), '20260823171000_castle_command_profile_privacy_write_boundary.sql', 'F18/F19 privacy boundary must be the final Castle migration')
 
 const addendum = await read('docs/releases/CASTLE-COMMAND-001F-F18-F19-RELEASE-ADDENDUM.md')
 assert.ok(addendum.includes('27 ordered Castle Command migrations'))
