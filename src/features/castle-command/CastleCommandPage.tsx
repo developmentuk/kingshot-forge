@@ -157,7 +157,6 @@ export default function CastleCommandPage() {
     <CastleCommandLiveHub
       userId={user.id}
       playerAccountId={playerAccount.id}
-      playerName={playerAccount.player_name}
     />
 
     <footer className="castle-command__footer"><Link to="/my-forge">← Back to My Forge</Link><span>CASTLE-COMMAND-001C · Live Command Room</span></footer>
