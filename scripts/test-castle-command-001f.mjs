@@ -150,7 +150,8 @@ async function testFinalReleaseContract() {
   assert.ok(release.includes('**STOP. Do not apply Castle Command migrations to production yet.**'))
   assert.ok(release.includes('fresh independent exact-head review'))
   assert.ok(release.includes('real authenticated role/Realtime acceptance'))
-  assert.ok(release.includes('freezes the corrected release candidate for final A–F CI only'))
+  assert.ok(release.includes('Finding F7 — participant acknowledgement transitions were not serialized with session closure'))
+  assert.ok(release.includes('The corrected candidate must pass fresh A–F CI and fresh independent exact-head review'))
 }
 
 async function testPermanentGateIncludes001F() {
