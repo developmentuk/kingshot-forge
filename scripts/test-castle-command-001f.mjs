@@ -128,6 +128,58 @@ async function testAssignmentProfileSerialization() {
   assert.ok(profileUpsert >= 0 && timingUpsert > profileUpsert, 'profile save must own/update the profile row before changing timing rows')
 }
 
+async function testMembershipTransitionSerialization() {
+  const sql = stripSqlComments(await read('supabase/migrations/20260823163000_castle_command_membership_transition_serialization.sql'))
+  for (const required of [
+    'create or replace function public.set_castle_command_session_assignment',
+    'create or replace function public.set_castle_command_acknowledgement',
+    'create or replace function public.set_castle_command_session_deputy',
+    'create or replace function public.save_castle_command_tactical_plan',
+    "membership.status = 'current'::public.alliance_membership_status",
+    'for update of membership;',
+    'order by membership.user_id',
+  ]) assert.ok(sql.includes(required), `001F membership transition serialization missing ${required}`)
+
+  const assignmentStart = sql.indexOf('create or replace function public.set_castle_command_session_assignment')
+  const assignmentEnd = sql.indexOf('revoke all on function public.set_castle_command_session_assignment', assignmentStart)
+  const assignment = sql.slice(assignmentStart, assignmentEnd)
+  const assignmentSessionLock = assignment.indexOf('from public.castle_command_sessions')
+  const assignmentMembershipLock = assignment.indexOf('for update of membership;')
+  const assignmentProfileLock = assignment.indexOf('for update of profile;')
+  const assignmentTimingRead = assignment.indexOf('from public.castle_command_profile_targets')
+  assert.ok(assignmentSessionLock >= 0)
+  assert.ok(assignmentMembershipLock > assignmentSessionLock, 'assignment must lock membership after session')
+  assert.ok(assignmentProfileLock > assignmentMembershipLock, 'assignment lock order must be session -> membership -> profile')
+  assert.ok(assignmentTimingRead > assignmentProfileLock, 'assignment must read timing only after membership and profile locks')
+  assert.ok(assignment.includes("Castle Command player is no longer a current alliance member"))
+
+  const acknowledgementStart = sql.indexOf('create or replace function public.set_castle_command_acknowledgement')
+  const acknowledgementEnd = sql.indexOf('revoke all on function public.set_castle_command_acknowledgement', acknowledgementStart)
+  const acknowledgement = sql.slice(acknowledgementStart, acknowledgementEnd)
+  const acknowledgementSessionLock = acknowledgement.indexOf('from public.castle_command_sessions')
+  const acknowledgementMembershipLock = acknowledgement.indexOf('for update of membership;')
+  const acknowledgementStateLock = acknowledgement.indexOf('from public.castle_command_session_acknowledgements')
+  assert.ok(acknowledgementMembershipLock > acknowledgementSessionLock, 'acknowledgement must lock caller membership after session')
+  assert.ok(acknowledgementStateLock > acknowledgementMembershipLock, 'acknowledgement state must be read after membership is locked')
+
+  const deputyStart = sql.indexOf('create or replace function public.set_castle_command_session_deputy')
+  const deputyEnd = sql.indexOf('revoke all on function public.set_castle_command_session_deputy', deputyStart)
+  const deputy = sql.slice(deputyStart, deputyEnd)
+  assert.ok(deputy.includes('for update of membership;'), 'deputy appointment must lock target membership')
+  assert.ok(deputy.indexOf('for update of membership;') < deputy.indexOf('insert into public.castle_command_session_deputies'))
+
+  const tacticalStart = sql.indexOf('create or replace function public.save_castle_command_tactical_plan')
+  const tacticalEnd = sql.indexOf('revoke all on function public.save_castle_command_tactical_plan', tacticalStart)
+  const tactical = sql.slice(tacticalStart, tacticalEnd)
+  const tacticalMembershipLock = tactical.indexOf('for update of membership;')
+  const tacticalEligibilityCheck = tactical.indexOf("Castle Command tactical plan contains a player who is no longer a current alliance member")
+  const tacticalSnapshot = tactical.indexOf('public.build_castle_command_assignment_snapshot')
+  assert.ok(tacticalMembershipLock >= 0)
+  assert.ok(tactical.includes('order by membership.user_id'), 'tactical membership locks must use deterministic order')
+  assert.ok(tacticalEligibilityCheck > tacticalMembershipLock, 'tactical eligibility must be rechecked after membership locking')
+  assert.ok(tacticalSnapshot > tacticalEligibilityCheck, 'tactical assignment snapshot must follow locked membership eligibility check')
+}
+
 async function testClientProjectionBoundary() {
   const service = await read('src/features/castle-command/castleCommandCloudService.ts')
   assert.ok(service.includes('shared_alliance_id'))
@@ -164,6 +216,7 @@ async function testFinalReleaseContract() {
     '20260823161500_castle_command_closed_session_ack_hardening.sql',
     '20260823162000_castle_command_ack_transition_serialization.sql',
     '20260823162500_castle_command_assignment_profile_serialization.sql',
+    '20260823163000_castle_command_membership_transition_serialization.sql',
   ]
   let cursor = -1
   for (const migration of required) {
@@ -176,6 +229,7 @@ async function testFinalReleaseContract() {
   assert.ok(release.includes('real authenticated role/Realtime acceptance'))
   assert.ok(release.includes('Finding F7 — participant acknowledgement transitions were not serialized with session closure'))
   assert.ok(release.includes('Finding F8 — assignment snapshots were not serialized with profile sharing/timing saves'))
+  assert.ok(release.includes('Finding F9 — durable membership-sensitive writes were not serialized with membership transitions'))
   assert.ok(release.includes('The corrected candidate must pass fresh A–F CI and fresh independent exact-head review'))
 }
 
@@ -191,6 +245,7 @@ await testTacticalPostgresCompatibility()
 await testClosedHistoryImmutability()
 await testAcknowledgementTransitionSerialization()
 await testAssignmentProfileSerialization()
+await testMembershipTransitionSerialization()
 await testClientProjectionBoundary()
 await testFinalReleaseContract()
 await testPermanentGateIncludes001F()
