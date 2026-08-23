@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { usePlayerIdentity } from '../../context/PlayerIdentityContext'
 import { loadPetDataset } from '../companion/pets/petData'
 import CastleCommandCloudWorkspace from './CastleCommandCloudWorkspace'
+import CastleCommandLiveHub from './CastleCommandLiveHub'
 import { getHowlerDefinition, type HowlerDefinition } from './howlerData'
 import {
   buildLaunchTiming,
@@ -153,6 +154,12 @@ export default function CastleCommandPage() {
       }}
     />
 
-    <footer className="castle-command__footer"><Link to="/my-forge">← Back to My Forge</Link><span>CASTLE-COMMAND-001B · persistent profiles & session foundation</span></footer>
+    <CastleCommandLiveHub
+      userId={user.id}
+      playerAccountId={playerAccount.id}
+      playerName={playerAccount.player_name}
+    />
+
+    <footer className="castle-command__footer"><Link to="/my-forge">← Back to My Forge</Link><span>CASTLE-COMMAND-001C · Live Command Room</span></footer>
   </main>
 }
