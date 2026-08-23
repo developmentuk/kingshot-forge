@@ -166,24 +166,7 @@ The earlier migrations describe the incremental implementation history. The 001F
 
 `scripts/test-castle-command-001f.mjs` is part of the existing Castle Command step in `vision-integration-check.yml`.
 
-It guards, at minimum:
-
-- current-membership enforcement for participant/deputy authority;
-- current-membership enforcement for READY/SENT and deputy appointment;
-- minimal direct authenticated column grants;
-- server-owned new-session lifecycle/identity;
-- removal of raw Castle profile ID from shared alliance projection;
-- alliance-scoped sharing consent;
-- server-side single-current-alliance compatibility resolution;
-- no unsupported `min(uuid)` sharing implementation;
-- assignment RPC enforcement of the exact sharing scope;
-- closed assignment immutability;
-- final tactical JSON validation using supported Postgres functions;
-- current-membership check before tactical publication;
-- closed acknowledgement immutability;
-- client-side suppression of stale alliance sharing after transfer;
-- documented final migration order and explicit production STOP gate;
-- permanent CI inclusion of the 001F regression suite itself.
+It guards current-membership authority, column minimisation, server-owned session creation, exact alliance-scoped sharing consent, assignment scope, closed-session immutability, production-compatible tactical JSON validation, client projection boundaries, documented migration order, explicit production STOP state and permanent CI inclusion.
 
 ## Review gate — STILL BLOCKING
 
@@ -207,9 +190,9 @@ Realtime is notification/Presence transport only. Database state remains canonic
 
 Before acceptance, verify with real authenticated clients that:
 
-1. a **current-alliance assigned** participant can receive the private channel;
+1. a current-alliance assigned participant can receive the private channel;
 2. an authorised alliance event manager can receive it;
-3. a **current-alliance assigned** deputy can receive it after appointment;
+3. a current-alliance assigned deputy can receive it after appointment;
 4. a former alliance member with a historical assignment/deputy row cannot receive it;
 5. an unassigned ordinary user cannot receive it merely by guessing the topic;
 6. an unauthenticated client cannot receive it;
@@ -225,72 +208,27 @@ Use real authenticated test identities. Do not simulate acceptance solely with s
 
 ### Player / profile owner
 
-Verify:
-
-- login is required;
-- linked Player Passport identity is used;
-- own five target timings save atomically;
-- Howler timing remains observed-only;
-- sharing is off by default;
-- explicit sharing binds to the exact current alliance;
-- after a simulated alliance transfer, the old consent does not expose timings to the new alliance and the UI presents sharing as off;
-- re-sharing in the new current alliance requires an explicit new save;
-- direct access to another player's raw Castle profile/user/audit identifiers fails.
+Verify login, linked Player Passport identity, atomic five-target saves, observed-only Howler timing, sharing off by default, exact-current-alliance consent, transfer/re-consent behaviour and denial of another player's raw private/audit identifiers.
 
 ### Ordinary current alliance member
 
-Verify:
-
-- may see only intentionally shared Castle timing through the limited projection;
-- cannot create/manage sessions without event-management authority;
-- cannot appoint deputies;
-- cannot mutate another player's profile;
-- cannot enter a private Live Room unless assigned.
+Verify only intentionally shared timing is visible through the projection, no session management/deputy powers exist and private Live Room entry is denied unless assigned.
 
 ### Assigned participant
 
-Verify:
-
-- can enter the private Live Room while still a current alliance member;
-- loses Live Room/private Realtime access after current membership is removed;
-- can mark own assignment READY;
-- SENT requires prior READY and active session;
-- cannot reset other players;
-- receives shared tactical plan updates;
-- shared tactical plan is read-only;
-- assignment changes invalidate prior acknowledgement.
+Verify Live Room works only while current membership remains, READY/SENT transitions are constrained, shared tactical plan is read-only and assignment changes invalidate prior acknowledgement.
 
 ### Event manager
 
-Verify:
-
-- new sessions are always server-created in planning state with server-owned ID/timestamps;
-- can assign only current members whose timing profile is explicitly scoped to the session alliance;
-- assignment timing is server-derived from saved observed profile;
-- can start/close session and reset acknowledgements only before close;
-- can appoint/remove only current-alliance assigned deputies;
-- can publish shared tactical versions only when all assignments remain current alliance members;
-- concurrent-version conflict is preserved rather than overwritten.
+Verify server-owned planning-state session creation, scoped eligible assignment, observed server-derived timing, lifecycle/ack controls only while open, current-member deputy appointment, current-member tactical publication and optimistic version conflict handling.
 
 ### Deputy
 
-Verify:
-
-- gains live session command authority only while assigned and still a current alliance member;
-- can operate permitted live/tactical controls;
-- cannot appoint other deputies;
-- does not gain alliance administration or 001B roster-edit authority;
-- loses command/Realtime authority after alliance membership removal.
+Verify live/tactical authority only while assigned and current, no deputy appointment/alliance-admin/roster-edit powers, and immediate denial after membership removal on the next canonical authorization check.
 
 ### Unassigned / former / unauthenticated
 
-Verify:
-
-- cannot enter the private Live Room;
-- cannot subscribe to a guessed private Castle topic;
-- cannot call mutation RPCs successfully;
-- cannot read raw private Castle tables/audit columns;
-- a former member with historical assignment/deputy records is denied.
+Verify Live Room/private topic/mutation/raw-private-table access fails, including for a former member with historical assignment/deputy records.
 
 ## End-to-end simulated battle acceptance
 
@@ -322,25 +260,14 @@ No actual Kingshot rally or combat action is required for this acceptance; it is
 
 ## Cost-controlled release strategy
 
-Do not merge the stacked implementation PRs independently merely to move the stack to `main` if that causes redundant production builds.
-
-Preferred final release shape after review/acceptance:
-
-- retain PRs #89–#93 as the auditable implementation chain;
-- use PR #94 / the 001F integration branch as the single final `main` release candidate containing the exact A–E stack plus release hardening and acceptance documentation;
-- run the final corrected exact-head validation once;
-- merge only the owner-approved integration candidate;
-- record the final disposition of #89–#93 explicitly;
-- avoid unnecessary production deployments.
+Retain PRs #89–#93 as the auditable implementation chain and use PR #94 / 001F as the single final `main` release candidate after acceptance. Run corrected exact-head validation once, merge only the owner-approved integration candidate, record the final disposition of #89–#93 and avoid unnecessary production deployments.
 
 ## Isolated Supabase branch option
 
-A Supabase development branch remains the preferred place to execute the complete migration chain before production because it can validate DDL and authenticated behaviour without modifying production.
-
-Supabase requires organisation-specific cost lookup and explicit cost confirmation before branch creation. No paid Supabase branch has been created and no branch cost has been incurred.
+A Supabase development branch remains the preferred place to execute the complete migration chain before production because it can validate DDL and authenticated behaviour without modifying production. Supabase requires organisation-specific cost lookup and explicit cost confirmation before branch creation. No paid Supabase branch has been created and no branch cost has been incurred.
 
 ## Current decision
 
 **STOP. Do not apply Castle Command migrations to production yet.**
 
-The release review found and corrected actionable authorization, privacy, consent, immutability and Postgres-compatibility defects. Those corrections are now protected by the 001F regression suite. The branch is frozen for final corrected exact-head CI; after CI, fresh independent review and real authenticated role/Realtime acceptance remain mandatory before production activation.
+The release review found and corrected actionable authorization, privacy, consent, immutability and Postgres-compatibility defects. Those corrections are protected by the 001F regression suite. This commit freezes the corrected release candidate for final A–F CI only; fresh independent exact-head review and real authenticated role/Realtime acceptance remain mandatory before production activation.
