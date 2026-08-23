@@ -25,6 +25,7 @@ export type CastleCommandCloudProfile = {
   playerAccountId: string
   howlerSkillLevel: number
   shareWithAlliance: boolean
+  sharedAllianceId: string | null
   updatedAt: string
   timings: MarchTimeProfile
 }
@@ -103,7 +104,7 @@ export async function loadCastleCommandCloudProfile(
 ): Promise<CastleCommandCloudResult<CastleCommandCloudProfile | null>> {
   const profileResult = await supabase
     .from('castle_command_profiles')
-    .select('id, player_account_id, howler_skill_level, share_with_alliance, updated_at')
+    .select('id, player_account_id, howler_skill_level, share_with_alliance, shared_alliance_id, updated_at')
     .eq('player_account_id', playerAccountId)
     .maybeSingle()
 
@@ -131,6 +132,7 @@ export async function loadCastleCommandCloudProfile(
       playerAccountId: profileResult.data.player_account_id,
       howlerSkillLevel: profileResult.data.howler_skill_level,
       shareWithAlliance: profileResult.data.share_with_alliance,
+      sharedAllianceId: profileResult.data.shared_alliance_id,
       updatedAt: profileResult.data.updated_at,
       timings: mapProfileTargets(targetsResult.data ?? []),
     },
@@ -142,6 +144,7 @@ export async function saveCastleCommandCloudProfile(input: {
   userId: string
   howlerSkillLevel: number
   shareWithAlliance: boolean
+  sharedAllianceId: string | null
   timings: MarchTimeProfile
 }): Promise<CastleCommandCloudResult<CastleCommandCloudProfile>> {
   void input.userId
@@ -149,6 +152,7 @@ export async function saveCastleCommandCloudProfile(input: {
     target_player_account_id: input.playerAccountId,
     target_howler_skill_level: input.howlerSkillLevel,
     target_share_with_alliance: input.shareWithAlliance,
+    target_shared_alliance_id: input.sharedAllianceId,
     castle_normal_seconds: input.timings.castle.normalSeconds,
     castle_howler_seconds: input.timings.castle.howlerSeconds,
     north_normal_seconds: input.timings.north.normalSeconds,
