@@ -18,7 +18,6 @@ create index castle_command_session_deputies_player_idx
   on public.castle_command_session_deputies(player_account_id, session_id);
 
 alter table public.castle_command_session_deputies enable row level security;
-grant select on public.castle_command_session_deputies to authenticated;
 
 create or replace function public.can_manage_castle_command_session(target_session_id uuid)
 returns boolean
@@ -70,11 +69,28 @@ $$;
 revoke all on function public.can_participate_castle_command_session(uuid) from public;
 grant execute on function public.can_participate_castle_command_session(uuid) to authenticated;
 
-create policy "Castle Command participants can view session deputies"
-on public.castle_command_session_deputies
-for select
-to authenticated
-using (public.can_participate_castle_command_session(session_id));
+create or replace function public.list_castle_command_session_deputies(target_session_id uuid)
+returns table (player_account_id uuid)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if not public.can_participate_castle_command_session(target_session_id) then
+    raise exception 'Castle Command live-session access denied' using errcode = '42501';
+  end if;
+
+  return query
+  select deputy.player_account_id
+  from public.castle_command_session_deputies deputy
+  where deputy.session_id = target_session_id
+  order by deputy.player_account_id;
+end;
+$$;
+
+revoke all on function public.list_castle_command_session_deputies(uuid) from public;
+grant execute on function public.list_castle_command_session_deputies(uuid) to authenticated;
 
 create or replace function public.get_castle_command_session_authority(target_session_id uuid)
 returns text
@@ -304,7 +320,7 @@ after insert or delete on public.castle_command_session_deputies
 for each row execute function public.broadcast_castle_command_state_change();
 
 comment on table public.castle_command_session_deputies is
-  'Session-scoped live-command delegates. Appointment remains restricted to existing alliance event managers.';
+  'Private session-scoped live-command delegates. Clients consume only the limited deputy projection RPC.';
 comment on function public.can_manage_castle_command_session(uuid) is
   'Session-scoped live authority: alliance event managers plus explicitly appointed assigned deputies.';
 
