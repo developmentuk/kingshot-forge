@@ -115,6 +115,22 @@ export async function loadCastleCommandCloudProfile(
 
   if (!profileResult.data) return { status: 'ready', data: null }
 
+  const sharedAllianceId = typeof profileResult.data.shared_alliance_id === 'string'
+    ? profileResult.data.shared_alliance_id
+    : null
+  let shareScopeIsCurrent = false
+
+  if (profileResult.data.share_with_alliance === true && sharedAllianceId) {
+    const scopeResult = await supabase.rpc('current_user_is_alliance_member', {
+      target_alliance_id: sharedAllianceId,
+    })
+    if (scopeResult.error) {
+      if (isSchemaUnavailable(scopeResult.error)) return { status: 'unavailable', data: null }
+      throwDatabaseError(scopeResult.error, 'Castle Command sharing scope could not be checked.')
+    }
+    shareScopeIsCurrent = scopeResult.data === true
+  }
+
   const targetsResult = await supabase
     .from('castle_command_profile_targets')
     .select('target, normal_seconds, howler_seconds')
@@ -131,8 +147,8 @@ export async function loadCastleCommandCloudProfile(
       id: profileResult.data.id,
       playerAccountId: profileResult.data.player_account_id,
       howlerSkillLevel: profileResult.data.howler_skill_level,
-      shareWithAlliance: profileResult.data.share_with_alliance,
-      sharedAllianceId: profileResult.data.shared_alliance_id,
+      shareWithAlliance: profileResult.data.share_with_alliance === true && shareScopeIsCurrent,
+      sharedAllianceId,
       updatedAt: profileResult.data.updated_at,
       timings: mapProfileTargets(targetsResult.data ?? []),
     },
@@ -144,7 +160,6 @@ export async function saveCastleCommandCloudProfile(input: {
   userId: string
   howlerSkillLevel: number
   shareWithAlliance: boolean
-  sharedAllianceId: string | null
   timings: MarchTimeProfile
 }): Promise<CastleCommandCloudResult<CastleCommandCloudProfile>> {
   void input.userId
@@ -152,7 +167,6 @@ export async function saveCastleCommandCloudProfile(input: {
     target_player_account_id: input.playerAccountId,
     target_howler_skill_level: input.howlerSkillLevel,
     target_share_with_alliance: input.shareWithAlliance,
-    target_shared_alliance_id: input.sharedAllianceId,
     castle_normal_seconds: input.timings.castle.normalSeconds,
     castle_howler_seconds: input.timings.castle.howlerSeconds,
     north_normal_seconds: input.timings.north.normalSeconds,
