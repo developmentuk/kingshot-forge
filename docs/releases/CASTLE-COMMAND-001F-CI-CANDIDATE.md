@@ -4,7 +4,7 @@ This file records the deliberate CI-only `main` retarget for PR #94 after correc
 
 Candidate parent before this evidence commit:
 
-`80c93e545b8d43158333b2a1b389a04742a05083`
+`8cbf6600374b64c4397b96486c69a8b4b6b35a34`
 
 The resulting commit is the frozen corrected CASTLE-COMMAND-001F candidate to be validated against the canonical `main` baseline `40c581eb20fa145c20efe0634b3e07e9c273a581`.
 
