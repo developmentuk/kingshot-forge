@@ -1,0 +1,197 @@
+.castle-command-live-hub {
+  display: grid;
+  gap: 1rem;
+}
+
+.castle-command-live-hub__heading,
+.castle-command-live__statusbar,
+.castle-command-live__commander,
+.castle-command-live__roster-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.castle-command-live-hub__state,
+.castle-command-live__connection,
+.castle-command-live__session-state,
+.castle-command-live__ack {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.9rem;
+  padding: .28rem .65rem;
+  border: 1px solid var(--border-color, rgba(255,255,255,.14));
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.castle-command-live-hub__selector {
+  display: grid;
+  gap: .4rem;
+  max-width: 42rem;
+}
+
+.castle-command-live-hub__selector select {
+  width: 100%;
+}
+
+.castle-command-live,
+.castle-command-live__roster {
+  display: grid;
+  gap: 1rem;
+}
+
+.castle-command-live__statusbar {
+  padding: .8rem 1rem;
+  border-radius: .8rem;
+  background: rgba(0, 0, 0, .18);
+}
+
+.castle-command-live__connection.is-live,
+.castle-command-live__ack.is-ready,
+.castle-command-live__presence.is-online {
+  box-shadow: 0 0 0 1px rgba(91, 221, 145, .34);
+}
+
+.castle-command-live__connection.is-error,
+.castle-command-live__session-state.is-closed,
+.castle-command-live__ack.is-sent {
+  font-weight: 900;
+}
+
+.castle-command-live__activation,
+.castle-command-live__boundary,
+.castle-command-live__stale {
+  padding: 1rem;
+  border: 1px solid var(--border-color, rgba(255,255,255,.14));
+  border-radius: .85rem;
+  background: rgba(0, 0, 0, .16);
+}
+
+.castle-command-live__activation strong,
+.castle-command-live__stale strong {
+  display: block;
+  margin-bottom: .25rem;
+}
+
+.castle-command-live__commander {
+  padding: .9rem 1rem;
+  border-radius: .85rem;
+  background: rgba(255,255,255,.035);
+}
+
+.castle-command-live__commander > div,
+.castle-command-live__ack-actions {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.castle-command-live__personal {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(10rem, .7fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.1rem;
+  border: 1px solid var(--border-color, rgba(255,255,255,.14));
+  border-radius: 1rem;
+  background: rgba(255,255,255,.035);
+}
+
+.castle-command-live__personal-countdown {
+  display: grid;
+  gap: .15rem;
+  text-align: center;
+}
+
+.castle-command-live__personal-countdown strong {
+  font-size: clamp(1.55rem, 4vw, 2.5rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.castle-command-live__personal.is-launch-window,
+.castle-command-live__roster li.is-launch-window {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.castle-command-live__roster ol {
+  display: grid;
+  gap: .55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.castle-command-live__roster li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.4fr) minmax(8.5rem, .7fr) auto;
+  align-items: center;
+  gap: .8rem;
+  padding: .8rem .9rem;
+  border: 1px solid var(--border-color, rgba(255,255,255,.12));
+  border-radius: .75rem;
+  background: rgba(0,0,0,.12);
+}
+
+.castle-command-live__presence {
+  width: .7rem;
+  height: .7rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .22;
+}
+
+.castle-command-live__presence.is-online {
+  opacity: 1;
+}
+
+.castle-command-live__identity,
+.castle-command-live__countdown,
+.castle-command-live__roster-ack {
+  display: grid;
+  gap: .2rem;
+}
+
+.castle-command-live__identity span,
+.castle-command-live__countdown span {
+  font-size: .82rem;
+  opacity: .78;
+}
+
+.castle-command-live__countdown strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.castle-command-live__roster-ack {
+  justify-items: end;
+}
+
+.castle-command-live__roster-ack button {
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .castle-command-live__personal,
+  .castle-command-live__roster li {
+    grid-template-columns: 1fr;
+  }
+
+  .castle-command-live__personal-countdown {
+    text-align: left;
+  }
+
+  .castle-command-live__roster-ack {
+    justify-items: start;
+  }
+}
