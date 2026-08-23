@@ -105,10 +105,39 @@ async function testClientProjectionBoundary() {
   assert.ok(service.includes(".select('id, alliance_id, title, impact_at, rally_preparation_seconds, status, closed_at, created_at, updated_at')"))
 }
 
+async function testFinalMigrationSequenceIsDocumented() {
+  const release = await read('docs/releases/CASTLE-COMMAND-001F-ACTIVATION-ACCEPTANCE.md')
+  const required = [
+    '20260823120400_castle_command_session_foundation.sql',
+    '20260823121800_castle_command_atomic_profile_save.sql',
+    '20260823122200_castle_command_shared_projection_lockdown.sql',
+    '20260823132500_castle_command_live_command_room.sql',
+    '20260823133600_castle_command_live_authority_hardening.sql',
+    '20260823134100_castle_command_assignment_ack_reset.sql',
+    '20260823141000_castle_command_battle_tactics_deputies.sql',
+    '20260823151500_castle_command_shared_tactical_operations.sql',
+    '20260823152000_castle_command_tactical_context_snapshot.sql',
+    '20260823154500_castle_command_current_membership_authority_hardening.sql',
+    '20260823155000_castle_command_release_privacy_integrity_hardening.sql',
+    '20260823155500_castle_command_alliance_scoped_sharing.sql',
+    '20260823160000_castle_command_scoped_sharing_compatibility.sql',
+    '20260823160500_castle_command_assignment_scope_hardening.sql',
+    '20260823161000_castle_command_tactical_json_compatibility.sql',
+    '20260823161500_castle_command_closed_session_ack_hardening.sql',
+  ]
+  let cursor = -1
+  for (const migration of required) {
+    const position = release.indexOf(migration)
+    assert.ok(position > cursor, `001F release migration order missing/out of order: ${migration}`)
+    cursor = position
+  }
+}
+
 await testCurrentMembershipAuthority()
 await testPrivacyAndCreationIntegrity()
 await testAllianceScopedConsent()
 await testTacticalPostgresCompatibility()
 await testClosedHistoryImmutability()
 await testClientProjectionBoundary()
+await testFinalMigrationSequenceIsDocumented()
 console.log('CASTLE-COMMAND-001F tests passed')
