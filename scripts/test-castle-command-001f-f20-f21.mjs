@@ -13,6 +13,7 @@ function stripSqlComments(sql) {
 }
 
 const migrationName = '20260823171500_castle_command_membership_term_consent.sql'
+const hotfixMigrationName = '20260823185129_castle_command_alliance_authority_execute_hotfix.sql'
 const migration = stripSqlComments(await read(`supabase/migrations/${migrationName}`))
 
 for (const required of [
@@ -64,18 +65,28 @@ const membershipLock = explicitSave.indexOf('for update of membership;')
 const profileWrite = explicitSave.indexOf('insert into public.castle_command_profiles')
 assert.ok(membershipLock >= 0 && profileWrite > membershipLock, 'explicit scoped save must lock current membership before profile persistence')
 
+const hotfix = stripSqlComments(await read(`supabase/migrations/${hotfixMigrationName}`))
+assert.ok(hotfix.includes('revoke all on function public.can_manage_alliance(uuid) from public;'))
+assert.ok(hotfix.includes('revoke all on function public.can_manage_alliance_members(uuid) from public;'))
+assert.ok(hotfix.includes('grant execute on function public.can_manage_alliance(uuid) to authenticated;'))
+assert.ok(hotfix.includes('grant execute on function public.can_manage_alliance_members(uuid) to authenticated;'))
+assert.ok(!hotfix.includes('to anon;'), 'alliance authority helpers must remain unavailable to anon')
+
 const migrationFiles = (await readdir(resolve(process.cwd(), 'supabase/migrations')))
   .filter((name) => name.includes('_castle_command_') && name.endsWith('.sql'))
   .sort()
-assert.equal(migrationFiles.length, 28, 'Castle Command release chain must contain exactly 28 ordered migrations')
-assert.equal(migrationFiles.at(-1), migrationName, 'F20 membership-term consent migration must be the final Castle migration')
+assert.equal(migrationFiles.length, 29, 'Castle Command release chain must contain exactly 29 ordered migrations after production activation hotfix')
+assert.ok(migrationFiles.includes(migrationName), 'F20 membership-term consent migration must remain in the governed chain')
+assert.equal(migrationFiles.at(-1), hotfixMigrationName, 'production alliance-authority execute hotfix must be the final Castle migration')
 
 const addendum = await read('docs/releases/CASTLE-COMMAND-001F-F20-F21-RELEASE-ADDENDUM.md')
-assert.ok(addendum.includes('28 ordered Castle Command migrations'))
+assert.ok(addendum.includes('29 ordered Castle Command migrations'))
 assert.ok(addendum.includes(migrationName))
+assert.ok(addendum.includes(hotfixMigrationName))
 assert.ok(addendum.includes('F20'))
 assert.ok(addendum.includes('F21'))
 assert.ok(addendum.includes('membership term'))
 assert.ok(addendum.includes('explicit alliance scope'))
+assert.ok(addendum.includes('production activation hotfix'))
 
-console.log('CASTLE-COMMAND-001F F20/F21 tests passed')
+console.log('CASTLE-COMMAND-001F F20/F21 + production hotfix tests passed')
