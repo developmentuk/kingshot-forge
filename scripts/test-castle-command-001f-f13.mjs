@@ -52,7 +52,7 @@ assert.ok(assignmentLock >= 0)
 assert.ok(snapshotBuild > assignmentLock, 'tactical snapshot must be rebuilt only after concrete assignment rows are locked')
 assert.ok(snapshotCompare > snapshotBuild, 'tactical version must compare the locked current snapshot before persistence')
 
-const release = await read('docs/releases/CASTLE-COMMAND-001F-ACTIVATION-ACCEPTANCE.md')
+const release = await read('docs/releases/CASTLE-COMMAND-001F-F13-RELEASE-ADDENDUM.md')
 const orderStart = release.indexOf('## Final migration dependency order')
 const orderEnd = release.indexOf('## Permanent regression gate', orderStart)
 assert.ok(orderStart >= 0 && orderEnd > orderStart)
@@ -62,5 +62,6 @@ const f13 = governedOrder.indexOf('20260823164500_castle_command_authority_recor
 assert.ok(f12 >= 0 && f13 > f12, 'F13 migration must be governed immediately after F12')
 assert.ok(release.includes('Finding F13 — deputy/participant authority records were not serialized with direct service revocation'))
 assert.ok(release.includes('22 Castle Command migrations'))
+assert.ok(release.includes('**STOP. Do not apply Castle Command migrations to production yet.**'))
 
 console.log('CASTLE-COMMAND-001F F13 tests passed')
