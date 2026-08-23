@@ -86,7 +86,12 @@ async function testMigrationAndClientContracts() {
   assert.ok(service.includes('private: true'))
   assert.ok(service.includes(".on('presence'"))
   assert.ok(service.includes(".on('broadcast'"))
+  assert.ok(service.includes('onPresenceCount'))
+  assert.ok(service.includes("channel.track({ onlineAt: new Date().toISOString() })"))
   assert.equal(service.includes("type: 'broadcast'"), false)
+  assert.equal(service.includes('playerName'), false, 'client-authored Presence must not claim a player identity')
+  assert.equal(service.includes("role: 'participant'"), false, 'client-authored Presence must not claim a participant role')
+  assert.equal(service.includes("role: 'manager'"), false, 'client-authored Presence must not claim a manager role')
 }
 
 testServerClockCalibration()
