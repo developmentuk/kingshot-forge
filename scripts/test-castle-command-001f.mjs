@@ -6,6 +6,12 @@ async function read(path) {
   return readFile(resolve(process.cwd(), path), 'utf8')
 }
 
+function stripSqlComments(sql) {
+  return sql
+    .replace(/--.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+}
+
 async function testCurrentMembershipAuthority() {
   const sql = await read('supabase/migrations/20260823154500_castle_command_current_membership_authority_hardening.sql')
   for (const required of [
@@ -73,7 +79,7 @@ async function testTacticalPostgresCompatibility() {
     'rally_preparation_seconds_snapshot',
     "raise exception 'Castle Command tactical plan version conflict' using errcode = '40001'",
   ]) assert.ok(sql.includes(required), `001F tactical compatibility hardening missing ${required}`)
-  assert.equal(/jsonb_object_length\s*\(/i.test(sql), false)
+  assert.equal(/jsonb_object_length\s*\(/i.test(stripSqlComments(sql)), false)
 }
 
 async function testClosedHistoryImmutability() {
