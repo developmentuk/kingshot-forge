@@ -24,6 +24,8 @@ export type CastleCommandSharedPlan = {
   counterOffsetSeconds: number
   waves: CastleCommandTacticalWave[]
   assignments: CastleCommandAssignmentSnapshot[]
+  sessionImpactAt: string
+  rallyPreparationSeconds: 60 | 180 | 300
   assignmentSnapshotCurrent: boolean
   savedAt: string
 }
@@ -84,6 +86,12 @@ function integer(value: unknown, minimum = 0): number {
   const parsed = typeof value === 'number' ? value : Number(value)
   if (!Number.isSafeInteger(parsed) || parsed < minimum) throw new Error('Castle Command returned invalid numeric data.')
   return parsed
+}
+
+function rallyPreparation(value: unknown): 60 | 180 | 300 {
+  const parsed = integer(value)
+  if (parsed === 60 || parsed === 180 || parsed === 300) return parsed
+  throw new Error('Castle Command returned an invalid rally preparation duration.')
 }
 
 function nullableIso(value: unknown): string | null {
@@ -174,6 +182,8 @@ function planFromRow(row: UnknownRow, includeCurrent: boolean): CastleCommandSha
     counterOffsetSeconds: integer(row.counter_offset_seconds),
     waves: waves(row.waves),
     assignments: assignments(row.assignment_snapshot),
+    sessionImpactAt: requiredIso(row.session_impact_at_snapshot),
+    rallyPreparationSeconds: rallyPreparation(row.rally_preparation_seconds_snapshot),
     assignmentSnapshotCurrent: includeCurrent ? row.assignment_snapshot_current === true : true,
     savedAt: requiredIso(row.saved_at),
   }
@@ -214,8 +224,18 @@ export async function loadCastleCommandTacticalPlanHistory(
     status: 'ready',
     data: rows.map((row) => {
       const plan = planFromRow(row, false)
-      const { assignmentSnapshotCurrent: _ignored, ...history } = plan
-      return history
+      return {
+        version: plan.version,
+        mode: plan.mode,
+        staggerSeconds: plan.staggerSeconds,
+        counterAnchorAt: plan.counterAnchorAt,
+        counterOffsetSeconds: plan.counterOffsetSeconds,
+        waves: plan.waves,
+        assignments: plan.assignments,
+        sessionImpactAt: plan.sessionImpactAt,
+        rallyPreparationSeconds: plan.rallyPreparationSeconds,
+        savedAt: plan.savedAt,
+      }
     }),
   }
 }
