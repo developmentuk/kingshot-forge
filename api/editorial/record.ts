@@ -17,11 +17,14 @@ import {
   EditorialRequestError,
 } from "../../server/editorial/errors.js";
 import {
+  readSingleQueryParameter,
+} from "../../server/http/requestQuery.js";
+import {
   requireRegisteredDatasetCapabilities,
 } from "../../shared/data-engine/dataset-capabilities.js";
 
 function readQueryText(
-  value: string | string[] | undefined,
+  value: string | null,
   label: string,
 ): string {
   if (
@@ -53,11 +56,11 @@ export default async function handler(
     const actor =
       await requireForgeActor(request);
     const datasetId = readQueryText(
-      request.query.datasetId,
+      readSingleQueryParameter(request.url, "datasetId"),
       "Dataset ID",
     );
     const recordId = readQueryText(
-      request.query.recordId,
+      readSingleQueryParameter(request.url, "recordId"),
       "Record ID",
     );
 

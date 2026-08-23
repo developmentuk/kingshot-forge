@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createHash } from 'node:crypto'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../../server/database/supabaseAdmin.js'
+import { readSingleQueryParameter } from '../../server/http/requestQuery.js'
 
 function fail(response: VercelResponse, status: number, message: string) {
   response.status(status).json({ status: 'error', message })
@@ -20,7 +21,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
     const supabase = getSupabaseAdmin()
     const input = body(request)
-    const importRunId = typeof input.importRunId === 'string' ? input.importRunId : typeof request.query.runId === 'string' ? request.query.runId : ''
+    const importRunId = typeof input.importRunId === 'string' ? input.importRunId : readSingleQueryParameter(request.url, 'runId') ?? ''
     if (!importRunId) { fail(response, 400, 'An import run is required.'); return }
 
     if (request.method === 'GET') {
