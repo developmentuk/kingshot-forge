@@ -1,8 +1,8 @@
 # CASTLE-COMMAND-001F — F20/F21 Release Addendum
 
-Status: **review-gated / production activation stopped**
+Status: **production schema activated / authenticated acceptance in progress**
 
-This addendum records the membership-term consent and explicit alliance-scope corrections following fresh independent review of exact head `80efe5bf32c1d4d253f59bd3c0146cf576d1f221`.
+This addendum records the membership-term consent and explicit alliance-scope corrections, followed by the owner-authorised production schema activation and alliance-authority execute hotfix discovered during real authenticated preview testing.
 
 ## F20 / P2 — sharing consent survived a completed membership term
 
@@ -10,7 +10,7 @@ Exact-alliance projection hid a shared profile after the owner left, but the sto
 
 Final rule: Castle timing sharing consent belongs to one **membership term**. When the selected current membership ends, consent is disarmed immediately and a later rejoin requires a new explicit opt-in.
 
-Final migration:
+Migration:
 
 `20260823171500_castle_command_membership_term_consent.sql`
 
@@ -38,28 +38,52 @@ The application now:
 
 The explicit save overload continues to lock and revalidate that exact membership before profile/timing persistence.
 
+## Production activation
+
+On 2026-08-23 the owner explicitly authorised production schema activation. All 28 governed Castle Command migrations were applied successfully and in order to Supabase project `hrvdhjscwitqpwjhnjkm`; none failed or were skipped.
+
+Real authenticated preview testing then exposed an older alliance privilege-contract inconsistency: authenticated RLS policies call `public.can_manage_alliance(uuid)` and `public.can_manage_alliance_members(uuid)`, while production allowed EXECUTE only to `postgres` and `service_role`. This produced `42501 permission denied for function can_manage_alliance` in Castle Command.
+
+The owner explicitly authorised the narrow production activation hotfix:
+
+`20260823185129_castle_command_alliance_authority_execute_hotfix.sql`
+
+The hotfix:
+
+- keeps both functions SECURITY DEFINER;
+- keeps anonymous EXECUTE denied;
+- grants EXECUTE only to `authenticated` in addition to the existing privileged roles;
+- does not grant management authority by itself; each function still evaluates the caller's Forge role/alliance-admin state;
+- restores the execution privilege required by the existing authenticated alliance RLS policies.
+
+Post-hotfix verification confirmed `authenticated` can execute both helpers without `42501`, while `anon` remains denied.
+
 ## Final release chain
 
-The corrected candidate contains **28 ordered Castle Command migrations**. The latest is:
+The production-aligned candidate now contains **29 ordered Castle Command migrations**. The latest is:
+
+`20260823185129_castle_command_alliance_authority_execute_hotfix.sql`
+
+The preceding membership-term consent migration remains:
 
 `20260823171500_castle_command_membership_term_consent.sql`
 
-## Acceptance still required
+## Current acceptance state
 
-Before any production activation the exact candidate must pass:
+Completed:
 
-- Castle Command 001A–001F permanent regressions;
-- F13–F19 focused authority/concurrency/privacy regressions;
-- F20/F21 membership-term consent and explicit-scope regression;
-- executable 28-migration count/order assertion;
-- complete Vision integration validation;
-- lint and production TypeScript/Vite build;
-- Buildings Companion, Companion Index and Island Route validations;
-- fresh independent exact-head review with no actionable finding;
-- real authenticated manager/deputy/assigned/unassigned/former-member/unauthenticated role and private-Realtime acceptance.
+- Castle Command production schema activation;
+- all eight Castle tables present;
+- Castle private Realtime receive/presence policies present;
+- production migration ledger includes all 28 governed migrations plus the authority execute hotfix;
+- authenticated alliance-authority helper execution verified;
+- anonymous execution remains denied.
 
-## Exact validation candidate
+Still required before merge/release completion:
 
-The commit containing this section is the documentation-only CI trigger for the frozen F20/F21 source candidate. No application or SQL behaviour is changed by this note.
-
-No Castle Command production migration, Realtime policy, production data mutation, merge, or paid Supabase branch is authorised by this addendum.
+- real authenticated Castle Command profile save/load acceptance after the hotfix;
+- manager/deputy/assigned/unassigned/former-member role acceptance;
+- READY/SENT and tactical-plan acceptance;
+- private Realtime channel acceptance;
+- final source candidate validation for the 29-migration production-aligned branch;
+- merge remains owner-controlled.
