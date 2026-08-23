@@ -19,7 +19,7 @@ Validated implementation stack before 001F review corrections:
 - 001E / PR #93: `f10b8ff2e59dab514d875a05e90317b3aae29caa`
 - 001F branch baseline: exact 001E head above
 
-PRs #89–#93 remain open, draft and unmerged. PR #94 is the integration/release-hardening gate stacked on the exact 001E head.
+PRs #89–#93 remain open, draft and unmerged. PR #94 is the integration/release-hardening gate stacked on the exact 001E head outside temporary CI retargeting.
 
 ## Validation completed before the 001F corrections
 
@@ -181,7 +181,9 @@ It guards, at minimum:
 - final tactical JSON validation using supported Postgres functions;
 - current-membership check before tactical publication;
 - closed acknowledgement immutability;
-- client-side suppression of stale alliance sharing after transfer.
+- client-side suppression of stale alliance sharing after transfer;
+- documented final migration order and explicit production STOP gate;
+- permanent CI inclusion of the 001F regression suite itself.
 
 ## Review gate — STILL BLOCKING
 
@@ -341,4 +343,4 @@ Supabase requires organisation-specific cost lookup and explicit cost confirmati
 
 **STOP. Do not apply Castle Command migrations to production yet.**
 
-The release review found and corrected actionable authorization, privacy, consent, immutability and Postgres-compatibility defects. Those corrections are now protected by the 001F regression suite, but the corrected exact head still requires full CI plus fresh independent review and real authenticated role/Realtime acceptance before production activation.
+The release review found and corrected actionable authorization, privacy, consent, immutability and Postgres-compatibility defects. Those corrections are now protected by the 001F regression suite. The branch is frozen for final corrected exact-head CI; after CI, fresh independent review and real authenticated role/Realtime acceptance remain mandatory before production activation.
