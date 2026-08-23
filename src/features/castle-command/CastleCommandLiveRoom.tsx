@@ -70,6 +70,7 @@ export default function CastleCommandLiveRoom({
   const [workingKey, setWorkingKey] = useState('')
   const [error, setError] = useState('')
   const [sessionAuthority, setSessionAuthority] = useState<CastleCommandSessionAuthority>(management === 'allowed' ? 'manager' : 'participant')
+  const [sharedRealtimeRevision, setSharedRealtimeRevision] = useState(0)
   const canonicalChangeRef = useRef(onCanonicalChange)
 
   useEffect(() => {
@@ -181,10 +182,17 @@ export default function CastleCommandLiveRoom({
           setError(caught instanceof Error ? caught.message : 'Live acknowledgements could not be refreshed.')
         })
         if (
-          event.entity === 'castle_command_sessions' ||
-          event.entity === 'castle_command_session_assignments'
+          event.entity === 'castle_command_sessions'
+          || event.entity === 'castle_command_session_assignments'
         ) {
           void canonicalChangeRef.current()
+        }
+        if (
+          event.entity === 'castle_command_sessions'
+          || event.entity === 'castle_command_session_assignments'
+          || event.entity === 'castle_command_tactical_plans'
+        ) {
+          setSharedRealtimeRevision((current) => current + 1)
         }
         if (event.entity === 'castle_command_session_deputies') {
           void refreshAuthority()
@@ -350,6 +358,7 @@ export default function CastleCommandLiveRoom({
       stale={stale}
       authority={sessionAuthority}
       canGrantDeputies={management === 'allowed'}
+      realtimeRevision={sharedRealtimeRevision}
       onAuthorityChange={refreshAuthority}
     />
 
