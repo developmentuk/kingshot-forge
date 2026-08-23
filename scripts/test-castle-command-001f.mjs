@@ -180,6 +180,59 @@ async function testMembershipTransitionSerialization() {
   assert.ok(tacticalSnapshot > tacticalEligibilityCheck, 'tactical assignment snapshot must follow locked membership eligibility check')
 }
 
+async function testDeputyAndConsentSerialization() {
+  const sql = stripSqlComments(await read('supabase/migrations/20260823163500_castle_command_deputy_consent_serialization.sql'))
+
+  const explicitProfileStart = sql.indexOf('create or replace function public.save_castle_command_profile')
+  const compatibilityProfileStart = sql.indexOf('create or replace function public.save_castle_command_profile', explicitProfileStart + 1)
+  const lifecycleStart = sql.indexOf('create or replace function public.set_castle_command_session_status')
+  const resetStart = sql.indexOf('create or replace function public.reset_castle_command_acknowledgement')
+  assert.ok(explicitProfileStart >= 0 && compatibilityProfileStart > explicitProfileStart)
+  assert.ok(lifecycleStart > compatibilityProfileStart && resetStart > lifecycleStart)
+
+  const explicitProfile = sql.slice(explicitProfileStart, compatibilityProfileStart)
+  const explicitMembershipLock = explicitProfile.indexOf('for update of membership;')
+  const explicitProfileUpsert = explicitProfile.indexOf('insert into public.castle_command_profiles')
+  const explicitTimingUpsert = explicitProfile.indexOf('insert into public.castle_command_profile_targets')
+  assert.ok(explicitMembershipLock >= 0, 'explicit shared profile save must lock the exact current membership')
+  assert.ok(explicitProfileUpsert > explicitMembershipLock, 'profile row must persist only after membership lock')
+  assert.ok(explicitTimingUpsert > explicitProfileUpsert, 'timings must remain after profile persistence')
+
+  const compatibilityProfile = sql.slice(compatibilityProfileStart, lifecycleStart)
+  const compatibilityMembershipLock = compatibilityProfile.indexOf('for update of membership;')
+  const compatibilityCount = compatibilityProfile.indexOf('select count(*)::integer')
+  const compatibilityStrictScope = compatibilityProfile.indexOf('into strict resolved_alliance_id')
+  const compatibilityDelegation = compatibilityProfile.indexOf('return public.save_castle_command_profile')
+  assert.ok(compatibilityMembershipLock >= 0, 'compatibility save must lock current memberships before scope resolution')
+  assert.ok(compatibilityProfile.includes('order by membership.alliance_id'), 'compatibility membership locks must be deterministic')
+  assert.ok(compatibilityCount > compatibilityMembershipLock, 'compatibility alliance count must follow membership locking')
+  assert.ok(compatibilityStrictScope > compatibilityCount, 'compatibility scope selection must fail closed after count')
+  assert.ok(compatibilityDelegation > compatibilityStrictScope, 'compatibility save must delegate only after locked scope resolution')
+
+  const lifecycle = sql.slice(lifecycleStart, resetStart)
+  const lifecycleSessionLock = lifecycle.indexOf('from public.castle_command_sessions')
+  const lifecycleManagerCheck = lifecycle.indexOf('public.can_manage_castle_command(command_session.alliance_id)')
+  const lifecycleDeputyMembershipLock = lifecycle.indexOf('for update of membership;')
+  const lifecycleUpdate = lifecycle.indexOf('update public.castle_command_sessions')
+  assert.ok(lifecycleSessionLock >= 0)
+  assert.ok(lifecycleManagerCheck > lifecycleSessionLock, 'lifecycle authority must be evaluated after session locking')
+  assert.ok(lifecycleDeputyMembershipLock > lifecycleManagerCheck, 'deputy lifecycle authority must lock caller membership')
+  assert.ok(lifecycleUpdate > lifecycleDeputyMembershipLock, 'lifecycle update must follow deputy membership serialization')
+  assert.ok(lifecycle.includes('public.castle_command_session_deputies deputy'))
+
+  const resetEnd = sql.indexOf('revoke all on function public.reset_castle_command_acknowledgement', resetStart)
+  const reset = sql.slice(resetStart, resetEnd)
+  const resetSessionLock = reset.indexOf('from public.castle_command_sessions')
+  const resetManagerCheck = reset.indexOf('public.can_manage_castle_command(command_session.alliance_id)')
+  const resetDeputyMembershipLock = reset.indexOf('for update of membership;')
+  const resetWrite = reset.indexOf('insert into public.castle_command_session_acknowledgements')
+  assert.ok(resetSessionLock >= 0)
+  assert.ok(resetManagerCheck > resetSessionLock, 'ack reset authority must be evaluated after session locking')
+  assert.ok(resetDeputyMembershipLock > resetManagerCheck, 'deputy ack reset must lock caller membership')
+  assert.ok(resetWrite > resetDeputyMembershipLock, 'ack reset must persist only after deputy membership serialization')
+  assert.ok(reset.includes("command_session.status = 'closed'"))
+}
+
 async function testClientProjectionBoundary() {
   const service = await read('src/features/castle-command/castleCommandCloudService.ts')
   assert.ok(service.includes('shared_alliance_id'))
@@ -217,6 +270,7 @@ async function testFinalReleaseContract() {
     '20260823162000_castle_command_ack_transition_serialization.sql',
     '20260823162500_castle_command_assignment_profile_serialization.sql',
     '20260823163000_castle_command_membership_transition_serialization.sql',
+    '20260823163500_castle_command_deputy_consent_serialization.sql',
   ]
   let cursor = -1
   for (const migration of required) {
@@ -230,6 +284,8 @@ async function testFinalReleaseContract() {
   assert.ok(release.includes('Finding F7 — participant acknowledgement transitions were not serialized with session closure'))
   assert.ok(release.includes('Finding F8 — assignment snapshots were not serialized with profile sharing/timing saves'))
   assert.ok(release.includes('Finding F9 — durable membership-sensitive writes were not serialized with membership transitions'))
+  assert.ok(release.includes('Finding F10 — deputy lifecycle/reset authority was not serialized with membership removal'))
+  assert.ok(release.includes('Finding F11 — sharing opt-in was not serialized with membership removal'))
   assert.ok(release.includes('The corrected candidate must pass fresh A–F CI and fresh independent exact-head review'))
 }
 
@@ -246,6 +302,7 @@ await testClosedHistoryImmutability()
 await testAcknowledgementTransitionSerialization()
 await testAssignmentProfileSerialization()
 await testMembershipTransitionSerialization()
+await testDeputyAndConsentSerialization()
 await testClientProjectionBoundary()
 await testFinalReleaseContract()
 await testPermanentGateIncludes001F()
