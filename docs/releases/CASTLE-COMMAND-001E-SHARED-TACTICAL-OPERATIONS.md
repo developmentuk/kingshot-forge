@@ -72,6 +72,22 @@ Forge does **not** claim to know:
 
 Until the 001E migration is activated, the 001D browser-local tactical editor remains available and is labelled `001E activation pending`. Shared publication/history/summary controls do not pretend to be active.
 
+## Validation contract
+
+The permanent Castle Command step in the existing Vision integration workflow must execute 001A, 001B, 001C, 001D and 001E focused suites on the exact candidate head.
+
+Merge-readiness evidence for 001E requires:
+
+- `scripts/test-castle-command-001e.mjs` success
+- all earlier Castle Command focused suites success
+- repository lint success
+- production TypeScript/Vite build success
+- existing Vision integration checks success
+- Buildings Companion validation success
+- Companion Index validation success
+- Island Route validation success
+- read-only confirmation that no Castle Command production tables or Realtime policies have been activated by the implementation branch
+
 ## Activation gate
 
 Do not apply the 001E migrations until 001B, 001C and 001D are owner-approved and the private Castle Command Realtime boundary is verified with real authenticated assigned, deputy, manager, unassigned and unauthenticated clients.
