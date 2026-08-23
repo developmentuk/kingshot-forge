@@ -1,0 +1,216 @@
+.castle-command-tactics {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255,255,255,.1);
+  display: grid;
+  gap: 1rem;
+}
+
+.castle-command-tactics__heading,
+.castle-command-tactics__section-heading,
+.castle-command-tactics__cues,
+.castle-command-tactics__brief-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.castle-command-tactics__heading h3,
+.castle-command-tactics__section-heading strong {
+  margin: 0;
+}
+
+.castle-command-tactics__heading p,
+.castle-command-tactics__section-heading span {
+  margin: .25rem 0 0;
+  opacity: .76;
+}
+
+.castle-command-tactics__authority {
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  padding: .35rem .7rem;
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .08em;
+}
+
+.castle-command-tactics__modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+}
+
+.castle-command-tactics__modes button,
+.castle-command-tactics__wave button {
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.035);
+  color: inherit;
+  border-radius: .7rem;
+  padding: .7rem .85rem;
+  cursor: pointer;
+}
+
+.castle-command-tactics__modes button.is-active {
+  border-color: currentColor;
+  background: rgba(255,255,255,.1);
+  font-weight: 700;
+}
+
+.castle-command-tactics__field,
+.castle-command-tactics__counter label,
+.castle-command-tactics__cues label {
+  display: grid;
+  gap: .35rem;
+}
+
+.castle-command-tactics__field span,
+.castle-command-tactics__counter label span {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.castle-command-tactics input,
+.castle-command-tactics select {
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: .6rem;
+  background: rgba(0,0,0,.2);
+  color: inherit;
+  padding: .6rem .7rem;
+}
+
+.castle-command-tactics input[type='number'] {
+  width: 6rem;
+}
+
+.castle-command-tactics__counter {
+  display: grid;
+  grid-template-columns: minmax(13rem, 1fr) auto minmax(12rem, 1fr);
+  align-items: end;
+  gap: .75rem;
+}
+
+.castle-command-tactics__counter .castle-command-tactics__warning {
+  grid-column: 1 / -1;
+}
+
+.castle-command-tactics__waves,
+.castle-command-tactics__deputies,
+.castle-command-tactics__preview {
+  display: grid;
+  gap: .7rem;
+}
+
+.castle-command-tactics__wave {
+  display: grid;
+  grid-template-columns: 2rem minmax(8rem, 1fr) auto 2.75rem;
+  align-items: center;
+  gap: .6rem;
+}
+
+.castle-command-tactics__wave > span {
+  font-weight: 800;
+  text-align: center;
+}
+
+.castle-command-tactics__wave label {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  white-space: nowrap;
+}
+
+.castle-command-tactics__warning {
+  margin: 0;
+  padding: .7rem .85rem;
+  border: 1px solid rgba(255, 193, 7, .4);
+  border-radius: .7rem;
+  background: rgba(255, 193, 7, .08);
+}
+
+.castle-command-tactics__preview ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .45rem;
+}
+
+.castle-command-tactics__preview li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .75rem;
+  align-items: center;
+  padding: .7rem .8rem;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: .7rem;
+}
+
+.castle-command-tactics__preview li > div {
+  display: grid;
+  gap: .2rem;
+}
+
+.castle-command-tactics__preview li > div:last-child {
+  text-align: right;
+}
+
+.castle-command-tactics__preview li.is-launch-window {
+  border-color: rgba(76, 217, 100, .7);
+}
+
+.castle-command-tactics__preview li.is-late {
+  border-color: rgba(255, 99, 71, .55);
+}
+
+.castle-command-tactics__deputy-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: .5rem;
+}
+
+.castle-command-tactics__deputy-list label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem .75rem;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: .7rem;
+}
+
+.castle-command-tactics__deputy-list label > span:first-child {
+  display: grid;
+  gap: .15rem;
+}
+
+.castle-command-tactics__deputy-list small {
+  opacity: .7;
+}
+
+@media (max-width: 720px) {
+  .castle-command-tactics__modes,
+  .castle-command-tactics__counter,
+  .castle-command-tactics__wave {
+    grid-template-columns: 1fr;
+  }
+
+  .castle-command-tactics__wave > span {
+    text-align: left;
+  }
+
+  .castle-command-tactics__counter .castle-command-tactics__warning {
+    grid-column: auto;
+  }
+
+  .castle-command-tactics__preview li {
+    grid-template-columns: 1fr;
+  }
+
+  .castle-command-tactics__preview li > div:last-child {
+    text-align: left;
+  }
+}
