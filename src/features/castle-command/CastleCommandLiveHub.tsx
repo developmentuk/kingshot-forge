@@ -8,12 +8,11 @@ import './castleCommandLive.css'
 type Props = {
   userId: string
   playerAccountId: string
-  playerName: string
 }
 
 type HubState = 'loading' | 'ready' | 'unavailable' | 'error'
 
-export default function CastleCommandLiveHub({ userId, playerAccountId, playerName }: Props) {
+export default function CastleCommandLiveHub({ userId, playerAccountId }: Props) {
   const [state, setState] = useState<HubState>('loading')
   const [alliance, setAlliance] = useState<AllianceMembershipDetails | null>(null)
   const [sessions, setSessions] = useState<CastleCommandSessionRecord[]>([])
@@ -83,8 +82,8 @@ export default function CastleCommandLiveHub({ userId, playerAccountId, playerNa
       <label className="castle-command-live-hub__selector">Live session<select value={selectedSessionId} onChange={(event) => setSelectedSessionId(event.target.value)}>{sessions.map((session) => <option key={session.id} value={session.id}>{session.title} · {session.status} · {new Date(session.impactAt).toLocaleString('en-GB')}</option>)}</select></label>
       {selectedSession ? <CastleCommandLiveRoom
         session={selectedSession}
+        userId={userId}
         playerAccountId={playerAccountId}
-        playerName={playerName}
         management={management}
         onCanonicalChange={load}
       /> : null}
