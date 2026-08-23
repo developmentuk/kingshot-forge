@@ -33,7 +33,7 @@ The exact 001E head passed:
 - lint
 - production TypeScript/Vite build
 
-Those results remain evidence for the inherited A–E implementation, but they do **not** validate the later 001F corrections. The corrected 001F exact head requires a fresh A–F run before release.
+Those results remain evidence for the inherited A–E implementation, but they do **not** validate later 001F corrections. Every new 001F correction requires a fresh exact-head A–F run before release.
 
 ## Fresh full-stack review findings
 
@@ -106,6 +106,14 @@ Correction: `20260823161500_castle_command_closed_session_ack_hardening.sql`.
 
 Closed Castle Command acknowledgement state is now immutable.
 
+### Finding F7 — participant acknowledgement transitions were not serialized with session closure
+
+The fresh independent Codex review of exact head `71c4008a2da405ff9341ed834ddb18cabe4984f6` found a P1 concurrency defect in `set_castle_command_acknowledgement(...)`. READY/SENT read the session without locking it. A participant transition could validate while the session was open, then a concurrent close could commit before the acknowledgement write. Concurrent READY/SENT calls could also validate against stale acknowledgement state and move a committed SENT state backwards.
+
+Correction: `20260823162000_castle_command_ack_transition_serialization.sql`.
+
+The final participant acknowledgement RPC acquires the session row `FOR UPDATE` before lifecycle/authority validation and locks the existing acknowledgement row before transition validation. Session close, manager reset and participant READY/SENT now share the session-row serialization boundary. A close cannot commit between participant validation and durable acknowledgement mutation, and concurrent acknowledgement transitions cannot validate against the same stale state.
+
 ## Production containment — CONFIRMED
 
 Read-only Supabase checks during 001F confirm Castle Command remains unactivated:
@@ -141,7 +149,7 @@ Required alliance/player columns exist with the expected broad types. Production
 
 ## Final migration dependency order
 
-The final integration candidate contains **16 Castle Command migrations**. They must be applied in this exact filename order and must not be selectively skipped:
+The final integration candidate contains **17 Castle Command migrations**. They must be applied in this exact filename order and must not be selectively skipped:
 
 1. `20260823120400_castle_command_session_foundation.sql`
 2. `20260823121800_castle_command_atomic_profile_save.sql`
@@ -159,20 +167,21 @@ The final integration candidate contains **16 Castle Command migrations**. They 
 14. `20260823160500_castle_command_assignment_scope_hardening.sql`
 15. `20260823161000_castle_command_tactical_json_compatibility.sql`
 16. `20260823161500_castle_command_closed_session_ack_hardening.sql`
+17. `20260823162000_castle_command_ack_transition_serialization.sql`
 
-The earlier migrations describe the incremental implementation history. The 001F migrations are required release corrections and define the final active authority/privacy behaviour. Production must never be accepted in a partially-applied state.
+The earlier migrations describe the incremental implementation history. The 001F migrations are required release corrections and define the final active authority/privacy/concurrency behaviour. Production must never be accepted in a partially-applied state.
 
 ## Permanent regression gate
 
 `scripts/test-castle-command-001f.mjs` is part of the existing Castle Command step in `vision-integration-check.yml`.
 
-It guards current-membership authority, column minimisation, server-owned session creation, exact alliance-scoped sharing consent, assignment scope, closed-session immutability, production-compatible tactical JSON validation, client projection boundaries, documented migration order, explicit production STOP state and permanent CI inclusion.
+It guards current-membership authority, column minimisation, server-owned session creation, exact alliance-scoped sharing consent, assignment scope, closed-session immutability, production-compatible tactical JSON validation, acknowledgement-transition serialization, client projection boundaries, documented migration order, explicit production STOP state and permanent CI inclusion.
 
 ## Review gate — STILL BLOCKING
 
 Forge governance requires Review before Merge.
 
-At the original 001F preflight, PRs #89–#93 had zero submitted reviews and zero review threads/comments. The 001F release review subsequently found the actionable defects above, so the original preflight was correctly not promoted to activation.
+At the original 001F preflight, PRs #89–#93 had zero submitted reviews and zero review threads/comments. The 001F full-stack release review found F1–F6. After those corrections, exact head `71c4008a2da405ff9341ed834ddb18cabe4984f6` passed the full A–F CI suite, but its fresh independent Codex review returned the actionable F7/P1 concurrency finding. That head is therefore superseded for release purposes.
 
 The corrected exact 001F head must now:
 
@@ -216,7 +225,7 @@ Verify only intentionally shared timing is visible through the projection, no se
 
 ### Assigned participant
 
-Verify Live Room works only while current membership remains, READY/SENT transitions are constrained, shared tactical plan is read-only and assignment changes invalidate prior acknowledgement.
+Verify Live Room works only while current membership remains, READY/SENT transitions are constrained and serialized with lifecycle changes, shared tactical plan is read-only and assignment changes invalidate prior acknowledgement.
 
 ### Event manager
 
@@ -250,11 +259,12 @@ After schema activation and role acceptance:
 14. SENT cannot occur before READY or before active session;
 15. simultaneous / staggered / multi-wave plans are exercised;
 16. counter mode requires an explicit operator-observed anchor;
-17. Realtime loss produces stale-sync warning and pauses trusted audio cues;
-18. session closes and cannot be reopened;
-19. assignment removal and acknowledgement reset fail after close;
-20. old tactical history remains immutable;
-21. battle summary reports only Forge-owned coordination facts and makes no combat-result claim.
+17. concurrent participant READY/SENT and manager close are exercised and serialize without post-close mutation or backward acknowledgement transition;
+18. Realtime loss produces stale-sync warning and pauses trusted audio cues;
+19. session closes and cannot be reopened;
+20. assignment removal, participant acknowledgement mutation and acknowledgement reset fail after close;
+21. old tactical history remains immutable;
+22. battle summary reports only Forge-owned coordination facts and makes no combat-result claim.
 
 No actual Kingshot rally or combat action is required for this acceptance; it is a Forge coordination simulation.
 
@@ -270,4 +280,4 @@ A Supabase development branch remains the preferred place to execute the complet
 
 **STOP. Do not apply Castle Command migrations to production yet.**
 
-The release review found and corrected actionable authorization, privacy, consent, immutability and Postgres-compatibility defects. Those corrections are protected by the 001F regression suite. This commit freezes the corrected release candidate for final A–F CI only; fresh independent exact-head review and real authenticated role/Realtime acceptance remain mandatory before production activation.
+The release review found and corrected actionable authorization, privacy, consent, immutability, Postgres-compatibility and acknowledgement-concurrency defects. Those corrections are protected by the 001F regression suite. The corrected candidate must pass fresh A–F CI and fresh independent exact-head review; real authenticated role/Realtime acceptance remains mandatory before production activation.
