@@ -1,0 +1,137 @@
+.castle-command-shared__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.castle-command-shared__state {
+  align-items: center;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14));
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+}
+
+.castle-command-shared__state.is-ready {
+  border-color: rgba(88, 200, 140, 0.42);
+}
+
+.castle-command-shared__state.is-unavailable,
+.castle-command-shared__state.is-loading {
+  opacity: 0.82;
+}
+
+.castle-command-shared__state.is-error {
+  border-color: rgba(232, 104, 104, 0.45);
+}
+
+.castle-command-shared__notice,
+.castle-command-shared__toolbar,
+.castle-command-shared__history,
+.castle-command-shared__summary {
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  border-radius: 0.9rem;
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.castle-command-shared__notice p,
+.castle-command-shared__summary p {
+  margin: 0.4rem 0 0;
+}
+
+.castle-command-shared__notice.is-warning {
+  border-color: rgba(232, 184, 76, 0.45);
+}
+
+.castle-command-shared__notice.is-error {
+  border-color: rgba(232, 104, 104, 0.45);
+}
+
+.castle-command-shared__notice .button {
+  margin-top: 0.75rem;
+}
+
+.castle-command-shared__toolbar {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.castle-command-shared__toolbar > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.castle-command-shared__toolbar span,
+.castle-command-shared__history span,
+.castle-command-shared__summary span {
+  opacity: 0.78;
+}
+
+.castle-command-shared__history ol {
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+}
+
+.castle-command-shared__history li {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding-top: 0.55rem;
+}
+
+.castle-command-shared__history li > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.castle-command-shared__metrics {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-top: 0.8rem;
+}
+
+.castle-command-shared__metrics span {
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  border-radius: 0.7rem;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem;
+}
+
+.castle-command-shared__metrics strong {
+  font-size: 1.2rem;
+}
+
+@media (max-width: 900px) {
+  .castle-command-shared__metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .castle-command-shared__badges {
+    justify-content: flex-start;
+  }
+
+  .castle-command-shared__toolbar,
+  .castle-command-shared__history li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .castle-command-shared__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
