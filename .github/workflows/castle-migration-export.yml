@@ -1,0 +1,26 @@
+name: Castle migration export
+
+on:
+  push:
+    branches:
+      - castle-command-preview
+    paths:
+      - '.github/workflows/castle-migration-export.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Export exact Castle migrations
+        uses: actions/upload-artifact@v4
+        with:
+          name: castle-command-production-migrations
+          path: supabase/migrations/20260823*_castle_command_*.sql
+          if-no-files-found: error
+          retention-days: 1
