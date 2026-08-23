@@ -58,4 +58,8 @@ Before any production activation the exact candidate must pass:
 - fresh independent exact-head review with no actionable finding;
 - real authenticated manager/deputy/assigned/unassigned/former-member/unauthenticated role and private-Realtime acceptance.
 
+## Exact validation candidate
+
+The commit containing this section is the documentation-only CI trigger for the frozen F20/F21 source candidate. No application or SQL behaviour is changed by this note.
+
 No Castle Command production migration, Realtime policy, production data mutation, merge, or paid Supabase branch is authorised by this addendum.
