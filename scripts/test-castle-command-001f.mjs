@@ -131,6 +131,7 @@ async function testFinalMigrationSequenceIsDocumented() {
     assert.ok(position > cursor, `001F release migration order missing/out of order: ${migration}`)
     cursor = position
   }
+  assert.ok(release.includes('**STOP. Do not apply Castle Command migrations to production yet.**'))
 }
 
 await testCurrentMembershipAuthority()
