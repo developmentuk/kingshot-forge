@@ -8,14 +8,12 @@ async function read(path) {
 
 async function testCurrentMembershipAuthority() {
   const sql = await read('supabase/migrations/20260823154500_castle_command_current_membership_authority_hardening.sql')
-
   for (const required of [
     'public.current_user_is_alliance_member(session.alliance_id)',
     "return 'denied';",
     "Castle Command participant is no longer a current alliance member",
     "Castle Command deputy must be a current alliance member",
   ]) assert.ok(sql.includes(required), `001F membership hardening missing ${required}`)
-
   assert.ok(sql.includes('create or replace function public.can_manage_castle_command_session'))
   assert.ok(sql.includes('create or replace function public.can_participate_castle_command_session'))
   assert.ok(sql.includes('create or replace function public.get_castle_command_session_authority'))
@@ -25,7 +23,6 @@ async function testCurrentMembershipAuthority() {
 
 async function testPrivacyAndCreationIntegrity() {
   const sql = await read('supabase/migrations/20260823155000_castle_command_release_privacy_integrity_hardening.sql')
-
   for (const required of [
     'revoke select on public.castle_command_sessions from authenticated;',
     'revoke select on public.castle_command_session_assignments from authenticated;',
@@ -35,37 +32,32 @@ async function testPrivacyAndCreationIntegrity() {
     'new.id := gen_random_uuid();',
     'new.title := btrim(new.title);',
   ]) assert.ok(sql.includes(required), `001F privacy/integrity hardening missing ${required}`)
-
   const sessionGrant = sql.match(/grant select \(([\s\S]*?)\) on public\.castle_command_sessions to authenticated;/i)?.[1] ?? ''
   const assignmentGrant = sql.match(/grant select \(([\s\S]*?)\) on public\.castle_command_session_assignments to authenticated;/i)?.[1] ?? ''
   const acknowledgementGrant = sql.match(/grant select \(([\s\S]*?)\) on public\.castle_command_session_acknowledgements to authenticated;/i)?.[1] ?? ''
-  assert.equal(/\bcreated_by\b/i.test(sessionGrant), false, 'session audit creator must not be directly readable')
-  assert.equal(/\bprofile_id\b|\badded_by\b/i.test(assignmentGrant), false, 'assignment internal/audit ids must not be directly readable')
-  assert.equal(/\blast_changed_by\b/i.test(acknowledgementGrant), false, 'acknowledgement audit user must not be directly readable')
-
+  assert.equal(/\bcreated_by\b/i.test(sessionGrant), false)
+  assert.equal(/\bprofile_id\b|\badded_by\b/i.test(assignmentGrant), false)
+  assert.equal(/\blast_changed_by\b/i.test(acknowledgementGrant), false)
   const projectionSignature = sql.match(/create function public\.list_castle_command_alliance_profiles[\s\S]*?returns table \(([\s\S]*?)\)\nlanguage/i)?.[1] ?? ''
-  assert.equal(/\bprofile_id\b/i.test(projectionSignature), false, 'shared alliance projection must not return raw Castle profile id')
+  assert.equal(/\bprofile_id\b/i.test(projectionSignature), false)
 }
 
 async function testAllianceScopedConsent() {
   const scoped = await read('supabase/migrations/20260823155500_castle_command_alliance_scoped_sharing.sql')
   const compatibility = await read('supabase/migrations/20260823160000_castle_command_scoped_sharing_compatibility.sql')
   const assignment = await read('supabase/migrations/20260823160500_castle_command_assignment_scope_hardening.sql')
-
   for (const required of [
     'add column shared_alliance_id uuid',
     'castle_command_profiles_sharing_scope_check',
     'public.current_user_is_alliance_member(target_shared_alliance_id)',
     'profile.shared_alliance_id = target_alliance_id',
   ]) assert.ok(scoped.includes(required), `001F scoped sharing migration missing ${required}`)
-
   assert.ok(compatibility.includes('current_alliance_count <> 1'))
   assert.ok(compatibility.includes("membership.status = 'current'::public.alliance_membership_status"))
-  assert.equal(/min\s*\(\s*membership\.alliance_id\s*\)/i.test(compatibility), false, 'UUID sharing scope must not use unsupported min(uuid)')
-
+  assert.equal(/min\s*\(\s*membership\.alliance_id\s*\)/i.test(compatibility), false)
   for (const required of [
     'profile.shared_alliance_id = command_session.alliance_id',
-    "Closed Castle Command session assignments are immutable",
+    'Closed Castle Command session assignments are immutable',
     'target_use_howler is null',
     'user_id = command_profile.user_id',
   ]) assert.ok(assignment.includes(required), `001F assignment scope hardening missing ${required}`)
@@ -73,17 +65,15 @@ async function testAllianceScopedConsent() {
 
 async function testTacticalPostgresCompatibility() {
   const sql = await read('supabase/migrations/20260823161000_castle_command_tactical_json_compatibility.sql')
-
   for (const required of [
     'from jsonb_object_keys(wave);',
     'wave_key_count <> 3',
-    "Castle Command tactical plan contains a player who is no longer a current alliance member",
+    'Castle Command tactical plan contains a player who is no longer a current alliance member',
     'session_impact_at_snapshot',
     'rally_preparation_seconds_snapshot',
     "raise exception 'Castle Command tactical plan version conflict' using errcode = '40001'",
   ]) assert.ok(sql.includes(required), `001F tactical compatibility hardening missing ${required}`)
-
-  assert.equal(sql.includes('jsonb_object_length'), false, 'final tactical save RPC must not use unsupported jsonb_object_length')
+  assert.equal(sql.includes('jsonb_object_length'), false)
 }
 
 async function testClosedHistoryImmutability() {
@@ -96,16 +86,15 @@ async function testClosedHistoryImmutability() {
 
 async function testClientProjectionBoundary() {
   const service = await read('src/features/castle-command/castleCommandCloudService.ts')
-
   assert.ok(service.includes('shared_alliance_id'))
   assert.ok(service.includes(".rpc('current_user_is_alliance_member'"))
-  assert.ok(service.includes("shareWithAlliance: profileResult.data.share_with_alliance === true && shareScopeIsCurrent"))
-  assert.equal(service.includes("profile_id: string"), false, 'alliance projection parser must not expect raw Castle profile id')
-  assert.equal(service.includes("created_by, closed_at"), false, 'session reader must not request created_by audit id')
+  assert.ok(service.includes('shareWithAlliance: profileResult.data.share_with_alliance === true && shareScopeIsCurrent'))
+  assert.equal(service.includes('profile_id: string'), false)
+  assert.equal(service.includes('created_by, closed_at'), false)
   assert.ok(service.includes(".select('id, alliance_id, title, impact_at, rally_preparation_seconds, status, closed_at, created_at, updated_at')"))
 }
 
-async function testFinalMigrationSequenceIsDocumented() {
+async function testFinalReleaseContract() {
   const release = await read('docs/releases/CASTLE-COMMAND-001F-ACTIVATION-ACCEPTANCE.md')
   const required = [
     '20260823120400_castle_command_session_foundation.sql',
@@ -134,6 +123,7 @@ async function testFinalMigrationSequenceIsDocumented() {
   assert.ok(release.includes('**STOP. Do not apply Castle Command migrations to production yet.**'))
   assert.ok(release.includes('fresh independent exact-head review'))
   assert.ok(release.includes('real authenticated role/Realtime acceptance'))
+  assert.ok(release.includes('freezes the corrected release candidate for final A–F CI only'))
 }
 
 async function testPermanentGateIncludes001F() {
@@ -147,6 +137,6 @@ await testAllianceScopedConsent()
 await testTacticalPostgresCompatibility()
 await testClosedHistoryImmutability()
 await testClientProjectionBoundary()
-await testFinalMigrationSequenceIsDocumented()
+await testFinalReleaseContract()
 await testPermanentGateIncludes001F()
 console.log('CASTLE-COMMAND-001F tests passed')
