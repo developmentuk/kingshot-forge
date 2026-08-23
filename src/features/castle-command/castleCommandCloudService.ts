@@ -29,9 +29,13 @@ export type CastleCommandCloudProfile = {
   timings: MarchTimeProfile
 }
 
-export type CastleCommandAllianceProfile = CastleCommandCloudProfile & {
+export type CastleCommandAllianceProfile = {
+  playerAccountId: string
   playerId: string
   playerName: string
+  howlerSkillLevel: number
+  updatedAt: string
+  timings: MarchTimeProfile
 }
 
 export type CastleCommandSessionRecord = {
@@ -41,7 +45,6 @@ export type CastleCommandSessionRecord = {
   impactAt: string
   rallyPreparationSeconds: RallyPreparationSeconds
   status: CastleCommandSessionStatus
-  createdBy: string
   closedAt: string | null
   createdAt: string
   updatedAt: string
@@ -184,7 +187,6 @@ export async function listCastleCommandAllianceProfiles(
 
   for (const raw of result.data ?? []) {
     const row = raw as {
-      profile_id: string
       player_account_id: string
       player_id: string
       player_name: string
@@ -195,13 +197,11 @@ export async function listCastleCommandAllianceProfiles(
       howler_seconds: unknown
     }
 
-    const current = grouped.get(row.profile_id) ?? {
-      id: row.profile_id,
+    const current = grouped.get(row.player_account_id) ?? {
       playerAccountId: row.player_account_id,
       playerId: row.player_id,
       playerName: row.player_name,
       howlerSkillLevel: row.howler_skill_level,
-      shareWithAlliance: true,
       updatedAt: row.profile_updated_at,
       timings: createEmptyMarchTimeProfile(),
     }
@@ -214,7 +214,7 @@ export async function listCastleCommandAllianceProfiles(
       }
     }
 
-    grouped.set(row.profile_id, current)
+    grouped.set(row.player_account_id, current)
   }
 
   return { status: 'ready', data: [...grouped.values()] }
@@ -248,7 +248,7 @@ export async function loadCastleCommandSessions(
 ): Promise<CastleCommandCloudResult<CastleCommandSessionRecord[]>> {
   const sessionsResult = await supabase
     .from('castle_command_sessions')
-    .select('id, alliance_id, title, impact_at, rally_preparation_seconds, status, created_by, closed_at, created_at, updated_at')
+    .select('id, alliance_id, title, impact_at, rally_preparation_seconds, status, closed_at, created_at, updated_at')
     .eq('alliance_id', allianceId)
     .order('impact_at', { ascending: false })
 
@@ -289,7 +289,6 @@ export async function loadCastleCommandSessions(
       impactAt: session.impact_at,
       rallyPreparationSeconds: session.rally_preparation_seconds as RallyPreparationSeconds,
       status: session.status as CastleCommandSessionStatus,
-      createdBy: session.created_by,
       closedAt: session.closed_at,
       createdAt: session.created_at,
       updatedAt: session.updated_at,
