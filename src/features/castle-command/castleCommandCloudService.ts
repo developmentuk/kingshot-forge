@@ -140,49 +140,32 @@ export async function saveCastleCommandCloudProfile(input: {
   shareWithAlliance: boolean
   timings: MarchTimeProfile
 }): Promise<CastleCommandCloudResult<CastleCommandCloudProfile>> {
-  const profileResult = await supabase
-    .from('castle_command_profiles')
-    .upsert({
-      player_account_id: input.playerAccountId,
-      user_id: input.userId,
-      howler_skill_level: input.howlerSkillLevel,
-      share_with_alliance: input.shareWithAlliance,
-    }, { onConflict: 'player_account_id' })
-    .select('id, player_account_id, howler_skill_level, share_with_alliance, updated_at')
-    .single()
+  void input.userId
+  const result = await supabase.rpc('save_castle_command_profile', {
+    target_player_account_id: input.playerAccountId,
+    target_howler_skill_level: input.howlerSkillLevel,
+    target_share_with_alliance: input.shareWithAlliance,
+    castle_normal_seconds: input.timings.castle.normalSeconds,
+    castle_howler_seconds: input.timings.castle.howlerSeconds,
+    north_normal_seconds: input.timings.north.normalSeconds,
+    north_howler_seconds: input.timings.north.howlerSeconds,
+    east_normal_seconds: input.timings.east.normalSeconds,
+    east_howler_seconds: input.timings.east.howlerSeconds,
+    south_normal_seconds: input.timings.south.normalSeconds,
+    south_howler_seconds: input.timings.south.howlerSeconds,
+    west_normal_seconds: input.timings.west.normalSeconds,
+    west_howler_seconds: input.timings.west.howlerSeconds,
+  })
 
-  if (profileResult.error) {
-    if (isSchemaUnavailable(profileResult.error)) return { status: 'unavailable', data: null }
-    throwDatabaseError(profileResult.error, 'Castle Command cloud profile could not be saved.')
+  if (result.error) {
+    if (isSchemaUnavailable(result.error)) return { status: 'unavailable', data: null }
+    throwDatabaseError(result.error, 'Castle Command cloud profile could not be saved.')
   }
 
-  const targetRows = CASTLE_COMMAND_TARGETS.map(({ id }) => ({
-    profile_id: profileResult.data.id,
-    target: id,
-    normal_seconds: input.timings[id].normalSeconds,
-    howler_seconds: input.timings[id].howlerSeconds,
-  }))
-
-  const targetsResult = await supabase
-    .from('castle_command_profile_targets')
-    .upsert(targetRows, { onConflict: 'profile_id,target' })
-
-  if (targetsResult.error) {
-    if (isSchemaUnavailable(targetsResult.error)) return { status: 'unavailable', data: null }
-    throwDatabaseError(targetsResult.error, 'Castle Command timing rows could not be saved.')
-  }
-
-  return {
-    status: 'ready',
-    data: {
-      id: profileResult.data.id,
-      playerAccountId: profileResult.data.player_account_id,
-      howlerSkillLevel: profileResult.data.howler_skill_level,
-      shareWithAlliance: profileResult.data.share_with_alliance,
-      updatedAt: profileResult.data.updated_at,
-      timings: input.timings,
-    },
-  }
+  const loaded = await loadCastleCommandCloudProfile(input.playerAccountId)
+  if (loaded.status === 'unavailable') return loaded
+  if (!loaded.data) throw new Error('Castle Command profile saved but could not be reloaded.')
+  return { status: 'ready', data: loaded.data }
 }
 
 export async function listCastleCommandAllianceProfiles(
