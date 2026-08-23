@@ -233,6 +233,54 @@ async function testDeputyAndConsentSerialization() {
   assert.ok(reset.includes("command_session.status = 'closed'"))
 }
 
+async function testWriteAuthorityBoundary() {
+  const sql = stripSqlComments(await read('supabase/migrations/20260823164000_castle_command_write_authority_boundary.sql'))
+
+  for (const required of [
+    'create or replace function public.lock_castle_command_event_manager',
+    'create or replace function public.lock_castle_command_deputy_authority',
+    'create or replace function public.lock_castle_command_participant_authority',
+    'revoke update, delete on public.castle_command_sessions from authenticated;',
+    'drop policy if exists "Castle Command managers can update sessions"',
+    'drop policy if exists "Castle Command managers can delete sessions"',
+    'create trigger castle_command_sessions_authorize_write',
+    'create trigger castle_command_assignments_authorize_write',
+    'create trigger castle_command_deputies_authorize_write',
+    'create trigger castle_command_tactical_versions_authorize_write',
+    'create trigger castle_command_tactical_plans_authorize_write',
+    'create trigger castle_command_acknowledgements_authorize_write',
+  ]) assert.ok(sql.includes(required), `001F write-authority boundary missing ${required}`)
+
+  const eventAuthorityStart = sql.indexOf('create or replace function public.lock_castle_command_event_manager')
+  const eventAuthorityEnd = sql.indexOf('revoke all on function public.lock_castle_command_event_manager', eventAuthorityStart)
+  const eventAuthority = sql.slice(eventAuthorityStart, eventAuthorityEnd)
+  const roleLock = eventAuthority.indexOf('for update of profile;')
+  const eventGrantLock = eventAuthority.indexOf('for update of administrator;')
+  assert.ok(roleLock >= 0, 'event-manager mutation authority must lock the Forge profile role row')
+  assert.ok(eventGrantLock > roleLock, 'event-manager mutation authority must lock the alliance event grant after role evaluation')
+  assert.ok(eventAuthority.includes('administrator.can_manage_events = true'))
+  assert.ok(eventAuthority.includes('administrator.revoked_at is null'))
+
+  const sessionBoundaryStart = sql.indexOf('create or replace function public.enforce_castle_command_session_write_authority')
+  const managerBoundaryStart = sql.indexOf('create or replace function public.enforce_castle_command_manager_write_authority')
+  const sessionBoundary = sql.slice(sessionBoundaryStart, managerBoundaryStart)
+  assert.ok(sessionBoundary.includes("tg_op = 'INSERT'"))
+  assert.ok(sessionBoundary.includes('public.lock_castle_command_event_manager(new.alliance_id)'))
+  assert.ok(sessionBoundary.includes("Castle Command session deletion is not permitted"))
+  assert.ok(sessionBoundary.includes('public.lock_castle_command_deputy_authority(old.id, old.alliance_id)'))
+
+  const commandBoundaryStart = sql.indexOf('create or replace function public.enforce_castle_command_command_write_authority')
+  const acknowledgementBoundaryStart = sql.indexOf('create or replace function public.enforce_castle_command_acknowledgement_write_authority')
+  const commandBoundary = sql.slice(commandBoundaryStart, acknowledgementBoundaryStart)
+  assert.ok(commandBoundary.includes('public.lock_castle_command_event_manager(command_session.alliance_id)'))
+  assert.ok(commandBoundary.includes('public.lock_castle_command_deputy_authority(command_session.id, command_session.alliance_id)'))
+
+  const acknowledgementBoundary = sql.slice(acknowledgementBoundaryStart)
+  assert.ok(acknowledgementBoundary.includes("target_status = 'waiting'"), 'WAITING/reset writes must use command authority')
+  assert.ok(acknowledgementBoundary.includes('public.lock_castle_command_participant_authority('), 'READY/SENT writes must re-lock exact participant authority')
+  assert.ok(acknowledgementBoundary.includes("Closed Castle Command acknowledgements are immutable"))
+}
+
 async function testClientProjectionBoundary() {
   const service = await read('src/features/castle-command/castleCommandCloudService.ts')
   assert.ok(service.includes('shared_alliance_id'))
@@ -271,6 +319,7 @@ async function testFinalReleaseContract() {
     '20260823162500_castle_command_assignment_profile_serialization.sql',
     '20260823163000_castle_command_membership_transition_serialization.sql',
     '20260823163500_castle_command_deputy_consent_serialization.sql',
+    '20260823164000_castle_command_write_authority_boundary.sql',
   ]
   let cursor = -1
   for (const migration of required) {
@@ -286,6 +335,7 @@ async function testFinalReleaseContract() {
   assert.ok(release.includes('Finding F9 — durable membership-sensitive writes were not serialized with membership transitions'))
   assert.ok(release.includes('Finding F10 — deputy lifecycle/reset authority was not serialized with membership removal'))
   assert.ok(release.includes('Finding F11 — sharing opt-in was not serialized with membership removal'))
+  assert.ok(release.includes('Finding F12 — durable write authority could outlive manager revocation and raw session lifecycle writes remained exposed'))
   assert.ok(release.includes('The corrected candidate must pass fresh A–F CI and fresh independent exact-head review'))
 }
 
@@ -303,6 +353,7 @@ await testAcknowledgementTransitionSerialization()
 await testAssignmentProfileSerialization()
 await testMembershipTransitionSerialization()
 await testDeputyAndConsentSerialization()
+await testWriteAuthorityBoundary()
 await testClientProjectionBoundary()
 await testFinalReleaseContract()
 await testPermanentGateIncludes001F()
