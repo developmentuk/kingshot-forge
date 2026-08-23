@@ -4,11 +4,11 @@ This file records the deliberate CI-only `main` retarget for PR #94 after correc
 
 Candidate parent before this evidence commit:
 
-`e06533a134331fa0d4f64e7ec08be828935f4f35`
+`8d4249ecf73933a4b885156bfdf3bd53a80895f1`
 
 The resulting commit is the frozen corrected CASTLE-COMMAND-001F candidate to be validated against the canonical `main` baseline `40c581eb20fa145c20efe0634b3e07e9c273a581`.
 
-The governed release chain now contains **27 Castle Command migrations**. The latest release-hardening migration is:
+The governed release chain contains **27 Castle Command migrations**. The latest release-hardening migration is:
 
 `20260823171000_castle_command_profile_privacy_write_boundary.sql`
 
@@ -21,6 +21,8 @@ F18/F19 close the final profile privacy and authenticated-write ambiguity:
 - the existing client already saves through `save_castle_command_profile(...)`;
 - the final save implementation continues to lock and validate current alliance membership before shared consent persists;
 - owner-controlled top-level profile deletion remains available under its existing RLS policy.
+
+The first F18/F19 CI attempt at `4bee6aacca5c08beb186fa35fe3d48dedcb683a5` stopped inside the new focused test because its grant-detection regex crossed SQL statement boundaries and falsely classified the preserved top-level profile DELETE grant as a timing-row write grant. The SQL correction itself was unchanged. The regression assertion was narrowed to one SQL statement at a time before this candidate was frozen.
 
 The authoritative final release-order/review addendum is:
 
