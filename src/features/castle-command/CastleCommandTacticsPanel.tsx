@@ -29,7 +29,7 @@ type Props = {
   stale: boolean
   authority: CastleCommandSessionAuthority
   canGrantDeputies: boolean
-  onAuthorityChange: () => void | Promise<void>
+  onAuthorityChange: () => unknown
 }
 
 type StoredTactics = {
@@ -171,17 +171,16 @@ export default function CastleCommandTacticsPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.id])
 
-  const counterAnchorAt = stored.counterAnchor ? new Date(stored.counterAnchor) : null
   const plan = useMemo(() => buildCastleCommandTacticalPlan({
     mode: stored.mode,
     sessionImpactAt: new Date(session.impactAt),
-    counterAnchorAt,
+    counterAnchorAt: stored.counterAnchor ? new Date(stored.counterAnchor) : null,
     counterOffsetSeconds: stored.counterOffsetSeconds,
     staggerSeconds: stored.staggerSeconds,
     waves: stored.waves,
     rallyPreparationSeconds: session.rallyPreparationSeconds,
     assignments: session.assignments,
-  }), [counterAnchorAt, session, stored])
+  }), [session, stored])
 
   useEffect(() => {
     announcedRef.current.clear()
