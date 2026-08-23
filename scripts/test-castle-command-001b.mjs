@@ -56,9 +56,14 @@ async function testMigrationContract() {
     process.cwd(),
     'supabase/migrations/20260823121800_castle_command_atomic_profile_save.sql',
   )
-  const [sql, hardeningSql] = await Promise.all([
+  const privacyPath = resolve(
+    process.cwd(),
+    'supabase/migrations/20260823122200_castle_command_shared_projection_lockdown.sql',
+  )
+  const [sql, hardeningSql, privacySql] = await Promise.all([
     readFile(migrationPath, 'utf8'),
     readFile(hardeningPath, 'utf8'),
+    readFile(privacyPath, 'utf8'),
   ])
 
   for (const required of [
@@ -97,6 +102,21 @@ async function testMigrationContract() {
     assert.ok(hardeningSql.includes(required), `hardening migration is missing: ${required}`)
   }
 
+  for (const required of [
+    'drop policy if exists "Players can view owned or explicitly shared Castle Command profiles"',
+    'create policy "Players can view their own Castle Command profiles"',
+    'drop policy if exists "Visible Castle Command profile targets are readable"',
+    'create policy "Players can view targets for their own Castle Command profile"',
+    'drop function public.users_share_current_alliance(uuid);',
+  ]) {
+    assert.ok(privacySql.includes(required), `privacy migration is missing: ${required}`)
+  }
+
+  assert.equal(
+    privacySql.includes('share_with_alliance = true'),
+    false,
+    'ordinary shared-row RLS must not expose underlying Castle Command profile records',
+  )
   assert.equal(
     /declare\s+profile_id\s+uuid;/i.test(hardeningSql),
     false,
@@ -107,13 +127,14 @@ async function testMigrationContract() {
     false,
     'assignment snapshots must be written only through the server-authoritative RPC boundary',
   )
+  const allMigrations = `${sql}\n${hardeningSql}\n${privacySql}`
   assert.equal(
-    `${sql}\n${hardeningSql}`.includes('alter publication supabase_realtime'),
+    allMigrations.includes('alter publication supabase_realtime'),
     false,
     '001B must not activate realtime publication before live state semantics are accepted',
   )
   assert.equal(
-    /howler[^\n]{0,80}(\/|\*)[^\n]{0,80}(speed|percent)/i.test(`${sql}\n${hardeningSql}`),
+    /howler[^\n]{0,80}(\/|\*)[^\n]{0,80}(speed|percent)/i.test(allMigrations),
     false,
     'migrations must not derive Howler duration from advertised speed percentage',
   )
