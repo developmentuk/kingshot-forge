@@ -90,6 +90,21 @@ async function testClosedHistoryImmutability() {
   assert.ok(sql.includes('public.can_manage_castle_command_session(target_session_id)'))
 }
 
+async function testAcknowledgementTransitionSerialization() {
+  const sql = await read('supabase/migrations/20260823162000_castle_command_ack_transition_serialization.sql')
+  for (const required of [
+    'create or replace function public.set_castle_command_acknowledgement',
+    'from public.castle_command_sessions',
+    'from public.castle_command_session_acknowledgements acknowledgement',
+    "Castle Command session is closed",
+    "Castle Command session must be active before marking sent",
+    "Sent acknowledgement cannot be moved backwards",
+  ]) assert.ok(sql.includes(required), `001F acknowledgement serialization missing ${required}`)
+
+  const lockCount = (stripSqlComments(sql).match(/for update;/gi) ?? []).length
+  assert.ok(lockCount >= 2, 'participant acknowledgement transition must lock both session and existing acknowledgement state')
+}
+
 async function testClientProjectionBoundary() {
   const service = await read('src/features/castle-command/castleCommandCloudService.ts')
   assert.ok(service.includes('shared_alliance_id'))
@@ -124,6 +139,7 @@ async function testFinalReleaseContract() {
     '20260823160500_castle_command_assignment_scope_hardening.sql',
     '20260823161000_castle_command_tactical_json_compatibility.sql',
     '20260823161500_castle_command_closed_session_ack_hardening.sql',
+    '20260823162000_castle_command_ack_transition_serialization.sql',
   ]
   let cursor = -1
   for (const migration of required) {
@@ -147,6 +163,7 @@ await testPrivacyAndCreationIntegrity()
 await testAllianceScopedConsent()
 await testTacticalPostgresCompatibility()
 await testClosedHistoryImmutability()
+await testAcknowledgementTransitionSerialization()
 await testClientProjectionBoundary()
 await testFinalReleaseContract()
 await testPermanentGateIncludes001F()
