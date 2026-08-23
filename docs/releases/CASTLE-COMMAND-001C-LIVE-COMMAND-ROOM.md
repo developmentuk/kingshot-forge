@@ -138,11 +138,11 @@ For each assignment:
 
 The Live Room shows:
 
-- countdown while more than five seconds remain;
-- `START NOW` from five seconds before through five seconds after the rally-start timestamp;
-- `LATE m:ss` after that launch window.
+- a countdown for every positive interval before the exact rally-start timestamp;
+- `START NOW` beginning at the exact calculated rally-start timestamp and remaining for the following five seconds;
+- `LATE m:ss` after that five-second late-launch window.
 
-READY/SENT acknowledgement does not rewrite the calculated timing.
+Forge never displays `START NOW` before the calculated rally-start timestamp. READY/SENT acknowledgement does not rewrite the calculated timing.
 
 ## Cost and performance controls
 
@@ -190,6 +190,7 @@ Before merge/activation, verify:
 - Presence is not used as an authoritative source for player identity or manager role;
 - unassigned users cannot enter the private Live Room;
 - assigned participants can receive Presence counts and state notifications;
+- countdown does not display `START NOW` before the exact calculated rally-start instant;
 - READY persists across refresh/reconnect;
 - SENT requires READY and active session state;
 - manager reset returns participant to waiting;
