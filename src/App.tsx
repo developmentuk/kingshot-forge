@@ -53,6 +53,7 @@ import CompanionIndexPage from "./pages/CompanionIndexPage";
 import CompanionItemPage from "./pages/CompanionItemPage";
 import SearchPage from "./features/search/SearchPage";
 import IslandRouteOptimizerPage from "./features/island-route-optimizer/IslandRouteOptimizerPage";
+import CastleCommandPage from "./features/castle-command/CastleCommandPage";
 
 import { DataEngineDiagnosticsPage } from "./pages/admin/DataEngineDiagnosticsPage";
 import { AdminDashboardPage } from "./features/admin/AdminDashboardPage";
@@ -138,6 +139,7 @@ function App() {
         <Route path="/my-forge/player-identity" element={<PrivatePlayerIdentityPage />} />
         <Route path="players/:forgeId" element={<PlayerProfilePage />} />
         <Route path="my-forge/progression" element={<PlayerProgressionPage />} />
+        <Route path="my-forge/castle-command" element={<CastleCommandPage />} />
         <Route path="my-forge/heroes" element={<HeroShowcaseEditorPage />} />
         <Route path="my-forge/hero-collection" element={<HeroCollectionPage />} />
         <Route path="settings" element={<SettingsPage />} />
