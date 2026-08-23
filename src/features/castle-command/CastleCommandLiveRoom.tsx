@@ -22,6 +22,11 @@ import {
   subscribeCastleCommandLiveSession,
   type CastleCommandAcknowledgement,
 } from './castleCommandLiveService'
+import CastleCommandTacticsPanel from './CastleCommandTacticsPanel'
+import {
+  getCastleCommandSessionAuthority,
+  type CastleCommandSessionAuthority,
+} from './castleCommandTacticsService'
 import './castleCommandLive.css'
 
 type Props = {
@@ -64,6 +69,7 @@ export default function CastleCommandLiveRoom({
   const [localNowMs, setLocalNowMs] = useState(Date.now())
   const [workingKey, setWorkingKey] = useState('')
   const [error, setError] = useState('')
+  const [sessionAuthority, setSessionAuthority] = useState<CastleCommandSessionAuthority>(management === 'allowed' ? 'manager' : 'participant')
   const canonicalChangeRef = useRef(onCanonicalChange)
 
   useEffect(() => {
@@ -91,6 +97,21 @@ export default function CastleCommandLiveRoom({
     setAcknowledgements(result.data)
     return true
   }, [session.id])
+
+  const refreshAuthority = useCallback(async () => {
+    try {
+      const result = await getCastleCommandSessionAuthority(session.id)
+      if (result.status === 'unavailable') {
+        setSessionAuthority(management === 'allowed' ? 'manager' : ownAssignment ? 'participant' : 'denied')
+        return false
+      }
+      setSessionAuthority(result.data)
+      return true
+    } catch {
+      setSessionAuthority(management === 'allowed' ? 'manager' : ownAssignment ? 'participant' : 'denied')
+      return false
+    }
+  }, [management, ownAssignment, session.id])
 
   const calibrateClock = useCallback(async () => {
     const requestStartedAtMs = Date.now()
@@ -128,6 +149,7 @@ export default function CastleCommandLiveRoom({
         const [ackReady, clockReady] = await Promise.all([
           refreshAcknowledgements(),
           calibrateClock(),
+          refreshAuthority(),
         ])
         if (!cancelled && ackReady && clockReady) setAvailability('ready')
       } catch (caught) {
@@ -139,7 +161,7 @@ export default function CastleCommandLiveRoom({
 
     void initialise()
     return () => { cancelled = true }
-  }, [calibrateClock, canEnterLiveRoom, refreshAcknowledgements])
+  }, [calibrateClock, canEnterLiveRoom, refreshAcknowledgements, refreshAuthority])
 
   useEffect(() => {
     const timer = window.setInterval(() => setLocalNowMs(Date.now()), 250)
@@ -164,6 +186,9 @@ export default function CastleCommandLiveRoom({
         ) {
           void canonicalChangeRef.current()
         }
+        if (event.entity === 'castle_command_session_deputies') {
+          void refreshAuthority()
+        }
       },
       onPresenceCount: setPresenceCount,
       onStatus: (status) => {
@@ -181,7 +206,7 @@ export default function CastleCommandLiveRoom({
         }
       },
     })
-  }, [availability, calibrateClock, canEnterLiveRoom, refreshAcknowledgements, session.id, userId])
+  }, [availability, calibrateClock, canEnterLiveRoom, refreshAcknowledgements, refreshAuthority, session.id, userId])
 
   useEffect(() => {
     if (availability !== 'ready' || connectionState !== 'live' || !canEnterLiveRoom) return
@@ -200,6 +225,7 @@ export default function CastleCommandLiveRoom({
   const ownAcknowledgement = ownAssignment
     ? acknowledgementFor(acknowledgements, ownAssignment.playerAccountId)
     : null
+  const canCommandSession = management === 'allowed' || sessionAuthority === 'manager' || sessionAuthority === 'deputy'
 
   async function runMutation(key: string, action: () => Promise<{ status: 'ready' | 'unavailable' }>) {
     setWorkingKey(key)
@@ -212,6 +238,7 @@ export default function CastleCommandLiveRoom({
       }
       await Promise.all([
         refreshAcknowledgements(),
+        refreshAuthority(),
         Promise.resolve(canonicalChangeRef.current()),
       ])
     } catch (caught) {
@@ -275,14 +302,15 @@ export default function CastleCommandLiveRoom({
       <span>{presenceCount} connected</span>
       <span>Server clock {lastServerSyncAtMs ? 'synced' : 'not synced'}</span>
       <span className={`castle-command-live__session-state is-${session.status}`}>{session.status}</span>
+      {sessionAuthority === 'deputy' ? <span>Deputy command</span> : null}
     </div>
 
     <p className="castle-command__hint">Presence is advisory only: Forge shows a private-channel connection count, not client-claimed player identities. Player names, assignments, roles and acknowledgements below come from canonical server state.</p>
 
     {stale ? <p className="castle-command-live__stale"><strong>Live sync is stale.</strong> Countdown timing uses the last successful server-clock calibration. Verify the in-game clock before launching.</p> : null}
 
-    {management === 'allowed' && session.status !== 'closed' ? <div className="castle-command-live__commander">
-      <strong>Commander controls</strong>
+    {canCommandSession && session.status !== 'closed' ? <div className="castle-command-live__commander">
+      <strong>{sessionAuthority === 'deputy' && management !== 'allowed' ? 'Deputy controls' : 'Commander controls'}</strong>
       <div>
         {session.status === 'planning' ? <button type="button" className="button" disabled={Boolean(workingKey)} onClick={() => void handleSessionStatus('active')}>Start live command</button> : null}
         <button type="button" className="button button--secondary" disabled={Boolean(workingKey)} onClick={() => void handleSessionStatus('closed')}>Close session</button>
@@ -310,10 +338,20 @@ export default function CastleCommandLiveRoom({
         return <li key={row.id} className={`is-${countdown.phase}`}>
           <div className="castle-command-live__identity"><strong>{row.playerName}</strong><span>{row.target} · {formatMarchDuration(row.marchSeconds)}{row.useHowler ? ` · Howler L${row.howlerSkillLevel}` : ''}</span></div>
           <div className="castle-command-live__countdown"><span>{formatClockTime(row.timing.rallyStartAt)}</span><strong>{countdown.display}</strong></div>
-          <div className="castle-command-live__roster-ack"><span className={`castle-command-live__ack is-${status}`}>{status}</span>{management === 'allowed' && status !== 'waiting' && session.status !== 'closed' ? <button type="button" disabled={Boolean(workingKey)} onClick={() => void handleReset(row.playerAccountId)}>Reset</button> : null}</div>
+          <div className="castle-command-live__roster-ack"><span className={`castle-command-live__ack is-${status}`}>{status}</span>{canCommandSession && status !== 'waiting' && session.status !== 'closed' ? <button type="button" disabled={Boolean(workingKey)} onClick={() => void handleReset(row.playerAccountId)}>Reset</button> : null}</div>
         </li>
       })}</ol>}
     </div>
+
+    <CastleCommandTacticsPanel
+      session={session}
+      playerAccountId={playerAccountId}
+      serverNowMs={serverNowMs}
+      stale={stale}
+      authority={sessionAuthority}
+      canGrantDeputies={management === 'allowed'}
+      onAuthorityChange={refreshAuthority}
+    />
 
     {error ? <p className="profile-panel__error">{error}</p> : null}
   </div>
