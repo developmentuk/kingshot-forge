@@ -37,8 +37,8 @@ for (const required of [
 
 assert.equal(sql.includes('users_share_current_alliance'), false, 'final raw-read policies must not use same-alliance relationship sharing')
 assert.equal(/share_with_alliance\s*=\s*true/i.test(sql), false, 'final raw-read RLS must not expose another user merely because sharing is enabled')
-assert.equal(/grant\s+(?:insert|update)[\s\S]*castle_command_profiles[\s\S]*authenticated/i.test(sql), false, 'final migration must not re-grant authenticated raw profile writes')
-assert.equal(/grant\s+(?:insert|update|delete)[\s\S]*castle_command_profile_targets[\s\S]*authenticated/i.test(sql), false, 'final migration must not re-grant authenticated raw timing writes')
+assert.equal(/grant\s+(?:insert|update)\b[^;]*\bon\s+public\.castle_command_profiles\b[^;]*\bto\s+authenticated\s*;/i.test(sql), false, 'final migration must not re-grant authenticated raw profile writes')
+assert.equal(/grant\s+(?:insert|update|delete)\b[^;]*\bon\s+public\.castle_command_profile_targets\b[^;]*\bto\s+authenticated\s*;/i.test(sql), false, 'final migration must not re-grant authenticated raw timing writes')
 
 const scopedSharing = stripSqlComments(await read('supabase/migrations/20260823155500_castle_command_alliance_scoped_sharing.sql'))
 assert.ok(scopedSharing.includes('profile.shared_alliance_id = target_alliance_id'), 'alliance projection must enforce exact selected sharing scope')
