@@ -21,14 +21,13 @@ import {
   setCastleCommandLiveSessionStatus,
   subscribeCastleCommandLiveSession,
   type CastleCommandAcknowledgement,
-  type CastleCommandPresence,
 } from './castleCommandLiveService'
 import './castleCommandLive.css'
 
 type Props = {
   session: CastleCommandSessionRecord
+  userId: string
   playerAccountId: string
-  playerName: string
   management: CastleCommandManagementCapability
   onCanonicalChange: () => void | Promise<void>
 }
@@ -51,14 +50,14 @@ function connectionLabel(state: CastleCommandLiveConnectionState) {
 
 export default function CastleCommandLiveRoom({
   session,
+  userId,
   playerAccountId,
-  playerName,
   management,
   onCanonicalChange,
 }: Props) {
   const [availability, setAvailability] = useState<LiveAvailability>('loading')
   const [acknowledgements, setAcknowledgements] = useState<CastleCommandAcknowledgement[]>([])
-  const [presence, setPresence] = useState<CastleCommandPresence[]>([])
+  const [presenceCount, setPresenceCount] = useState(0)
   const [connectionState, setConnectionState] = useState<CastleCommandLiveConnectionState>('connecting')
   const [serverOffsetMs, setServerOffsetMs] = useState(0)
   const [lastServerSyncAtMs, setLastServerSyncAtMs] = useState<number | null>(null)
@@ -150,17 +149,11 @@ export default function CastleCommandLiveRoom({
   useEffect(() => {
     if (availability !== 'ready' || !canEnterLiveRoom) return
 
-    const role: CastleCommandPresence['role'] = management === 'allowed' ? 'manager' : 'participant'
     setConnectionState('connecting')
 
     return subscribeCastleCommandLiveSession({
       sessionId: session.id,
-      presence: {
-        playerAccountId,
-        playerName,
-        role,
-        onlineAt: new Date().toISOString(),
-      },
+      presenceKey: userId,
       onBroadcast: (event) => {
         void refreshAcknowledgements().catch((caught) => {
           setError(caught instanceof Error ? caught.message : 'Live acknowledgements could not be refreshed.')
@@ -172,7 +165,7 @@ export default function CastleCommandLiveRoom({
           void canonicalChangeRef.current()
         }
       },
-      onPresence: setPresence,
+      onPresenceCount: setPresenceCount,
       onStatus: (status) => {
         if (status === 'SUBSCRIBED') {
           setConnectionState('live')
@@ -188,7 +181,7 @@ export default function CastleCommandLiveRoom({
         }
       },
     })
-  }, [availability, calibrateClock, canEnterLiveRoom, management, playerAccountId, playerName, refreshAcknowledgements, session.id])
+  }, [availability, calibrateClock, canEnterLiveRoom, refreshAcknowledgements, session.id, userId])
 
   useEffect(() => {
     if (availability !== 'ready' || connectionState !== 'live' || !canEnterLiveRoom) return
@@ -204,7 +197,6 @@ export default function CastleCommandLiveRoom({
     lastServerSyncAtMs,
     localNowMs,
   })
-  const onlinePlayerIds = useMemo(() => new Set(presence.map((item) => item.playerAccountId)), [presence])
   const ownAcknowledgement = ownAssignment
     ? acknowledgementFor(acknowledgements, ownAssignment.playerAccountId)
     : null
@@ -280,10 +272,12 @@ export default function CastleCommandLiveRoom({
   return <div className="castle-command-live">
     <div className="castle-command-live__statusbar">
       <span className={`castle-command-live__connection is-${connectionState}`}>{connectionLabel(connectionState)}</span>
-      <span>{presence.length} online</span>
+      <span>{presenceCount} connected</span>
       <span>Server clock {lastServerSyncAtMs ? 'synced' : 'not synced'}</span>
       <span className={`castle-command-live__session-state is-${session.status}`}>{session.status}</span>
     </div>
+
+    <p className="castle-command__hint">Presence is advisory only: Forge shows a private-channel connection count, not client-claimed player identities. Player names, assignments, roles and acknowledgements below come from canonical server state.</p>
 
     {stale ? <p className="castle-command-live__stale"><strong>Live sync is stale.</strong> Countdown timing uses the last successful server-clock calibration. Verify the in-game clock before launching.</p> : null}
 
@@ -313,9 +307,7 @@ export default function CastleCommandLiveRoom({
         const acknowledgement = acknowledgementFor(acknowledgements, row.playerAccountId)
         const status = acknowledgement?.status ?? 'waiting'
         const countdown = buildCastleCommandCountdown(row.timing.rallyStartAt, serverNowMs)
-        const online = onlinePlayerIds.has(row.playerAccountId)
         return <li key={row.id} className={`is-${countdown.phase}`}>
-          <span className={`castle-command-live__presence ${online ? 'is-online' : ''}`} aria-label={online ? 'Online' : 'Offline'} />
           <div className="castle-command-live__identity"><strong>{row.playerName}</strong><span>{row.target} · {formatMarchDuration(row.marchSeconds)}{row.useHowler ? ` · Howler L${row.howlerSkillLevel}` : ''}</span></div>
           <div className="castle-command-live__countdown"><span>{formatClockTime(row.timing.rallyStartAt)}</span><strong>{countdown.display}</strong></div>
           <div className="castle-command-live__roster-ack"><span className={`castle-command-live__ack is-${status}`}>{status}</span>{management === 'allowed' && status !== 'waiting' && session.status !== 'closed' ? <button type="button" disabled={Boolean(workingKey)} onClick={() => void handleReset(row.playerAccountId)}>Reset</button> : null}</div>
@@ -323,7 +315,6 @@ export default function CastleCommandLiveRoom({
       })}</ol>}
     </div>
 
-    {presence.length > 0 ? <p className="castle-command__hint">Online now: {presence.map((item) => `${item.playerName}${item.role === 'manager' ? ' (commander)' : ''}`).join(', ')}</p> : null}
     {error ? <p className="profile-panel__error">{error}</p> : null}
   </div>
 }
