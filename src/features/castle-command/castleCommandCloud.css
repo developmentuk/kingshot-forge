@@ -1,0 +1,187 @@
+.castle-command-cloud {
+  display: grid;
+  gap: 1rem;
+}
+
+.castle-command-cloud__heading,
+.castle-command-cloud__session-title,
+.castle-command-cloud__alliance,
+.castle-command-cloud__profile-actions,
+.castle-command-cloud__assignment-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.castle-command-cloud__status {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.castle-command-cloud__status.is-ready {
+  color: var(--color-success, #72d49b);
+}
+
+.castle-command-cloud__status.is-unavailable,
+.castle-command-cloud__status.is-error {
+  color: var(--color-warning, #f2c66d);
+}
+
+.castle-command-cloud__activation {
+  border: 1px solid rgba(242, 198, 109, 0.45);
+  border-radius: 0.8rem;
+  padding: 1rem;
+  background: rgba(242, 198, 109, 0.08);
+}
+
+.castle-command-cloud__activation p {
+  margin-bottom: 0;
+}
+
+.castle-command-cloud__profile-actions {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.castle-command-cloud__profile-actions > label {
+  flex: 1 1 24rem;
+}
+
+.castle-command-cloud__profile-actions > div {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.castle-command-cloud__alliance {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 0;
+}
+
+.castle-command-cloud__alliance div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.castle-command-cloud__alliance span,
+.castle-command-cloud__launch-order li span,
+.castle-command-cloud__launch-order li small {
+  opacity: 0.78;
+}
+
+.castle-command-cloud__manager,
+.castle-command-cloud__sessions,
+.castle-command-cloud__launch-order {
+  display: grid;
+  gap: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.castle-command-cloud__form-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 0.8fr;
+  gap: 0.8rem;
+}
+
+.castle-command-cloud__form-grid label,
+.castle-command-cloud__sessions > label,
+.castle-command-cloud__assignment-form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.castle-command-cloud input:not([type='checkbox']),
+.castle-command-cloud select {
+  width: 100%;
+}
+
+.castle-command-cloud__assignment-form {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.8fr auto;
+  align-items: end;
+}
+
+.castle-command-cloud__checkbox {
+  display: flex !important;
+  align-items: center;
+  min-height: 2.7rem;
+}
+
+.castle-command-cloud__launch-order ol {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.castle-command-cloud__launch-order li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+}
+
+.castle-command-cloud__launch-order li > div:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.castle-command-cloud__times {
+  display: flex;
+  gap: 1rem;
+}
+
+.castle-command-cloud__times span {
+  display: grid;
+  gap: 0.12rem;
+  text-align: right;
+}
+
+.castle-command-cloud__launch-order li > button {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (max-width: 820px) {
+  .castle-command-cloud__alliance,
+  .castle-command-cloud__form-grid,
+  .castle-command-cloud__assignment-form {
+    grid-template-columns: 1fr;
+  }
+
+  .castle-command-cloud__heading,
+  .castle-command-cloud__session-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .castle-command-cloud__launch-order li {
+    grid-template-columns: 1fr auto;
+  }
+
+  .castle-command-cloud__times {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+
+  .castle-command-cloud__times span {
+    text-align: left;
+  }
+}
