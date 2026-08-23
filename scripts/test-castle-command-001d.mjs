@@ -123,15 +123,19 @@ async function testAuthorityContracts() {
     'create table public.castle_command_session_deputies',
     'foreign key (session_id, player_account_id)',
     'create or replace function public.can_manage_castle_command_session',
+    'create or replace function public.list_castle_command_session_deputies',
     'create or replace function public.get_castle_command_session_authority',
     'create or replace function public.set_castle_command_session_deputy',
     "if not public.can_manage_castle_command(command_session.alliance_id)",
     'create trigger castle_command_deputies_broadcast_change',
   ]) assert.ok(migration.includes(required), `001D migration missing ${required}`)
 
+  assert.equal(migration.includes('grant select on public.castle_command_session_deputies to authenticated'), false)
   assert.equal(migration.includes('grant insert on public.castle_command_session_deputies to authenticated'), false)
   assert.equal(migration.includes('grant update on public.castle_command_session_deputies to authenticated'), false)
   assert.equal(migration.includes('grant delete on public.castle_command_session_deputies to authenticated'), false)
+  assert.ok(service.includes(".rpc('list_castle_command_session_deputies'"))
+  assert.equal(service.includes(".from('castle_command_session_deputies')"), false)
   assert.ok(service.includes(".rpc('set_castle_command_session_deputy'"))
   assert.ok(panel.includes('Forge does not detect enemy ownership'))
   assert.ok(panel.includes('Audio + spoken launch cues'))
