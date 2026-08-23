@@ -102,6 +102,11 @@ async function testClientProjectionBoundary() {
 
 async function testFinalReleaseContract() {
   const release = await read('docs/releases/CASTLE-COMMAND-001F-ACTIVATION-ACCEPTANCE.md')
+  const orderStart = release.indexOf('## Final migration dependency order')
+  const orderEnd = release.indexOf('## Permanent regression gate', orderStart)
+  assert.ok(orderStart >= 0 && orderEnd > orderStart, '001F governed migration-order section is missing')
+  const governedOrder = release.slice(orderStart, orderEnd)
+
   const required = [
     '20260823120400_castle_command_session_foundation.sql',
     '20260823121800_castle_command_atomic_profile_save.sql',
@@ -122,7 +127,7 @@ async function testFinalReleaseContract() {
   ]
   let cursor = -1
   for (const migration of required) {
-    const position = release.indexOf(migration)
+    const position = governedOrder.indexOf(migration)
     assert.ok(position > cursor, `001F release migration order missing/out of order: ${migration}`)
     cursor = position
   }
