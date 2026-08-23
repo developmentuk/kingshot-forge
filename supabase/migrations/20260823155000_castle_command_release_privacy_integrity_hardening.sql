@@ -1,8 +1,8 @@
 begin;
 
 -- CASTLE-COMMAND-001F release hardening.
--- Minimise raw authenticated column access and make session creation state
--- server-enforced rather than trusting a direct client insert.
+-- Minimise raw authenticated column access and make session creation identity,
+-- lifecycle and timestamps server-enforced rather than trusting a direct client insert.
 
 revoke select on public.castle_command_sessions from authenticated;
 grant select (
@@ -60,6 +60,8 @@ begin
     raise exception 'Castle Command session creator mismatch' using errcode = '42501';
   end if;
 
+  new.id := gen_random_uuid();
+  new.title := btrim(new.title);
   new.created_at := now();
   new.updated_at := new.created_at;
   return new;
@@ -125,7 +127,7 @@ revoke all on function public.list_castle_command_alliance_profiles(uuid) from p
 grant execute on function public.list_castle_command_alliance_profiles(uuid) to authenticated;
 
 comment on function public.enforce_castle_command_session_creation() is
-  'Forces new Castle Command sessions to begin in planning state with server-owned timestamps.';
+  'Forces new Castle Command sessions to server-owned identity/timestamps and planning lifecycle state.';
 comment on function public.list_castle_command_alliance_profiles(uuid) is
   'Returns the minimum shared identity/timing projection required for Castle assignment; raw profile/user ids stay private.';
 
