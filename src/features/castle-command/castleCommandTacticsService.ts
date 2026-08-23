@@ -5,6 +5,10 @@ type DatabaseErrorLike = {
   message?: string
 }
 
+type DeputyProjectionRow = {
+  player_account_id?: unknown
+}
+
 export type CastleCommandSessionAuthority = 'manager' | 'deputy' | 'participant' | 'denied'
 
 export type CastleCommandDeputyRecord = {
@@ -62,10 +66,11 @@ export async function loadCastleCommandSessionDeputies(
     throwDatabaseError(result.error, 'Castle Command deputies could not be loaded.')
   }
 
+  const rows = (result.data ?? []) as DeputyProjectionRow[]
   return {
     status: 'ready',
-    data: (result.data ?? []).flatMap((row) => {
-      const playerAccountId = row?.player_account_id
+    data: rows.flatMap((row) => {
+      const playerAccountId = row.player_account_id
       return typeof playerAccountId === 'string' ? [{ playerAccountId }] : []
     }),
   }
