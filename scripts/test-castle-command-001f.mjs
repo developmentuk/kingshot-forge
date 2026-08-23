@@ -73,7 +73,7 @@ async function testTacticalPostgresCompatibility() {
     'rally_preparation_seconds_snapshot',
     "raise exception 'Castle Command tactical plan version conflict' using errcode = '40001'",
   ]) assert.ok(sql.includes(required), `001F tactical compatibility hardening missing ${required}`)
-  assert.equal(sql.includes('jsonb_object_length'), false)
+  assert.equal(/jsonb_object_length\s*\(/i.test(sql), false)
 }
 
 async function testClosedHistoryImmutability() {
