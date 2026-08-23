@@ -132,6 +132,8 @@ async function testFinalMigrationSequenceIsDocumented() {
     cursor = position
   }
   assert.ok(release.includes('**STOP. Do not apply Castle Command migrations to production yet.**'))
+  assert.ok(release.includes('fresh independent exact-head review'))
+  assert.ok(release.includes('real authenticated role/Realtime acceptance'))
 }
 
 async function testPermanentGateIncludes001F() {
