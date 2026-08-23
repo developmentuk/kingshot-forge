@@ -70,10 +70,16 @@ async function testMigrationContract() {
     'profile_updated_at_snapshot',
     'player_name_snapshot',
     'enable row level security',
+    'grant select on public.castle_command_session_assignments to authenticated',
   ]) {
     assert.ok(sql.includes(required), `migration is missing: ${required}`)
   }
 
+  assert.equal(
+    sql.includes('grant select, insert, update, delete on public.castle_command_session_assignments'),
+    false,
+    'assignment snapshots must be written only through the server-authoritative RPC boundary',
+  )
   assert.equal(
     sql.includes('alter publication supabase_realtime'),
     false,
