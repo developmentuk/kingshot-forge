@@ -86,6 +86,14 @@ async function testTacticalPostgresCompatibility() {
   assert.equal(sql.includes('jsonb_object_length'), false, 'final tactical save RPC must not use unsupported jsonb_object_length')
 }
 
+async function testClosedHistoryImmutability() {
+  const sql = await read('supabase/migrations/20260823161500_castle_command_closed_session_ack_hardening.sql')
+  assert.ok(sql.includes('for update;'))
+  assert.ok(sql.includes("command_session.status = 'closed'"))
+  assert.ok(sql.includes('Closed Castle Command acknowledgements are immutable'))
+  assert.ok(sql.includes('public.can_manage_castle_command_session(target_session_id)'))
+}
+
 async function testClientProjectionBoundary() {
   const service = await read('src/features/castle-command/castleCommandCloudService.ts')
 
@@ -101,5 +109,6 @@ await testCurrentMembershipAuthority()
 await testPrivacyAndCreationIntegrity()
 await testAllianceScopedConsent()
 await testTacticalPostgresCompatibility()
+await testClosedHistoryImmutability()
 await testClientProjectionBoundary()
 console.log('CASTLE-COMMAND-001F tests passed')
