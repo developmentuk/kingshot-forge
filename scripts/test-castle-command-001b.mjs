@@ -52,7 +52,14 @@ async function testMigrationContract() {
     process.cwd(),
     'supabase/migrations/20260823120400_castle_command_session_foundation.sql',
   )
-  const sql = await readFile(migrationPath, 'utf8')
+  const hardeningPath = resolve(
+    process.cwd(),
+    'supabase/migrations/20260823121800_castle_command_atomic_profile_save.sql',
+  )
+  const [sql, hardeningSql] = await Promise.all([
+    readFile(migrationPath, 'utf8'),
+    readFile(hardeningPath, 'utf8'),
+  ])
 
   for (const required of [
     'create table public.castle_command_profiles',
@@ -72,23 +79,43 @@ async function testMigrationContract() {
     'enable row level security',
     'grant select on public.castle_command_session_assignments to authenticated',
   ]) {
-    assert.ok(sql.includes(required), `migration is missing: ${required}`)
+    assert.ok(sql.includes(required), `foundation migration is missing: ${required}`)
   }
 
+  for (const required of [
+    'create or replace function public.save_castle_command_profile',
+    'saved_profile_id uuid;',
+    'returning id into saved_profile_id;',
+    "(saved_profile_id, 'castle'",
+    'return saved_profile_id;',
+    'revoke insert, update on public.castle_command_profiles from authenticated;',
+    'revoke insert, update, delete on public.castle_command_profile_targets from authenticated;',
+    'create or replace function public.preserve_castle_command_session_identity()',
+    'create trigger castle_command_sessions_preserve_identity',
+    "raise exception 'Castle Command session identity fields are immutable'",
+  ]) {
+    assert.ok(hardeningSql.includes(required), `hardening migration is missing: ${required}`)
+  }
+
+  assert.equal(
+    /declare\s+profile_id\s+uuid;/i.test(hardeningSql),
+    false,
+    'atomic profile function must not shadow the profile_id table column',
+  )
   assert.equal(
     sql.includes('grant select, insert, update, delete on public.castle_command_session_assignments'),
     false,
     'assignment snapshots must be written only through the server-authoritative RPC boundary',
   )
   assert.equal(
-    sql.includes('alter publication supabase_realtime'),
+    `${sql}\n${hardeningSql}`.includes('alter publication supabase_realtime'),
     false,
     '001B must not activate realtime publication before live state semantics are accepted',
   )
   assert.equal(
-    /howler[^\n]{0,80}(\/|\*)[^\n]{0,80}(speed|percent)/i.test(sql),
+    /howler[^\n]{0,80}(\/|\*)[^\n]{0,80}(speed|percent)/i.test(`${sql}\n${hardeningSql}`),
     false,
-    'migration must not derive Howler duration from advertised speed percentage',
+    'migrations must not derive Howler duration from advertised speed percentage',
   )
 }
 
