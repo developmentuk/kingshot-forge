@@ -105,6 +105,29 @@ async function testAcknowledgementTransitionSerialization() {
   assert.ok(lockCount >= 2, 'participant acknowledgement transition must lock both session and existing acknowledgement state')
 }
 
+async function testAssignmentProfileSerialization() {
+  const sql = await read('supabase/migrations/20260823162500_castle_command_assignment_profile_serialization.sql')
+  const executable = stripSqlComments(sql)
+  for (const required of [
+    'create or replace function public.set_castle_command_session_assignment',
+    'profile.share_with_alliance = true',
+    'profile.shared_alliance_id = command_session.alliance_id',
+    'for update of profile;',
+    'profile_updated_at_snapshot',
+    "Player has no explicitly shared Castle Command profile in this alliance",
+  ]) assert.ok(executable.includes(required), `001F assignment/profile serialization missing ${required}`)
+
+  const profileLock = executable.indexOf('for update of profile;')
+  const timingRead = executable.indexOf('from public.castle_command_profile_targets')
+  assert.ok(profileLock >= 0 && timingRead > profileLock, 'assignment must lock the shared profile before reading target timings')
+
+  const profileSave = await read('supabase/migrations/20260823155500_castle_command_alliance_scoped_sharing.sql')
+  assert.ok(profileSave.includes('on conflict (player_account_id) do update set'))
+  const profileUpsert = profileSave.indexOf('insert into public.castle_command_profiles')
+  const timingUpsert = profileSave.indexOf('insert into public.castle_command_profile_targets')
+  assert.ok(profileUpsert >= 0 && timingUpsert > profileUpsert, 'profile save must own/update the profile row before changing timing rows')
+}
+
 async function testClientProjectionBoundary() {
   const service = await read('src/features/castle-command/castleCommandCloudService.ts')
   assert.ok(service.includes('shared_alliance_id'))
@@ -140,6 +163,7 @@ async function testFinalReleaseContract() {
     '20260823161000_castle_command_tactical_json_compatibility.sql',
     '20260823161500_castle_command_closed_session_ack_hardening.sql',
     '20260823162000_castle_command_ack_transition_serialization.sql',
+    '20260823162500_castle_command_assignment_profile_serialization.sql',
   ]
   let cursor = -1
   for (const migration of required) {
@@ -151,6 +175,7 @@ async function testFinalReleaseContract() {
   assert.ok(release.includes('fresh independent exact-head review'))
   assert.ok(release.includes('real authenticated role/Realtime acceptance'))
   assert.ok(release.includes('Finding F7 — participant acknowledgement transitions were not serialized with session closure'))
+  assert.ok(release.includes('Finding F8 — assignment snapshots were not serialized with profile sharing/timing saves'))
   assert.ok(release.includes('The corrected candidate must pass fresh A–F CI and fresh independent exact-head review'))
 }
 
@@ -165,6 +190,7 @@ await testAllianceScopedConsent()
 await testTacticalPostgresCompatibility()
 await testClosedHistoryImmutability()
 await testAcknowledgementTransitionSerialization()
+await testAssignmentProfileSerialization()
 await testClientProjectionBoundary()
 await testFinalReleaseContract()
 await testPermanentGateIncludes001F()
