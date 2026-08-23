@@ -2,13 +2,13 @@
 
 This file records the deliberate CI-only `main` retarget for PR #94 after correction of F12, the final durable write-authority boundary found by the post-F11 release audit.
 
-Candidate parent before the F12 release-evidence update:
+Candidate parent before this exact-head evidence commit:
 
-`12675a9ea2192808e75c4aa5669e4b7afbce8314`
+`040d93855977119b3b5f38590b88d25ba627914f`
 
-The resulting exact head after this evidence update is the frozen corrected CASTLE-COMMAND-001F candidate to be validated against the canonical `main` baseline `40c581eb20fa145c20efe0634b3e07e9c273a581`.
+The resulting commit is the frozen corrected CASTLE-COMMAND-001F candidate to be validated against the canonical `main` baseline `40c581eb20fa145c20efe0634b3e07e9c273a581`.
 
-The final governed migration chain now contains **21 Castle Command migrations**. The latest release-hardening migration is:
+The final governed migration chain contains **21 Castle Command migrations**. The latest release-hardening migration is:
 
 `20260823164000_castle_command_write_authority_boundary.sql`
 
