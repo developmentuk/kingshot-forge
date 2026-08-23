@@ -20,13 +20,6 @@ export type CastleCommandAcknowledgement = {
   updatedAt: string
 }
 
-export type CastleCommandPresence = {
-  playerAccountId: string
-  playerName: string
-  role: 'participant' | 'manager'
-  onlineAt: string
-}
-
 export type CastleCommandBroadcast = {
   entity: string
   operation: string
@@ -152,52 +145,31 @@ export async function getCastleCommandServerTime(
   return { status: 'ready', data: serverTime }
 }
 
-function mapPresenceState(raw: unknown): CastleCommandPresence[] {
-  if (!raw || typeof raw !== 'object') return []
-  const byPlayer = new Map<string, CastleCommandPresence>()
-
+function countPresenceConnections(raw: unknown): number {
+  if (!raw || typeof raw !== 'object') return 0
+  let count = 0
   for (const presences of Object.values(raw as Record<string, unknown>)) {
-    if (!Array.isArray(presences)) continue
-    for (const candidate of presences) {
-      if (!candidate || typeof candidate !== 'object') continue
-      const value = candidate as Record<string, unknown>
-      if (
-        typeof value.playerAccountId !== 'string' ||
-        typeof value.playerName !== 'string' ||
-        (value.role !== 'participant' && value.role !== 'manager') ||
-        typeof value.onlineAt !== 'string'
-      ) {
-        continue
-      }
-
-      byPlayer.set(value.playerAccountId, {
-        playerAccountId: value.playerAccountId,
-        playerName: value.playerName,
-        role: value.role,
-        onlineAt: value.onlineAt,
-      })
-    }
+    if (Array.isArray(presences)) count += presences.length
   }
-
-  return [...byPlayer.values()].sort((a, b) => a.playerName.localeCompare(b.playerName))
+  return count
 }
 
 export function subscribeCastleCommandLiveSession(input: {
   sessionId: string
-  presence: CastleCommandPresence
+  presenceKey: string
   onBroadcast: (event: CastleCommandBroadcast) => void
-  onPresence: (presence: CastleCommandPresence[]) => void
+  onPresenceCount: (count: number) => void
   onStatus: (status: string) => void
 }) {
   const channel = supabase.channel(`castle-command:${input.sessionId}`, {
     config: {
       private: true,
-      presence: { key: input.presence.playerAccountId },
+      presence: { key: input.presenceKey },
     },
   })
 
   const syncPresence = () => {
-    input.onPresence(mapPresenceState(channel.presenceState()))
+    input.onPresenceCount(countPresenceConnections(channel.presenceState()))
   }
 
   channel
@@ -219,7 +191,7 @@ export function subscribeCastleCommandLiveSession(input: {
     .subscribe((status) => {
       input.onStatus(status)
       if (status === 'SUBSCRIBED') {
-        void channel.track(input.presence)
+        void channel.track({ onlineAt: new Date().toISOString() })
       }
     })
 
