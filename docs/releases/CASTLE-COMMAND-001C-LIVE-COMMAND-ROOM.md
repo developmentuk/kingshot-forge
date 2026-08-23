@@ -6,7 +6,7 @@ Status: implementation branch; activation gated
 
 CASTLE-COMMAND-001C turns the shared Castle Command battle session from a static coordinated plan into a private live second-screen experience for assigned players and authorised alliance event managers.
 
-It adds low-latency state notification and participant presence without making Realtime the system of record. Canonical session, assignment and acknowledgement state remains in Supabase tables and RPC-owned mutations.
+It adds low-latency state notification and advisory connection presence without making Realtime the system of record. Canonical session, assignment, player identity, role and acknowledgement state remains in Supabase tables and RPC-owned mutations.
 
 ## Scope
 
@@ -15,13 +15,14 @@ It adds low-latency state notification and participant presence without making R
 - a separate Live Command Room surface under the authenticated Castle Command page;
 - private Realtime channel topics per battle session;
 - assigned-player / event-manager channel authorization;
-- Presence showing connected assigned players and commanders;
+- advisory Presence connection counts without trusting client-claimed player identities or roles;
 - server-clock calibration rather than trusting the browser clock;
 - per-player launch countdowns based on the immutable assignment timing snapshot;
 - a highlighted personal rally call for the signed-in assigned player;
 - durable acknowledgement states: waiting, ready and sent;
 - participant-owned READY and SENT transitions;
 - manager-owned acknowledgement reset;
+- automatic acknowledgement invalidation when a material assignment snapshot changes;
 - manager-owned session transition from planning to active to closed;
 - stale-connection and stale-server-clock warnings;
 - database-triggered metadata-only state-change Broadcast notifications;
@@ -38,7 +39,7 @@ The Live Room uses one private topic per session:
 
 Realtime is used for two purposes only:
 
-1. **Presence** — each client publishes one small presence payload when it joins the private channel. Presence is not used for high-frequency cursor/activity telemetry.
+1. **Presence** — each authorised client publishes only a minimal connection timestamp after joining the private channel. Forge treats Presence as advisory connection telemetry only. It does not trust Presence payloads for player identity, assignment identity, manager role, READY/SENT state or battle authority.
 2. **Broadcast notification** — database triggers emit metadata-only `state_changed` notifications after canonical session, assignment or acknowledgement changes.
 
 A client receiving `state_changed` must re-fetch canonical state. It must not treat the Broadcast payload as authoritative battle state.
@@ -96,7 +97,10 @@ Rules:
 - SENT is permitted only while the session is active;
 - SENT cannot be moved backwards by the participant;
 - an authorised event manager may reset an acknowledgement to waiting;
-- acknowledgement rows disappear automatically if the underlying assignment is removed.
+- acknowledgement rows disappear automatically if the underlying assignment is removed;
+- a material change to the assignment snapshot automatically invalidates any existing READY/SENT acknowledgement so the player must reconfirm the revised rally call.
+
+Material assignment changes include target, Howler use/level, snapshotted march duration, timing source, calibration state and source-profile snapshot timestamp.
 
 ## Session lifecycle authority
 
@@ -145,7 +149,8 @@ READY/SENT acknowledgement does not rewrite the calculated timing.
 001C intentionally avoids high-volume realtime behaviour:
 
 - one private channel per open Live Room;
-- Presence tracked on join, not as a heartbeat table write;
+- Presence tracked on join with a minimal advisory payload, not as a heartbeat table write;
+- no trusted identity or role information in client-authored Presence payloads;
 - no database presence table;
 - no cursor/activity telemetry;
 - server-clock RPC recalibration every two minutes while live;
@@ -182,11 +187,13 @@ Before merge/activation, verify:
 - no Castle Command tables are added to `supabase_realtime` Postgres Changes publication;
 - client channel configuration uses `private: true`;
 - client code does not publish Broadcast commands;
+- Presence is not used as an authoritative source for player identity or manager role;
 - unassigned users cannot enter the private Live Room;
-- assigned participants can see Presence and state notifications;
+- assigned participants can receive Presence counts and state notifications;
 - READY persists across refresh/reconnect;
 - SENT requires READY and active session state;
 - manager reset returns participant to waiting;
+- a material assignment change invalidates existing READY/SENT acknowledgement;
 - closed sessions cannot reopen;
 - stale network/server-clock state is visibly disclosed;
 - two authenticated browsers receive state changes without manual refresh;
