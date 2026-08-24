@@ -12,6 +12,8 @@ type Props = {
 
 type HubState = 'loading' | 'ready' | 'unavailable' | 'error'
 
+const CASTLE_COMMAND_CANONICAL_CHANGE_EVENT = 'kingshot-forge:castle-command:canonical-change'
+
 export default function CastleCommandLiveHub({ userId, playerAccountId }: Props) {
   const [state, setState] = useState<HubState>('loading')
   const [alliance, setAlliance] = useState<AllianceMembershipDetails | null>(null)
@@ -60,6 +62,15 @@ export default function CastleCommandLiveHub({ userId, playerAccountId }: Props)
   useEffect(() => {
     setState('loading')
     void load()
+  }, [load])
+
+  useEffect(() => {
+    const handleCanonicalChange = () => {
+      void load()
+    }
+
+    window.addEventListener(CASTLE_COMMAND_CANONICAL_CHANGE_EVENT, handleCanonicalChange)
+    return () => window.removeEventListener(CASTLE_COMMAND_CANONICAL_CHANGE_EVENT, handleCanonicalChange)
   }, [load])
 
   const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? null

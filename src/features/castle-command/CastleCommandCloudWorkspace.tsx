@@ -34,6 +34,8 @@ type Props = {
 
 type CloudState = 'loading' | 'ready' | 'unavailable' | 'error'
 
+const CASTLE_COMMAND_CANONICAL_CHANGE_EVENT = 'kingshot-forge:castle-command:canonical-change'
+
 function futureLocalDateTime() {
   const date = new Date(Date.now() + 30 * 60_000)
   date.setSeconds(0, 0)
@@ -167,6 +169,7 @@ export default function CastleCommandCloudWorkspace({
     setAllianceProfiles(profilesResult.data)
     setSessions(sessionsResult.data)
     setSelectedSessionId((current) => current || sessionsResult.data[0]?.id || '')
+    window.dispatchEvent(new Event(CASTLE_COMMAND_CANONICAL_CHANGE_EVENT))
   }
 
   async function handleCloudSave() {
