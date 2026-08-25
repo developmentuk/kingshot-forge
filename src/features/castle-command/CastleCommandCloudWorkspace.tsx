@@ -34,6 +34,8 @@ type Props = {
 
 type CloudState = 'loading' | 'ready' | 'unavailable' | 'error'
 
+const CASTLE_COMMAND_CANONICAL_CHANGE_EVENT = 'kingshot-forge:castle-command:canonical-change'
+
 function futureLocalDateTime() {
   const date = new Date(Date.now() + 30 * 60_000)
   date.setSeconds(0, 0)
@@ -83,7 +85,13 @@ export default function CastleCommandCloudWorkspace({
         ])
         if (cancelled) return
 
-        const alliance = memberships.find((membership) => membership.status === 'current') ?? null
+        const currentMemberships = memberships.filter((membership) => membership.status === 'current')
+        const preferredAllianceId = profileResult.status === 'ready'
+          ? profileResult.data?.sharedAllianceId ?? null
+          : null
+        const alliance = currentMemberships.find((membership) => membership.alliance_id === preferredAllianceId)
+          ?? currentMemberships[0]
+          ?? null
         setCurrentAlliance(alliance)
 
         if (profileResult.status === 'unavailable') {
@@ -161,9 +169,16 @@ export default function CastleCommandCloudWorkspace({
     setAllianceProfiles(profilesResult.data)
     setSessions(sessionsResult.data)
     setSelectedSessionId((current) => current || sessionsResult.data[0]?.id || '')
+    window.dispatchEvent(new Event(CASTLE_COMMAND_CANONICAL_CHANGE_EVENT))
   }
 
   async function handleCloudSave() {
+    if (shareWithAlliance && !currentAlliance) {
+      setMessage('')
+      setError('A current Forge alliance is required before Castle Command timings can be shared.')
+      return
+    }
+
     setWorking(true)
     setMessage('')
     setError('')
@@ -173,6 +188,7 @@ export default function CastleCommandCloudWorkspace({
         userId,
         howlerSkillLevel,
         shareWithAlliance,
+        sharedAllianceId: shareWithAlliance ? currentAlliance?.alliance_id ?? null : null,
         timings,
       })
       if (result.status === 'unavailable') {
@@ -281,7 +297,7 @@ export default function CastleCommandCloudWorkspace({
         <label><input type="checkbox" checked={shareWithAlliance} onChange={(event) => setShareWithAlliance(event.target.checked)} /> Share my Castle Command timings with my current alliance</label>
         <div><button type="button" className="button" disabled={working} onClick={() => void handleCloudSave()}>{working ? 'Saving…' : 'Save to Forge'}</button>{cloudProfile ? <button type="button" className="button button--secondary" disabled={working} onClick={() => onImportCloudProfile(cloudProfile)}>Load cloud times</button> : null}</div>
       </div>
-      <p className="castle-command__hint">Sharing is off by default. It exposes only the limited Castle Command identity/timing projection to authenticated current members of the same alliance.</p>
+      <p className="castle-command__hint">Sharing is off by default. It exposes only the limited Castle Command identity/timing projection to authenticated current members of the selected alliance.</p>
 
       {currentAlliance ? <div className="castle-command-cloud__alliance">
         <div><span>Current alliance</span><strong>[{currentAlliance.alliance_tag}] {currentAlliance.alliance_name ?? 'Alliance'}</strong></div>

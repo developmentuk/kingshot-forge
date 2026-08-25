@@ -25,13 +25,19 @@ export type CastleCommandCloudProfile = {
   playerAccountId: string
   howlerSkillLevel: number
   shareWithAlliance: boolean
+  sharedAllianceId: string | null
   updatedAt: string
   timings: MarchTimeProfile
 }
 
-export type CastleCommandAllianceProfile = CastleCommandCloudProfile & {
+export type CastleCommandAllianceProfile = {
+  id: string
+  playerAccountId: string
   playerId: string
   playerName: string
+  howlerSkillLevel: number
+  updatedAt: string
+  timings: MarchTimeProfile
 }
 
 export type CastleCommandSessionRecord = {
@@ -41,7 +47,6 @@ export type CastleCommandSessionRecord = {
   impactAt: string
   rallyPreparationSeconds: RallyPreparationSeconds
   status: CastleCommandSessionStatus
-  createdBy: string
   closedAt: string | null
   createdAt: string
   updatedAt: string
@@ -99,7 +104,7 @@ export async function loadCastleCommandCloudProfile(
 ): Promise<CastleCommandCloudResult<CastleCommandCloudProfile | null>> {
   const profileResult = await supabase
     .from('castle_command_profiles')
-    .select('id, player_account_id, howler_skill_level, share_with_alliance, updated_at')
+    .select('id, player_account_id, howler_skill_level, share_with_alliance, shared_alliance_id, updated_at')
     .eq('player_account_id', playerAccountId)
     .maybeSingle()
 
@@ -109,6 +114,22 @@ export async function loadCastleCommandCloudProfile(
   }
 
   if (!profileResult.data) return { status: 'ready', data: null }
+
+  const sharedAllianceId = typeof profileResult.data.shared_alliance_id === 'string'
+    ? profileResult.data.shared_alliance_id
+    : null
+  let shareScopeIsCurrent = false
+
+  if (profileResult.data.share_with_alliance === true && sharedAllianceId) {
+    const scopeResult = await supabase.rpc('current_user_is_alliance_member', {
+      target_alliance_id: sharedAllianceId,
+    })
+    if (scopeResult.error) {
+      if (isSchemaUnavailable(scopeResult.error)) return { status: 'unavailable', data: null }
+      throwDatabaseError(scopeResult.error, 'Castle Command sharing scope could not be checked.')
+    }
+    shareScopeIsCurrent = scopeResult.data === true
+  }
 
   const targetsResult = await supabase
     .from('castle_command_profile_targets')
@@ -126,7 +147,8 @@ export async function loadCastleCommandCloudProfile(
       id: profileResult.data.id,
       playerAccountId: profileResult.data.player_account_id,
       howlerSkillLevel: profileResult.data.howler_skill_level,
-      shareWithAlliance: profileResult.data.share_with_alliance,
+      shareWithAlliance: profileResult.data.share_with_alliance === true && shareScopeIsCurrent,
+      sharedAllianceId,
       updatedAt: profileResult.data.updated_at,
       timings: mapProfileTargets(targetsResult.data ?? []),
     },
@@ -138,6 +160,7 @@ export async function saveCastleCommandCloudProfile(input: {
   userId: string
   howlerSkillLevel: number
   shareWithAlliance: boolean
+  sharedAllianceId: string | null
   timings: MarchTimeProfile
 }): Promise<CastleCommandCloudResult<CastleCommandCloudProfile>> {
   void input.userId
@@ -145,6 +168,7 @@ export async function saveCastleCommandCloudProfile(input: {
     target_player_account_id: input.playerAccountId,
     target_howler_skill_level: input.howlerSkillLevel,
     target_share_with_alliance: input.shareWithAlliance,
+    target_shared_alliance_id: input.shareWithAlliance ? input.sharedAllianceId : null,
     castle_normal_seconds: input.timings.castle.normalSeconds,
     castle_howler_seconds: input.timings.castle.howlerSeconds,
     north_normal_seconds: input.timings.north.normalSeconds,
@@ -184,7 +208,6 @@ export async function listCastleCommandAllianceProfiles(
 
   for (const raw of result.data ?? []) {
     const row = raw as {
-      profile_id: string
       player_account_id: string
       player_id: string
       player_name: string
@@ -195,13 +218,12 @@ export async function listCastleCommandAllianceProfiles(
       howler_seconds: unknown
     }
 
-    const current = grouped.get(row.profile_id) ?? {
-      id: row.profile_id,
+    const current = grouped.get(row.player_account_id) ?? {
+      id: row.player_account_id,
       playerAccountId: row.player_account_id,
       playerId: row.player_id,
       playerName: row.player_name,
       howlerSkillLevel: row.howler_skill_level,
-      shareWithAlliance: true,
       updatedAt: row.profile_updated_at,
       timings: createEmptyMarchTimeProfile(),
     }
@@ -214,7 +236,7 @@ export async function listCastleCommandAllianceProfiles(
       }
     }
 
-    grouped.set(row.profile_id, current)
+    grouped.set(row.player_account_id, current)
   }
 
   return { status: 'ready', data: [...grouped.values()] }
@@ -248,7 +270,7 @@ export async function loadCastleCommandSessions(
 ): Promise<CastleCommandCloudResult<CastleCommandSessionRecord[]>> {
   const sessionsResult = await supabase
     .from('castle_command_sessions')
-    .select('id, alliance_id, title, impact_at, rally_preparation_seconds, status, created_by, closed_at, created_at, updated_at')
+    .select('id, alliance_id, title, impact_at, rally_preparation_seconds, status, closed_at, created_at, updated_at')
     .eq('alliance_id', allianceId)
     .order('impact_at', { ascending: false })
 
@@ -289,7 +311,6 @@ export async function loadCastleCommandSessions(
       impactAt: session.impact_at,
       rallyPreparationSeconds: session.rally_preparation_seconds as RallyPreparationSeconds,
       status: session.status as CastleCommandSessionStatus,
-      createdBy: session.created_by,
       closedAt: session.closed_at,
       createdAt: session.created_at,
       updatedAt: session.updated_at,
