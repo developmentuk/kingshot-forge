@@ -9,8 +9,7 @@
   "git": {
     "deploymentEnabled": {
       "**": false,
-      "main": true,
-      "castle-command-preview": true
+      "main": true
     }
   },
   "rewrites": [
