@@ -1,6 +1,6 @@
 # MIGHTPULSE-001A Player Provider Recovery
 
-**Status:** Merged and deployed; both production Town Center schema hotfixes applied; source hotfix validated and pending PR #100 merge
+**Status:** Production acceptance in progress; both Town Center schema hotfix migrations are applied
 
 **Branch:** `feature/mightpulse-001a-provider-recovery`
 
@@ -151,7 +151,8 @@ The server is authoritative for a 60-minute freshness TTL based on
 
 The in-memory single-flight and attempt throttle are deliberately best-effort
 per-instance controls, not a distributed cache. Persisted database freshness is
-the cross-instance successful-refresh quota boundary. A distributed failed-attempt limiter remains deferred. The two production
+the cross-instance successful-refresh quota boundary. A distributed failed-attempt limiter remains
+deferred. The two production
 acceptance migrations are limited to the Town Center persistence/range contract
 and do not add a cache service, limiter table or other quota infrastructure.
 
@@ -261,7 +262,8 @@ show the explicit `town_center_level` value only, or an honest
 The two Town Center migrations were explicitly owner-approved and applied during
 production acceptance. Production verification confirmed both affected CHECK
 constraints allow `NULL` or raw Town Center values `1..84`; no existing
-`player_accounts.town_center_level` values were backfilled or rewritten. A subsequent exact-head Codex review identified two UI
+`player_accounts.town_center_level` values were backfilled or rewritten. A
+subsequent exact-head Codex review identified two UI
 semantics defects: the identity context could still infer a Passport Town Center
 from legacy rendered text, and several views displayed raw 35–84 codes as literal
 Town Center levels. The hotfix now preserves the persisted explicit field in the
