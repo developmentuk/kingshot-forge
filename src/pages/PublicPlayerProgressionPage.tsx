@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getPublicPlayerProfile, type PublicPlayerProfile } from '../services/playerProfileService'
 import { getPublicProgression, type PlayerProgressionSnapshot } from '../services/playerProgressionService'
+import { formatTownCenterRawLevel } from '../../shared/domains/player-identity/townCenterLevel'
 
 const formatNumber = (value:number|null) => value === null ? '—' : value.toLocaleString('en-GB')
 
@@ -21,7 +22,7 @@ export default function PublicPlayerProgressionPage() {
   const latest=snapshots[0]
   return <main className="player-progression-page">
     <header className="player-domain-hero"><div><p className="eyebrow">Public player profile</p><h1>{profile.playerName}'s progression</h1><p>Only snapshots the player has chosen to share are shown.</p></div><div className="player-domain-actions"><Link className="button button--secondary" to={`/player/${encodeURIComponent(profile.forgeId)}`}>Profile overview</Link><Link className="button button--secondary" to="/companion/heroes">Hero Companion</Link></div></header>
-    {latest&&<section className="player-progress-summary"><article><span>Current power</span><strong>{formatNumber(latest.currentPower)}</strong></article><article><span>Town Center</span><strong>{latest.townCenterLevel??'—'}</strong></article><article><span>Truegold</span><strong>{latest.truegoldLevel??'—'}</strong></article><article><span>VIP</span><strong>{latest.vipLevel??'—'}</strong></article></section>}
+    {latest&&<section className="player-progress-summary"><article><span>Current power</span><strong>{formatNumber(latest.currentPower)}</strong></article><article><span>Town Center</span><strong>{latest.townCenterLevel === null ? '—' : formatTownCenterRawLevel(latest.townCenterLevel)}</strong></article><article><span>Truegold</span><strong>{latest.truegoldLevel??'—'}</strong></article><article><span>VIP</span><strong>{latest.vipLevel??'—'}</strong></article></section>}
     <section className="player-domain-card"><div><p className="eyebrow">Shared history</p><h2>Progression snapshots</h2></div>{snapshots.length===0?<p>This player has not shared any progression snapshots yet.</p>:<div className="player-snapshot-list">{snapshots.map(snapshot=><article key={snapshot.id}><div><strong>{new Date(snapshot.recordedAt).toLocaleDateString('en-GB')}</strong><span>Shared</span></div><p>{formatNumber(snapshot.currentPower)} power · Infantry TG{snapshot.infantryTier??'—'} · Cavalry TG{snapshot.lancerTier??'—'} · Archers TG{snapshot.marksmanTier??'—'}</p>{snapshot.notes&&<small>{snapshot.notes}</small>}</article>)}</div>}</section>
   </main>
 }

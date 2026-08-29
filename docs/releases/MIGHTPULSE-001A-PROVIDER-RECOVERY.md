@@ -247,8 +247,14 @@ reinterpreted as Town Center. The Player Passport summary is also corrected to
 show the explicit `town_center_level` value only, or an honest
 `Town Center not recorded` state.
 
-No production schema mutation is authorised merely by this source change. The
-migration must be reviewed and explicitly approved before application.
+The two Town Center migrations were explicitly owner-approved and applied during
+production acceptance. A subsequent exact-head Codex review identified two UI
+semantics defects: the identity context could still infer a Passport Town Center
+from legacy rendered text, and several views displayed raw 35–84 codes as literal
+Town Center levels. The hotfix now preserves the persisted explicit field in the
+identity context and routes raw-value presentation through the shared formatter.
+The profile service also no longer falls back from Town Center to generic
+`player_level`.
 
 ## Rollback
 

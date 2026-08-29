@@ -11,6 +11,7 @@ import {
   type UserListResponse,
 } from '../../services/userManagementService'
 import type { UserDetail } from '../../../server/identity/contracts'
+import { formatTownCenterRawLevel } from '../../../shared/domains/player-identity/townCenterLevel'
 
 const emptyList: UserListResponse = { items: [], page: 1, pageSize: 20, total: 0, totalPages: 0 }
 
@@ -257,7 +258,7 @@ export function UserDetailPage() {
             </div>
             <label className="operations-user-detail__reason" htmlFor="player-link-reason">Linking reason<textarea id="player-link-reason" value={playerReason} onChange={(event) => setPlayerReason(event.target.value)} minLength={3} maxLength={2000} placeholder="Why is this administrator link required?" /></label>
             {user.linkedPlayers.length > 0 && <label className="operations-user-detail__checkbox"><input type="checkbox" checked={replaceExisting} onChange={(event) => setReplaceExisting(event.target.checked)} /> Replace the existing linked Player Account</label>}
-            {playerLookup && <article className="operations-user-detail__lookup-result"><strong>{playerLookup.player.name}</strong><span>Player ID {playerLookup.player.playerId} · State {playerLookup.player.kingdomId} · {playerLookup.player.townCenterLevel ? `Town Centre ${playerLookup.player.townCenterLevel}` : 'Town Centre unavailable'}</span></article>}
+            {playerLookup && <article className="operations-user-detail__lookup-result"><strong>{playerLookup.player.name}</strong><span>Player ID {playerLookup.player.playerId} · State {playerLookup.player.kingdomId} · {formatTownCenterRawLevel(playerLookup.player.townCenterLevel)}</span></article>}
             <div className="operations-user-detail__actions">
               <button type="button" disabled={playerWorking || !playerValuesValid} onClick={() => void lookupPlayer()}>{playerWorking ? 'Working…' : 'Lookup details'}</button>
               <button type="button" className="button--warning" disabled={playerWorking || !playerMutationValid} onClick={() => void applyManualPlayer()}>Apply manual link</button>
