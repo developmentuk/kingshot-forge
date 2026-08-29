@@ -233,7 +233,9 @@ function IdentitySummary({
           Welcome back, {playerAccount.player_name}
         </h2>
         <p>
-          Kingdom {playerAccount.kingdom_id} · Town Center {formatLevel(playerAccount)}
+          Kingdom {playerAccount.kingdom_id} · {playerAccount.town_center_level
+            ? `Town Center ${playerAccount.town_center_level}`
+            : 'Town Center not recorded'}
         </p>
         <div className="player-identity__summary-status" aria-label="Passport status">
           <span>{formatVerification(playerAccount.verification_status)}</span>
@@ -282,15 +284,6 @@ function IdentityTool({
   )
 }
 
-function formatLevel(playerAccount: PlayerAccount) {
-  return (
-    playerAccount.level_rendered_detailed ||
-    playerAccount.level_rendered ||
-    (playerAccount.player_level
-      ? `Level ${playerAccount.player_level}`
-      : 'Not available')
-  )
-}
 
 function formatDate(value: string) {
   const date = new Date(value)

@@ -1,6 +1,6 @@
 # MIGHTPULSE-001A Player Provider Recovery
 
-**Status:** Implemented; full local gate passes; not deployed or production-accepted
+**Status:** Merged and deployed; production acceptance blocked pending Town Center schema hotfix
 
 **Branch:** `feature/mightpulse-001a-provider-recovery`
 
@@ -225,6 +225,24 @@ Local result on 29 August 2026:
   passed every new MIGHTPULSE test before Windows Application Control blocked
   the pinned Sharp ARM64 binary; the subsequent canonical full check loaded the
   same dependency and passed without a dependency, policy or test bypass.
+
+## Production acceptance incident — 29 August 2026
+
+The first production acceptance pass exposed a schema mismatch before any
+MightPulse call occurred. The deployed Player Passport and linked-player service
+select `player_accounts.town_center_level`, but production `player_accounts`
+did not yet contain that column. The browser therefore failed closed while
+loading the linked account.
+
+The corrective hotfix adds a nullable integer `town_center_level` column with
+an explicit 1–30 range constraint and no backfill. Existing generic
+`player_level` and legacy rendered-level fields remain untouched and are not
+reinterpreted as Town Center. The Player Passport summary is also corrected to
+show the explicit `town_center_level` value only, or an honest
+`Town Center not recorded` state.
+
+No production schema mutation is authorised merely by this source change. The
+migration must be reviewed and explicitly approved before application.
 
 ## Rollback
 
