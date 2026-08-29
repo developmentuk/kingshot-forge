@@ -2,11 +2,12 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
   LinkedPlayerServiceError,
-  normalizeKingshotLookup,
+  createProviderRefreshFields,
   validateKingdomId,
   validatePlayerId,
 } from '../server/player-identity/linkedPlayerService.ts'
 import { validateSelfReportedClaim } from '../server/player-identity/playerClaimService.ts'
+import { linkManagedPlayer, UserManagementError } from '../server/identity/userManagementService.ts'
 
 assert.equal(validatePlayerId(' 125500338 '), '125500338')
 assert.equal(validateKingdomId('850'), 850)
@@ -18,27 +19,20 @@ assert.deepEqual(
   { playerId: '125500338', kingdomId: 850, playerName: 'Claimed Governor', townCenterLevel: null },
 )
 
-const response = {
-  status: 'success',
-  data: {
-    playerId: '125500338',
-    name: 'Verified Governor',
-    kingdom: 850,
-    level: 30,
-    levelRendered: '30',
-    levelRenderedDetailed: 'Level 30',
-    levelImage: null,
-    profilePhoto: null,
-  },
+const player = {
+  playerId: '125500338',
+  name: 'Provider Governor',
+  kingdomId: 850,
+  townCenterLevel: 30,
+  avatarUrl: null,
+  provider: 'mightpulse',
+  providerFetchedAt: '2026-08-29T12:00:00.000Z',
 }
 
-const player = normalizeKingshotLookup(response, '125500338', 850)
-assert.equal(player.kingdom, 850)
-assert.equal(player.name, 'Verified Governor')
-assert.throws(
-  () => normalizeKingshotLookup(response, '125500338', 851),
-  (error) => error instanceof LinkedPlayerServiceError && error.statusCode === 409 && error.message.includes('State 850'),
-)
+const fields = createProviderRefreshFields(player)
+assert.equal(fields.kingdom_id, 850)
+assert.equal(fields.town_center_level, 30)
+assert.equal('player_level' in fields, false)
 
 const read = (path) => fs.readFileSync(path, 'utf8')
 const contracts = [
@@ -50,16 +44,43 @@ const contracts = [
   ['claim service State boundary', read('server/player-identity/playerClaimService.ts'), ['state_mismatch', 'indexedKingdomId !== kingdomId', 'Number(account.kingdom_id) !== kingdomId']],
   ['legacy player account API', read('api/player/account.ts'), ['kingdomId: input.kingdomId ?? input.state']],
   ['operations API', read('api/operations/users.ts'), ['lookup_player', 'link_player', 'lookupManagedPlayer', 'linkManagedPlayer']],
-  ['operations UI', read('src/features/operations/UserManagementPage.tsx'), ['Lookup details', 'Apply verified lookup', 'Apply manual link', 'Replace the existing linked Player Account']],
+  ['operations UI', read('src/features/operations/UserManagementPage.tsx'), ['Lookup details', 'pending the governed admin-link contract update', 'Apply manual link', 'Replace the existing linked Player Account']],
   ['admin permission', read('server/identity/roleCapabilities.ts'), ['users.manage_players']],
   ['audited transaction', read('supabase/migrations/20260729193000_admin_player_linking.sql'), ['admin_link_player_account', 'forge_identity_audit_events', 'player_account_linked', 'users.manage_players']],
   ['legacy edge function containment', read('supabase/functions/kingshot-player/index.ts'), ['kingdomId', 'STATE_MISMATCH', 'belongs to State', 'PLAYER_LOOKUP_UPSTREAM_UNAVAILABLE', 'No player details have been changed']],
-  ['legacy server lookup containment', read('server/player-identity/linkedPlayerService.ts'), ['passthroughStatuses', '503']],
+  ['server provider lookup containment', read('server/player-identity/linkedPlayerService.ts'), ['createMightPulsePlayerProvider', 'PLAYER_PROVIDER_FRESHNESS_TTL_MS', 'forceProviderRefresh']],
 ]
 
 for (const [name, content, needles] of contracts) {
   for (const needle of needles) assert.ok(content.includes(needle), `${name}: missing ${needle}`)
 }
+
+const managementSource = read('server/identity/userManagementService.ts')
+const providerGuardOffset = managementSource.indexOf("if (input.mode === 'lookup')")
+const targetReadOffset = managementSource.indexOf('const target = await requireTargetExists', providerGuardOffset)
+const rpcOffset = managementSource.indexOf(".rpc('admin_link_player_account'", providerGuardOffset)
+assert.ok(providerGuardOffset >= 0 && providerGuardOffset < targetReadOffset && targetReadOffset < rpcOffset)
+assert.equal(managementSource.includes('existingPlayer?.player_level'), false)
+assert.equal(managementSource.includes('existingPlayer?.level_rendered'), false)
+assert.equal(managementSource.includes('existingPlayer?.level_image'), false)
+assert.equal(managementSource.includes('existingPlayer?.profile_photo'), false)
+assert.ok(managementSource.includes("p_verification_status: 'community_verified'"))
+assert.ok(managementSource.includes("p_verification_method: 'forge_admin'"))
+
+await assert.rejects(
+  () => linkManagedPlayer(
+    { userId: 'admin-test', accountStatus: 'active', capabilities: ['users.manage_players'] },
+    'target-test',
+    { mode: 'lookup', playerId: '125500338', kingdomId: 850, reason: 'Synthetic test' },
+  ),
+  (error) => error instanceof UserManagementError
+    && error.statusCode === 409
+    && error.message.includes('does not change the Player Account'),
+)
+
+const operationsUi = read('src/features/operations/UserManagementPage.tsx')
+assert.equal(operationsUi.includes('Apply provider link'), false)
+assert.equal(operationsUi.includes("applyPlayer('lookup')"), false)
 
 const hybridUi = read('src/components/HybridPlayerClaimPanel.tsx')
 const publicLookup = read('src/pages/PlayerLookupPage.tsx')

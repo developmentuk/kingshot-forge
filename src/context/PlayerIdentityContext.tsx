@@ -19,7 +19,7 @@ import {
   type PlayerIdentityRefreshReason,
 } from './playerIdentityRefreshPolicy'
 
-const REFRESH_STALE_MS = 30 * 60 * 1000
+const REFRESH_STALE_MS = 60 * 60 * 1000
 const REFRESH_THROTTLE_MS = 5 * 60 * 1000
 const refreshAttemptAt = new Map<string, number>()
 // refreshInFlight is coordinated by PlayerIdentityRefreshCoordinator so the
@@ -83,6 +83,7 @@ export function PlayerIdentityProvider({
           player_name,
           kingdom_id,
           player_level,
+          town_center_level,
           level_rendered,
           level_rendered_detailed,
           level_image,
@@ -138,7 +139,7 @@ export function PlayerIdentityProvider({
         setLoadingPlayerAccount(true)
         setPlayerIdentityError(null)
         setPlayerIdentityRefreshWarning(null)
-        const response = await fetch('/api/player/account', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'revalidate' }) })
+        const response = await fetch('/api/player/account', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'revalidate', forceProviderRefresh: reason === 'manual' }) })
         const payload = await response.json().catch(() => null) as { status?: string; code?: string; message?: string } | null
         if (payload?.status === 'success' && payload.code === 'NO_LINKED_PLAYER') return
         if (!response.ok || payload?.status !== 'success') {
@@ -191,7 +192,7 @@ export function PlayerIdentityProvider({
   useEffect(() => {
     if (isVisionAcceptanceRoute) return
     function handlePlayerUpdate() {
-      void refreshPlayerIdentity('manual')
+      void refreshPlayerIdentity('automatic')
     }
 
     window.addEventListener(

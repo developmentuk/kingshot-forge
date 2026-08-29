@@ -1,10 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { GiftCodesResponse } from '../types/giftCodes'
 import type {
-  PlayerInfoErrorResponse,
-  PlayerInfoResponse,
-} from '../types/player'
-import type {
   KingdomTrackerErrorResponse,
   KingdomTrackerResponse,
 } from '../types/kingdom'
@@ -32,72 +28,6 @@ export async function getGiftCodes(): Promise<GiftCodesResponse> {
   }
 
   return data
-}
-
-export async function getPlayer(
-  playerId: string,
-  kingdomId: string,
-): Promise<PlayerInfoResponse> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  const supabaseKey =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase configuration is missing.')
-  }
-
-  const functionUrl = new URL(
-    `${supabaseUrl}/functions/v1/kingshot-player`,
-  )
-
-  functionUrl.searchParams.set('playerId', playerId)
-  functionUrl.searchParams.set('kingdomId', kingdomId)
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  const response = await fetch(functionUrl.toString(), {
-    method: 'GET',
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${
-        session?.access_token ?? supabaseKey
-      }`,
-      Accept: 'application/json',
-    },
-  })
-
-  const responseData: unknown = await response.json()
-
-  if (!response.ok) {
-    const errorResponse =
-      responseData as PlayerInfoErrorResponse
-
-    throw new Error(
-      errorResponse.message ||
-        'Player information could not be loaded.',
-    )
-  }
-
-  const playerResponse = responseData as PlayerInfoResponse
-
-  if (
-    playerResponse.status !== 'success' ||
-    !playerResponse.data
-  ) {
-    throw new Error(
-      'The player service returned an unexpected response.',
-    )
-  }
-
-  if (String(playerResponse.data.kingdom) !== kingdomId) {
-    throw new Error(
-      `This Player ID belongs to State ${playerResponse.data.kingdom}, not State ${kingdomId}.`,
-    )
-  }
-
-  return playerResponse
 }
 
 export async function getKingdom(

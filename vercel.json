@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
+    "api/player/account.ts": {
+      "maxDuration": 60
+    },
     "api/player/link-ocr.ts": {
       "maxDuration": 60,
       "includeFiles": "node_modules/{tesseract.js,tesseract.js-core,@tesseract.js-data/eng}/**"

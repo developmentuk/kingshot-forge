@@ -47,4 +47,9 @@ assert.equal(await manual.run(userId, 'manual', async () => { attempts += 1 }, 3
 manual.markSuccess(userId)
 assert.equal(manual.isCoolingDown(userId, 3_002), false)
 
+const rateLimited = new PlayerIdentityRefreshCoordinator()
+const rateLimitFailure = Object.assign(new Error('provider rate limited'), { statusCode: 429 })
+await rateLimited.run(userId, 'automatic', async () => { throw rateLimitFailure }, 4_000).catch(() => undefined)
+assert.equal(rateLimited.isCoolingDown(userId, 4_001), true)
+
 console.log('Player identity resilience policy tests passed.')

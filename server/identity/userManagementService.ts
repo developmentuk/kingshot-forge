@@ -8,7 +8,6 @@ import type { AccountStatus, UserAuditEntry, UserDetail, UserListItem, UserRoleA
 const PAGE_SIZE_MAX = 50
 type PlayerRow = { id: string; user_id: string; player_id: string; player_name: string; kingdom_id: number; verification_status: string; verified_at: string | null; is_primary: boolean }
 type ManagedPlayerInput = Readonly<Record<string, unknown>>
-
 export class UserManagementError extends Error {
   constructor(readonly statusCode: number, message: string) { super(message); this.name = 'UserManagementError' }
 }
@@ -181,7 +180,7 @@ export async function lookupManagedPlayer(actor: ForgeActor, input: ManagedPlaye
   const { playerId, kingdomId } = playerInput(input)
   try {
     const player = await lookupKingshotPlayer(playerId, kingdomId)
-    return { source: 'kingshot_player_lookup', player }
+    return { source: player.provider, player }
   } catch (error) {
     return mapLookupError(error)
   }
@@ -189,51 +188,36 @@ export async function lookupManagedPlayer(actor: ForgeActor, input: ManagedPlaye
 
 export async function linkManagedPlayer(actor: ForgeActor, targetUserId: string, input: ManagedPlayerInput) {
   requireCapability(actor, 'users.manage_players')
+  if (input.mode === 'lookup') {
+    throw new UserManagementError(
+      409,
+      'Provider-backed administrator linking is pending the governed admin-link contract update. Lookup details remains available and does not change the Player Account.',
+    )
+  }
+  if (input.mode !== 'manual') throw new UserManagementError(400, 'Choose manual administrator verification.')
   const target = await requireTargetExists(targetUserId)
   const reason = requireReason(input.reason)
   const { playerId, kingdomId } = playerInput(input)
-  const mode = input.mode === 'manual' ? 'manual' : input.mode === 'lookup' ? 'lookup' : null
-  if (!mode) throw new UserManagementError(400, 'Choose lookup verification or manual administrator verification.')
+  const admin = getSupabaseAdmin()
+  const { data: existingPlayer, error: existingPlayerError } = await admin
+    .from('player_accounts')
+    .select('player_name')
+    .eq('user_id', targetUserId)
+    .maybeSingle()
+  if (existingPlayerError) throw new UserManagementError(500, 'The existing Player Account could not be read safely.')
 
-  let playerName: string
-  let playerLevel: number | null = null
-  let levelRendered: string | null = null
-  let levelRenderedDetailed: string | null = null
-  let levelImage: string | null = null
-  let profilePhoto: string | null = null
-  let verificationStatus: 'verified' | 'community_verified'
-  let verificationMethod: 'kingshot_player_lookup' | 'forge_admin'
-
-  if (mode === 'lookup') {
-    try {
-      const player = await lookupKingshotPlayer(playerId, kingdomId)
-      playerName = player.name
-      playerLevel = Number.isFinite(player.level) ? player.level : null
-      levelRendered = player.levelRendered || null
-      levelRenderedDetailed = player.levelRenderedDetailed || null
-      levelImage = player.levelImage
-      profilePhoto = player.profilePhoto
-      verificationStatus = 'verified'
-      verificationMethod = 'kingshot_player_lookup'
-    } catch (error) {
-      return mapLookupError(error)
-    }
-  } else {
-    const admin = getSupabaseAdmin()
-    const [{ data: profile }, { data: existing }] = await Promise.all([
-      admin.from('profiles').select('display_name').eq('id', targetUserId).maybeSingle(),
-      admin.from('player_accounts').select('player_name').eq('user_id', targetUserId).maybeSingle(),
-    ])
-    playerName = optionalText(input.playerName, 120)
-      ?? optionalText(existing?.player_name, 120)
-      ?? optionalText(profile?.display_name, 120)
-      ?? optionalText(target.user_metadata?.full_name, 120)
-      ?? optionalText(target.user_metadata?.name, 120)
-      ?? target.email?.split('@')[0]
-      ?? `Player ${playerId.slice(-4)}`
-    verificationStatus = 'community_verified'
-    verificationMethod = 'forge_admin'
-  }
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('display_name')
+    .eq('id', targetUserId)
+    .maybeSingle()
+  const playerName = optionalText(input.playerName, 120)
+    ?? optionalText(existingPlayer?.player_name, 120)
+    ?? optionalText(profile?.display_name, 120)
+    ?? optionalText(target.user_metadata?.full_name, 120)
+    ?? optionalText(target.user_metadata?.name, 120)
+    ?? target.email?.split('@')[0]
+    ?? `Player ${playerId.slice(-4)}`
 
   const { data, error } = await getSupabaseAdmin().rpc('admin_link_player_account', {
     p_actor_user_id: actor.userId,
@@ -241,13 +225,13 @@ export async function linkManagedPlayer(actor: ForgeActor, targetUserId: string,
     p_player_id: playerId,
     p_kingdom_id: kingdomId,
     p_player_name: playerName,
-    p_player_level: playerLevel,
-    p_level_rendered: levelRendered,
-    p_level_rendered_detailed: levelRenderedDetailed,
-    p_level_image: levelImage,
-    p_profile_photo: profilePhoto,
-    p_verification_status: verificationStatus,
-    p_verification_method: verificationMethod,
+    p_player_level: null,
+    p_level_rendered: null,
+    p_level_rendered_detailed: null,
+    p_level_image: null,
+    p_profile_photo: null,
+    p_verification_status: 'community_verified',
+    p_verification_method: 'forge_admin',
     p_reason: reason,
     p_replace_existing: input.replaceExisting === true,
   })

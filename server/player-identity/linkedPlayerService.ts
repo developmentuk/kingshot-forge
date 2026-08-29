@@ -1,24 +1,34 @@
-import type { KingshotPlayer } from '../../src/types/player.js'
 import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
+import { createMightPulsePlayerProvider } from './providers/mightPulsePlayerProvider.js'
+import {
+  PlayerProviderError,
+  type NormalizedPlayer,
+  type PlayerProvider,
+} from './providers/playerProvider.js'
 
 const ACCOUNT_FIELDS = 'id,user_id,player_id,player_name,kingdom_id,player_level,town_center_level,level_rendered,level_rendered_detailed,level_image,profile_photo,verification_status,verification_method,verified_by,verified_at,last_refreshed_at,is_primary,is_public,created_at,updated_at'
+
+export const PLAYER_PROVIDER_FRESHNESS_TTL_MS = 60 * 60 * 1000
+export const PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS = 5 * 60 * 1000
 
 type LookupRecord = Readonly<Record<string, unknown>>
 
 export class LinkedPlayerServiceError extends Error {
-  readonly statusCode: number
-
-  constructor(statusCode: number, message: string) {
+  constructor(
+    readonly statusCode: number,
+    message: string,
+    readonly code = 'PLAYER_ACCOUNT_REQUEST_FAILED',
+    readonly retryable = false,
+  ) {
     super(message)
     this.name = 'LinkedPlayerServiceError'
-    this.statusCode = statusCode
   }
 }
 
 export function validatePlayerId(value: unknown): string {
   const playerId = typeof value === 'string' ? value.trim().replace(/\s+/gu, '') : ''
   if (!/^\d{1,20}$/u.test(playerId)) {
-    throw new LinkedPlayerServiceError(422, 'Enter a valid Kingshot Player ID.')
+    throw new LinkedPlayerServiceError(422, 'Enter a valid Kingshot Player ID.', 'INVALID_PLAYER_ID')
   }
   return playerId
 }
@@ -26,90 +36,145 @@ export function validatePlayerId(value: unknown): string {
 export function validateKingdomId(value: unknown): number {
   const kingdomId = typeof value === 'number' ? value : Number(String(value ?? '').trim())
   if (!Number.isInteger(kingdomId) || kingdomId < 1 || kingdomId > 9999) {
-    throw new LinkedPlayerServiceError(422, 'Enter a valid Kingshot State between 1 and 9999.')
+    throw new LinkedPlayerServiceError(422, 'Enter a valid Kingshot State between 1 and 9999.', 'INVALID_STATE')
   }
   return kingdomId
 }
 
 function record(value: unknown): LookupRecord | null {
-  return value && typeof value === 'object' ? value as LookupRecord : null
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as LookupRecord
+    : null
 }
 
-export function normalizeKingshotLookup(value: unknown, requestedPlayerId: string, requestedKingdomId?: number): KingshotPlayer {
-  const response = record(value)
-  const data = record(response?.data)
-  const returnedPlayerId = typeof data?.playerId === 'string'
-    ? data.playerId.trim()
-    : typeof data?.playerId === 'number' && Number.isSafeInteger(data.playerId)
-      ? String(data.playerId)
-      : ''
-  const name = typeof data?.name === 'string' ? data.name.trim() : ''
-  const kingdom = typeof data?.kingdom === 'number' ? data.kingdom : Number(data?.kingdom)
-  const level = typeof data?.level === 'number' ? data.level : Number(data?.level)
-
-  if (response?.status !== 'success' || returnedPlayerId !== requestedPlayerId || !name || !Number.isInteger(kingdom) || kingdom < 1 || kingdom > 9999 || !Number.isFinite(level)) {
-    throw new LinkedPlayerServiceError(502, 'The Kingshot player service returned an invalid player record.')
+function mapProviderError(error: unknown): never {
+  if (error instanceof PlayerProviderError) {
+    throw new LinkedPlayerServiceError(error.statusCode, error.message, error.code, error.retryable)
   }
-  if (requestedKingdomId !== undefined && kingdom !== requestedKingdomId) {
-    throw new LinkedPlayerServiceError(409, `This Player ID belongs to State ${kingdom}, not State ${requestedKingdomId}.`)
-  }
+  throw error
+}
 
-  return {
-    playerId: returnedPlayerId,
-    name,
-    kingdom,
-    level,
-    levelRendered: typeof data?.levelRendered === 'string' ? data.levelRendered : '',
-    levelRenderedDetailed: typeof data?.levelRenderedDetailed === 'string' ? data.levelRenderedDetailed : '',
-    levelImage: typeof data?.levelImage === 'string' ? data.levelImage : null,
-    profilePhoto: typeof data?.profilePhoto === 'string' ? data.profilePhoto : null,
+const providerLookupsInFlight = new Map<string, Promise<NormalizedPlayer>>()
+
+async function lookupPlayerSingleFlight(
+  provider: PlayerProvider,
+  playerId: string,
+  expectedKingdomId: number,
+): Promise<NormalizedPlayer> {
+  const key = `${playerId}:${expectedKingdomId}`
+  const existing = providerLookupsInFlight.get(key)
+  if (existing) return existing
+
+  const lookup = provider.lookupPlayer({ playerId, expectedKingdomId })
+    .finally(() => {
+      if (providerLookupsInFlight.get(key) === lookup) providerLookupsInFlight.delete(key)
+    })
+  providerLookupsInFlight.set(key, lookup)
+  return lookup
+}
+
+export async function lookupKingshotPlayer(
+  playerIdInput: unknown,
+  kingdomIdInput: unknown,
+  provider: PlayerProvider = createMightPulsePlayerProvider(),
+): Promise<NormalizedPlayer> {
+  const playerId = validatePlayerId(playerIdInput)
+  const kingdomId = validateKingdomId(kingdomIdInput)
+  try {
+    return await lookupPlayerSingleFlight(provider, playerId, kingdomId)
+  } catch (error) {
+    return mapProviderError(error)
   }
 }
 
-export function createVerifiedPlayerFields(player: KingshotPlayer, userId: string, verifiedAt = new Date().toISOString()) {
+function isPlayerAccountFreshWithin(
+  lastRefreshedAt: unknown,
+  freshnessMs: number,
+  nowMs = Date.now(),
+): boolean {
+  if (typeof lastRefreshedAt !== 'string') return false
+  const refreshedAt = Date.parse(lastRefreshedAt)
+  if (!Number.isFinite(refreshedAt)) return false
+  const age = nowMs - refreshedAt
+  return age >= 0 && age < freshnessMs
+}
+
+export function isPlayerAccountFresh(
+  lastRefreshedAt: unknown,
+  nowMs = Date.now(),
+): boolean {
+  return isPlayerAccountFreshWithin(lastRefreshedAt, PLAYER_PROVIDER_FRESHNESS_TTL_MS, nowMs)
+}
+
+export async function resolvePlayerRefresh(input: {
+  action: 'link' | 'revalidate'
+  existingAccount: LookupRecord | null
+  playerId: string
+  kingdomId: number
+  forceProviderRefresh?: boolean
+  provider: PlayerProvider
+  nowMs?: number
+}): Promise<{ source: 'cache'; player: null } | { source: 'provider'; player: NormalizedPlayer }> {
+  if (input.action === 'link' && input.existingAccount) {
+    if (input.existingAccount.player_id !== input.playerId) {
+      throw new LinkedPlayerServiceError(
+        409,
+        'A different primary Kingshot player is already linked.',
+        'PLAYER_ACCOUNT_CONFLICT',
+      )
+    }
+    const existingKingdomId = validateKingdomId(input.existingAccount.kingdom_id)
+    if (existingKingdomId !== input.kingdomId) {
+      throw new LinkedPlayerServiceError(
+        409,
+        `This Player ID is already linked to State ${existingKingdomId}, not State ${input.kingdomId}.`,
+        'STATE_MISMATCH',
+      )
+    }
+  }
+  const samePlayer = input.existingAccount?.player_id === input.playerId
+  if (samePlayer) {
+    const freshnessMs = input.forceProviderRefresh === true
+      ? PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS
+      : PLAYER_PROVIDER_FRESHNESS_TTL_MS
+    if (isPlayerAccountFreshWithin(input.existingAccount?.last_refreshed_at, freshnessMs, input.nowMs)) {
+      return { source: 'cache', player: null }
+    }
+  }
+  const player = await lookupKingshotPlayer(input.playerId, input.kingdomId, input.provider)
+  return { source: 'provider', player }
+}
+
+export function createProviderRefreshFields(player: NormalizedPlayer) {
   return {
     player_id: player.playerId,
     player_name: player.name,
-    kingdom_id: player.kingdom,
-    player_level: player.level,
-    level_rendered: player.levelRendered || null,
-    level_rendered_detailed: player.levelRenderedDetailed || null,
-    level_image: player.levelImage,
-    profile_photo: player.profilePhoto,
-    verification_status: 'verified' as const,
-    verification_method: 'kingshot_player_lookup' as const,
-    verified_by: userId,
-    verified_at: verifiedAt,
-    last_refreshed_at: verifiedAt,
-    updated_at: verifiedAt,
+    kingdom_id: player.kingdomId,
+    ...(player.townCenterLevel !== null ? { town_center_level: player.townCenterLevel } : {}),
+    ...(player.avatarUrl ? { profile_photo: player.avatarUrl } : {}),
+    last_refreshed_at: player.providerFetchedAt,
+    updated_at: player.providerFetchedAt,
   }
 }
 
-export async function lookupKingshotPlayer(playerIdInput: unknown, kingdomIdInput: unknown): Promise<KingshotPlayer> {
-  const playerId = validatePlayerId(playerIdInput)
-  const kingdomId = validateKingdomId(kingdomIdInput)
-  const baseUrl = process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim()
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ?? process.env.SUPABASE_SECRET_KEY?.trim() ?? process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
-  if (!baseUrl || !key) throw new LinkedPlayerServiceError(503, 'The Kingshot player service is not configured.')
-
-  const url = new URL(`${baseUrl.replace(/\/$/u, '')}/functions/v1/kingshot-player`)
-  url.searchParams.set('playerId', playerId)
-  url.searchParams.set('kingdomId', String(kingdomId))
-  let response: Response
-  try {
-    response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }, signal: AbortSignal.timeout(15_000) })
-  } catch {
-    throw new LinkedPlayerServiceError(502, 'The Kingshot player service could not be reached.')
+export function createNewLinkedPlayerFields(player: NormalizedPlayer, userId: string) {
+  return {
+    ...createProviderRefreshFields(player),
+    user_id: userId,
+    player_level: null,
+    town_center_level: player.townCenterLevel,
+    level_rendered: null,
+    level_rendered_detailed: null,
+    level_image: null,
+    profile_photo: player.avatarUrl,
+    verification_status: 'linked' as const,
+    verification_method: 'none' as const,
+    verified_by: null,
+    verified_at: null,
+    is_primary: true,
+    is_public: true,
+    created_at: player.providerFetchedAt,
   }
-  const payload = await response.json().catch(() => null)
-  if (!response.ok) {
-    const safePayload = record(payload)
-    const message = typeof safePayload?.message === 'string' ? safePayload.message : ''
-    const passthroughStatuses = new Set([404, 409, 429, 503])
-    const statusCode = passthroughStatuses.has(response.status) ? response.status : 502
-    throw new LinkedPlayerServiceError(statusCode, message || 'The Kingshot player service could not validate this Player ID and State.')
-  }
-  return normalizeKingshotLookup(payload, playerId, kingdomId)
 }
 
 function safeAccount(value: unknown) {
@@ -135,11 +200,26 @@ function safeAccount(value: unknown) {
   }
 }
 
-export async function linkOrRevalidatePlayerAccount(userId: string, input: { action: 'link' | 'revalidate'; playerId?: unknown; kingdomId?: unknown }) {
+export async function linkOrRevalidatePlayerAccount(
+  userId: string,
+  input: {
+    action: 'link' | 'revalidate'
+    playerId?: unknown
+    kingdomId?: unknown
+    forceProviderRefresh?: boolean
+  },
+  dependencies: { provider?: PlayerProvider; nowMs?: number } = {},
+) {
   const admin = getSupabaseAdmin()
-  const { data: existing, error: existingError } = await admin.from('player_accounts').select('id,player_id,kingdom_id,is_primary,is_public').eq('user_id', userId).eq('is_primary', true).maybeSingle()
+  const { data: existingValue, error: existingError } = await admin
+    .from('player_accounts')
+    .select(ACCOUNT_FIELDS)
+    .eq('user_id', userId)
+    .eq('is_primary', true)
+    .maybeSingle()
   if (existingError) throw existingError
 
+  const existing = record(existingValue)
   if (input.action === 'revalidate' && !existing) return null
 
   const requestedPlayerId = input.action === 'revalidate'
@@ -148,20 +228,35 @@ export async function linkOrRevalidatePlayerAccount(userId: string, input: { act
   const requestedKingdomId = input.action === 'revalidate'
     ? validateKingdomId(existing?.kingdom_id)
     : validateKingdomId(input.kingdomId)
-  if (existing && existing.player_id !== requestedPlayerId) throw new LinkedPlayerServiceError(409, 'A different primary Kingshot player is already linked.')
+  const resolution = await resolvePlayerRefresh({
+    action: input.action,
+    existingAccount: existing,
+    playerId: requestedPlayerId,
+    kingdomId: requestedKingdomId,
+    forceProviderRefresh: input.forceProviderRefresh,
+    provider: dependencies.provider ?? createMightPulsePlayerProvider(),
+    nowMs: dependencies.nowMs,
+  })
+  if (resolution.source === 'cache') return safeAccount(existing)
 
-  const player = await lookupKingshotPlayer(requestedPlayerId, requestedKingdomId)
-  const verifiedFields = createVerifiedPlayerFields(player, userId)
-  const payload = existing
-    ? { ...verifiedFields, is_public: existing.is_public, is_primary: true }
-    : { ...verifiedFields, user_id: userId, is_primary: true, is_public: true }
-
-  const query = existing
-    ? admin.from('player_accounts').update(payload).eq('id', existing.id).eq('user_id', userId)
-    : admin.from('player_accounts').insert(payload)
-  const { data, error } = await query.select(ACCOUNT_FIELDS).single()
+  const result = existing
+    ? await admin.from('player_accounts').update({
+        ...createProviderRefreshFields(resolution.player),
+        is_public: existing.is_public,
+        is_primary: true,
+      }).eq('id', existing.id).eq('user_id', userId).select(ACCOUNT_FIELDS).single()
+    : await admin.from('player_accounts').insert(
+        createNewLinkedPlayerFields(resolution.player, userId),
+      ).select(ACCOUNT_FIELDS).single()
+  const { data, error } = result
   if (error) {
-    if (error.code === '23505') throw new LinkedPlayerServiceError(409, 'This Kingshot player is already linked to another Forge account.')
+    if (error.code === '23505') {
+      throw new LinkedPlayerServiceError(
+        409,
+        'This Kingshot player is already linked to another Forge account.',
+        'PLAYER_ALREADY_LINKED',
+      )
+    }
     throw error
   }
   return safeAccount(data)
