@@ -7,13 +7,23 @@ type AttemptRecord = { count: number; resetAt: number }
 
 export class PlayerAccountAttemptThrottle {
   private readonly attempts = new Map<string, AttemptRecord>()
+  private nextSweepAt = 0
 
   constructor(
     private readonly limit = PLAYER_ACCOUNT_ATTEMPT_LIMIT,
     private readonly windowMs = PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS,
   ) {}
 
+  private sweepExpired(nowMs: number): void {
+    if (nowMs < this.nextSweepAt) return
+    for (const [userId, record] of this.attempts) {
+      if (record.resetAt <= nowMs) this.attempts.delete(userId)
+    }
+    this.nextSweepAt = nowMs + this.windowMs
+  }
+
   enforce(userId: string, nowMs = Date.now()): void {
+    this.sweepExpired(nowMs)
     const current = this.attempts.get(userId)
     if (!current || current.resetAt <= nowMs) {
       this.attempts.set(userId, { count: 1, resetAt: nowMs + this.windowMs })

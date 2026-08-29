@@ -138,7 +138,8 @@ The server is authoritative for a 60-minute freshness TTL based on
   do not force provider calls;
 - every authenticated `/api/player/account` attempt is additionally protected
   by a simple per-instance 20-request/five-minute throttle, covering failed and
-  unlinked lookups without relying on browser state;
+  unlinked lookups without relying on browser state; expired throttle entries
+  are opportunistically swept at most once per throttle window without timers;
 - both Forge and provider 429 responses join the browser transient-failure
   cooldown;
 - concurrent lookups for the same Player ID and expected State share one

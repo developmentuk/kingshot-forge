@@ -348,6 +348,26 @@ assert.throws(
 )
 attemptThrottle.enforce('authenticated-user', nowMs + PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS)
 
+const evictionThrottle = new PlayerAccountAttemptThrottle(2, 100)
+evictionThrottle.enforce('expired-user', 0)
+evictionThrottle.enforce('active-user', 50)
+assert.equal(evictionThrottle.attempts.size, 2)
+evictionThrottle.enforce('sweep-trigger', 100)
+assert.equal(evictionThrottle.attempts.has('expired-user'), false)
+assert.equal(evictionThrottle.attempts.has('active-user'), true)
+assert.equal(evictionThrottle.attempts.has('sweep-trigger'), true)
+evictionThrottle.enforce('expired-user', 101)
+assert.equal(evictionThrottle.attempts.has('expired-user'), true)
+
+const manyUsersThrottle = new PlayerAccountAttemptThrottle(1, 10)
+for (let index = 0; index < 1_000; index += 1) {
+  manyUsersThrottle.enforce(`synthetic-user-${index}`, 0)
+}
+assert.equal(manyUsersThrottle.attempts.size, 1_000)
+manyUsersThrottle.enforce('bounded-sweep-trigger', 10)
+assert.equal(manyUsersThrottle.attempts.size, 1)
+assert.equal(manyUsersThrottle.attempts.has('bounded-sweep-trigger'), true)
+
 const refreshFields = createProviderRefreshFields(normalizedPlayer)
 assert.equal('player_level' in refreshFields, false)
 assert.equal('level_rendered' in refreshFields, false)
