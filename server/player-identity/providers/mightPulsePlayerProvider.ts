@@ -19,6 +19,7 @@ type MightPulseProviderOptions = Readonly<{
   fetchImplementation?: FetchImplementation
   now?: () => Date
 }>
+type MightPulseRuntimeOptions = Omit<MightPulseProviderOptions, 'baseUrl'>
 
 function plainRecord(value: unknown): JsonRecord | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
@@ -189,11 +190,11 @@ function mapHttpFailure(status: number): never {
   )
 }
 
-export function createMightPulsePlayerProvider(
-  options: MightPulseProviderOptions = {},
+function createConfiguredMightPulsePlayerProvider(
+  options: MightPulseProviderOptions,
+  baseUrl: string,
 ): PlayerProvider {
   const apiKey = options.apiKey ?? process.env.MIGHTPULSE_API_KEY?.trim()
-  const baseUrl = configuredBaseUrl(options.baseUrl ?? process.env.MIGHTPULSE_API_BASE_URL)
   const timeoutMs = options.timeoutMs ?? configuredTimeout(process.env.MIGHTPULSE_TIMEOUT_MS)
   const fetchImplementation = options.fetchImplementation ?? fetch
   const now = options.now ?? (() => new Date())
@@ -249,6 +250,18 @@ export function createMightPulsePlayerProvider(
       return normalizeMightPulsePlayer(payload, request, now().toISOString())
     },
   }
+}
+
+export function createMightPulsePlayerProvider(
+  options: MightPulseRuntimeOptions = {},
+): PlayerProvider {
+  return createConfiguredMightPulsePlayerProvider(options, DEFAULT_BASE_URL)
+}
+
+export function createMightPulsePlayerProviderForTest(
+  options: MightPulseProviderOptions,
+): PlayerProvider {
+  return createConfiguredMightPulsePlayerProvider(options, configuredBaseUrl(options.baseUrl))
 }
 
 export { normalizeMightPulsePlayer }

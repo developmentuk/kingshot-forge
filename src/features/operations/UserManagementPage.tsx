@@ -184,7 +184,7 @@ export function UserDetailPage() {
     }
   }
 
-  async function applyPlayer(mode: 'lookup' | 'manual') {
+  async function applyManualPlayer() {
     setPlayerWorking(true)
     setError('')
     setPlayerMessage('')
@@ -193,13 +193,13 @@ export function UserDetailPage() {
         ...cleanPlayerValues(),
         playerName: playerName.trim() || undefined,
         reason: playerReason,
-        mode,
+        mode: 'manual',
         replaceExisting,
       })
       setPlayerLookup(null)
       setPlayerReason('')
       setReplaceExisting(false)
-      setPlayerMessage(mode === 'lookup' ? 'Provider-validated Player Account linked without ownership verification.' : 'Player Account linked with administrator community verification.')
+      setPlayerMessage('Player Account linked with administrator community verification.')
       await refreshUser()
     } catch (reasonValue) {
       setError(reasonValue instanceof Error ? reasonValue.message : 'The Player Account link failed.')
@@ -249,7 +249,7 @@ export function UserDetailPage() {
           <section className="operations-user-detail__player-manager">
             <p className="eyebrow">Player recovery</p>
             <h2>Link or correct Player Account</h2>
-            <p>Enter the exact Player ID and State. Lookup verifies that both values match. Manual linking is available only when you have independently confirmed the player.</p>
+            <p>Enter the exact Player ID and State. Lookup verifies that both values match without changing the account. Manual linking is available only when you have independently confirmed the player.</p>
             <div className="operations-user-detail__player-fields">
               <label htmlFor="managed-player-id">Player ID<input id="managed-player-id" inputMode="numeric" autoComplete="off" maxLength={20} value={playerId} onChange={(event) => { setPlayerId(event.target.value); setPlayerLookup(null) }} placeholder="e.g. 125500338" /></label>
               <label htmlFor="managed-player-state">State<input id="managed-player-state" inputMode="numeric" autoComplete="off" maxLength={4} value={kingdomId} onChange={(event) => { setKingdomId(event.target.value); setPlayerLookup(null) }} placeholder="e.g. 850" /></label>
@@ -260,10 +260,9 @@ export function UserDetailPage() {
             {playerLookup && <article className="operations-user-detail__lookup-result"><strong>{playerLookup.player.name}</strong><span>Player ID {playerLookup.player.playerId} · State {playerLookup.player.kingdomId} · {playerLookup.player.townCenterLevel ? `Town Centre ${playerLookup.player.townCenterLevel}` : 'Town Centre unavailable'}</span></article>}
             <div className="operations-user-detail__actions">
               <button type="button" disabled={playerWorking || !playerValuesValid} onClick={() => void lookupPlayer()}>{playerWorking ? 'Working…' : 'Lookup details'}</button>
-              <button type="button" disabled={playerWorking || !playerMutationValid} onClick={() => void applyPlayer('lookup')}>Apply provider link</button>
-              <button type="button" className="button--warning" disabled={playerWorking || !playerMutationValid} onClick={() => void applyPlayer('manual')}>Apply manual link</button>
+              <button type="button" className="button--warning" disabled={playerWorking || !playerMutationValid} onClick={() => void applyManualPlayer()}>Apply manual link</button>
             </div>
-            <p className="operations-user-detail__mutations-hint">Manual links are recorded as community verified by Forge Admin. They do not claim an official Century Games verification.</p>
+            <p className="operations-user-detail__mutations-hint">Provider-backed administrator linking is pending the governed admin-link contract update. Manual links remain recorded as community verified by Forge Admin and do not claim an official Century Games verification.</p>
           </section>
         )}
 

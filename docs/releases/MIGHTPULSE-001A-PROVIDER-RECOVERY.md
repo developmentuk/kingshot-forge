@@ -1,6 +1,6 @@
 # MIGHTPULSE-001A Player Provider Recovery
 
-**Status:** Implemented; non-native local gates pass; native Sharp gate is environment-blocked; not deployed or production-accepted
+**Status:** Implemented; full local gate passes; not deployed or production-accepted
 
 **Branch:** `feature/mightpulse-001a-provider-recovery`
 
@@ -50,7 +50,10 @@ lookup projection; it never receives provider credentials or raw responses.
 `Authorization: Bearer ...` to MightPulse. It is not a `VITE_*` variable and is
 not written to logs, API responses, fixtures, database rows, documentation
 examples or Supabase. `.env.example` contains only
-`MIGHTPULSE_API_KEY=server-only-placeholder`.
+`MIGHTPULSE_API_KEY=server-only-placeholder`. The runtime destination is fixed
+to the exact `https://api.mightpulse.com/v1` origin; environment configuration
+cannot redirect the bearer credential. A `baseUrl` dependency may be injected
+only by synthetic tests.
 
 ## Provider contract
 
@@ -90,12 +93,15 @@ useful stored value. The update therefore preserves legacy `player_level`,
 verification/ownership field when MightPulse has no equivalent. A new link
 stores unsupported legacy presentation fields as null.
 
-The legacy administrator RPC has no `town_center_level` argument. Its MightPulse
-lookup projection displays Town Center, but the existing audited RPC continues
-to persist `player_level` as null instead of misclassifying Town Center. A
-future schema/RPC milestone may add an atomic Town Center parameter; 001A does
-not create or apply that migration. On a same-player administrator relink, 001A
-preserves existing legacy presentation and verification status/method values.
+The legacy administrator RPC has no `town_center_level` argument and always
+rewrites legacy verification actor/time columns. Operations therefore keeps
+MightPulse **Lookup details** read-only and disables provider-backed
+administrator apply. The server rejects `mode=lookup` before any target or
+Player Account database access. The intentional manual/community-verification
+administrator path remains permission-gated, reason-gated and atomically
+audited by the existing RPC. A future owner-approved schema/RPC milestone may
+add an atomic provider-link contract with Town Center and provenance semantics;
+001A does not create or apply that migration.
 
 ## Ownership and verification
 
@@ -103,13 +109,13 @@ A MightPulse lookup proves only that a public player record exists. New links
 through `/api/player/account` use `verification_status=linked`,
 `verification_method=none`, and null verification actor/time fields.
 Revalidation never changes existing verification state. A new or replaced
-administrator provider link also records `linked`/`none`, not `verified` or
-`officially_verified`; a same-player administrator relink preserves the prior
-status/method. The historical audited administrator RPC still records its actor
-and operation timestamp in legacy verification columns even for `linked`
-status. UI verification-date presentation is therefore gated on a positive
-verification status, and the timestamp alone grants no ownership capability.
-Removing that legacy RPC ambiguity requires a separately approved migration.
+provider-backed administrator link is not available in 001A because the legacy
+RPC cannot represent it without contradictory verification provenance.
+MightPulse administrator lookup is read-only and cannot change `verified_by`,
+`verified_at`, `officially_verified` provenance or any Player Account field.
+UI verification-date presentation remains gated on a positive verification
+status, so `linked`/`none` is never presented as verified. Resolving the legacy
+RPC ambiguity requires a separately approved governed contract update.
 AUTO-REDEEM continues to require its separate ownership-verified state and is
 otherwise unchanged.
 
@@ -120,17 +126,27 @@ The server is authoritative for a 60-minute freshness TTL based on
 
 - automatic revalidation inside the TTL returns the existing safe account and
   performs zero MightPulse calls;
+- an idempotent same-player `action=link` follows the same freshness policy and
+  performs zero provider calls while fresh;
 - stale or malformed refresh timestamps cause one provider lookup;
-- an explicit manual refresh sends `forceProviderRefresh: true` and bypasses
-  the TTL;
+- an explicit manual refresh may bypass the 60-minute TTL only after a
+  server-authoritative five-minute minimum interval, also persisted through
+  `last_refreshed_at`;
 - browser mutation events use automatic refresh, so profile/progression saves
   do not force provider calls;
-- provider rate limiting joins the browser transient-failure cooldown;
+- every authenticated `/api/player/account` attempt is additionally protected
+  by a simple per-instance 20-request/five-minute throttle, covering failed and
+  unlinked lookups without relying on browser state;
+- both Forge and provider 429 responses join the browser transient-failure
+  cooldown;
 - concurrent lookups for the same Player ID and expected State share one
   in-flight request within a warm Vercel instance.
 
-The in-memory single-flight is deliberately best-effort and not a distributed
-cache. Database freshness remains the cross-instance quota boundary.
+The in-memory single-flight and attempt throttle are deliberately best-effort
+per-instance controls, not a distributed cache. Persisted database freshness is
+the cross-instance successful-refresh quota boundary. A distributed failed-
+attempt limiter remains deferred because 001A permits neither a migration nor a
+new cache service.
 
 ## Timeout policy
 
@@ -147,6 +163,7 @@ response after provider abort. The request is never unbounded.
 | --- | ---: | --- |
 | `404` unknown player | 404 | `PLAYER_NOT_FOUND` |
 | `429` quota/rate limit | 429 | `PLAYER_LOOKUP_RATE_LIMITED` |
+| Forge authenticated attempt limit | 429 | `PLAYER_ACCOUNT_RATE_LIMITED` |
 | `401` missing/invalid provider authentication | 503 | `PLAYER_PROVIDER_UNAVAILABLE` |
 | `400` rejected integration request | 502 | `PLAYER_PROVIDER_INVALID_REQUEST` |
 | malformed/non-JSON `2xx` | 502 | `PLAYER_PROVIDER_INVALID_RESPONSE` |
@@ -171,8 +188,13 @@ Synthetic tests cover valid normalization, ID and State mismatch, invalid
 State, malformed wrappers, missing nickname, Town Center validation, missing
 or unsafe avatars, provider 400/401/404/429/5xx outcomes, timeout, network
 failure, secret redaction, server freshness, stale refresh, manual bypass,
-legacy-field preservation, Town Center/player-level separation and the
-non-verifying link boundary. Existing Player Identity tests retain duplicate
+manual minimum interval, same-player link idempotency, authenticated attempt
+throttling, fixed runtime credential destination, legacy-field preservation,
+Town Center/player-level separation and the non-verifying link boundary.
+Operations tests prove provider apply is rejected before database access,
+cross-player legacy fields cannot be carried through that path, lookup cannot
+restamp verification provenance, and the manual community-verification RPC
+contract remains unchanged. Existing Player Identity tests retain duplicate
 account and primary-player protections.
 
 Required validation commands:
@@ -189,31 +211,24 @@ npm run check
 
 Local result on 29 August 2026:
 
-- the new synthetic provider/freshness/ownership suite, Player link service,
-  Player State linking, resilience and UX-003 contracts pass;
+- `npm run check` passes end to end, including the pinned Sharp production
+  dependency, the new synthetic provider/freshness/ownership suite, Player link
+  service, Player State linking, Auto Redeem ownership gates, security checks,
+  lint and the production build;
+- the focused resilience and UX-003 contract commands pass;
 - lint completes with the same 11 existing warnings and no errors;
 - TypeScript/Vite production build and `git diff --check` pass;
-- all `npm run check` stages that do not load the native Sharp binary pass when
-  run independently, including Auto Redeem and the other ownership-sensitive
-  suites;
-- the exact `npm run check` command stops at the unchanged
-  `test:production-dependencies` import because Windows Application Control
-  blocks `sharp-win32-arm64-0.35.3.node` with `ERR_DLOPEN_FAILED`;
-- the exact `npm run test:player-identity` command reaches and passes the new
-  MIGHTPULSE-001A tests, then encounters the same native Sharp policy block in
-  the pre-existing OCR import graph. Non-Sharp Player UI and VISION-LINK-007
-  checks pass independently.
-
-No dependency, policy or test bypass is introduced to hide this environment
-failure. CI or an approved host that permits the pinned Sharp binary must run
-the exact full command before owner acceptance.
+- one earlier standalone `npm run test:player-identity` invocation reached and
+  passed every new MIGHTPULSE test before Windows Application Control blocked
+  the pinned Sharp ARM64 binary; the subsequent canonical full check loaded the
+  same dependency and passed without a dependency, policy or test bypass.
 
 ## Rollback
 
-Revert the MIGHTPULSE-001A commit. That restores the former Supabase Edge
-Function call path and removes the new environment/configuration entries. No
-database rollback is necessary because the milestone adds no migration and
-does not rewrite legacy data.
+Revert the MIGHTPULSE-001A implementation and correction commits. That restores
+the former Supabase Edge Function call path and removes the new
+environment/configuration entries. No database rollback is necessary because
+the milestone adds no migration and does not rewrite legacy data.
 
 ## Deferred MIGHTPULSE-001B+
 

@@ -1,14 +1,17 @@
 import assert from 'node:assert/strict'
 import {
   createMightPulsePlayerProvider,
+  createMightPulsePlayerProviderForTest,
 } from '../server/player-identity/providers/mightPulsePlayerProvider.ts'
 import {
   createNewLinkedPlayerFields,
   createProviderRefreshFields,
   lookupKingshotPlayer,
   PLAYER_PROVIDER_FRESHNESS_TTL_MS,
+  PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS,
   resolvePlayerRefresh,
 } from '../server/player-identity/linkedPlayerService.ts'
+import { PlayerAccountAttemptThrottle } from '../server/player-identity/playerAccountAttemptThrottle.ts'
 
 const secret = 'synthetic-test-secret-never-log'
 const fetchedAt = '2026-08-29T12:00:00.000Z'
@@ -36,7 +39,7 @@ function validPayload(overrides = {}, playerOverrides = {}) {
 }
 
 function providerFor(response, capture) {
-  return createMightPulsePlayerProvider({
+  return createMightPulsePlayerProviderForTest({
     apiKey: secret,
     baseUrl: 'https://api.mightpulse.test/v1',
     now: () => new Date(fetchedAt),
@@ -79,6 +82,23 @@ assert.deepEqual(valid, {
 assert.equal(requestUrl.toString(), 'https://api.mightpulse.test/v1/players/125500338?include=base')
 assert.equal(requestInit.headers.Authorization, `Bearer ${secret}`)
 assert.equal(requestUrl.toString().includes(secret), false)
+
+const previousConfiguredBaseUrl = process.env.MIGHTPULSE_API_BASE_URL
+process.env.MIGHTPULSE_API_BASE_URL = 'https://api.mightpulse.com.evil.example/v1'
+let runtimeRequestUrl
+const runtimeProvider = createMightPulsePlayerProvider({
+  apiKey: secret,
+  now: () => new Date(fetchedAt),
+  fetchImplementation: async (url) => {
+    runtimeRequestUrl = url
+    return Response.json(validPayload())
+  },
+})
+await runtimeProvider.lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
+assert.equal(runtimeRequestUrl.origin, 'https://api.mightpulse.com')
+assert.equal(runtimeRequestUrl.pathname, '/v1/players/125500338')
+if (previousConfiguredBaseUrl === undefined) delete process.env.MIGHTPULSE_API_BASE_URL
+else process.env.MIGHTPULSE_API_BASE_URL = previousConfiguredBaseUrl
 
 const noAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: undefined })))
   .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
@@ -135,7 +155,7 @@ await expectProviderError(
 )
 
 await expectProviderError(
-  createMightPulsePlayerProvider({
+  createMightPulsePlayerProviderForTest({
     apiKey: '',
     baseUrl: 'https://api.mightpulse.test/v1',
   }),
@@ -144,7 +164,7 @@ await expectProviderError(
 )
 
 await expectProviderError(
-  createMightPulsePlayerProvider({
+  createMightPulsePlayerProviderForTest({
     apiKey: secret,
     baseUrl: 'https://api.mightpulse.test/v1',
     fetchImplementation: async () => { throw new Error('synthetic network failure') },
@@ -154,7 +174,7 @@ await expectProviderError(
 )
 
 await expectProviderError(
-  createMightPulsePlayerProvider({
+  createMightPulsePlayerProviderForTest({
     apiKey: secret,
     baseUrl: 'https://api.mightpulse.test/v1',
     timeoutMs: 5,
@@ -229,6 +249,41 @@ const cached = await resolvePlayerRefresh({
 assert.equal(cached.source, 'cache')
 assert.equal(providerCalls, 0)
 
+const samePlayerLink = await resolvePlayerRefresh({
+  action: 'link',
+  existingAccount: recentAccount,
+  playerId: '125500338',
+  kingdomId: 850,
+  provider: countingProvider,
+  nowMs,
+})
+assert.equal(samePlayerLink.source, 'cache')
+assert.equal(providerCalls, 0)
+
+const blockedManual = await resolvePlayerRefresh({
+  action: 'revalidate',
+  existingAccount: { ...recentAccount, last_refreshed_at: new Date(nowMs - PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS + 1).toISOString() },
+  playerId: '125500338',
+  kingdomId: 850,
+  provider: countingProvider,
+  forceProviderRefresh: true,
+  nowMs,
+})
+assert.equal(blockedManual.source, 'cache')
+assert.equal(providerCalls, 0)
+
+const allowedManual = await resolvePlayerRefresh({
+  action: 'revalidate',
+  existingAccount: { ...recentAccount, last_refreshed_at: new Date(nowMs - PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS).toISOString() },
+  playerId: '125500338',
+  kingdomId: 850,
+  provider: countingProvider,
+  forceProviderRefresh: true,
+  nowMs,
+})
+assert.equal(allowedManual.source, 'provider')
+assert.equal(providerCalls, 1)
+
 const stale = await resolvePlayerRefresh({
   action: 'revalidate',
   existingAccount: { ...recentAccount, last_refreshed_at: new Date(nowMs - PLAYER_PROVIDER_FRESHNESS_TTL_MS).toISOString() },
@@ -238,18 +293,22 @@ const stale = await resolvePlayerRefresh({
   nowMs,
 })
 assert.equal(stale.source, 'provider')
-assert.equal(providerCalls, 1)
-
-await resolvePlayerRefresh({
-  action: 'revalidate',
-  existingAccount: recentAccount,
-  playerId: '125500338',
-  kingdomId: 850,
-  provider: countingProvider,
-  forceProviderRefresh: true,
-  nowMs,
-})
 assert.equal(providerCalls, 2)
+
+const attemptThrottle = new PlayerAccountAttemptThrottle(2, PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS)
+attemptThrottle.enforce('authenticated-user', nowMs)
+attemptThrottle.enforce('authenticated-user', nowMs + 1)
+assert.throws(
+  () => attemptThrottle.enforce('authenticated-user', nowMs + 2),
+  (error) => {
+    assert.equal(error.statusCode, 429)
+    assert.equal(error.code, 'PLAYER_ACCOUNT_RATE_LIMITED')
+    assert.equal(String(error).includes(secret), false)
+    assert.equal(JSON.stringify({ code: error.code, message: error.message }).includes(secret), false)
+    return true
+  },
+)
+attemptThrottle.enforce('authenticated-user', nowMs + PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS)
 
 const refreshFields = createProviderRefreshFields(normalizedPlayer)
 assert.equal('player_level' in refreshFields, false)

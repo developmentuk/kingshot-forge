@@ -39,9 +39,10 @@ try {
   assert.match(source, /error\.code === '23505'/u)
   assert.match(source, /PLAYER_ALREADY_LINKED/u)
   const operationsSource = await readFile('server/identity/userManagementService.ts', 'utf8')
-  assert.match(operationsSource, /sameLinkedPlayer/u)
-  assert.match(operationsSource, /existingPlayer\?\.player_level/u)
-  assert.match(operationsSource, /verificationStatus = sameLinkedPlayer/u)
+  assert.match(operationsSource, /Provider-backed administrator linking is pending the governed admin-link contract update/u)
+  assert.doesNotMatch(operationsSource, /existingPlayer\?\.(?:player_level|level_rendered|level_rendered_detailed|level_image|profile_photo)/u)
+  assert.match(operationsSource, /p_verification_status: 'community_verified'/u)
+  assert.match(operationsSource, /p_verification_method: 'forge_admin'/u)
 
   console.log('Player link service tests passed.')
 } finally {

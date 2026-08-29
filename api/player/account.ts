@@ -2,6 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
 import { captureServerException } from '../../server/observability/sentry.js'
 import { LinkedPlayerServiceError, linkOrRevalidatePlayerAccount } from '../../server/player-identity/linkedPlayerService.js'
+import { PlayerAccountAttemptThrottle } from '../../server/player-identity/playerAccountAttemptThrottle.js'
+
+const attemptThrottle = new PlayerAccountAttemptThrottle()
 
 function body(request: VercelRequest) {
   return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {}
@@ -27,6 +30,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const actor = await requireForgeActor(request)
     actorUserId = actor.userId
+    attemptThrottle.enforce(actor.userId)
     const input = body(request)
     const action = input.action === 'revalidate' ? 'revalidate' : input.action === 'link' ? 'link' : null
     if (!action) { fail(response, 400, 'A valid player action is required.'); return }
@@ -41,6 +45,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
       : { status: 'success', data })
   } catch (error) {
     if (error instanceof ForgeAuthenticationError || error instanceof LinkedPlayerServiceError) {
+      if (error instanceof LinkedPlayerServiceError && error.code === 'PLAYER_ACCOUNT_RATE_LIMITED') {
+        response.setHeader('Retry-After', '300')
+      }
       fail(
         response,
         error.statusCode,

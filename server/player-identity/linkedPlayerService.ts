@@ -9,6 +9,7 @@ import {
 const ACCOUNT_FIELDS = 'id,user_id,player_id,player_name,kingdom_id,player_level,town_center_level,level_rendered,level_rendered_detailed,level_image,profile_photo,verification_status,verification_method,verified_by,verified_at,last_refreshed_at,is_primary,is_public,created_at,updated_at'
 
 export const PLAYER_PROVIDER_FRESHNESS_TTL_MS = 60 * 60 * 1000
+export const PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS = 5 * 60 * 1000
 
 type LookupRecord = Readonly<Record<string, unknown>>
 
@@ -86,15 +87,23 @@ export async function lookupKingshotPlayer(
   }
 }
 
-export function isPlayerAccountFresh(
+function isPlayerAccountFreshWithin(
   lastRefreshedAt: unknown,
+  freshnessMs: number,
   nowMs = Date.now(),
 ): boolean {
   if (typeof lastRefreshedAt !== 'string') return false
   const refreshedAt = Date.parse(lastRefreshedAt)
   if (!Number.isFinite(refreshedAt)) return false
   const age = nowMs - refreshedAt
-  return age >= 0 && age < PLAYER_PROVIDER_FRESHNESS_TTL_MS
+  return age >= 0 && age < freshnessMs
+}
+
+export function isPlayerAccountFresh(
+  lastRefreshedAt: unknown,
+  nowMs = Date.now(),
+): boolean {
+  return isPlayerAccountFreshWithin(lastRefreshedAt, PLAYER_PROVIDER_FRESHNESS_TTL_MS, nowMs)
 }
 
 export async function resolvePlayerRefresh(input: {
@@ -106,13 +115,14 @@ export async function resolvePlayerRefresh(input: {
   provider: PlayerProvider
   nowMs?: number
 }): Promise<{ source: 'cache'; player: null } | { source: 'provider'; player: NormalizedPlayer }> {
-  if (
-    input.action === 'revalidate'
-    && input.existingAccount
-    && input.forceProviderRefresh !== true
-    && isPlayerAccountFresh(input.existingAccount.last_refreshed_at, input.nowMs)
-  ) {
-    return { source: 'cache', player: null }
+  const samePlayer = input.existingAccount?.player_id === input.playerId
+  if (samePlayer) {
+    const freshnessMs = input.forceProviderRefresh === true
+      ? PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS
+      : PLAYER_PROVIDER_FRESHNESS_TTL_MS
+    if (isPlayerAccountFreshWithin(input.existingAccount?.last_refreshed_at, freshnessMs, input.nowMs)) {
+      return { source: 'cache', player: null }
+    }
   }
   const player = await lookupKingshotPlayer(input.playerId, input.kingdomId, input.provider)
   return { source: 'provider', player }
