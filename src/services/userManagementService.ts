@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { UserDetail, UserListItem } from '../../server/identity/contracts'
-import type { KingshotPlayer } from '../types/player'
+import type { NormalizedPlayerLookup } from '../types/player'
 
 type ApiResponse<T> = { status: 'success' | 'error'; data?: T; message?: string }
 
@@ -14,7 +14,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export type UserListQuery = { search?: string; role?: string; status?: string; page?: number; pageSize?: number }
 export type UserListResponse = { items: UserListItem[]; page: number; pageSize: number; total: number; totalPages: number }
-export type ManagedPlayerLookup = { source: 'kingshot_player_lookup'; player: KingshotPlayer }
+export type ManagedPlayerLookup = { source: 'mightpulse'; player: NormalizedPlayerLookup }
 export type ManagedPlayerInput = {
   playerId: string
   kingdomId: string

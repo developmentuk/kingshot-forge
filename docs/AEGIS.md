@@ -1,5 +1,23 @@
 # Kingshot Forge Project Constitution
 
+## MIGHTPULSE-001A provider recovery record — 29 August 2026
+
+Forge Player ID lookup and linked-player revalidation now use a server-only,
+provider-neutral adapter backed by MightPulse from the Forge Vercel runtime.
+`MIGHTPULSE_API_KEY` never enters browser, Supabase, persistence, logs or API
+responses. The server enforces a 60-minute freshness boundary, a bounded
+45-second provider timeout and safe error mapping. MightPulse Town Center maps
+only to `town_center_level`; generic `player_level`, unsupported legacy display
+fields and existing verification state are preserved during revalidation.
+
+Public lookup proves existence, not ownership. New provider-backed links remain
+`linked`/`none`; MightPulse never grants `verified` or
+`officially_verified`, and AUTO-REDEEM gates remain unchanged. The historical
+Supabase `kingshot-player` Edge Function remains checked in but is no longer the
+primary linked-player runtime path. No migration, Supabase change, deployment
+or production activation is part of this record. See
+`docs/releases/MIGHTPULSE-001A-PROVIDER-RECOVERY.md`.
+
 ## AUTO-REDEEM-SAFETY-001 containment record — 16 August 2026
 
 Auto Redeem remains disabled. Phase 1 contains unsafe activation paths; it is

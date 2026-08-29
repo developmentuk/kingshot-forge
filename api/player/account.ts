@@ -7,11 +7,15 @@ function body(request: VercelRequest) {
   return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {}
 }
 
-function fail(response: VercelResponse, status: number, message: string) {
-  response.status(status).json({ status: 'error', message })
+function fail(response: VercelResponse, status: number, message: string, code?: string) {
+  response.status(status).json({ status: 'error', ...(code ? { code } : {}), message })
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse): Promise<void> {
+  response.setHeader('Cache-Control', 'no-store')
+  response.setHeader('X-Content-Type-Options', 'nosniff')
+  response.setHeader('Referrer-Policy', 'no-referrer')
+
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST')
     fail(response, 405, 'Method not allowed.')
@@ -30,13 +34,19 @@ export default async function handler(request: VercelRequest, response: VercelRe
       action,
       playerId: input.playerId,
       kingdomId: input.kingdomId ?? input.state,
+      forceProviderRefresh: input.forceProviderRefresh === true,
     })
     response.status(200).json(data === null
       ? { status: 'success', code: 'NO_LINKED_PLAYER', data: null }
       : { status: 'success', data })
   } catch (error) {
     if (error instanceof ForgeAuthenticationError || error instanceof LinkedPlayerServiceError) {
-      fail(response, error.statusCode, error.message)
+      fail(
+        response,
+        error.statusCode,
+        error.message,
+        error instanceof LinkedPlayerServiceError ? error.code : undefined,
+      )
       return
     }
 

@@ -8,6 +8,10 @@ import type { AccountStatus, UserAuditEntry, UserDetail, UserListItem, UserRoleA
 const PAGE_SIZE_MAX = 50
 type PlayerRow = { id: string; user_id: string; player_id: string; player_name: string; kingdom_id: number; verification_status: string; verified_at: string | null; is_primary: boolean }
 type ManagedPlayerInput = Readonly<Record<string, unknown>>
+type PlayerVerificationStatus = 'linked' | 'verified' | 'pending' | 'community_verified' | 'officially_verified' | 'rejected' | 'revoked'
+type PlayerVerificationMethod = 'none' | 'kingshot_player_lookup' | 'alliance_officer' | 'kingdom_moderator' | 'forge_admin' | 'century_games_code'
+const PLAYER_VERIFICATION_STATUSES = new Set<PlayerVerificationStatus>(['linked', 'verified', 'pending', 'community_verified', 'officially_verified', 'rejected', 'revoked'])
+const PLAYER_VERIFICATION_METHODS = new Set<PlayerVerificationMethod>(['none', 'kingshot_player_lookup', 'alliance_officer', 'kingdom_moderator', 'forge_admin', 'century_games_code'])
 
 export class UserManagementError extends Error {
   constructor(readonly statusCode: number, message: string) { super(message); this.name = 'UserManagementError' }
@@ -171,6 +175,24 @@ function optionalText(value: unknown, maximum = 240) {
   return text
 }
 
+function optionalInteger(value: unknown) {
+  if (value === null || value === undefined || value === '') return null
+  const number = typeof value === 'number' ? value : Number(value)
+  return Number.isInteger(number) ? number : null
+}
+
+function existingVerificationStatus(value: unknown): PlayerVerificationStatus | null {
+  return typeof value === 'string' && PLAYER_VERIFICATION_STATUSES.has(value as PlayerVerificationStatus)
+    ? value as PlayerVerificationStatus
+    : null
+}
+
+function existingVerificationMethod(value: unknown): PlayerVerificationMethod | null {
+  return typeof value === 'string' && PLAYER_VERIFICATION_METHODS.has(value as PlayerVerificationMethod)
+    ? value as PlayerVerificationMethod
+    : null
+}
+
 function mapLookupError(error: unknown): never {
   if (error instanceof LinkedPlayerServiceError) throw new UserManagementError(error.statusCode, error.message)
   throw error
@@ -181,7 +203,7 @@ export async function lookupManagedPlayer(actor: ForgeActor, input: ManagedPlaye
   const { playerId, kingdomId } = playerInput(input)
   try {
     const player = await lookupKingshotPlayer(playerId, kingdomId)
-    return { source: 'kingshot_player_lookup', player }
+    return { source: player.provider, player }
   } catch (error) {
     return mapLookupError(error)
   }
@@ -193,7 +215,14 @@ export async function linkManagedPlayer(actor: ForgeActor, targetUserId: string,
   const reason = requireReason(input.reason)
   const { playerId, kingdomId } = playerInput(input)
   const mode = input.mode === 'manual' ? 'manual' : input.mode === 'lookup' ? 'lookup' : null
-  if (!mode) throw new UserManagementError(400, 'Choose lookup verification or manual administrator verification.')
+  if (!mode) throw new UserManagementError(400, 'Choose provider lookup or manual administrator verification.')
+  const admin = getSupabaseAdmin()
+  const { data: existingPlayer, error: existingPlayerError } = await admin
+    .from('player_accounts')
+    .select('player_id,player_name,player_level,level_rendered,level_rendered_detailed,level_image,profile_photo,verification_status,verification_method')
+    .eq('user_id', targetUserId)
+    .maybeSingle()
+  if (existingPlayerError) throw new UserManagementError(500, 'The existing Player Account could not be read safely.')
 
   let playerName: string
   let playerLevel: number | null = null
@@ -201,31 +230,36 @@ export async function linkManagedPlayer(actor: ForgeActor, targetUserId: string,
   let levelRenderedDetailed: string | null = null
   let levelImage: string | null = null
   let profilePhoto: string | null = null
-  let verificationStatus: 'verified' | 'community_verified'
-  let verificationMethod: 'kingshot_player_lookup' | 'forge_admin'
+  let verificationStatus: PlayerVerificationStatus
+  let verificationMethod: PlayerVerificationMethod
 
   if (mode === 'lookup') {
     try {
       const player = await lookupKingshotPlayer(playerId, kingdomId)
       playerName = player.name
-      playerLevel = Number.isFinite(player.level) ? player.level : null
-      levelRendered = player.levelRendered || null
-      levelRenderedDetailed = player.levelRenderedDetailed || null
-      levelImage = player.levelImage
-      profilePhoto = player.profilePhoto
-      verificationStatus = 'verified'
-      verificationMethod = 'kingshot_player_lookup'
+      playerLevel = optionalInteger(existingPlayer?.player_level)
+      levelRendered = optionalText(existingPlayer?.level_rendered)
+      levelRenderedDetailed = optionalText(existingPlayer?.level_rendered_detailed)
+      levelImage = optionalText(existingPlayer?.level_image, 2048)
+      profilePhoto = player.avatarUrl ?? optionalText(existingPlayer?.profile_photo, 2048)
+      const sameLinkedPlayer = existingPlayer?.player_id === playerId
+      verificationStatus = sameLinkedPlayer
+        ? existingVerificationStatus(existingPlayer.verification_status) ?? 'linked'
+        : 'linked'
+      verificationMethod = sameLinkedPlayer
+        ? existingVerificationMethod(existingPlayer.verification_method) ?? 'none'
+        : 'none'
     } catch (error) {
       return mapLookupError(error)
     }
   } else {
-    const admin = getSupabaseAdmin()
-    const [{ data: profile }, { data: existing }] = await Promise.all([
-      admin.from('profiles').select('display_name').eq('id', targetUserId).maybeSingle(),
-      admin.from('player_accounts').select('player_name').eq('user_id', targetUserId).maybeSingle(),
-    ])
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('display_name')
+      .eq('id', targetUserId)
+      .maybeSingle()
     playerName = optionalText(input.playerName, 120)
-      ?? optionalText(existing?.player_name, 120)
+      ?? optionalText(existingPlayer?.player_name, 120)
       ?? optionalText(profile?.display_name, 120)
       ?? optionalText(target.user_metadata?.full_name, 120)
       ?? optionalText(target.user_metadata?.name, 120)

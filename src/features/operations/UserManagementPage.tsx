@@ -176,7 +176,7 @@ export function UserDetailPage() {
       const result = await lookupPlayerForUser(userId, cleanPlayerValues())
       setPlayerLookup(result)
       setPlayerName(result.player.name)
-      setPlayerMessage(`Found ${result.player.name} in State ${result.player.kingdom}.`)
+      setPlayerMessage(`Found ${result.player.name} in State ${result.player.kingdomId}.`)
     } catch (reasonValue) {
       setError(reasonValue instanceof Error ? reasonValue.message : 'The Player lookup failed.')
     } finally {
@@ -199,7 +199,7 @@ export function UserDetailPage() {
       setPlayerLookup(null)
       setPlayerReason('')
       setReplaceExisting(false)
-      setPlayerMessage(mode === 'lookup' ? 'Verified Player Account linked successfully.' : 'Player Account linked with administrator community verification.')
+      setPlayerMessage(mode === 'lookup' ? 'Provider-validated Player Account linked without ownership verification.' : 'Player Account linked with administrator community verification.')
       await refreshUser()
     } catch (reasonValue) {
       setError(reasonValue instanceof Error ? reasonValue.message : 'The Player Account link failed.')
@@ -257,10 +257,10 @@ export function UserDetailPage() {
             </div>
             <label className="operations-user-detail__reason" htmlFor="player-link-reason">Linking reason<textarea id="player-link-reason" value={playerReason} onChange={(event) => setPlayerReason(event.target.value)} minLength={3} maxLength={2000} placeholder="Why is this administrator link required?" /></label>
             {user.linkedPlayers.length > 0 && <label className="operations-user-detail__checkbox"><input type="checkbox" checked={replaceExisting} onChange={(event) => setReplaceExisting(event.target.checked)} /> Replace the existing linked Player Account</label>}
-            {playerLookup && <article className="operations-user-detail__lookup-result"><strong>{playerLookup.player.name}</strong><span>Player ID {playerLookup.player.playerId} · State {playerLookup.player.kingdom} · {playerLookup.player.levelRenderedDetailed || playerLookup.player.levelRendered || `Level ${playerLookup.player.level}`}</span></article>}
+            {playerLookup && <article className="operations-user-detail__lookup-result"><strong>{playerLookup.player.name}</strong><span>Player ID {playerLookup.player.playerId} · State {playerLookup.player.kingdomId} · {playerLookup.player.townCenterLevel ? `Town Centre ${playerLookup.player.townCenterLevel}` : 'Town Centre unavailable'}</span></article>}
             <div className="operations-user-detail__actions">
               <button type="button" disabled={playerWorking || !playerValuesValid} onClick={() => void lookupPlayer()}>{playerWorking ? 'Working…' : 'Lookup details'}</button>
-              <button type="button" disabled={playerWorking || !playerMutationValid} onClick={() => void applyPlayer('lookup')}>Apply verified lookup</button>
+              <button type="button" disabled={playerWorking || !playerMutationValid} onClick={() => void applyPlayer('lookup')}>Apply provider link</button>
               <button type="button" className="button--warning" disabled={playerWorking || !playerMutationValid} onClick={() => void applyPlayer('manual')}>Apply manual link</button>
             </div>
             <p className="operations-user-detail__mutations-hint">Manual links are recorded as community verified by Forge Admin. They do not claim an official Century Games verification.</p>

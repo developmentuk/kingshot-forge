@@ -201,7 +201,7 @@ export function PrivatePlayerIdentityPage() {
             <p>
               {verificationDescription(playerAccount.verification_status)}
             </p>
-            {playerAccount.verified_at ? (
+            {playerAccount.verified_at && ['verified', 'community_verified', 'officially_verified'].includes(playerAccount.verification_status) ? (
               <p className="player-identity__hint">
                 Verified {formatDate(playerAccount.verified_at)}
               </p>

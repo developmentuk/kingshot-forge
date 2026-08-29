@@ -21,7 +21,7 @@ export function isPlayerIdentityAutoRefreshRoute(pathname: string) {
 
 export function isTransientPlayerIdentityFailure(error: unknown) {
   const statusCode = (error as PlayerIdentityRefreshFailure | null)?.statusCode
-  return statusCode === 502 || statusCode === 503 || statusCode === 504
+  return statusCode === 429 || statusCode === 502 || statusCode === 503 || statusCode === 504
 }
 
 export class PlayerIdentityRefreshCoordinator {
