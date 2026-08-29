@@ -1,6 +1,6 @@
 # MIGHTPULSE-001A Player Provider Recovery
 
-**Status:** Merged and deployed; production acceptance blocked pending Town Center schema hotfix
+**Status:** Merged and deployed; both production Town Center schema hotfixes applied; source hotfix validated and pending PR #100 merge
 
 **Branch:** `feature/mightpulse-001a-provider-recovery`
 
@@ -11,8 +11,10 @@
 Restore dependable Player ID lookup, linking, linked-player revalidation and
 State validation by replacing the failed `kingshot.net` runtime dependency with
 a server-side MightPulse adapter. The milestone keeps the current
-`player_accounts` persistence contract and does not introduce a migration,
-Player Intelligence datasets or ownership verification.
+`player_accounts` persistence contract and originally introduced no migration,
+Player Intelligence datasets or ownership verification. Production acceptance
+later required two explicitly approved Town Center schema hotfix migrations;
+those are recorded below as part of the final 001A production state.
 
 ## Architecture
 
@@ -149,9 +151,9 @@ The server is authoritative for a 60-minute freshness TTL based on
 
 The in-memory single-flight and attempt throttle are deliberately best-effort
 per-instance controls, not a distributed cache. Persisted database freshness is
-the cross-instance successful-refresh quota boundary. A distributed failed-
-attempt limiter remains deferred because 001A permits neither a migration nor a
-new cache service.
+the cross-instance successful-refresh quota boundary. A distributed failed-attempt limiter remains deferred. The two production
+acceptance migrations are limited to the Town Center persistence/range contract
+and do not add a cache service, limiter table or other quota infrastructure.
 
 ## Timeout policy
 
@@ -184,8 +186,17 @@ cross the Forge API boundary.
 
 `supabase/functions/kingshot-player/index.ts` remains unchanged as historical
 recovery context. The live `/api/player/account` and Operations lookup paths no
-longer call it. No MightPulse key is copied into Supabase, no migration is
-created or applied, and no Supabase configuration is changed.
+longer call it. No MightPulse key is copied into Supabase and no Supabase Edge
+Function or configuration change is required. Production acceptance did apply
+exactly two approved schema migrations:
+
+- `20260829212144_mightpulse_player_account_town_center_level` adds nullable
+  `public.player_accounts.town_center_level` with the initial range guard;
+- `20260829213913_mightpulse_town_center_raw_level_range` widens the Town Center
+  CHECK constraints on `public.player_accounts` and
+  `public.player_progression_snapshots` to the verified raw range `1..84`.
+
+Neither migration backfills rows or changes verification/ownership state.
 
 ## Tests and validation
 
@@ -248,7 +259,9 @@ show the explicit `town_center_level` value only, or an honest
 `Town Center not recorded` state.
 
 The two Town Center migrations were explicitly owner-approved and applied during
-production acceptance. A subsequent exact-head Codex review identified two UI
+production acceptance. Production verification confirmed both affected CHECK
+constraints allow `NULL` or raw Town Center values `1..84`; no existing
+`player_accounts.town_center_level` values were backfilled or rewritten. A subsequent exact-head Codex review identified two UI
 semantics defects: the identity context could still infer a Passport Town Center
 from legacy rendered text, and several views displayed raw 35–84 codes as literal
 Town Center levels. The hotfix now preserves the persisted explicit field in the
@@ -258,10 +271,13 @@ The profile service also no longer falls back from Town Center to generic
 
 ## Rollback
 
-Revert the MIGHTPULSE-001A implementation and correction commits. That restores
-the former Supabase Edge Function call path and removes the new
-environment/configuration entries. No database rollback is necessary because
-the milestone adds no migration and does not rewrite legacy data.
+Revert the MIGHTPULSE-001A implementation and correction commits to restore the
+former application call path if an application rollback is required. The two
+Town Center production migrations are backward-compatible schema changes and do
+not need to be reversed merely to roll back application code. Any schema
+reversal must be a separate, explicitly approved migration; do not delete the
+column or tighten the range ad hoc. No migration performed a data backfill or
+rewrote verification/ownership state.
 
 ## Deferred MIGHTPULSE-001B+
 
