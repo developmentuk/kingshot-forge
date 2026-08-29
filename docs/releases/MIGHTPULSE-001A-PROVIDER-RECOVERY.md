@@ -71,7 +71,9 @@ object wrapper, `ok === true`, an exact requested Governor ID, an optional
 `id_type` of `governor_id`, a plain-object `player`, a non-empty primitive
 `nick_name`, and an integer `kid` from 1 through 9999. A supplied expected State
 must match exactly. Town Center is optional, but when present it must be an
-integer from 1 through 30. Unsafe, malformed or non-HTTPS avatar URLs are
+integer raw Kingshot Town Center code from 1 through 84. Raw values 31–34
+represent the four TC30 sub-stages; 35–84 represent TG1 through TG10 and their
+four sub-stages. Unsafe, malformed or non-HTTPS avatar URLs are
 ignored. Raw provider payloads are neither logged nor persisted.
 
 ## Field mapping
@@ -235,7 +237,11 @@ did not yet contain that column. The browser therefore failed closed while
 loading the linked account.
 
 The corrective hotfix adds a nullable integer `town_center_level` column with
-an explicit 1–30 range constraint and no backfill. Existing generic
+an initial 1–30 range constraint and no backfill. Live provider acceptance then
+proved that the upstream/game raw Town Center code continues beyond 30 for
+TC30 sub-stages and Truegold progression. A follow-up correction widens the
+raw-level constraint to 1–84 on both `player_accounts` and
+`player_progression_snapshots`, without changing any row values. Existing generic
 `player_level` and legacy rendered-level fields remain untouched and are not
 reinterpreted as Town Center. The Player Passport summary is also corrected to
 show the explicit `town_center_level` value only, or an honest

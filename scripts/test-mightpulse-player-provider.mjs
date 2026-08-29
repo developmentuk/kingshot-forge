@@ -30,7 +30,7 @@ function validPayload(overrides = {}, playerOverrides = {}) {
       governor_id: '125500338',
       nick_name: 'Synthetic Governor',
       kid: 850,
-      town_center_level: 30,
+      town_center_level: 35,
       avatar_url: 'https://cdn.example.test/avatar.png',
       ...playerOverrides,
     },
@@ -74,7 +74,7 @@ assert.deepEqual(valid, {
   playerId: '125500338',
   name: 'Synthetic Governor',
   kingdomId: 850,
-  townCenterLevel: 30,
+  townCenterLevel: 35,
   avatarUrl: 'https://cdn.example.test/avatar.png',
   provider: 'mightpulse',
   providerFetchedAt: fetchedAt,
@@ -106,6 +106,12 @@ assert.equal(noAvatar.avatarUrl, null)
 const unsafeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: 'data:text/html,unsafe' })))
   .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
 assert.equal(unsafeAvatar.avatarUrl, null)
+for (const [rawLevel, expected] of [[31, 31], [34, 34], [35, 35], [40, 40], [84, 84]]) {
+  const accepted = await providerFor(Response.json(validPayload({}, { town_center_level: rawLevel })))
+    .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
+  assert.equal(accepted.townCenterLevel, expected)
+}
+
 const noTownCenter = await providerFor(Response.json(validPayload({}, { town_center_level: null })))
   .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
 assert.equal(noTownCenter.townCenterLevel, null)
@@ -118,8 +124,9 @@ for (const payload of [
   validPayload({}, { nick_name: '' }),
   validPayload({}, { kid: 0 }),
   validPayload({}, { kid: 10000 }),
-  validPayload({}, { town_center_level: '30' }),
-  validPayload({}, { town_center_level: 31 }),
+  validPayload({}, { town_center_level: '35' }),
+  validPayload({}, { town_center_level: 0 }),
+  validPayload({}, { town_center_level: 85 }),
 ]) {
   await expectProviderError(
     providerFor(Response.json(payload)),
