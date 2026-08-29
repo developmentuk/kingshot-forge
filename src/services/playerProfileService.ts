@@ -4,6 +4,8 @@ import type {
   PlayerTransferStatus,
 } from '../types/playerProfile'
 import type { PlayerAccount } from '../types/playerAccount'
+import { normalizeTownCenterLevel } from './playerProgressionService'
+import { formatTownCenterRawLevel } from '../../shared/domains/player-identity/townCenterLevel'
 
 type PlayerVerificationStatus =
   | 'linked'
@@ -22,6 +24,7 @@ type PlayerAccountIdentity = {
   profile_photo: string | null
   kingdom_id: number | null
   player_level: number | null
+  town_center_level?: number | null
   level_rendered: string | null
   level_rendered_detailed: string | null
   level_image: string | null
@@ -115,19 +118,15 @@ function normaliseText(
 function getTownCenterDisplay(
   player: PlayerAccountIdentity,
 ): string {
-  if (player.level_rendered_detailed) {
-    return player.level_rendered_detailed
-  }
+  const rawLevel = normalizeTownCenterLevel(
+    player.town_center_level,
+    player.level_rendered_detailed,
+    player.level_rendered,
+  )
 
-  if (player.level_rendered) {
-    return player.level_rendered
-  }
-
-  if (player.player_level !== null) {
-    return `Level ${player.player_level}`
-  }
-
-  return 'Not available'
+  return rawLevel === null
+    ? 'Not available'
+    : formatTownCenterRawLevel(rawLevel)
 }
 
 function createEditableProfile(
@@ -244,6 +243,7 @@ export async function getPublicPlayerProfile(
         profile_photo,
         kingdom_id,
         player_level,
+        town_center_level,
         level_rendered,
         level_rendered_detailed,
         level_image,

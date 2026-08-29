@@ -4,6 +4,7 @@ import {
   type PlayerLookupRequest,
   type PlayerProvider,
 } from './playerProvider.js'
+import { isTownCenterRawLevel } from '../../../shared/domains/player-identity/townCenterLevel.js'
 
 const DEFAULT_BASE_URL = 'https://api.mightpulse.com/v1'
 export const DEFAULT_MIGHTPULSE_TIMEOUT_MS = 45_000
@@ -90,12 +91,8 @@ function normalizeMightPulsePlayer(
 
   let townCenterLevel: number | null = null
   if (player.town_center_level !== null && player.town_center_level !== undefined) {
-    if (
-      !Number.isInteger(player.town_center_level)
-      || Number(player.town_center_level) < 1
-      || Number(player.town_center_level) > 30
-    ) invalidResponse()
-    townCenterLevel = Number(player.town_center_level)
+    if (!isTownCenterRawLevel(player.town_center_level)) invalidResponse()
+    townCenterLevel = player.town_center_level
   }
 
   if (request.expectedKingdomId !== undefined && kingdomId !== request.expectedKingdomId) {

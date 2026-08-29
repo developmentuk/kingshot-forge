@@ -11,7 +11,6 @@ import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PlayerAccount } from '../types/playerAccount'
-import { normalizeTownCenterLevel } from '../services/playerProgressionService'
 import {
   isPlayerIdentityAutoRefreshRoute,
   PlayerIdentityRefreshCoordinator,
@@ -117,7 +116,7 @@ export function PlayerIdentityProvider({
       return null
     }
 
-    const account = data ? { ...(data as PlayerAccount), town_center_level: normalizeTownCenterLevel((data as PlayerAccount).town_center_level, (data as PlayerAccount).level_rendered_detailed, (data as PlayerAccount).level_rendered) } : null
+    const account = data ? data as PlayerAccount : null
     setPlayerAccount(account)
     if (!account) setPlayerIdentityRefreshWarning(null)
 

@@ -12,6 +12,7 @@ import type {
   PlayerClaimSearchResult,
 } from '../types/playerClaim'
 import type { AccountLinkOcrReview } from '../../shared/domains/player-identity/accountLinkingOcr'
+import { formatTownCenterRawLevel } from '../../shared/domains/player-identity/townCenterLevel'
 import ScreenshotLinkingPanel from './ScreenshotLinkingPanel'
 
 function notifyPlayerIdentityChanged() {
@@ -346,7 +347,7 @@ function HybridPlayerClaimPanel() {
               <div>
                 <span className="linked-player-card__label">Primary Kingshot player</span>
                 <h3>{linkedAccount.player_name}</h3>
-                <p>{linkedAccount.town_center_level ? `Town Centre ${linkedAccount.town_center_level}` : 'Town Centre not recorded'}</p>
+                <p>{formatTownCenterRawLevel(linkedAccount.town_center_level)}</p>
               </div>
             </div>
             <div className="linked-player-card__stats">
@@ -396,7 +397,7 @@ function IndexedPlayerPreview({ player }: { player: IndexedPlayerRecord }) {
         <div>
           <span>Indexed Forge record</span>
           <h3>{player.playerName}</h3>
-          <p>State {player.kingdomId}{player.townCenterLevel ? ` · Town Centre ${player.townCenterLevel}` : ''}</p>
+          <p>State {player.kingdomId}{player.townCenterLevel ? ` · ${formatTownCenterRawLevel(player.townCenterLevel)}` : ''}</p>
           <small>{player.allianceName ? `${player.allianceName} · ` : ''}{formatPower(player.currentPower) ? `${formatPower(player.currentPower)} power · ` : ''}Player ID {player.playerId}</small>
         </div>
       </div>

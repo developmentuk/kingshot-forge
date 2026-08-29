@@ -1,4 +1,8 @@
 import { supabase } from '../lib/supabase'
+import {
+  isTownCenterRawLevel,
+  rawTownCenterFromTruegold,
+} from '../../shared/domains/player-identity/townCenterLevel'
 
 export type PlayerProgressionSnapshot = {
   id: string
@@ -71,19 +75,29 @@ function validateNonNegative(value: number | null, label: string) {
 
 export function normalizeTownCenterLevel(...values: unknown[]): number | null {
   for (const value of values) {
-    if (typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 30) return value
+    if (isTownCenterRawLevel(value)) return value
     if (typeof value !== 'string') continue
+
     const text = value.trim()
-    const match = text.match(/(?:town\s*center|town_center|\btc\b)\s*[:#-]?\s*(\d{1,2})\b/i) ?? text.match(/\bTG\s*(\d{1,2})\s*-\s*0\b/i)
-    const parsed = match ? Number(match[1]) : null
-    if (parsed !== null && Number.isInteger(parsed) && parsed >= 1 && parsed <= 30) return parsed
+    const tc30Stage = text.match(/(?:town\s*center|town_center|\btc\b)\s*30\s*[-.]\s*([1-4])\b/i)
+    if (tc30Stage) return 30 + Number(tc30Stage[1])
+
+    const truegold = text.match(/\bTG\s*(10|[1-9])(?:\s*[-.]\s*([0-4]))?\b/i)
+    if (truegold) {
+      const raw = rawTownCenterFromTruegold(Number(truegold[1]), Number(truegold[2] ?? 0))
+      if (raw !== null) return raw
+    }
+
+    const base = text.match(/(?:town\s*center|town_center|\btc\b)\s*[:#-]?\s*(\d{1,2})\b/i)
+    const parsed = base ? Number(base[1]) : null
+    if (parsed !== null && isTownCenterRawLevel(parsed) && parsed <= 30) return parsed
   }
   return null
 }
 
 export function validateTownCenterLevel(value: number | null): void {
-  if (value !== null && (!Number.isInteger(value) || value < 1 || value > 30)) {
-    throw new Error('Town Center must be a whole level from 1 to 30, or left as Not recorded.')
+  if (value !== null && !isTownCenterRawLevel(value)) {
+    throw new Error('Town Center must be a valid Kingshot raw level from 1 to 84, or left as Not recorded.')
   }
 }
 
@@ -126,7 +140,7 @@ export async function addProgressionSnapshot(playerAccountId: string, input: Pla
   })
   if (error) {
     if (error.code === '23514' && error.message.includes('player_progression_town_center_range')) {
-      throw new Error('Town Center must be a whole level from 1 to 30. The linked player data does not contain a valid Town Center value yet.')
+      throw new Error('Town Center must be a valid Kingshot raw level from 1 to 84. The linked player data does not contain a valid Town Center value yet.')
     }
     throw new Error('Progression could not be saved. Check the highlighted values and try again.')
   }

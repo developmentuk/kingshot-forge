@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { usePlayerIdentity } from '../../context/PlayerIdentityContext'
 import { trackForgePlayerEvent } from '../../platform/analytics/forgeAnalytics'
 import type { PlayerAccount } from '../../types/playerAccount'
+import { formatTownCenterRawLevel } from '../../../shared/domains/player-identity/townCenterLevel'
 import ForgeProgressPanel from '../../components/ForgeProgressPanel'
 import LinkedPlayerPanel from '../../components/LinkedPlayerPanel'
 
@@ -233,7 +234,7 @@ function IdentitySummary({
           Welcome back, {playerAccount.player_name}
         </h2>
         <p>
-          Kingdom {playerAccount.kingdom_id} · Town Center {formatLevel(playerAccount)}
+          Kingdom {playerAccount.kingdom_id} · {formatTownCenterRawLevel(playerAccount.town_center_level)}
         </p>
         <div className="player-identity__summary-status" aria-label="Passport status">
           <span>{formatVerification(playerAccount.verification_status)}</span>
@@ -282,15 +283,6 @@ function IdentityTool({
   )
 }
 
-function formatLevel(playerAccount: PlayerAccount) {
-  return (
-    playerAccount.level_rendered_detailed ||
-    playerAccount.level_rendered ||
-    (playerAccount.player_level
-      ? `Level ${playerAccount.player_level}`
-      : 'Not available')
-  )
-}
 
 function formatDate(value: string) {
   const date = new Date(value)
