@@ -24,7 +24,7 @@ type PlayerAccountIdentity = {
   profile_photo: string | null
   kingdom_id: number | null
   player_level: number | null
-  town_center_level: number | null
+  town_center_level?: number | null
   level_rendered: string | null
   level_rendered_detailed: string | null
   level_image: string | null
