@@ -115,6 +115,23 @@ export async function resolvePlayerRefresh(input: {
   provider: PlayerProvider
   nowMs?: number
 }): Promise<{ source: 'cache'; player: null } | { source: 'provider'; player: NormalizedPlayer }> {
+  if (input.action === 'link' && input.existingAccount) {
+    if (input.existingAccount.player_id !== input.playerId) {
+      throw new LinkedPlayerServiceError(
+        409,
+        'A different primary Kingshot player is already linked.',
+        'PLAYER_ACCOUNT_CONFLICT',
+      )
+    }
+    const existingKingdomId = validateKingdomId(input.existingAccount.kingdom_id)
+    if (existingKingdomId !== input.kingdomId) {
+      throw new LinkedPlayerServiceError(
+        409,
+        `This Player ID is already linked to State ${existingKingdomId}, not State ${input.kingdomId}.`,
+        'STATE_MISMATCH',
+      )
+    }
+  }
   const samePlayer = input.existingAccount?.player_id === input.playerId
   if (samePlayer) {
     const freshnessMs = input.forceProviderRefresh === true
@@ -211,14 +228,6 @@ export async function linkOrRevalidatePlayerAccount(
   const requestedKingdomId = input.action === 'revalidate'
     ? validateKingdomId(existing?.kingdom_id)
     : validateKingdomId(input.kingdomId)
-  if (existing && existing.player_id !== requestedPlayerId) {
-    throw new LinkedPlayerServiceError(
-      409,
-      'A different primary Kingshot player is already linked.',
-      'PLAYER_ACCOUNT_CONFLICT',
-    )
-  }
-
   const resolution = await resolvePlayerRefresh({
     action: input.action,
     existingAccount: existing,

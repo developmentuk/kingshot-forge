@@ -260,6 +260,44 @@ const samePlayerLink = await resolvePlayerRefresh({
 assert.equal(samePlayerLink.source, 'cache')
 assert.equal(providerCalls, 0)
 
+for (const { existingAccount, forceProviderRefresh } of [
+  { existingAccount: recentAccount, forceProviderRefresh: false },
+  { existingAccount: { ...recentAccount, last_refreshed_at: new Date(nowMs - PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS + 1).toISOString() }, forceProviderRefresh: true },
+  { existingAccount: { ...recentAccount, last_refreshed_at: new Date(nowMs - PLAYER_PROVIDER_FRESHNESS_TTL_MS).toISOString() }, forceProviderRefresh: false },
+]) {
+  await assert.rejects(
+    () => resolvePlayerRefresh({
+      action: 'link',
+      existingAccount,
+      playerId: '125500338',
+      kingdomId: 851,
+      provider: countingProvider,
+      forceProviderRefresh,
+      nowMs,
+    }),
+    (error) => {
+      assert.equal(error.statusCode, 409)
+      assert.equal(error.code, 'STATE_MISMATCH')
+      assert.match(error.message, /linked to State 850, not State 851/u)
+      return true
+    },
+  )
+  assert.equal(providerCalls, 0)
+}
+
+await assert.rejects(
+  () => resolvePlayerRefresh({
+    action: 'link',
+    existingAccount: recentAccount,
+    playerId: '999999999',
+    kingdomId: 850,
+    provider: countingProvider,
+    nowMs,
+  }),
+  (error) => error.statusCode === 409 && error.code === 'PLAYER_ACCOUNT_CONFLICT',
+)
+assert.equal(providerCalls, 0)
+
 const blockedManual = await resolvePlayerRefresh({
   action: 'revalidate',
   existingAccount: { ...recentAccount, last_refreshed_at: new Date(nowMs - PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS + 1).toISOString() },

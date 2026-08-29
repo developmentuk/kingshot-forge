@@ -127,7 +127,9 @@ The server is authoritative for a 60-minute freshness TTL based on
 - automatic revalidation inside the TTL returns the existing safe account and
   performs zero MightPulse calls;
 - an idempotent same-player `action=link` follows the same freshness policy and
-  performs zero provider calls while fresh;
+  performs zero provider calls while fresh, but only after the requested State
+  exactly matches the stored linked State; a mismatch returns deterministic
+  `409 STATE_MISMATCH` without consuming provider quota;
 - stale or malformed refresh timestamps cause one provider lookup;
 - an explicit manual refresh may bypass the 60-minute TTL only after a
   server-authoritative five-minute minimum interval, also persisted through

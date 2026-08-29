@@ -35,7 +35,9 @@ try {
   assert.throws(() => service.validateKingdomId(0), /valid Kingshot State/u)
 
   const source = await readFile('server/player-identity/linkedPlayerService.ts', 'utf8')
-  assert.match(source, /existing\.player_id !== requestedPlayerId/u)
+  assert.match(source, /input\.existingAccount\.player_id !== input\.playerId/u)
+  assert.match(source, /existingKingdomId !== input\.kingdomId/u)
+  assert.match(source, /'STATE_MISMATCH'/u)
   assert.match(source, /error\.code === '23505'/u)
   assert.match(source, /PLAYER_ALREADY_LINKED/u)
   const operationsSource = await readFile('server/identity/userManagementService.ts', 'utf8')
