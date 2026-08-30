@@ -261,6 +261,13 @@ function optionalTemporal(value: unknown): string | number | null {
   return text
 }
 
+function optionalTimestamp(value: unknown): string | null {
+  const text = optionalString(value, 80)
+  if (text === null) return null
+  if (!Number.isFinite(Date.parse(text))) invalidResponse()
+  return text
+}
+
 function normalizedAssetUrl(value: unknown): string | null {
   return normalizeAvatarUrl(value).url
 }
@@ -548,7 +555,7 @@ function normalizeMightPulsePlayerIntelligence(
     heroes,
     ranks: normalizeRanks(wrapper.ranks),
     governorGear: normalizeGovernorGear(wrapper.gov_gear),
-    providerCachedAt: optionalString(wrapper.cached_at, 80),
+    providerCachedAt: optionalTimestamp(wrapper.cached_at),
     providerAgeSeconds: optionalNumber(wrapper.age_seconds),
     providerFresh: optionalBoolean(wrapper.fresh),
   }
