@@ -40,6 +40,7 @@ import {
   syncLinkedPlayerIntelligence,
 } from '../server/player-intelligence/playerIntelligenceService.ts'
 import {
+  baseSignInProviderIdempotencyKey,
   isProviderQuotaRuntimeEnabled,
   readMightPulseProviderRequestStatus,
   signInProviderIdempotencyKey,
@@ -72,6 +73,22 @@ assert.equal(
   isProviderQuotaRuntimeEnabled({ MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'false' }),
   false,
 )
+assert.notEqual(
+  baseSignInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
+  signInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
+)
+assert.equal(
+  baseSignInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
+  baseSignInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
+)
+assert.notEqual(
+  baseSignInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
+  baseSignInProviderIdempotencyKey(
+    'user-sign-in-key',
+    '2026-08-29T12:01:00.000Z',
+  ),
+)
+
 assert.equal(shouldEnforcePlayerProviderQuota(), false)
 assert.equal(
   shouldEnforcePlayerProviderQuota({
@@ -1842,7 +1859,10 @@ const baseSignInRefresh = await resolvePlayerRefresh({
       assert.deepEqual(input, {
         category: 'player_sign_in',
         priority: 'high',
-        idempotencyKey: null,
+        idempotencyKey: baseSignInProviderIdempotencyKey(
+          'user-base-quota',
+          fetchedAt,
+        ),
       })
       return {
         allowed: true,
@@ -1863,6 +1883,57 @@ const baseSignInRefresh = await resolvePlayerRefresh({
 })
 assert.equal(baseSignInRefresh.source, 'provider')
 assert.equal(baseSignInProviderCalls, 1)
+
+let duplicateBaseSignInProviderCalls = 0
+let duplicateBaseSignInReservations = 0
+const duplicateBaseSignInRefresh = await resolvePlayerRefresh({
+  action: 'revalidate',
+  existingAccount: {
+    ...recentAccount,
+    last_refreshed_at: new Date(nowMs - 60_000).toISOString(),
+  },
+  playerId: '125500338',
+  kingdomId: 850,
+  provider: {
+    async lookupPlayer() {
+      duplicateBaseSignInProviderCalls += 1
+      return normalizedPlayer
+    },
+  },
+  refreshReason: 'sign-in',
+  verifiedLastSignInAt: fetchedAt,
+  userId: 'user-base-quota',
+  quotaRepository: {
+    async reserve(input) {
+      duplicateBaseSignInReservations += 1
+      assert.deepEqual(input, {
+        category: 'player_sign_in',
+        priority: 'high',
+        idempotencyKey: baseSignInProviderIdempotencyKey(
+          'user-base-quota',
+          fetchedAt,
+        ),
+      })
+      return {
+        allowed: false,
+        duplicate: true,
+        state: 'in_progress',
+        reservationId: '00000000-0000-0000-0000-000000000011',
+        attemptToken: null,
+        minuteUsed: 2,
+        dayUsed: 2,
+        minuteLimit: 60,
+        dayLimit: 5000,
+        normalDayLimit: 4500,
+      }
+    },
+  },
+  enforceQuota: true,
+  nowMs,
+})
+assert.equal(duplicateBaseSignInRefresh.source, 'cache')
+assert.equal(duplicateBaseSignInReservations, 1)
+assert.equal(duplicateBaseSignInProviderCalls, 0)
 
 let singleFlightQuotaReservations = 0
 let singleFlightQuotaCompletions = 0
