@@ -1157,6 +1157,178 @@ const stale = await resolvePlayerRefresh({
 assert.equal(stale.source, 'provider')
 assert.equal(providerCalls, 2)
 
+
+assert.deepEqual(
+  quotaClassForPlayerRefresh('link', 'automatic'),
+  { category: 'player_link', priority: 'high' },
+)
+assert.deepEqual(
+  quotaClassForPlayerRefresh('revalidate', 'sign-in'),
+  { category: 'player_sign_in', priority: 'high' },
+)
+assert.deepEqual(
+  quotaClassForPlayerRefresh('revalidate', 'manual'),
+  { category: 'player_manual', priority: 'high' },
+)
+assert.deepEqual(
+  quotaClassForPlayerRefresh('revalidate', 'automatic'),
+  { category: 'player_automatic', priority: 'low' },
+)
+
+let identityQuotaInput
+let identityQuotaProviderCalls = 0
+const identityQuotaProvider = {
+  async lookupPlayer() {
+    identityQuotaProviderCalls += 1
+    return normalizedPlayer
+  },
+}
+const identityQuotaRepository = {
+  async reserve(input) {
+    identityQuotaInput = input
+    return {
+      allowed: true,
+      duplicate: false,
+      reservationId: '00000000-0000-0000-0000-000000000010',
+      minuteUsed: 1,
+      dayUsed: 1,
+      minuteLimit: 60,
+      dayLimit: 5000,
+      normalDayLimit: 4500,
+    }
+  },
+}
+
+const quotaGovernedLink = await resolvePlayerRefresh({
+  action: 'link',
+  existingAccount: null,
+  playerId: '125500338',
+  kingdomId: 850,
+  provider: identityQuotaProvider,
+  userId: 'user-base-quota',
+  quotaRepository: identityQuotaRepository,
+  enforceQuota: true,
+  nowMs,
+})
+assert.equal(quotaGovernedLink.source, 'provider')
+assert.deepEqual(
+  identityQuotaInput,
+  {
+    category: 'player_link',
+    priority: 'high',
+    idempotencyKey: null,
+  },
+)
+assert.equal(identityQuotaProviderCalls, 1)
+
+const quotaGovernedManual = await resolvePlayerRefresh({
+  action: 'revalidate',
+  existingAccount: {
+    ...recentAccount,
+    last_refreshed_at: new Date(
+      nowMs - PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS,
+    ).toISOString(),
+  },
+  playerId: '125500338',
+  kingdomId: 850,
+  provider: identityQuotaProvider,
+  forceProviderRefresh: true,
+  refreshReason: 'manual',
+  userId: 'user-base-quota',
+  quotaRepository: identityQuotaRepository,
+  enforceQuota: true,
+  nowMs,
+})
+assert.equal(quotaGovernedManual.source, 'provider')
+assert.equal(identityQuotaInput.category, 'player_manual')
+assert.equal(identityQuotaInput.priority, 'high')
+assert.equal(identityQuotaProviderCalls, 2)
+
+let duplicateBaseProviderCalls = 0
+const duplicateBaseSignIn = await resolvePlayerRefresh({
+  action: 'revalidate',
+  existingAccount: {
+    ...recentAccount,
+    last_refreshed_at: new Date(nowMs - 60_000).toISOString(),
+  },
+  playerId: '125500338',
+  kingdomId: 850,
+  provider: {
+    async lookupPlayer() {
+      duplicateBaseProviderCalls += 1
+      return normalizedPlayer
+    },
+  },
+  refreshReason: 'sign-in',
+  verifiedLastSignInAt: fetchedAt,
+  userId: 'user-base-quota',
+  quotaRepository: {
+    async reserve(input) {
+      assert.deepEqual(input, {
+        category: 'player_sign_in',
+        priority: 'high',
+        idempotencyKey: signInProviderIdempotencyKey(
+          'user-base-quota',
+          fetchedAt,
+        ),
+      })
+      return {
+        allowed: false,
+        duplicate: true,
+        reservationId: '00000000-0000-0000-0000-000000000011',
+        minuteUsed: 2,
+        dayUsed: 2,
+        minuteLimit: 60,
+        dayLimit: 5000,
+        normalDayLimit: 4500,
+      }
+    },
+  },
+  enforceQuota: true,
+  nowMs,
+})
+assert.equal(duplicateBaseSignIn.source, 'cache')
+assert.equal(duplicateBaseProviderCalls, 0)
+
+await assert.rejects(
+  () => resolvePlayerRefresh({
+    action: 'revalidate',
+    existingAccount: {
+      ...recentAccount,
+      last_refreshed_at: new Date(
+        nowMs - PLAYER_PROVIDER_FRESHNESS_TTL_MS,
+      ).toISOString(),
+    },
+    playerId: '125500338',
+    kingdomId: 850,
+    provider: identityQuotaProvider,
+    refreshReason: 'automatic',
+    userId: 'user-base-quota',
+    quotaRepository: {
+      async reserve() {
+        return {
+          allowed: false,
+          duplicate: false,
+          reservationId: null,
+          minuteUsed: 60,
+          dayUsed: 4500,
+          minuteLimit: 60,
+          dayLimit: 5000,
+          normalDayLimit: 4500,
+        }
+      },
+    },
+    enforceQuota: true,
+    nowMs,
+  }),
+  (error) => {
+    assert.equal(error.statusCode, 429)
+    assert.equal(error.code, 'PLAYER_PROVIDER_QUOTA_EXHAUSTED')
+    return true
+  },
+)
+assert.equal(identityQuotaProviderCalls, 2)
+
 const attemptThrottle = new PlayerAccountAttemptThrottle(2, PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS)
 attemptThrottle.enforce('authenticated-user', nowMs)
 attemptThrottle.enforce('authenticated-user', nowMs + 1)
