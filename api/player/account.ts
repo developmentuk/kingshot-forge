@@ -3,7 +3,11 @@ import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/r
 import { captureServerException } from '../../server/observability/sentry.js'
 import { LinkedPlayerServiceError, linkOrRevalidatePlayerAccount } from '../../server/player-identity/linkedPlayerService.js'
 import { PlayerProviderError } from '../../server/player-identity/providers/playerProvider.js'
-import { PlayerAccountAttemptThrottle } from '../../server/player-identity/playerAccountAttemptThrottle.js'
+import {
+  PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS,
+  PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT,
+  PlayerAccountAttemptThrottle,
+} from '../../server/player-identity/playerAccountAttemptThrottle.js'
 import {
   isPlayerIntelligenceRuntimeEnabled,
   syncLinkedPlayerIntelligence,
@@ -15,6 +19,10 @@ import {
 } from '../../server/player-intelligence/providerQuota.js'
 
 const attemptThrottle = new PlayerAccountAttemptThrottle()
+const signInStatusThrottle = new PlayerAccountAttemptThrottle(
+  PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT,
+  PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS,
+)
 
 function body(request: VercelRequest) {
   return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {}
@@ -43,6 +51,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const input = body(request)
 
     if (input.action === 'sign-in-status') {
+      signInStatusThrottle.enforce(actor.userId)
       if (!actor.lastSignInAt) {
         fail(
           response,
