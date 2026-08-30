@@ -251,7 +251,7 @@ returns table (
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   player_row public.player_accounts;
   kingdom_row public.kingdoms;
@@ -707,7 +707,7 @@ begin
   admin_active := management_role;
   return next;
 end;
-$;
+$$;
 
 revoke all on function public.sync_mightpulse_alliance_membership(
   uuid,
