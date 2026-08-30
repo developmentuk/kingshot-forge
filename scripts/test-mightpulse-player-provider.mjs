@@ -407,7 +407,8 @@ assert.deepEqual(
     allianceTag: 'SYN',
     allianceName: 'Synthetic Alliance',
     memberRole: 'r4',
-    observedAt: fetchedAt,
+    observedAt: '2026-08-29T11:50:00.000Z',
+    fetchedAt,
   },
 )
 assert.equal(intelligenceResult.allianceAuthority.memberRole, 'r4')
@@ -580,6 +581,22 @@ assert.match(
 assert.match(
   migrationSql,
   /'mightpulse_admin_synced'/iu,
+)
+assert.match(
+  migrationSql,
+  /create table if not exists public\.player_alliance_provider_state/iu,
+)
+assert.match(
+  migrationSql,
+  /p_observed_at <= authority_state\.provider_observed_at/iu,
+)
+assert.match(
+  migrationSql,
+  /provider_observed_at = excluded\.provider_observed_at/iu,
+)
+assert.match(
+  migrationSql,
+  /p_fetched_at timestamptz/iu,
 )
 assert.match(
   migrationSql,
