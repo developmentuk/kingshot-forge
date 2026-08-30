@@ -804,8 +804,17 @@ begin
     and previous_admin.id is not null
     and previous_admin.is_active = false
     and previous_admin.revoked_at is not null
-    and authority_state.member_role in ('r4', 'leader')
-    and previous_admin.revoked_at >= authority_state.provider_fetched_at
+    and (
+      (
+        authority_state.player_account_id is not null
+        and authority_state.member_role in ('r4', 'leader')
+        and previous_admin.revoked_at >= authority_state.provider_fetched_at
+      )
+      or (
+        authority_state.player_account_id is null
+        and previous_admin.role in ('r4', 'leader')
+      )
+    )
     and (
       authority_override_history.alliance_id is null
       or previous_admin.revoked_at > greatest(
