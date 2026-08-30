@@ -548,6 +548,58 @@ assert.equal(
 )
 assert.equal(ageOnlyResult.allianceAuthority.memberRole, 'r4')
 
+let incompleteRankApplyInput
+const incompleteRankResult = await syncLinkedPlayerIntelligence(
+  'user-intelligence',
+  'manual',
+  {
+    repository: {
+      ...allowedRepository,
+      async applySync(input) {
+        incompleteRankApplyInput = input
+        return {
+          observationId: '00000000-0000-0000-0000-000000000009',
+          allianceAuthority: input.applyAllianceAuthority
+            ? {
+                allianceId: '00000000-0000-0000-0000-000000000004',
+                membershipId: '00000000-0000-0000-0000-000000000005',
+                memberRole: 'r4',
+                adminActive: true,
+              }
+            : null,
+        }
+      },
+    },
+    quotaRepository: allowedQuotaRepository,
+    provider: {
+      async lookupPlayer() {
+        throw new Error('identity-only lookup must not be used by intelligence sync')
+      },
+      async lookupPlayerIntelligence() {
+        return {
+          ...intelligence,
+          base: {
+            ...intelligence.base,
+            alliance: {
+              ...intelligence.base.alliance,
+              rank: null,
+            },
+          },
+        }
+      },
+    },
+  },
+)
+assert.equal(incompleteRankApplyInput.applyAllianceAuthority, true)
+assert.equal(incompleteRankApplyInput.allianceTag, 'SYN')
+assert.equal(incompleteRankApplyInput.memberRole, null)
+assert.equal(
+  incompleteRankApplyInput.authorityObservedAt,
+  '2026-08-29T11:50:00.000Z',
+)
+assert.equal(incompleteRankResult.allianceAuthority.memberRole, 'r4')
+assert.equal(incompleteRankResult.allianceAuthority.adminActive, true)
+
 let noEvidenceApplyInput
 const noEvidenceResult = await syncLinkedPlayerIntelligence(
   'user-intelligence',
@@ -2447,6 +2499,38 @@ assert.ok(signInStatusActionIndex >= 0)
 assert.ok(signInStatusReadIndex > signInStatusActionIndex)
 assert.ok(accountThrottleIndex > signInStatusReadIndex)
 assert.ok(richSyncIndex > accountThrottleIndex)
+
+const incompleteRankWatermarkMigrationSql = await readFile(
+  new URL(
+    '../supabase/migrations/20260830193000_mightpulse_001b_incomplete_rank_watermark.sql',
+    import.meta.url,
+  ),
+  'utf8',
+)
+assert.match(
+  incompleteRankWatermarkMigrationSql,
+  /create or replace function public\.advance_mightpulse_alliance_authority_watermark\(/u,
+)
+assert.match(
+  incompleteRankWatermarkMigrationSql,
+  /p_observed_at > authority_state\.provider_observed_at/u,
+)
+assert.match(
+  incompleteRankWatermarkMigrationSql,
+  /alliance_tag = public\.player_alliance_provider_state\.alliance_tag[\s\S]*member_role = public\.player_alliance_provider_state\.member_role/u,
+)
+assert.match(
+  incompleteRankWatermarkMigrationSql,
+  /nullif\(btrim\(p_alliance_tag\), ''\) is not null[\s\S]*p_member_role is null[\s\S]*advance_mightpulse_alliance_authority_watermark/u,
+)
+assert.match(
+  incompleteRankWatermarkMigrationSql,
+  /grant execute on function public\.advance_mightpulse_alliance_authority_watermark\([\s\S]*to service_role/u,
+)
+assert.doesNotMatch(
+  incompleteRankWatermarkMigrationSql,
+  /grant execute on function public\.advance_mightpulse_alliance_authority_watermark\([\s\S]*to authenticated/u,
+)
 
 const providerRequestStatusMigrationSql = await readFile(
   new URL(
