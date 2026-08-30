@@ -9,6 +9,7 @@ import {
   syncLinkedPlayerIntelligence,
 } from '../../server/player-intelligence/playerIntelligenceService.js'
 import {
+  baseSignInProviderIdempotencyKey,
   readMightPulseProviderRequestStatus,
   signInProviderIdempotencyKey,
 } from '../../server/player-intelligence/providerQuota.js'
@@ -42,14 +43,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const input = body(request)
 
     if (input.action === 'sign-in-status') {
-      if (!isPlayerIntelligenceRuntimeEnabled()) {
-        response.status(200).json({
-          status: 'success',
-          code: 'PLAYER_INTELLIGENCE_STATUS_UNAVAILABLE',
-          data: null,
-        })
-        return
-      }
       if (!actor.lastSignInAt) {
         fail(
           response,
@@ -59,11 +52,17 @@ export default async function handler(request: VercelRequest, response: VercelRe
         )
         return
       }
+      const intelligenceEnabled = isPlayerIntelligenceRuntimeEnabled()
       const state = await readMightPulseProviderRequestStatus(
-        signInProviderIdempotencyKey(
-          actor.userId,
-          actor.lastSignInAt,
-        ),
+        intelligenceEnabled
+          ? signInProviderIdempotencyKey(
+              actor.userId,
+              actor.lastSignInAt,
+            )
+          : baseSignInProviderIdempotencyKey(
+              actor.userId,
+              actor.lastSignInAt,
+            ),
       )
       response.status(200).json({
         status: 'success',
@@ -141,6 +140,17 @@ export default async function handler(request: VercelRequest, response: VercelRe
       || error instanceof LinkedPlayerServiceError
       || error instanceof PlayerProviderError
     ) {
+      if (
+        error instanceof LinkedPlayerServiceError
+        && error.code === 'PLAYER_PROVIDER_REQUEST_IN_PROGRESS'
+      ) {
+        response.status(200).json({
+          status: 'success',
+          code: 'PLAYER_INTELLIGENCE_IN_PROGRESS',
+          data: null,
+        })
+        return
+      }
       if (error instanceof LinkedPlayerServiceError && error.code === 'PLAYER_ACCOUNT_RATE_LIMITED') {
         response.setHeader('Retry-After', '300')
       }
