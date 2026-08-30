@@ -833,6 +833,7 @@ revoke all on function public.sync_mightpulse_alliance_membership(
   text,
   text,
   public.alliance_member_role,
+  timestamptz,
   timestamptz
 ) from public;
 revoke all on function public.sync_mightpulse_alliance_membership(
@@ -842,6 +843,7 @@ revoke all on function public.sync_mightpulse_alliance_membership(
   text,
   text,
   public.alliance_member_role,
+  timestamptz,
   timestamptz
 ) from anon;
 revoke all on function public.sync_mightpulse_alliance_membership(
@@ -851,6 +853,7 @@ revoke all on function public.sync_mightpulse_alliance_membership(
   text,
   text,
   public.alliance_member_role,
+  timestamptz,
   timestamptz
 ) from authenticated;
 grant execute on function public.sync_mightpulse_alliance_membership(
@@ -860,6 +863,7 @@ grant execute on function public.sync_mightpulse_alliance_membership(
   text,
   text,
   public.alliance_member_role,
+  timestamptz,
   timestamptz
 ) to service_role;
 
