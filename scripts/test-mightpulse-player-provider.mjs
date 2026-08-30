@@ -21,8 +21,11 @@ import {
   getPostSignInPlayerSyncInFlight,
   getPostSignInPlayerSyncOutcome,
   hasPostSignInPlayerSyncAttempted,
+  POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS,
+  POST_SIGN_IN_COMPLETION_POLL_INTERVAL_MS,
   shouldSuppressAutomaticRefreshAfterPostSignInSync,
   syncLinkedPlayerAfterSignIn,
+  waitForPostSignInPlayerRefreshCompletion,
 } from '../src/services/postSignInPlayerSyncService.ts'
 import {
   isAllianceManagementRank,
@@ -774,6 +777,14 @@ assert.match(
 assert.match(
   migrationSql,
   /authority_override_history public\.alliance_provider_authority_overrides/iu,
+)
+assert.match(
+  migrationSql,
+  /authority_state\.player_account_id is null[\s\S]*previous_admin\.role in \('r4', 'leader'\)/iu,
+)
+assert.match(
+  migrationSql,
+  /authority_state\.player_account_id is not null[\s\S]*authority_state\.member_role in \('r4', 'leader'\)[\s\S]*previous_admin\.revoked_at >= authority_state\.provider_fetched_at/iu,
 )
 assert.match(
   migrationSql,
@@ -1635,8 +1646,56 @@ assert.equal(
   shouldSuppressAutomaticRefreshAfterPostSignInSync(
     getPostSignInPlayerSyncOutcome(inProgressSession),
   ),
+  false,
+)
+assert.ok(
+  (POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS - 1)
+    * POST_SIGN_IN_COMPLETION_POLL_INTERVAL_MS
+    >= 90_000,
+)
+
+let completionReadCalls = 0
+let completionSleepCalls = 0
+assert.equal(
+  await waitForPostSignInPlayerRefreshCompletion(
+    '2026-08-29T11:00:00.000Z',
+    async () => {
+      completionReadCalls += 1
+      return completionReadCalls < 3
+        ? '2026-08-29T11:00:00.000Z'
+        : '2026-08-29T11:01:00.000Z'
+    },
+    {
+      intervalMs: 1,
+      maxAttempts: 3,
+      sleepImplementation: async (milliseconds) => {
+        assert.equal(milliseconds, 1)
+        completionSleepCalls += 1
+      },
+    },
+  ),
   true,
 )
+assert.equal(completionReadCalls, 3)
+assert.equal(completionSleepCalls, 2)
+
+let timeoutReadCalls = 0
+assert.equal(
+  await waitForPostSignInPlayerRefreshCompletion(
+    '2026-08-29T11:00:00.000Z',
+    async () => {
+      timeoutReadCalls += 1
+      return '2026-08-29T11:00:00.000Z'
+    },
+    {
+      intervalMs: 1,
+      maxAttempts: 3,
+      sleepImplementation: async () => {},
+    },
+  ),
+  false,
+)
+assert.equal(timeoutReadCalls, 3)
 
 assert.equal(
   await syncLinkedPlayerAfterSignIn(
@@ -1740,6 +1799,14 @@ assert.match(
 assert.match(
   playerIdentityContextSource,
   /shouldSuppressAutomaticRefreshAfterPostSignInSync\(signInResult\)/u,
+)
+assert.match(
+  playerIdentityContextSource,
+  /signInResult === 'in-progress'[\s\S]*waitForPostSignInPlayerRefreshCompletion/u,
+)
+assert.match(
+  playerIdentityContextSource,
+  /\.select\('last_refreshed_at'\)[\s\S]*\.eq\('is_primary', true\)/u,
 )
 assert.doesNotMatch(
   playerIdentityContextSource,
