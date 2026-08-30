@@ -14,7 +14,9 @@ import { supabase } from '../lib/supabase'
 import type { PlayerAccount } from '../types/playerAccount'
 import {
   getPostSignInPlayerSyncInFlight,
+  getPostSignInPlayerSyncOutcome,
   hasPostSignInPlayerSyncAttempted,
+  shouldSuppressAutomaticRefreshAfterPostSignInSync,
 } from '../services/postSignInPlayerSyncService'
 import {
   isPlayerIdentityAutoRefreshRoute,
@@ -195,12 +197,20 @@ export function PlayerIdentityProvider({
       ) {
         suppressedInitialSignInRefresh.current = signInMarker
         const signInSync = getPostSignInPlayerSyncInFlight(user.id)
-        if (signInSync) await signInSync
+        const signInResult = signInSync
+          ? await signInSync
+          : getPostSignInPlayerSyncOutcome(session)
         if (cancelled) return
+
         const refreshedAfterSignIn = await loadPlayerIdentity()
         if (!refreshedAfterSignIn || cancelled) return
         currentAccount = refreshedAfterSignIn
-        return
+
+        if (
+          shouldSuppressAutomaticRefreshAfterPostSignInSync(signInResult)
+        ) {
+          return
+        }
       }
 
       const lastRefresh = Date.parse(currentAccount.last_refreshed_at ?? '')
