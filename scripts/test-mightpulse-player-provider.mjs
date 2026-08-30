@@ -2929,6 +2929,34 @@ assert.doesNotMatch(
   /grant execute[\s\S]*to authenticated/u,
 )
 
+const expiredProviderStatusMigrationSql = await readFile(
+  new URL(
+    '../supabase/migrations/20260830204500_mightpulse_001b_expired_provider_status.sql',
+    import.meta.url,
+  ),
+  'utf8',
+)
+assert.match(
+  expiredProviderStatusMigrationSql,
+  /create or replace function public\.get_provider_request_status\(/u,
+)
+assert.match(
+  expiredProviderStatusMigrationSql,
+  /reservation\.status = 'pending'[\s\S]*reservation\.lease_expires_at <= clock_timestamp\(\)[\s\S]*then 'failed'/u,
+)
+assert.match(
+  expiredProviderStatusMigrationSql,
+  /return coalesce\(current_status, 'missing'\)/u,
+)
+assert.match(
+  expiredProviderStatusMigrationSql,
+  /grant execute on function public\.get_provider_request_status\([\s\S]*to service_role/u,
+)
+assert.doesNotMatch(
+  expiredProviderStatusMigrationSql,
+  /grant execute[\s\S]*to authenticated/u,
+)
+
 const playerIdentityContextSource = await readFile(
   new URL('../src/context/PlayerIdentityContext.tsx', import.meta.url),
   'utf8',
@@ -2961,6 +2989,13 @@ assert.match(
   postSignInSyncServiceSource,
   /if \(retryResult === 'unavailable'\) \{[\s\S]*return true/u,
 )
+const repeatedSuppressionIndex = playerIdentityContextSource.indexOf(
+  'const sameHandledSignIn =',
+)
+const repeatedSuppressionReturnIndex = playerIdentityContextSource.indexOf(
+  'Date.now() - existingSignInSuppression.handledAt < REFRESH_STALE_MS',
+  repeatedSuppressionIndex,
+)
 const signInResultIndex = playerIdentityContextSource.indexOf(
   'const signInResult = signInSync',
 )
@@ -2969,20 +3004,34 @@ const completionWaitIndex = playerIdentityContextSource.indexOf(
   signInResultIndex,
 )
 const suppressionMarkerIndex = playerIdentityContextSource.indexOf(
-  'suppressedInitialSignInRefresh.current = signInMarker',
+  'suppressedInitialSignInRefresh.current = {',
   signInResultIndex,
 )
 const ordinaryRefreshIndex = playerIdentityContextSource.indexOf(
   'const lastRefresh = Date.parse',
   signInResultIndex,
 )
-assert.ok(signInResultIndex >= 0)
+assert.ok(repeatedSuppressionIndex >= 0)
+assert.ok(repeatedSuppressionReturnIndex > repeatedSuppressionIndex)
+assert.ok(signInResultIndex > repeatedSuppressionReturnIndex)
 assert.ok(completionWaitIndex > signInResultIndex)
 assert.ok(suppressionMarkerIndex > completionWaitIndex)
 assert.ok(ordinaryRefreshIndex > suppressionMarkerIndex)
 assert.match(
   playerIdentityContextSource,
-  /suppressedInitialSignInRefresh\.current = signInMarker\s*if \(suppressAutomaticRefresh\) return\s*\}\s*const lastRefresh = Date\.parse/u,
+  /const signInSuppressionKey = session && user[\s\S]*const sameHandledSignIn = signInSuppressionKey !== null[\s\S]*Date\.now\(\) - existingSignInSuppression\.handledAt < REFRESH_STALE_MS[\s\S]*return/u,
+)
+assert.match(
+  playerIdentityContextSource,
+  /session[\s\S]*signInSuppressionKey !== null[\s\S]*!sameHandledSignIn[\s\S]*hasPostSignInPlayerSyncAttempted\(session\)/u,
+)
+assert.match(
+  playerIdentityContextSource,
+  /if \(suppressAutomaticRefresh\) \{[\s\S]*suppressedInitialSignInRefresh\.current = \{[\s\S]*key: signInSuppressionKey,[\s\S]*handledAt: Date\.now\(\),[\s\S]*return/u,
+)
+assert.doesNotMatch(
+  playerIdentityContextSource,
+  /suppressedInitialSignInRefresh\.current = signInMarker/u,
 )
 assert.doesNotMatch(
   playerIdentityContextSource,
