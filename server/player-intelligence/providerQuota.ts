@@ -14,10 +14,18 @@ export type ProviderRequestCategory =
 
 export type ProviderQuotaPriority = 'high' | 'normal' | 'low'
 
+export type ProviderQuotaReservationState =
+  | 'reserved'
+  | 'in_progress'
+  | 'completed'
+  | 'quota_exhausted'
+
 export type ProviderQuotaReservation = Readonly<{
   allowed: boolean
   duplicate: boolean
+  state: ProviderQuotaReservationState
   reservationId: string | null
+  attemptToken: string | null
   minuteUsed: number
   dayUsed: number
   minuteLimit: number
@@ -31,6 +39,10 @@ export interface ProviderQuotaRepository {
     priority: ProviderQuotaPriority
     idempotencyKey?: string | null
   }>): Promise<ProviderQuotaReservation>
+  fail(input: Readonly<{
+    reservationId: string
+    attemptToken: string
+  }>): Promise<boolean>
 }
 
 export function isProviderQuotaRuntimeEnabled(
@@ -85,6 +97,16 @@ implements ProviderQuotaRepository {
       typeof value.allowed !== 'boolean'
       || typeof value.duplicate !== 'boolean'
       || (
+        value.reservation_state !== 'reserved'
+        && value.reservation_state !== 'in_progress'
+        && value.reservation_state !== 'completed'
+        && value.reservation_state !== 'quota_exhausted'
+      )
+      || (
+        value.attempt_token !== null
+        && typeof value.attempt_token !== 'string'
+      )
+      || (
         value.reservation_id !== null
         && typeof value.reservation_id !== 'string'
       )
@@ -105,13 +127,36 @@ implements ProviderQuotaRepository {
     return {
       allowed: value.allowed,
       duplicate: value.duplicate,
+      state: value.reservation_state as ProviderQuotaReservationState,
       reservationId: value.reservation_id as string | null,
+      attemptToken: value.attempt_token as string | null,
       minuteUsed: value.minute_used,
       dayUsed: value.day_used,
       minuteLimit: value.minute_limit,
       dayLimit: value.day_limit,
       normalDayLimit: value.normal_day_limit,
     }
+  }
+
+  async fail(
+    input: Readonly<{
+      reservationId: string
+      attemptToken: string
+    }>,
+  ): Promise<boolean> {
+    const admin = getSupabaseAdmin()
+    const { data, error } = await admin.rpc(
+      'fail_provider_request',
+      {
+        p_reservation_id: input.reservationId,
+        p_attempt_token: input.attemptToken,
+      },
+    )
+    if (error) throw error
+    if (typeof data !== 'boolean') {
+      throw new Error('Provider quota failure update returned an invalid result.')
+    }
+    return data
   }
 }
 
@@ -134,4 +179,24 @@ export async function reserveMightPulseProviderRequest(
     )
   }
   return reservation
+}
+
+
+export async function failMightPulseProviderRequest(
+  reservation: ProviderQuotaReservation,
+  repository: ProviderQuotaRepository =
+    new SupabaseProviderQuotaRepository(),
+): Promise<boolean> {
+  if (
+    reservation.state !== 'reserved'
+    || reservation.reservationId === null
+    || reservation.attemptToken === null
+  ) {
+    return false
+  }
+
+  return repository.fail({
+    reservationId: reservation.reservationId,
+    attemptToken: reservation.attemptToken,
+  })
 }
