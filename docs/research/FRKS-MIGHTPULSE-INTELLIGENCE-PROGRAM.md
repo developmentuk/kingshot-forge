@@ -19,9 +19,15 @@ This approval does **not** change the separation between:
 1. **linking** — a Forge user deliberately associates a Kingshot Player ID;
 2. **observation** — Forge receives game data from MightPulse at a recorded time;
 3. **ownership proof** — stronger evidence that the person controls the game account;
-4. **Forge authority** — permissions derived from Forge membership/capability rules.
+4. **Forge Alliance authority** — Alliance membership/rank may be synchronised from
+   the latest successful MightPulse observation;
+5. **Forge global authority** — platform-wide roles such as admin/owner remain
+   independent and are never granted by MightPulse.
 
-MightPulse observations never upgrade ownership or Forge authority by themselves.
+MightPulse observations never upgrade player ownership/verification or Forge
+global roles. They **may** create/update the player's canonical Forge Alliance
+membership and in-Alliance position when the provider reports a current Alliance
+and rank.
 
 ## Provider contract
 
@@ -98,6 +104,24 @@ governed KvK intelligence session is active for the selected opponent scope:
 Opponent operational intelligence leaves active use after the KvK window.
 Longer-lived history must be aggregate/non-sensitive or separately approved.
 
+## Authentication-triggered refresh
+
+Every genuine authenticated sign-in for a linked Forge player triggers one
+server-side MightPulse Player refresh. This refresh is session-triggered rather
+than page-triggered and updates approved provider-owned fields automatically,
+including current Alliance membership/rank.
+
+Duplicate auth callbacks, multiple mounted routes or rapid reloads must not
+amplify this into repeated provider calls: Forge uses per-user/session
+single-flight coordination plus a short safety cooldown. After the sign-in
+refresh, an active session may refresh again around the provider's ~60-minute
+freshness boundary, on an explicit manual refresh, or when a governed feature
+requires fresher data.
+
+Login refresh is a high-priority quota class. If the provider is unavailable or
+quota-limited, authentication itself still succeeds and Forge uses the last
+successful cached observation with a visible freshness state.
+
 ## Quota model
 
 Forge must not poll entire Kingdoms player-by-player.
@@ -137,12 +161,33 @@ Raw provider payloads are not browser contracts and should not be logged.
 
 ## Authority model
 
-MightPulse R1–R5 / Alliance rank is informational evidence only.
+The latest successful MightPulse Alliance observation is authoritative for the
+player's **in-game Alliance membership and position inside Forge**.
 
-Forge authority continues to use canonical Alliance Membership and scoped
-capabilities. Current Forge Alliance members may read own-Alliance operational
-intelligence. Quota-heavy refresh, target management and session management may
-be capability-gated independently.
+Canonical mapping:
+
+- R1 → `member`
+- R2 → `recruiter`
+- R3 → `officer`
+- R4 → `r4`
+- R5 → `leader`
+
+A successful refresh may therefore create/update the canonical Alliance
+Membership and synchronise its `member_role`. R4/R5 may receive the
+corresponding Alliance-management position/capability profile. This authority is
+resource-scoped to that exact Alliance and never grants Forge-wide
+`admin`/`owner` privileges.
+
+If a newer successful MightPulse observation shows a rank change, Alliance
+change, or no Alliance, Forge synchronises the membership/position accordingly.
+A provider outage does not by itself revoke the last successfully confirmed
+Alliance position; failed refreshes preserve the last-known state and freshness
+metadata. Emergency/manual Forge suspension remains available for abuse or
+incident response.
+
+Current Alliance members may read own-Alliance operational intelligence.
+Quota-heavy refresh, target management and KvK session management may still be
+capability-gated independently.
 
 ## KvK Intelligence operating model
 
