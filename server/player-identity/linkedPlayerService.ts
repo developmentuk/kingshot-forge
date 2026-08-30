@@ -6,6 +6,7 @@ import {
   type PlayerProvider,
 } from './providers/playerProvider.js'
 import {
+  isProviderQuotaRuntimeEnabled,
   reserveMightPulseProviderRequest,
   signInProviderIdempotencyKey,
   type ProviderQuotaRepository,
@@ -298,6 +299,7 @@ export async function linkOrRevalidatePlayerAccount(
     provider?: PlayerProvider
     nowMs?: number
     quotaRepository?: ProviderQuotaRepository
+    quotaEnabled?: boolean
   } = {},
 ) {
   const admin = getSupabaseAdmin()
@@ -330,8 +332,12 @@ export async function linkOrRevalidatePlayerAccount(
     nowMs: dependencies.nowMs,
     userId,
     quotaRepository: dependencies.quotaRepository,
-    enforceQuota: dependencies.provider === undefined
-      || dependencies.quotaRepository !== undefined,
+    enforceQuota: dependencies.quotaEnabled
+      ?? (
+        dependencies.quotaRepository !== undefined
+          ? true
+          : isProviderQuotaRuntimeEnabled()
+      ),
   })
   if (resolution.source === 'cache') return safeAccount(existing)
 
