@@ -5,6 +5,7 @@ type FetchImplementation = typeof fetch
 export type PostSignInPlayerSyncResult =
   | 'updated'
   | 'no-linked-player'
+  | 'already-attempted'
   | 'unavailable'
 
 const signInSyncInFlight = new Map<
@@ -83,10 +84,15 @@ export async function syncLinkedPlayerAfterSignIn(
   const userId = session.user?.id
   if (!userId) return 'unavailable'
 
-  signInSyncAttemptMarker.set(userId, sessionSignInMarker(session))
-
+  const marker = sessionSignInMarker(session)
   const existing = signInSyncInFlight.get(userId)
   if (existing) return existing
+
+  if (signInSyncAttemptMarker.get(userId) === marker) {
+    return 'already-attempted'
+  }
+
+  signInSyncAttemptMarker.set(userId, marker)
 
   const request = performLinkedPlayerSignInSync(
     session,
