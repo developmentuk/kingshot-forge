@@ -11,6 +11,8 @@ const ACCOUNT_FIELDS = 'id,user_id,player_id,player_name,kingdom_id,player_level
 export const PLAYER_PROVIDER_FRESHNESS_TTL_MS = 60 * 60 * 1000
 export const PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS = 5 * 60 * 1000
 
+export type PlayerProviderRefreshReason = 'automatic' | 'manual' | 'sign-in'
+
 type LookupRecord = Readonly<Record<string, unknown>>
 
 export class LinkedPlayerServiceError extends Error {
@@ -106,12 +108,27 @@ export function isPlayerAccountFresh(
   return isPlayerAccountFreshWithin(lastRefreshedAt, PLAYER_PROVIDER_FRESHNESS_TTL_MS, nowMs)
 }
 
+export function hasNewVerifiedSignIn(
+  lastSignInAt: unknown,
+  lastRefreshedAt: unknown,
+): boolean {
+  if (typeof lastSignInAt !== 'string') return false
+  const signInAt = Date.parse(lastSignInAt)
+  if (!Number.isFinite(signInAt)) return false
+
+  if (typeof lastRefreshedAt !== 'string') return true
+  const refreshedAt = Date.parse(lastRefreshedAt)
+  return !Number.isFinite(refreshedAt) || signInAt > refreshedAt
+}
+
 export async function resolvePlayerRefresh(input: {
   action: 'link' | 'revalidate'
   existingAccount: LookupRecord | null
   playerId: string
   kingdomId: number
   forceProviderRefresh?: boolean
+  refreshReason?: PlayerProviderRefreshReason
+  verifiedLastSignInAt?: string | null
   provider: PlayerProvider
   nowMs?: number
 }): Promise<{ source: 'cache'; player: null } | { source: 'provider'; player: NormalizedPlayer }> {
@@ -134,11 +151,19 @@ export async function resolvePlayerRefresh(input: {
   }
   const samePlayer = input.existingAccount?.player_id === input.playerId
   if (samePlayer) {
-    const freshnessMs = input.forceProviderRefresh === true
-      ? PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS
-      : PLAYER_PROVIDER_FRESHNESS_TTL_MS
-    if (isPlayerAccountFreshWithin(input.existingAccount?.last_refreshed_at, freshnessMs, input.nowMs)) {
-      return { source: 'cache', player: null }
+    const verifiedSignInRefresh = input.refreshReason === 'sign-in'
+      && hasNewVerifiedSignIn(
+        input.verifiedLastSignInAt,
+        input.existingAccount?.last_refreshed_at,
+      )
+
+    if (!verifiedSignInRefresh) {
+      const freshnessMs = input.forceProviderRefresh === true
+        ? PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS
+        : PLAYER_PROVIDER_FRESHNESS_TTL_MS
+      if (isPlayerAccountFreshWithin(input.existingAccount?.last_refreshed_at, freshnessMs, input.nowMs)) {
+        return { source: 'cache', player: null }
+      }
     }
   }
   const player = await lookupKingshotPlayer(input.playerId, input.kingdomId, input.provider)
@@ -207,6 +232,8 @@ export async function linkOrRevalidatePlayerAccount(
     playerId?: unknown
     kingdomId?: unknown
     forceProviderRefresh?: boolean
+    refreshReason?: PlayerProviderRefreshReason
+    verifiedLastSignInAt?: string | null
   },
   dependencies: { provider?: PlayerProvider; nowMs?: number } = {},
 ) {
@@ -234,6 +261,8 @@ export async function linkOrRevalidatePlayerAccount(
     playerId: requestedPlayerId,
     kingdomId: requestedKingdomId,
     forceProviderRefresh: input.forceProviderRefresh,
+    refreshReason: input.refreshReason,
+    verifiedLastSignInAt: input.verifiedLastSignInAt,
     provider: dependencies.provider ?? createMightPulsePlayerProvider(),
     nowMs: dependencies.nowMs,
   })
