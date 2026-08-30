@@ -4,6 +4,7 @@ import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 import { supabase } from '../lib/supabase'
 import {
   createSelfReportedClaim,
+  linkKingshotPlayer,
   searchPlayerClaim,
 } from '../services/playerClaimService'
 import type { PlayerAccount } from '../types/playerAccount'
@@ -73,6 +74,7 @@ function HybridPlayerClaimPanel() {
   const [searchResult, setSearchResult] = useState<PlayerClaimSearchResult | null>(null)
   const [searching, setSearching] = useState(false)
   const [claiming, setClaiming] = useState(false)
+  const [linkingLivePlayer, setLinkingLivePlayer] = useState(false)
   const [submittingEvidence, setSubmittingEvidence] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [message, setMessage] = useState('')
@@ -122,6 +124,46 @@ function HybridPlayerClaimPanel() {
       setErrorMessage(error instanceof Error ? error.message : 'The Forge player index could not be searched.')
     } finally {
       setSearching(false)
+    }
+  }
+
+  async function handleLiveLink() {
+    if (!session?.access_token || !searchResult?.claimable) return
+    setMessage('')
+    setErrorMessage('')
+
+    let identity: ReturnType<typeof validateIdentityInputs>
+    try {
+      identity = validateIdentityInputs()
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Review the player link details.',
+      )
+      return
+    }
+
+    setLinkingLivePlayer(true)
+    try {
+      await linkKingshotPlayer(
+        session.access_token,
+        identity.playerId,
+        identity.kingdomId,
+      )
+      setMessage(
+        'Kingshot player linked from the live player service. Ownership is not yet verified.',
+      )
+      notifyPlayerIdentityChanged()
+      await refreshPlayerIdentity()
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'The live Kingshot player could not be linked.',
+      )
+    } finally {
+      setLinkingLivePlayer(false)
     }
   }
 
@@ -311,6 +353,22 @@ function HybridPlayerClaimPanel() {
                 <strong>No existing Forge record</strong>
                 <p>Create a self-reported claim now. This does not verify ownership or current profile values.</p>
               </div>
+              <div className="linked-player-preview__actions">
+                <button
+                  type="button"
+                  className="button button--primary"
+                  disabled={linkingLivePlayer}
+                  onClick={() => void handleLiveLink()}
+                >
+                  {linkingLivePlayer
+                    ? 'Linking live player…'
+                    : 'Link live Kingshot player'}
+                </button>
+              </div>
+              <p className="field__help">
+                Live linking checks the current public player record and State.
+                It proves the player exists, not that you own the account.
+              </p>
               <div className="linked-player-search linked-player-search--state-aware">
                 <div className="field">
                   <label htmlFor="hybrid-player-name">Player name</label>
@@ -323,7 +381,7 @@ function HybridPlayerClaimPanel() {
               </div>
               <div className="linked-player-preview__actions">
                 <button type="button" className="button button--secondary" onClick={() => setSearchResult(null)}>Start again</button>
-                <button type="button" className="button button--primary" disabled={claiming} onClick={() => void handleClaim()}>{claiming ? 'Creating claim…' : 'Claim This Player'}</button>
+                <button type="button" className="button button--primary" disabled={claiming} onClick={() => void handleClaim()}>{claiming ? 'Creating claim…' : 'Create Self-Reported Claim'}</button>
               </div>
             </article>
           )}
