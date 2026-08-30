@@ -953,7 +953,7 @@ assert.match(
 )
 assert.match(
   migrationSql,
-  /authority_state\.player_account_id is not null[\s\S]*authority_state\.member_role in \('r4', 'leader'\)[\s\S]*previous_admin\.revoked_at >= authority_state\.provider_fetched_at/iu,
+  /authority_state\.player_account_id is not null[\s\S]*authority_state\.alliance_tag = normalized_tag[\s\S]*authority_state\.member_role in \('r4', 'leader'\)[\s\S]*previous_admin\.revoked_at >= authority_state\.provider_fetched_at/iu,
 )
 assert.match(
   migrationSql,
@@ -991,6 +991,23 @@ assert.match(
   migrationSql,
   /p_quota_attempt_token uuid/iu,
 )
+const linkedPlayerServiceSource = await readFile(
+  new URL('../server/player-identity/linkedPlayerService.ts', import.meta.url),
+  'utf8',
+)
+assert.match(
+  linkedPlayerServiceSource,
+  /lookupPlayerSingleFlight[\s\S]*ownerLookup\? PlayerLookupOwner/iu,
+)
+assert.match(
+  linkedPlayerServiceSource,
+  /lookupKingshotPlayerWithOwner[\s\S]*quotaClass[\s\S]*reserveMightPulseProviderRequest/iu,
+)
+assert.doesNotMatch(
+  linkedPlayerServiceSource,
+  /if \(input\.enforceQuota === true\)[\s\S]*reserveMightPulseProviderRequest[\s\S]*lookupKingshotPlayer\(/iu,
+)
+
 const playerIntelligenceServiceSource = await readFile(
   new URL(
     '../server/player-intelligence/playerIntelligenceService.ts',
@@ -1626,6 +1643,89 @@ const baseSignInRefresh = await resolvePlayerRefresh({
 })
 assert.equal(baseSignInRefresh.source, 'provider')
 assert.equal(baseSignInProviderCalls, 1)
+
+let singleFlightQuotaReservations = 0
+let singleFlightQuotaCompletions = 0
+let singleFlightQuotaFailures = 0
+let singleFlightProviderCalls = 0
+let releaseSingleFlightProvider
+const singleFlightProvider = {
+  async lookupPlayer() {
+    singleFlightProviderCalls += 1
+    return new Promise((resolve) => {
+      releaseSingleFlightProvider = () => resolve(normalizedPlayer)
+    })
+  },
+}
+const singleFlightQuotaRepository = {
+  async reserve(input) {
+    singleFlightQuotaReservations += 1
+    assert.deepEqual(input, {
+      category: 'player_automatic',
+      priority: 'low',
+      idempotencyKey: null,
+    })
+    return {
+      allowed: true,
+      duplicate: false,
+      state: 'reserved',
+      reservationId: '00000000-0000-0000-0000-000000000014',
+      attemptToken: '00000000-0000-0000-0000-000000000015',
+      minuteUsed: 1,
+      dayUsed: 1,
+      minuteLimit: 60,
+      dayLimit: 5000,
+      normalDayLimit: 4500,
+    }
+  },
+  async complete(input) {
+    singleFlightQuotaCompletions += 1
+    assert.deepEqual(input, {
+      reservationId: '00000000-0000-0000-0000-000000000014',
+      attemptToken: '00000000-0000-0000-0000-000000000015',
+    })
+    return true
+  },
+  async fail() {
+    singleFlightQuotaFailures += 1
+    return true
+  },
+}
+
+const singleFlightRefreshInput = {
+  action: 'revalidate',
+  existingAccount: {
+    ...recentAccount,
+    last_refreshed_at: new Date(
+      nowMs - PLAYER_PROVIDER_FRESHNESS_TTL_MS,
+    ).toISOString(),
+  },
+  playerId: '125500338',
+  kingdomId: 850,
+  provider: singleFlightProvider,
+  refreshReason: 'automatic',
+  userId: 'single-flight-quota-user',
+  quotaRepository: singleFlightQuotaRepository,
+  enforceQuota: true,
+  nowMs,
+}
+const singleFlightFirst = resolvePlayerRefresh(singleFlightRefreshInput)
+const singleFlightSecond = resolvePlayerRefresh(singleFlightRefreshInput)
+await Promise.resolve()
+await Promise.resolve()
+assert.equal(singleFlightQuotaReservations, 1)
+assert.equal(singleFlightProviderCalls, 1)
+releaseSingleFlightProvider()
+const [singleFlightFirstResult, singleFlightSecondResult] = await Promise.all([
+  singleFlightFirst,
+  singleFlightSecond,
+])
+assert.equal(singleFlightFirstResult.source, 'provider')
+assert.equal(singleFlightSecondResult.source, 'provider')
+assert.equal(singleFlightQuotaReservations, 1)
+assert.equal(singleFlightProviderCalls, 1)
+assert.equal(singleFlightQuotaCompletions, 1)
+assert.equal(singleFlightQuotaFailures, 0)
 
 await assert.rejects(
   () => resolvePlayerRefresh({
