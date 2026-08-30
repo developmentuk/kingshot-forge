@@ -96,6 +96,7 @@ export interface PlayerIntelligenceRepository {
     allianceName: string | null
     memberRole: ForgeAllianceMemberRole | null
     observedAt: string
+    fetchedAt: string
   }>): Promise<AllianceAuthoritySyncResult>
 }
 
@@ -314,6 +315,7 @@ implements PlayerIntelligenceRepository {
       allianceName: string | null
       memberRole: ForgeAllianceMemberRole | null
       observedAt: string
+      fetchedAt: string
     }>,
   ): Promise<AllianceAuthoritySyncResult> {
     const admin = getSupabaseAdmin()
@@ -327,6 +329,7 @@ implements PlayerIntelligenceRepository {
         p_alliance_name: input.allianceName,
         p_member_role: input.memberRole,
         p_observed_at: input.observedAt,
+        p_fetched_at: input.fetchedAt,
       },
     )
     if (error) throw error
@@ -470,6 +473,17 @@ export async function syncLinkedPlayerIntelligence(
     ? mapMightPulseAllianceRank(alliance.rank)
     : null
 
+  const providerFetchedAt = intelligence.identity.providerFetchedAt
+  const cachedAtMs = intelligence.providerCachedAt === null
+    ? Number.NaN
+    : Date.parse(intelligence.providerCachedAt)
+  const fetchedAtMs = Date.parse(providerFetchedAt)
+  const authorityObservedAt = Number.isFinite(cachedAtMs)
+    && Number.isFinite(fetchedAtMs)
+    && cachedAtMs <= fetchedAtMs
+    ? intelligence.providerCachedAt as string
+    : providerFetchedAt
+
   const allianceAuthority = alliance && mappedRole === null
     ? null
     : await repository.syncAllianceAuthority({
@@ -479,7 +493,8 @@ export async function syncLinkedPlayerIntelligence(
         allianceTag: alliance?.tag ?? null,
         allianceName: alliance?.name ?? null,
         memberRole: mappedRole,
-        observedAt: intelligence.identity.providerFetchedAt,
+        observedAt: authorityObservedAt,
+        fetchedAt: providerFetchedAt,
       })
 
   return Object.freeze({
