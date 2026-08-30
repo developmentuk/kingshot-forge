@@ -3290,7 +3290,7 @@ const repeatedSuppressionIndex = playerIdentityContextSource.indexOf(
   'const sameHandledSignIn =',
 )
 const repeatedSuppressionReturnIndex = playerIdentityContextSource.indexOf(
-  'Date.now() - existingSignInSuppression.handledAt < REFRESH_STALE_MS',
+  'Date.now() < existingSignInSuppression.expiresAt',
   repeatedSuppressionIndex,
 )
 const signInResultIndex = playerIdentityContextSource.indexOf(
@@ -3316,7 +3316,7 @@ assert.ok(suppressionMarkerIndex > completionWaitIndex)
 assert.ok(ordinaryRefreshIndex > suppressionMarkerIndex)
 assert.match(
   playerIdentityContextSource,
-  /const signInSuppressionKey = session && user[\s\S]*const sameHandledSignIn = signInSuppressionKey !== null[\s\S]*Date\.now\(\) - existingSignInSuppression\.handledAt < REFRESH_STALE_MS[\s\S]*return/u,
+  /const signInSuppressionKey = session && user[\s\S]*const sameHandledSignIn = signInSuppressionKey !== null[\s\S]*Date\.now\(\) < existingSignInSuppression\.expiresAt[\s\S]*return/u,
 )
 assert.match(
   playerIdentityContextSource,
@@ -3324,7 +3324,7 @@ assert.match(
 )
 assert.match(
   playerIdentityContextSource,
-  /if \(suppressAutomaticRefresh\) \{[\s\S]*suppressedInitialSignInRefresh\.current = \{[\s\S]*key: signInSuppressionKey,[\s\S]*handledAt: Date\.now\(\),[\s\S]*return/u,
+  /if \(suppressAutomaticRefresh\) \{[\s\S]*const suppressionNow = Date\.now\(\)[\s\S]*suppressedInitialSignInRefresh\.current = \{[\s\S]*key: signInSuppressionKey,[\s\S]*expiresAt: postSignInSuppressionExpiresAt\([\s\S]*currentAccount\.last_refreshed_at,[\s\S]*return/u,
 )
 assert.doesNotMatch(
   playerIdentityContextSource,
