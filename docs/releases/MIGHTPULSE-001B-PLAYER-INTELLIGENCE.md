@@ -1,9 +1,9 @@
 # MIGHTPULSE-001B — Player Intelligence Foundation
 
-**Issue:** #110  
-**Parent:** #109  
-**Baseline:** `main` at `3663ec8378d8c57d95fb7c756e3c6c6e39dab7b0`  
-**Branch:** `feature/mightpulse-001b-player-intelligence`  
+**Issue:** #110
+**Parent:** #109
+**Baseline:** `main` at `3663ec8378d8c57d95fb7c756e3c6c6e39dab7b0`
+**Branch:** `feature/mightpulse-001b-player-intelligence`
 **Status:** Implementation started; production schema unchanged
 
 ## Objective
