@@ -38,23 +38,55 @@ function providerPlayerId(value: unknown): string {
 }
 
 type AvatarDiagnosticStatus = 'accepted' | 'missing' | 'rejected'
+type AvatarDiagnosticReason =
+  | 'accepted'
+  | 'not_provided'
+  | 'empty'
+  | 'not_string'
+  | 'too_long'
+  | 'invalid_url'
+  | 'non_https'
+  | 'credentials'
+  | 'missing_hostname'
 
-function normalizeAvatarUrl(value: unknown): { url: string | null; status: AvatarDiagnosticStatus } {
-  if (value === null || value === undefined) return { url: null, status: 'missing' }
-  if (typeof value !== 'string') return { url: null, status: 'rejected' }
+function normalizeAvatarUrl(value: unknown): {
+  url: string | null
+  status: AvatarDiagnosticStatus
+  reason: AvatarDiagnosticReason
+} {
+  if (value === null || value === undefined) {
+    return { url: null, status: 'missing', reason: 'not_provided' }
+  }
+  if (typeof value !== 'string') {
+    return { url: null, status: 'rejected', reason: 'not_string' }
+  }
 
   const candidate = value.trim()
-  if (!candidate) return { url: null, status: 'missing' }
-  if (candidate.length > 2048) return { url: null, status: 'rejected' }
+  if (!candidate) {
+    return { url: null, status: 'missing', reason: 'empty' }
+  }
+  if (candidate.length > 2048) {
+    return { url: null, status: 'rejected', reason: 'too_long' }
+  }
 
   try {
     const url = new URL(candidate)
-    if (url.protocol !== 'https:' || url.username || url.password || !url.hostname) {
-      return { url: null, status: 'rejected' }
+    if (url.protocol !== 'https:') {
+      return { url: null, status: 'rejected', reason: 'non_https' }
     }
-    return { url: url.toString(), status: 'accepted' }
+    if (url.username || url.password) {
+      return { url: null, status: 'rejected', reason: 'credentials' }
+    }
+    if (!url.hostname) {
+      return { url: null, status: 'rejected', reason: 'missing_hostname' }
+    }
+    return {
+      url: url.toString(),
+      status: 'accepted',
+      reason: 'accepted',
+    }
   } catch {
-    return { url: null, status: 'rejected' }
+    return { url: null, status: 'rejected', reason: 'invalid_url' }
   }
 }
 
@@ -112,7 +144,10 @@ function normalizeMightPulsePlayer(
   }
 
   const avatar = normalizeAvatarUrl(player.avatar_url)
-  console.info('[mightpulse-player-provider]', { avatarStatus: avatar.status })
+  console.info('[mightpulse-player-provider]', {
+    avatarStatus: avatar.status,
+    avatarReason: avatar.reason,
+  })
 
   return {
     playerId: returnedPlayerId,
