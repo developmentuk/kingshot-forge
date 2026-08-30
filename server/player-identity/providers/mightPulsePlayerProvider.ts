@@ -69,7 +69,10 @@ function classifyInvalidAvatarShape(value: unknown): InvalidAvatarShape {
     (candidate.startsWith('"') && candidate.endsWith('"'))
     || (candidate.startsWith("'") && candidate.endsWith("'"))
   ) return 'quoted'
-  if (/^(?:\.{1,2}\/|[\p{L}\p{N}._~-]+\/)/u.test(candidate)) return 'relative_path'
+  if (
+    /^(?:\.{1,2}\/|[\p{L}\p{N}._~-]+\/)/u.test(candidate)
+    || /^[\p{L}\p{N}_~-][\p{L}\p{N}._~-]*\.[\p{L}\p{N}._~-]+(?:[?#][^\s]*)?$/u.test(candidate)
+  ) return 'relative_path'
   return 'other'
 }
 

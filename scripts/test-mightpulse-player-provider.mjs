@@ -128,6 +128,8 @@ for (const [rawAvatar, expectedShape] of [
   ['https%3A%2F%2Fcdn.example.test%2Favatar.png', 'encoded_https'],
   ['"https://cdn.example.test/avatar.png"', 'quoted'],
   ['avatars/synthetic.png', 'relative_path'],
+  ['avatar.png', 'relative_path'],
+  ['avatar.webp?size=128', 'relative_path'],
   ['synthetic avatar', 'other'],
 ]) {
   assert.equal(classifyInvalidAvatarShape(rawAvatar), expectedShape)
