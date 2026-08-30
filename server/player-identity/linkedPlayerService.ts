@@ -5,6 +5,13 @@ import {
   type NormalizedPlayer,
   type PlayerProvider,
 } from './providers/playerProvider.js'
+import {
+  reserveMightPulseProviderRequest,
+  signInProviderIdempotencyKey,
+  type ProviderQuotaRepository,
+  type ProviderRequestCategory,
+  type ProviderQuotaPriority,
+} from '../player-intelligence/providerQuota.js'
 
 const ACCOUNT_FIELDS = 'id,user_id,player_id,player_name,kingdom_id,player_level,town_center_level,level_rendered,level_rendered_detailed,level_image,profile_photo,verification_status,verification_method,verified_by,verified_at,last_refreshed_at,is_primary,is_public,created_at,updated_at'
 
@@ -12,6 +19,25 @@ export const PLAYER_PROVIDER_FRESHNESS_TTL_MS = 60 * 60 * 1000
 export const PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS = 5 * 60 * 1000
 
 export type PlayerProviderRefreshReason = 'automatic' | 'manual' | 'sign-in'
+
+export function quotaClassForPlayerRefresh(
+  action: 'link' | 'revalidate',
+  reason: PlayerProviderRefreshReason = 'automatic',
+): Readonly<{
+  category: ProviderRequestCategory
+  priority: ProviderQuotaPriority
+}> {
+  if (action === 'link') {
+    return { category: 'player_link', priority: 'high' }
+  }
+  if (reason === 'sign-in') {
+    return { category: 'player_sign_in', priority: 'high' }
+  }
+  if (reason === 'manual') {
+    return { category: 'player_manual', priority: 'high' }
+  }
+  return { category: 'player_automatic', priority: 'low' }
+}
 
 type LookupRecord = Readonly<Record<string, unknown>>
 
@@ -131,6 +157,9 @@ export async function resolvePlayerRefresh(input: {
   verifiedLastSignInAt?: string | null
   provider: PlayerProvider
   nowMs?: number
+  userId?: string
+  quotaRepository?: ProviderQuotaRepository
+  enforceQuota?: boolean
 }): Promise<{ source: 'cache'; player: null } | { source: 'provider'; player: NormalizedPlayer }> {
   if (input.action === 'link' && input.existingAccount) {
     if (input.existingAccount.player_id !== input.playerId) {
@@ -166,6 +195,36 @@ export async function resolvePlayerRefresh(input: {
       }
     }
   }
+  if (input.enforceQuota === true) {
+    const quotaClass = quotaClassForPlayerRefresh(
+      input.action,
+      input.refreshReason ?? 'automatic',
+    )
+    const idempotencyKey = input.refreshReason === 'sign-in'
+      && input.userId
+      && input.verifiedLastSignInAt
+      ? signInProviderIdempotencyKey(
+          input.userId,
+          input.verifiedLastSignInAt,
+        )
+      : null
+
+    try {
+      const reservation = await reserveMightPulseProviderRequest(
+        {
+          ...quotaClass,
+          idempotencyKey,
+        },
+        input.quotaRepository,
+      )
+      if (reservation.duplicate) {
+        return { source: 'cache', player: null }
+      }
+    } catch (error) {
+      return mapProviderError(error)
+    }
+  }
+
   const player = await lookupKingshotPlayer(input.playerId, input.kingdomId, input.provider)
   return { source: 'provider', player }
 }
@@ -235,7 +294,11 @@ export async function linkOrRevalidatePlayerAccount(
     refreshReason?: PlayerProviderRefreshReason
     verifiedLastSignInAt?: string | null
   },
-  dependencies: { provider?: PlayerProvider; nowMs?: number } = {},
+  dependencies: {
+    provider?: PlayerProvider
+    nowMs?: number
+    quotaRepository?: ProviderQuotaRepository
+  } = {},
 ) {
   const admin = getSupabaseAdmin()
   const { data: existingValue, error: existingError } = await admin
@@ -265,6 +328,10 @@ export async function linkOrRevalidatePlayerAccount(
     verifiedLastSignInAt: input.verifiedLastSignInAt,
     provider: dependencies.provider ?? createMightPulsePlayerProvider(),
     nowMs: dependencies.nowMs,
+    userId,
+    quotaRepository: dependencies.quotaRepository,
+    enforceQuota: dependencies.provider === undefined
+      || dependencies.quotaRepository !== undefined,
   })
   if (resolution.source === 'cache') return safeAccount(existing)
 
