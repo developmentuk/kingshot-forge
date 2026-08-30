@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 
 const correctiveMigration = await readFile(
   new URL(
-    '../supabase/migrations/20260830170000_mightpulse_001b_stale_identity_guard.sql',
+    '../supabase/migrations/20260830224458_mightpulse_001b_stale_identity_guard.sql',
     import.meta.url,
   ),
   'utf8',
