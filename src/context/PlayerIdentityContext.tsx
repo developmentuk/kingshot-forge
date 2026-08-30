@@ -222,7 +222,12 @@ export function PlayerIdentityProvider({
         if (cancelled) return
 
         let suppressAutomaticRefresh = false
-        if (signInResult === 'in-progress') {
+        if (
+          signInResult === 'in-progress'
+          || signInResult === 'unavailable'
+        ) {
+          // Reconcile an unavailable response through the persistent sign-in
+          // claim before considering a non-idempotent automatic refresh.
           suppressAutomaticRefresh = await waitForPostSignInPlayerSyncCompletion(
             session,
             { shouldStop: () => cancelled },

@@ -3034,7 +3034,7 @@ assert.match(
 )
 assert.match(
   playerIdentityContextSource,
-  /signInResult === 'in-progress'[\s\S]*suppressAutomaticRefresh = await waitForPostSignInPlayerSyncCompletion\(\s*session,[\s\S]*currentAccount = completedAccount/u,
+  /signInResult === 'in-progress'[\s\S]*signInResult === 'unavailable'[\s\S]*suppressAutomaticRefresh = await waitForPostSignInPlayerSyncCompletion\(\s*session,[\s\S]*currentAccount = completedAccount/u,
 )
 const postSignInSyncServiceSource = await readFile(
   new URL('../src/services/postSignInPlayerSyncService.ts', import.meta.url),
