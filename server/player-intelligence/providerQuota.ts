@@ -80,6 +80,20 @@ export function signInProviderIdempotencyKey(
     .digest('hex')
 }
 
+export function baseSignInProviderIdempotencyKey(
+  userId: string,
+  verifiedLastSignInAt: string,
+): string {
+  return createHash('sha256')
+    .update(
+      'mightpulse-player-base-sign-in-v1\n'
+      + userId
+      + '\n'
+      + verifiedLastSignInAt,
+    )
+    .digest('hex')
+}
+
 export class SupabaseProviderRequestStatusRepository
 implements ProviderRequestStatusRepository {
   async read(idempotencyKey: string): Promise<ProviderRequestStatus> {
