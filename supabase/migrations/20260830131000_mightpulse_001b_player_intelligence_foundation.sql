@@ -1833,4 +1833,268 @@ grant execute on function public.sync_mightpulse_alliance_membership(
   timestamptz
 ) to service_role;
 
+create or replace function public.apply_mightpulse_player_intelligence_sync(
+  p_user_id uuid,
+  p_player_account_id uuid,
+  p_player_id text,
+  p_kingdom_number integer,
+  p_player_name text,
+  p_town_center_level integer,
+  p_avatar_url text,
+  p_request_reason text,
+  p_sections text[],
+  p_normalized_snapshot jsonb,
+  p_content_sha256 text,
+  p_provider_fetched_at timestamptz,
+  p_provider_cached_at timestamptz,
+  p_provider_age_seconds integer,
+  p_provider_fresh boolean,
+  p_apply_alliance_authority boolean,
+  p_alliance_tag text,
+  p_alliance_name text,
+  p_member_role public.alliance_member_role,
+  p_authority_observed_at timestamptz
+)
+returns table (
+  observation_id uuid,
+  alliance_id uuid,
+  membership_id uuid,
+  member_role public.alliance_member_role,
+  admin_active boolean
+)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $apply$
+declare
+  player_row public.player_accounts;
+  authority_result record;
+begin
+  if p_user_id is null
+    or p_player_account_id is null
+    or p_player_id is null
+    or p_player_id !~ '^[0-9]{1,20}$'
+    or p_kingdom_number < 1
+    or p_kingdom_number > 9999
+    or p_player_name is null
+    or btrim(p_player_name) = ''
+    or p_request_reason <> all (
+      array[
+        'sign-in'::text,
+        'automatic'::text,
+        'manual'::text,
+        'intelligence'::text
+      ]
+    )
+    or p_sections is null
+    or cardinality(p_sections) < 1
+    or cardinality(p_sections) > 8
+    or jsonb_typeof(p_normalized_snapshot) <> 'object'
+    or p_content_sha256 !~ '^[0-9a-f]{64}$'
+    or p_provider_fetched_at is null
+    or (
+      p_provider_cached_at is not null
+      and p_provider_cached_at > p_provider_fetched_at
+    )
+    or (
+      p_provider_age_seconds is not null
+      and p_provider_age_seconds < 0
+    )
+    or (
+      p_town_center_level is not null
+      and (p_town_center_level < 1 or p_town_center_level > 84)
+    )
+    or (
+      p_authority_observed_at is not null
+      and p_authority_observed_at > p_provider_fetched_at
+    ) then
+    raise exception 'Invalid MightPulse Player intelligence sync input.'
+      using errcode = '22023';
+  end if;
+
+  select *
+  into player_row
+  from public.player_accounts account
+  where account.id = p_player_account_id
+    and account.user_id = p_user_id
+    and account.is_primary = true
+  for update;
+
+  if player_row.id is null then
+    raise exception 'Linked Player account not found for intelligence sync.'
+      using errcode = 'P0002';
+  end if;
+
+  if player_row.player_id <> p_player_id
+    or player_row.kingdom_id <> p_kingdom_number then
+    raise exception 'Player identity conflicts with intelligence sync.'
+      using errcode = '22023';
+  end if;
+
+  update public.player_accounts
+  set
+    player_name = p_player_name,
+    town_center_level = coalesce(
+      p_town_center_level,
+      player_row.town_center_level
+    ),
+    profile_photo = coalesce(
+      p_avatar_url,
+      player_row.profile_photo
+    ),
+    last_refreshed_at = p_provider_fetched_at,
+    updated_at = p_provider_fetched_at
+  where id = p_player_account_id
+    and user_id = p_user_id
+    and is_primary = true;
+
+  insert into public.player_intelligence_observations (
+    player_account_id,
+    provider,
+    request_reason,
+    sections,
+    normalized_snapshot,
+    content_sha256,
+    provider_fetched_at,
+    provider_cached_at,
+    provider_age_seconds,
+    provider_fresh
+  )
+  values (
+    p_player_account_id,
+    'mightpulse',
+    p_request_reason,
+    p_sections,
+    p_normalized_snapshot,
+    p_content_sha256,
+    p_provider_fetched_at,
+    p_provider_cached_at,
+    p_provider_age_seconds,
+    p_provider_fresh
+  )
+  returning id into observation_id;
+
+  alliance_id := null;
+  membership_id := null;
+  member_role := null;
+  admin_active := false;
+
+  if p_apply_alliance_authority then
+    if p_authority_observed_at is null then
+      raise exception 'Alliance authority sync requires an observation time.'
+        using errcode = '22023';
+    end if;
+
+    select *
+    into authority_result
+    from public.sync_mightpulse_alliance_membership(
+      p_user_id,
+      p_player_account_id,
+      p_kingdom_number,
+      p_alliance_tag,
+      p_alliance_name,
+      p_member_role,
+      p_authority_observed_at,
+      p_provider_fetched_at
+    );
+
+    alliance_id := authority_result.alliance_id;
+    membership_id := authority_result.membership_id;
+    member_role := authority_result.member_role;
+    admin_active := authority_result.admin_active;
+  end if;
+
+  return next;
+end;
+$apply$;
+
+revoke all on function public.apply_mightpulse_player_intelligence_sync(
+  uuid,
+  uuid,
+  text,
+  integer,
+  text,
+  integer,
+  text,
+  text,
+  text[],
+  jsonb,
+  text,
+  timestamptz,
+  timestamptz,
+  integer,
+  boolean,
+  boolean,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz
+) from public;
+revoke all on function public.apply_mightpulse_player_intelligence_sync(
+  uuid,
+  uuid,
+  text,
+  integer,
+  text,
+  integer,
+  text,
+  text,
+  text[],
+  jsonb,
+  text,
+  timestamptz,
+  timestamptz,
+  integer,
+  boolean,
+  boolean,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz
+) from anon;
+revoke all on function public.apply_mightpulse_player_intelligence_sync(
+  uuid,
+  uuid,
+  text,
+  integer,
+  text,
+  integer,
+  text,
+  text,
+  text[],
+  jsonb,
+  text,
+  timestamptz,
+  timestamptz,
+  integer,
+  boolean,
+  boolean,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz
+) from authenticated;
+grant execute on function public.apply_mightpulse_player_intelligence_sync(
+  uuid,
+  uuid,
+  text,
+  integer,
+  text,
+  integer,
+  text,
+  text,
+  text[],
+  jsonb,
+  text,
+  timestamptz,
+  timestamptz,
+  integer,
+  boolean,
+  boolean,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz
+) to service_role;
+
 commit;
