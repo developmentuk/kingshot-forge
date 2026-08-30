@@ -351,7 +351,7 @@ function HybridPlayerClaimPanel() {
             <article className="linked-player-preview">
               <div className="linked-player-preview__warning">
                 <strong>No existing Forge record</strong>
-                <p>Create a self-reported claim now. This does not verify ownership or current profile values.</p>
+                <p>Link the current Kingshot record through the live player service, or use the self-reported fallback if live lookup is unavailable. Neither route verifies ownership.</p>
               </div>
               <div className="linked-player-preview__actions">
                 <button
