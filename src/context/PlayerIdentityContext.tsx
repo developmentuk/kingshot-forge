@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -11,6 +12,10 @@ import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PlayerAccount } from '../types/playerAccount'
+import {
+  getPostSignInPlayerSyncInFlight,
+  hasPostSignInPlayerSyncAttempted,
+} from '../services/postSignInPlayerSyncService'
 import {
   isPlayerIdentityAutoRefreshRoute,
   PlayerIdentityRefreshCoordinator,
@@ -58,6 +63,7 @@ export function PlayerIdentityProvider({
     useState<string | null>(null)
   const [playerIdentityRefreshWarning, setPlayerIdentityRefreshWarning] =
     useState<string | null>(null)
+  const suppressedInitialSignInRefresh = useRef<string | null>(null)
 
   const loadPlayerIdentity = useCallback(async (): Promise<PlayerAccount | null> => {
     if (isVisionAcceptanceRoute) return null
@@ -176,8 +182,25 @@ export function PlayerIdentityProvider({
 
     let cancelled = false
     async function establish() {
-      const account = await loadPlayerIdentity()
+      let account = await loadPlayerIdentity()
       if (!user || !account || cancelled) return
+
+      const signInMarker = session?.user?.last_sign_in_at
+        ?? String(session?.expires_at ?? '')
+      if (
+        session
+        && suppressedInitialSignInRefresh.current !== signInMarker
+        && hasPostSignInPlayerSyncAttempted(session)
+      ) {
+        suppressedInitialSignInRefresh.current = signInMarker
+        const signInSync = getPostSignInPlayerSyncInFlight(user.id)
+        if (signInSync) await signInSync
+        if (cancelled) return
+        account = await loadPlayerIdentity()
+        if (!account || cancelled) return
+        return
+      }
+
       const lastRefresh = Date.parse(account.last_refreshed_at ?? '')
       const throttled = Date.now() - (refreshAttemptAt.get(user.id) ?? 0) < REFRESH_THROTTLE_MS
       const stale = !Number.isFinite(lastRefresh) || Date.now() - lastRefresh > REFRESH_STALE_MS
