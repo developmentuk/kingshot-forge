@@ -590,6 +590,59 @@ const migrationSql = await readFile(
   ),
   'utf8',
 )
+
+assert.equal(
+  (migrationSql.match(/\bbegin;/giu) ?? []).length,
+  1,
+)
+assert.equal(
+  (migrationSql.match(/\bcommit;/giu) ?? []).length,
+  1,
+)
+assert.equal(
+  (
+    migrationSql.match(
+      /create or replace function public\.reserve_provider_request\(/giu,
+    ) ?? []
+  ).length,
+  1,
+)
+assert.equal(
+  (
+    migrationSql.match(
+      /create table if not exists public\.player_alliance_provider_state/giu,
+    ) ?? []
+  ).length,
+  1,
+)
+assert.equal(
+  (
+    migrationSql.match(
+      /create table if not exists public\.alliance_provider_authority_overrides/giu,
+    ) ?? []
+  ).length,
+  1,
+)
+assert.equal(
+  (
+    migrationSql.match(
+      /create or replace function public\.sync_mightpulse_alliance_membership\(/giu,
+    ) ?? []
+  ).length,
+  1,
+)
+assert.equal(
+  (
+    migrationSql.match(
+      /create or replace function public\.apply_mightpulse_player_intelligence_sync\(/giu,
+    ) ?? []
+  ).length,
+  1,
+)
+assert.doesNotMatch(
+  migrationSql,
+  /reserve_provider_request\(text, text, text\)/iu,
+)
 assert.match(
   migrationSql,
   /create table if not exists public\.player_intelligence_observations/iu,
