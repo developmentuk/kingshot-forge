@@ -80,6 +80,7 @@ function HybridPlayerClaimPanel() {
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [ocrReview, setOcrReview] = useState<AccountLinkOcrReview | null>(null)
+  const claimMutationPending = claiming || linkingLivePlayer
 
   function validateIdentityInputs() {
     const cleanId = cleanPlayerId(playerId)
@@ -93,6 +94,7 @@ function HybridPlayerClaimPanel() {
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (claimMutationPending) return
     setMessage('')
     setErrorMessage('')
     setSearchResult(null)
@@ -128,7 +130,11 @@ function HybridPlayerClaimPanel() {
   }
 
   async function handleLiveLink() {
-    if (!session?.access_token || !searchResult?.claimable) return
+    if (
+      !session?.access_token
+      || !searchResult?.claimable
+      || claimMutationPending
+    ) return
     setMessage('')
     setErrorMessage('')
 
@@ -168,7 +174,11 @@ function HybridPlayerClaimPanel() {
   }
 
   async function handleClaim() {
-    if (!session?.access_token || !searchResult?.claimable) return
+    if (
+      !session?.access_token
+      || !searchResult?.claimable
+      || claimMutationPending
+    ) return
     setMessage('')
     setErrorMessage('')
 
@@ -342,7 +352,7 @@ function HybridPlayerClaimPanel() {
               <input id="hybrid-player-state" type="text" inputMode="numeric" autoComplete="off" value={kingdomId} maxLength={4} placeholder="e.g. 850" onChange={(event) => { setKingdomId(event.target.value); setSearchResult(null) }} />
               <span className="field__help">Enter the State shown on the same profile.</span>
             </div>
-            <button type="submit" className="button button--primary" disabled={searching}>{searching ? 'Checking Forge index…' : 'Check Player ID'}</button>
+            <button type="submit" className="button button--primary" disabled={searching || claimMutationPending}>{searching ? 'Checking Forge index…' : 'Check Player ID'}</button>
           </form>
 
           {searchResult?.player && <IndexedPlayerPreview player={searchResult.player} />}
@@ -357,7 +367,7 @@ function HybridPlayerClaimPanel() {
                 <button
                   type="button"
                   className="button button--primary"
-                  disabled={linkingLivePlayer}
+                  disabled={claimMutationPending}
                   onClick={() => void handleLiveLink()}
                 >
                   {linkingLivePlayer
@@ -380,8 +390,8 @@ function HybridPlayerClaimPanel() {
                 </div>
               </div>
               <div className="linked-player-preview__actions">
-                <button type="button" className="button button--secondary" onClick={() => setSearchResult(null)}>Start again</button>
-                <button type="button" className="button button--primary" disabled={claiming} onClick={() => void handleClaim()}>{claiming ? 'Creating claim…' : 'Claim This Player'}</button>
+                <button type="button" className="button button--secondary" disabled={claimMutationPending} onClick={() => setSearchResult(null)}>Start again</button>
+                <button type="button" className="button button--primary" disabled={claimMutationPending} onClick={() => void handleClaim()}>{claiming ? 'Creating claim…' : 'Claim This Player'}</button>
               </div>
             </article>
           )}
