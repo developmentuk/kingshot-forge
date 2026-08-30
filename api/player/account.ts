@@ -2,7 +2,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
 import { captureServerException } from '../../server/observability/sentry.js'
 import { LinkedPlayerServiceError, linkOrRevalidatePlayerAccount } from '../../server/player-identity/linkedPlayerService.js'
+import { PlayerProviderError } from '../../server/player-identity/providers/playerProvider.js'
 import { PlayerAccountAttemptThrottle } from '../../server/player-identity/playerAccountAttemptThrottle.js'
+import {
+  isPlayerIntelligenceRuntimeEnabled,
+  syncLinkedPlayerIntelligence,
+} from '../../server/player-intelligence/playerIntelligenceService.js'
 
 const attemptThrottle = new PlayerAccountAttemptThrottle()
 
@@ -39,6 +44,39 @@ export default async function handler(request: VercelRequest, response: VercelRe
       : input.forceProviderRefresh === true
         ? 'manual'
         : 'automatic'
+
+    if (
+      action === 'revalidate'
+      && refreshReason === 'sign-in'
+      && isPlayerIntelligenceRuntimeEnabled()
+    ) {
+      try {
+        const result = await syncLinkedPlayerIntelligence(
+          actor.userId,
+          'sign-in',
+          { verifiedLastSignInAt: actor.lastSignInAt },
+        )
+        response.status(200).json({
+          status: 'success',
+          code: result.source === 'provider'
+            ? 'PLAYER_INTELLIGENCE_SYNCED'
+            : 'PLAYER_INTELLIGENCE_CACHED',
+          data: null,
+        })
+        return
+      } catch (error) {
+        if (error instanceof PlayerProviderError && error.code === 'NO_LINKED_PLAYER') {
+          response.status(200).json({
+            status: 'success',
+            code: 'NO_LINKED_PLAYER',
+            data: null,
+          })
+          return
+        }
+        throw error
+      }
+    }
+
     const data = await linkOrRevalidatePlayerAccount(actor.userId, {
       action,
       playerId: input.playerId,
@@ -53,7 +91,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
       ? { status: 'success', code: 'NO_LINKED_PLAYER', data: null }
       : { status: 'success', data })
   } catch (error) {
-    if (error instanceof ForgeAuthenticationError || error instanceof LinkedPlayerServiceError) {
+    if (
+      error instanceof ForgeAuthenticationError
+      || error instanceof LinkedPlayerServiceError
+      || error instanceof PlayerProviderError
+    ) {
       if (error instanceof LinkedPlayerServiceError && error.code === 'PLAYER_ACCOUNT_RATE_LIMITED') {
         response.setHeader('Retry-After', '300')
       }
@@ -61,7 +103,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
         response,
         error.statusCode,
         error.message,
-        error instanceof LinkedPlayerServiceError ? error.code : undefined,
+        error instanceof LinkedPlayerServiceError || error instanceof PlayerProviderError
+          ? error.code
+          : undefined,
       )
       return
     }
