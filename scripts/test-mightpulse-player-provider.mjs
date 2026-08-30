@@ -712,6 +712,59 @@ const staleAgeObservation = await authorityInputFor({
 assert.equal(staleAgeObservation.applyAllianceAuthority, false)
 assert.equal(staleAgeObservation.authorityObservedAt, null)
 
+const contradictoryRecentCachedAt = await authorityInputFor({
+  ...intelligence,
+  providerCachedAt: new Date(Date.parse(fetchedAt) - (5 * 60 * 1_000)).toISOString(),
+  providerAgeSeconds: 2 * 60 * 60,
+})
+assert.equal(contradictoryRecentCachedAt.applyAllianceAuthority, false)
+assert.equal(contradictoryRecentCachedAt.authorityObservedAt, null)
+assert.equal(contradictoryRecentCachedAt.normalizedSnapshot.identity.playerId, '125500338')
+
+const contradictoryStaleCachedAt = await authorityInputFor({
+  ...intelligence,
+  providerCachedAt: new Date(Date.parse(fetchedAt) - (2 * 60 * 60 * 1_000)).toISOString(),
+  providerAgeSeconds: 5 * 60,
+})
+assert.equal(contradictoryStaleCachedAt.applyAllianceAuthority, false)
+assert.equal(contradictoryStaleCachedAt.authorityObservedAt, null)
+
+const bothFreshObservation = await authorityInputFor({
+  ...intelligence,
+  providerCachedAt: new Date(Date.parse(fetchedAt) - (10 * 60 * 1_000)).toISOString(),
+  providerAgeSeconds: 15 * 60,
+})
+assert.equal(bothFreshObservation.applyAllianceAuthority, true)
+assert.equal(
+  bothFreshObservation.authorityObservedAt,
+  new Date(Date.parse(fetchedAt) - (15 * 60 * 1_000)).toISOString(),
+)
+
+const exactTtlObservation = await authorityInputFor({
+  ...intelligence,
+  providerCachedAt: new Date(
+    Date.parse(fetchedAt) - PLAYER_PROVIDER_FRESHNESS_TTL_MS,
+  ).toISOString(),
+  providerAgeSeconds: null,
+})
+assert.equal(exactTtlObservation.applyAllianceAuthority, true)
+
+const futureCachedAtObservation = await authorityInputFor({
+  ...intelligence,
+  providerCachedAt: new Date(Date.parse(fetchedAt) + 1_000).toISOString(),
+  providerAgeSeconds: null,
+})
+assert.equal(futureCachedAtObservation.applyAllianceAuthority, false)
+assert.equal(futureCachedAtObservation.authorityObservedAt, null)
+
+const invalidAgeObservation = await authorityInputFor({
+  ...intelligence,
+  providerCachedAt: null,
+  providerAgeSeconds: Number.NaN,
+})
+assert.equal(invalidAgeObservation.applyAllianceAuthority, false)
+assert.equal(invalidAgeObservation.authorityObservedAt, null)
+
 const contradictoryFreshnessObservation = await authorityInputFor({
   ...intelligence,
   providerFresh: false,

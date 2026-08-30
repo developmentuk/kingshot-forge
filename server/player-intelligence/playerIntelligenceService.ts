@@ -410,18 +410,20 @@ export async function syncLinkedPlayerIntelligence(
       && ageSeconds >= 0
       ? fetchedAtMs - (ageSeconds * 1_000)
       : Number.NaN
-    const authorityObservationAt = Number.isFinite(cachedAtMs)
-      && Number.isFinite(fetchedAtMs)
-      && cachedAtMs <= fetchedAtMs
-      ? intelligence.providerCachedAt as string
-      : Number.isFinite(ageObservedAtMs)
-        && ageObservedAtMs <= fetchedAtMs
-        ? new Date(ageObservedAtMs).toISOString()
-        : null
-
-    const authorityObservedAtMs = authorityObservationAt === null
-      ? Number.NaN
-      : Date.parse(authorityObservationAt)
+    const authorityObservationCandidates = [
+      Number.isFinite(cachedAtMs) && Number.isFinite(fetchedAtMs) && cachedAtMs <= fetchedAtMs
+        ? cachedAtMs
+        : Number.NaN,
+      Number.isFinite(ageObservedAtMs) && ageObservedAtMs <= fetchedAtMs
+        ? ageObservedAtMs
+        : Number.NaN,
+    ].filter(Number.isFinite)
+    const authorityObservedAtMs = authorityObservationCandidates.length > 0
+      ? Math.min(...authorityObservationCandidates)
+      : Number.NaN
+    const authorityObservationAt = Number.isFinite(authorityObservedAtMs)
+      ? new Date(authorityObservedAtMs).toISOString()
+      : null
     const nowMs = dependencies.nowMs ?? Date.now()
     const authorityEvidenceFresh =
       intelligence.providerFresh !== false
