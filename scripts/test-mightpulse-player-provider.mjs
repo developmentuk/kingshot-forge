@@ -26,7 +26,7 @@ import {
   POST_SIGN_IN_COMPLETION_POLL_INTERVAL_MS,
   shouldSuppressAutomaticRefreshAfterPostSignInSync,
   syncLinkedPlayerAfterSignIn,
-  waitForPostSignInPlayerRefreshCompletion,
+  waitForPostSignInPlayerSyncCompletion,
 } from '../src/services/postSignInPlayerSyncService.ts'
 import {
   isAllianceManagementRank,
@@ -1882,6 +1882,97 @@ assert.equal(singleFlightProviderCalls, 1)
 assert.equal(singleFlightQuotaCompletions, 1)
 assert.equal(singleFlightQuotaFailures, 0)
 
+let priorityIsolationProviderCalls = 0
+let lowPriorityReservations = 0
+let highPriorityReservations = 0
+let releaseLowPriorityReservation
+const priorityIsolationProvider = {
+  async lookupPlayer() {
+    priorityIsolationProviderCalls += 1
+    return normalizedPlayer
+  },
+}
+const lowPriorityRequest = resolvePlayerRefresh({
+  ...singleFlightRefreshInput,
+  provider: priorityIsolationProvider,
+  quotaRepository: {
+    async reserve(input) {
+      lowPriorityReservations += 1
+      assert.deepEqual(input, {
+        category: 'player_automatic',
+        priority: 'low',
+        idempotencyKey: null,
+      })
+      return new Promise((resolve) => {
+        releaseLowPriorityReservation = () => resolve({
+          allowed: false,
+          duplicate: false,
+          state: 'quota_exhausted',
+          reservationId: null,
+          attemptToken: null,
+          minuteUsed: 1,
+          dayUsed: 4500,
+          minuteLimit: 60,
+          dayLimit: 5000,
+          normalDayLimit: 4500,
+        })
+      })
+    },
+  },
+})
+await Promise.resolve()
+await Promise.resolve()
+assert.equal(lowPriorityReservations, 1)
+
+const highPriorityResult = await resolvePlayerRefresh({
+  ...singleFlightRefreshInput,
+  provider: priorityIsolationProvider,
+  refreshReason: 'manual',
+  quotaRepository: {
+    async reserve(input) {
+      highPriorityReservations += 1
+      assert.deepEqual(input, {
+        category: 'player_manual',
+        priority: 'high',
+        idempotencyKey: null,
+      })
+      return {
+        allowed: true,
+        duplicate: false,
+        state: 'reserved',
+        reservationId: '00000000-0000-0000-0000-000000000018',
+        attemptToken: '00000000-0000-0000-0000-000000000019',
+        minuteUsed: 2,
+        dayUsed: 4501,
+        minuteLimit: 60,
+        dayLimit: 5000,
+        normalDayLimit: 4500,
+      }
+    },
+    async complete() {
+      return true
+    },
+    async fail() {
+      throw new Error('successful high-priority lookup must not fail quota')
+    },
+  },
+})
+assert.equal(highPriorityResult.source, 'provider')
+assert.equal(highPriorityReservations, 1)
+assert.equal(priorityIsolationProviderCalls, 1)
+
+const lowPriorityRejection = assert.rejects(
+  lowPriorityRequest,
+  (error) => {
+    assert.equal(error.statusCode, 429)
+    assert.equal(error.code, 'PLAYER_PROVIDER_QUOTA_EXHAUSTED')
+    return true
+  },
+)
+releaseLowPriorityReservation()
+await lowPriorityRejection
+assert.equal(priorityIsolationProviderCalls, 1)
+
 await assert.rejects(
   () => resolvePlayerRefresh({
     action: 'revalidate',
@@ -2174,17 +2265,11 @@ assert.ok(
     >= 90_000,
 )
 
-let completionReadCalls = 0
+let completionPollCalls = 0
 let completionSleepCalls = 0
 assert.equal(
-  await waitForPostSignInPlayerRefreshCompletion(
-    '2026-08-29T11:00:00.000Z',
-    async () => {
-      completionReadCalls += 1
-      return completionReadCalls < 3
-        ? '2026-08-29T11:00:00.000Z'
-        : '2026-08-29T11:01:00.000Z'
-    },
+  await waitForPostSignInPlayerSyncCompletion(
+    inProgressSession,
     {
       intervalMs: 1,
       maxAttempts: 3,
@@ -2192,30 +2277,53 @@ assert.equal(
         assert.equal(milliseconds, 1)
         completionSleepCalls += 1
       },
+      fetchImplementation: async (url, init) => {
+        completionPollCalls += 1
+        assert.equal(url, '/api/player/account')
+        assert.deepEqual(
+          JSON.parse(init.body),
+          { action: 'revalidate', refreshReason: 'sign-in' },
+        )
+        return completionPollCalls < 3
+          ? Response.json({
+              status: 'success',
+              code: 'PLAYER_INTELLIGENCE_IN_PROGRESS',
+              data: null,
+            })
+          : Response.json({
+              status: 'success',
+              code: 'PLAYER_INTELLIGENCE_CACHED',
+              data: null,
+            })
+      },
     },
   ),
   true,
 )
-assert.equal(completionReadCalls, 3)
+assert.equal(completionPollCalls, 3)
 assert.equal(completionSleepCalls, 2)
 
-let timeoutReadCalls = 0
+let timeoutPollCalls = 0
 assert.equal(
-  await waitForPostSignInPlayerRefreshCompletion(
-    '2026-08-29T11:00:00.000Z',
-    async () => {
-      timeoutReadCalls += 1
-      return '2026-08-29T11:00:00.000Z'
-    },
+  await waitForPostSignInPlayerSyncCompletion(
+    inProgressSession,
     {
       intervalMs: 1,
       maxAttempts: 3,
       sleepImplementation: async () => {},
+      fetchImplementation: async () => {
+        timeoutPollCalls += 1
+        return Response.json({
+          status: 'success',
+          code: 'PLAYER_INTELLIGENCE_IN_PROGRESS',
+          data: null,
+        })
+      },
     },
   ),
   false,
 )
-assert.equal(timeoutReadCalls, 3)
+assert.equal(timeoutPollCalls, 3)
 
 assert.equal(
   await syncLinkedPlayerAfterSignIn(
@@ -2322,11 +2430,11 @@ assert.match(
 )
 assert.match(
   playerIdentityContextSource,
-  /signInResult === 'in-progress'[\s\S]*waitForPostSignInPlayerRefreshCompletion/u,
+  /signInResult === 'in-progress'[\s\S]*waitForPostSignInPlayerSyncCompletion\(\s*session,[\s\S]*loadPlayerIdentity\(\)[\s\S]*return/u,
 )
-assert.match(
+assert.doesNotMatch(
   playerIdentityContextSource,
-  /\.select\('last_refreshed_at'\)[\s\S]*\.eq\('is_primary', true\)/u,
+  /\.select\('last_refreshed_at'\)/u,
 )
 assert.doesNotMatch(
   playerIdentityContextSource,
