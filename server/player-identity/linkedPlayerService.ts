@@ -172,8 +172,9 @@ async function lookupPlayerSingleFlight(
   playerId: string,
   expectedKingdomId: number,
   ownerLookup?: PlayerLookupOwner,
+  coordinationPolicy = 'ungoverned',
 ): Promise<NormalizedPlayer> {
-  const key = `${playerId}:${expectedKingdomId}`
+  const key = `${playerId}:${expectedKingdomId}:${coordinationPolicy}`
   const existing = providerLookupsInFlight.get(key)
   if (existing) return existing
 
@@ -197,6 +198,7 @@ async function lookupKingshotPlayerWithOwner(
   kingdomIdInput: unknown,
   provider: PlayerProvider,
   ownerLookup?: PlayerLookupOwner,
+  coordinationPolicy = 'ungoverned',
 ): Promise<NormalizedPlayer> {
   const playerId = validatePlayerId(playerIdInput)
   const kingdomId = validateKingdomId(kingdomIdInput)
@@ -206,6 +208,7 @@ async function lookupKingshotPlayerWithOwner(
       playerId,
       kingdomId,
       ownerLookup,
+      coordinationPolicy,
     )
   } catch (error) {
     return mapProviderError(error)
@@ -259,6 +262,9 @@ export async function lookupKingshotPlayerGoverned(
           options.quotaRepository,
         )
       : undefined,
+    enforceQuota
+      ? `quota:${quotaClass.category}:${quotaClass.priority}`
+      : 'ungoverned',
   )
 }
 
@@ -361,6 +367,9 @@ export async function resolvePlayerRefresh(input: {
           input.quotaRepository,
         )
       : undefined,
+    quotaClass
+      ? `quota:${quotaClass.category}:${quotaClass.priority}`
+      : 'ungoverned',
   )
   return { source: 'provider', player }
 }
