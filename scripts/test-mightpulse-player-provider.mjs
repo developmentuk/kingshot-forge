@@ -392,19 +392,30 @@ const allowedRepository = {
     }
   },
 }
+let failedQuotaAttempts = 0
 const allowedQuotaRepository = {
   async reserve(input) {
     syncedQuotaInput = input
     return {
       allowed: true,
       duplicate: false,
+      state: 'reserved',
       reservationId: '00000000-0000-0000-0000-000000000002',
+      attemptToken: '00000000-0000-0000-0000-000000000006',
       minuteUsed: 3,
       dayUsed: 120,
       minuteLimit: 60,
       dayLimit: 5000,
       normalDayLimit: 4500,
     }
+  },
+  async fail(input) {
+    failedQuotaAttempts += 1
+    assert.deepEqual(input, {
+      reservationId: '00000000-0000-0000-0000-000000000002',
+      attemptToken: '00000000-0000-0000-0000-000000000006',
+    })
+    return true
   },
 }
 const intelligenceResult = await syncLinkedPlayerIntelligence(
@@ -467,6 +478,15 @@ assert.equal(
   syncedApplyInput.authorityObservedAt,
   '2026-08-29T11:50:00.000Z',
 )
+assert.equal(
+  syncedApplyInput.quotaReservationId,
+  '00000000-0000-0000-0000-000000000002',
+)
+assert.equal(
+  syncedApplyInput.quotaAttemptToken,
+  '00000000-0000-0000-0000-000000000006',
+)
+assert.equal(failedQuotaAttempts, 0)
 assert.equal(intelligenceResult.allianceAuthority.memberRole, 'r4')
 assert.equal(intelligenceResult.allianceAuthority.adminActive, true)
 
@@ -536,13 +556,18 @@ const crossInstanceDuplicate = await syncLinkedPlayerIntelligence(
         return {
           allowed: false,
           duplicate: true,
+          state: 'in_progress',
           reservationId: '00000000-0000-0000-0000-000000000002',
+          attemptToken: null,
           minuteUsed: 3,
           dayUsed: 120,
           minuteLimit: 60,
           dayLimit: 5000,
           normalDayLimit: 4500,
         }
+      },
+      async fail() {
+        throw new Error('duplicate reservation must not be failed')
       },
     },
     verifiedLastSignInAt: fetchedAt,
@@ -580,13 +605,18 @@ await assert.rejects(
           return {
             allowed: false,
             duplicate: false,
+            state: 'quota_exhausted',
             reservationId: null,
+            attemptToken: null,
             minuteUsed: 60,
             dayUsed: 4500,
             minuteLimit: 60,
             dayLimit: 5000,
             normalDayLimit: 4500,
           }
+        },
+        async fail() {
+          throw new Error('quota-exhausted reservation must not be failed')
         },
       },
       provider: {
@@ -645,6 +675,49 @@ await assert.rejects(
   },
 )
 assert.equal(inconsistentApplied, false)
+assert.equal(failedQuotaAttempts, 1)
+
+const completedDuplicate = await syncLinkedPlayerIntelligence(
+  'user-intelligence',
+  'sign-in',
+  {
+    repository: {
+      ...allowedRepository,
+      async applySync() {
+        throw new Error('completed duplicate must not apply')
+      },
+    },
+    quotaRepository: {
+      async reserve() {
+        return {
+          allowed: false,
+          duplicate: true,
+          state: 'completed',
+          reservationId: '00000000-0000-0000-0000-000000000002',
+          attemptToken: null,
+          minuteUsed: 3,
+          dayUsed: 120,
+          minuteLimit: 60,
+          dayLimit: 5000,
+          normalDayLimit: 4500,
+        }
+      },
+      async fail() {
+        throw new Error('completed duplicate must not be failed')
+      },
+    },
+    verifiedLastSignInAt: fetchedAt,
+    provider: {
+      async lookupPlayer() {
+        throw new Error('identity-only lookup must not run')
+      },
+      async lookupPlayerIntelligence() {
+        throw new Error('completed duplicate must not call provider')
+      },
+    },
+  },
+)
+assert.equal(completedDuplicate.source, 'cache')
 
 const migrationSql = await readFile(
   new URL(
