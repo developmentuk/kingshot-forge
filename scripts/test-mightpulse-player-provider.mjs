@@ -1402,7 +1402,9 @@ const identityQuotaRepository = {
     return {
       allowed: true,
       duplicate: false,
+      state: 'reserved',
       reservationId: '00000000-0000-0000-0000-000000000010',
+      attemptToken: '00000000-0000-0000-0000-000000000012',
       minuteUsed: 1,
       dayUsed: 1,
       minuteLimit: 60,
@@ -1457,8 +1459,8 @@ assert.equal(identityQuotaInput.category, 'player_manual')
 assert.equal(identityQuotaInput.priority, 'high')
 assert.equal(identityQuotaProviderCalls, 2)
 
-let duplicateBaseProviderCalls = 0
-const duplicateBaseSignIn = await resolvePlayerRefresh({
+let baseSignInProviderCalls = 0
+const baseSignInRefresh = await resolvePlayerRefresh({
   action: 'revalidate',
   existingAccount: {
     ...recentAccount,
@@ -1468,7 +1470,7 @@ const duplicateBaseSignIn = await resolvePlayerRefresh({
   kingdomId: 850,
   provider: {
     async lookupPlayer() {
-      duplicateBaseProviderCalls += 1
+      baseSignInProviderCalls += 1
       return normalizedPlayer
     },
   },
@@ -1480,15 +1482,14 @@ const duplicateBaseSignIn = await resolvePlayerRefresh({
       assert.deepEqual(input, {
         category: 'player_sign_in',
         priority: 'high',
-        idempotencyKey: signInProviderIdempotencyKey(
-          'user-base-quota',
-          fetchedAt,
-        ),
+        idempotencyKey: null,
       })
       return {
-        allowed: false,
-        duplicate: true,
+        allowed: true,
+        duplicate: false,
+        state: 'reserved',
         reservationId: '00000000-0000-0000-0000-000000000011',
+        attemptToken: '00000000-0000-0000-0000-000000000013',
         minuteUsed: 2,
         dayUsed: 2,
         minuteLimit: 60,
@@ -1500,8 +1501,8 @@ const duplicateBaseSignIn = await resolvePlayerRefresh({
   enforceQuota: true,
   nowMs,
 })
-assert.equal(duplicateBaseSignIn.source, 'cache')
-assert.equal(duplicateBaseProviderCalls, 0)
+assert.equal(baseSignInRefresh.source, 'provider')
+assert.equal(baseSignInProviderCalls, 1)
 
 await assert.rejects(
   () => resolvePlayerRefresh({
@@ -1522,7 +1523,9 @@ await assert.rejects(
         return {
           allowed: false,
           duplicate: false,
+          state: 'quota_exhausted',
           reservationId: null,
+          attemptToken: null,
           minuteUsed: 60,
           dayUsed: 4500,
           minuteLimit: 60,
