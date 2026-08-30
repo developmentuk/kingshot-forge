@@ -20,6 +20,13 @@ import {
   isAllianceManagementRank,
   mapMightPulseAllianceRank,
 } from '../shared/domains/player-identity/mightPulseAllianceRank.ts'
+import {
+  hashPlayerIntelligenceSnapshot,
+  projectPlayerIntelligenceSnapshot,
+  quotaClassForPlayerIntelligenceReason,
+  syncLinkedPlayerIntelligence,
+} from '../server/player-intelligence/playerIntelligenceService.ts'
+import { readFile } from 'node:fs/promises'
 
 const secret = 'synthetic-test-secret-never-log'
 const fetchedAt = '2026-08-29T12:00:00.000Z'
@@ -250,6 +257,219 @@ assert.equal(
 assert.equal(intelligence.providerCachedAt, '2026-08-29T11:50:00.000Z')
 assert.equal(intelligence.providerAgeSeconds, 600)
 assert.equal(intelligence.providerFresh, true)
+
+const intelligenceSnapshot = projectPlayerIntelligenceSnapshot(intelligence)
+const intelligenceHash = hashPlayerIntelligenceSnapshot(intelligenceSnapshot)
+assert.match(intelligenceHash, /^[0-9a-f]{64}$/u)
+assert.equal(
+  hashPlayerIntelligenceSnapshot(intelligenceSnapshot),
+  intelligenceHash,
+)
+assert.equal(
+  JSON.stringify(intelligenceSnapshot).includes('providerFetchedAt'),
+  false,
+)
+assert.deepEqual(
+  quotaClassForPlayerIntelligenceReason('sign-in'),
+  { category: 'player_sign_in', priority: 'high' },
+)
+assert.deepEqual(
+  quotaClassForPlayerIntelligenceReason('manual'),
+  { category: 'player_manual', priority: 'high' },
+)
+assert.deepEqual(
+  quotaClassForPlayerIntelligenceReason('automatic'),
+  { category: 'player_automatic', priority: 'low' },
+)
+
+let syncedObservation
+let syncedQuotaInput
+let intelligenceProviderCalls = 0
+const allowedRepository = {
+  async loadPrimaryLinkedPlayer(userId) {
+    assert.equal(userId, 'user-intelligence')
+    return {
+      playerAccountId: '00000000-0000-0000-0000-000000000001',
+      playerId: '125500338',
+      kingdomId: 850,
+    }
+  },
+  async reserveProviderRequest(input) {
+    syncedQuotaInput = input
+    return {
+      allowed: true,
+      reservationId: '00000000-0000-0000-0000-000000000002',
+      minuteUsed: 3,
+      dayUsed: 120,
+      minuteLimit: 60,
+      dayLimit: 5000,
+      normalDayLimit: 4500,
+    }
+  },
+  async appendObservation(input) {
+    syncedObservation = input
+    return '00000000-0000-0000-0000-000000000003'
+  },
+}
+const intelligenceResult = await syncLinkedPlayerIntelligence(
+  'user-intelligence',
+  'sign-in',
+  {
+    repository: allowedRepository,
+    provider: {
+      async lookupPlayer() {
+        throw new Error('identity-only lookup must not be used by intelligence sync')
+      },
+      async lookupPlayerIntelligence(request) {
+        intelligenceProviderCalls += 1
+        assert.deepEqual(request, {
+          playerId: '125500338',
+          expectedKingdomId: 850,
+        })
+        return intelligence
+      },
+    },
+  },
+)
+assert.equal(intelligenceProviderCalls, 1)
+assert.deepEqual(
+  syncedQuotaInput,
+  { category: 'player_sign_in', priority: 'high' },
+)
+assert.equal(intelligenceResult.contentSha256, intelligenceHash)
+assert.equal(
+  intelligenceResult.observationId,
+  '00000000-0000-0000-0000-000000000003',
+)
+assert.equal(syncedObservation.provider, 'mightpulse')
+assert.equal(syncedObservation.requestReason, 'sign-in')
+assert.deepEqual(
+  syncedObservation.sections,
+  ['base', 'heroes', 'ranks', 'gov_gear'],
+)
+assert.equal(
+  syncedObservation.contentSha256,
+  intelligenceHash,
+)
+assert.equal(
+  JSON.stringify(syncedObservation).includes(secret),
+  false,
+)
+
+let deniedProviderCalls = 0
+await assert.rejects(
+  () => syncLinkedPlayerIntelligence(
+    'user-intelligence',
+    'automatic',
+    {
+      repository: {
+        ...allowedRepository,
+        async reserveProviderRequest() {
+          return {
+            allowed: false,
+            reservationId: null,
+            minuteUsed: 60,
+            dayUsed: 4500,
+            minuteLimit: 60,
+            dayLimit: 5000,
+            normalDayLimit: 4500,
+          }
+        },
+        async appendObservation() {
+          throw new Error('quota-denied sync must not persist')
+        },
+      },
+      provider: {
+        async lookupPlayer() {
+          throw new Error('identity-only lookup must not run')
+        },
+        async lookupPlayerIntelligence() {
+          deniedProviderCalls += 1
+          return intelligence
+        },
+      },
+    },
+  ),
+  (error) => {
+    assert.equal(error.statusCode, 429)
+    assert.equal(error.code, 'PLAYER_PROVIDER_QUOTA_EXHAUSTED')
+    return true
+  },
+)
+assert.equal(deniedProviderCalls, 0)
+
+let inconsistentPersisted = false
+await assert.rejects(
+  () => syncLinkedPlayerIntelligence(
+    'user-intelligence',
+    'intelligence',
+    {
+      repository: {
+        ...allowedRepository,
+        async appendObservation() {
+          inconsistentPersisted = true
+          return 'should-not-persist'
+        },
+      },
+      provider: {
+        async lookupPlayer() {
+          throw new Error('identity-only lookup must not run')
+        },
+        async lookupPlayerIntelligence() {
+          return {
+            ...intelligence,
+            identity: {
+              ...intelligence.identity,
+              playerId: '999999999',
+            },
+          }
+        },
+      },
+    },
+  ),
+  (error) => {
+    assert.equal(error.statusCode, 502)
+    assert.equal(error.code, 'PLAYER_PROVIDER_INVALID_RESPONSE')
+    return true
+  },
+)
+assert.equal(inconsistentPersisted, false)
+
+const migrationSql = await readFile(
+  new URL(
+    '../supabase/migrations/20260830131000_mightpulse_001b_player_intelligence_foundation.sql',
+    import.meta.url,
+  ),
+  'utf8',
+)
+assert.match(
+  migrationSql,
+  /create table if not exists public\.player_intelligence_observations/iu,
+)
+assert.match(
+  migrationSql,
+  /create trigger reject_player_intelligence_observation_mutation/iu,
+)
+assert.match(
+  migrationSql,
+  /create or replace function public\.reserve_provider_request/iu,
+)
+assert.match(
+  migrationSql,
+  /pg_advisory_xact_lock/iu,
+)
+assert.match(
+  migrationSql,
+  /interval '24 hours'/iu,
+)
+assert.match(
+  migrationSql,
+  /normal_day_limit := 4500/iu,
+)
+assert.doesNotMatch(
+  migrationSql,
+  /grant .*authenticated.*player_intelligence_observations/iu,
+)
 
 const hiddenGovernorGear = await providerFor(Response.json(validIntelligencePayload({
   gov_gear: {
