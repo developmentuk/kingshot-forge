@@ -12,6 +12,7 @@ import {
   lookupKingshotPlayer,
   PLAYER_PROVIDER_FRESHNESS_TTL_MS,
   PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS,
+  quotaClassForPlayerRefresh,
   resolvePlayerRefresh,
 } from '../server/player-identity/linkedPlayerService.ts'
 import { PlayerAccountAttemptThrottle } from '../server/player-identity/playerAccountAttemptThrottle.ts'
@@ -31,6 +32,9 @@ import {
   quotaClassForPlayerIntelligenceReason,
   syncLinkedPlayerIntelligence,
 } from '../server/player-intelligence/playerIntelligenceService.ts'
+import {
+  signInProviderIdempotencyKey,
+} from '../server/player-intelligence/providerQuota.ts'
 import { readFile } from 'node:fs/promises'
 
 const secret = 'synthetic-test-secret-never-log'
@@ -300,10 +304,8 @@ assert.deepEqual(
   { category: 'player_automatic', priority: 'low' },
 )
 
-let syncedObservation
 let syncedQuotaInput
-let syncedAllianceAuthorityInput
-let syncedLinkedIdentityInput
+let syncedApplyInput
 let intelligenceProviderCalls = 0
 const allowedRepository = {
   async loadPrimaryLinkedPlayer(userId) {
@@ -315,10 +317,25 @@ const allowedRepository = {
       lastRefreshedAt: '2026-08-29T11:00:00.000Z',
     }
   },
-  async reserveProviderRequest(input) {
+  async applySync(input) {
+    syncedApplyInput = input
+    return {
+      observationId: '00000000-0000-0000-0000-000000000003',
+      allianceAuthority: {
+        allianceId: '00000000-0000-0000-0000-000000000004',
+        membershipId: '00000000-0000-0000-0000-000000000005',
+        memberRole: input.memberRole,
+        adminActive: input.memberRole === 'r4' || input.memberRole === 'leader',
+      },
+    }
+  },
+}
+const allowedQuotaRepository = {
+  async reserve(input) {
     syncedQuotaInput = input
     return {
       allowed: true,
+      duplicate: false,
       reservationId: '00000000-0000-0000-0000-000000000002',
       minuteUsed: 3,
       dayUsed: 120,
@@ -327,28 +344,13 @@ const allowedRepository = {
       normalDayLimit: 4500,
     }
   },
-  async updateLinkedPlayerIdentity(input) {
-    syncedLinkedIdentityInput = input
-  },
-  async appendObservation(input) {
-    syncedObservation = input
-    return '00000000-0000-0000-0000-000000000003'
-  },
-  async syncAllianceAuthority(input) {
-    syncedAllianceAuthorityInput = input
-    return {
-      allianceId: '00000000-0000-0000-0000-000000000004',
-      membershipId: '00000000-0000-0000-0000-000000000005',
-      memberRole: input.memberRole,
-      adminActive: input.memberRole === 'r4' || input.memberRole === 'leader',
-    }
-  },
 }
 const intelligenceResult = await syncLinkedPlayerIntelligence(
   'user-intelligence',
   'sign-in',
   {
     repository: allowedRepository,
+    quotaRepository: allowedQuotaRepository,
     verifiedLastSignInAt: fetchedAt,
     provider: {
       async lookupPlayer() {
@@ -368,48 +370,40 @@ const intelligenceResult = await syncLinkedPlayerIntelligence(
 assert.equal(intelligenceProviderCalls, 1)
 assert.equal(intelligenceResult.source, 'provider')
 assert.deepEqual(
-  syncedLinkedIdentityInput,
+  syncedQuotaInput,
   {
-    userId: 'user-intelligence',
-    playerAccountId: '00000000-0000-0000-0000-000000000001',
-    player: intelligence.identity,
+    category: 'player_sign_in',
+    priority: 'high',
+    idempotencyKey: signInProviderIdempotencyKey(
+      'user-intelligence',
+      fetchedAt,
+    ),
   },
 )
-assert.deepEqual(
-  syncedQuotaInput,
-  { category: 'player_sign_in', priority: 'high' },
-)
+assert.equal(intelligenceResult.quota.duplicate, false)
 assert.equal(intelligenceResult.contentSha256, intelligenceHash)
 assert.equal(
   intelligenceResult.observationId,
   '00000000-0000-0000-0000-000000000003',
 )
-assert.equal(syncedObservation.provider, 'mightpulse')
-assert.equal(syncedObservation.requestReason, 'sign-in')
-assert.deepEqual(
-  syncedObservation.sections,
-  ['base', 'heroes', 'ranks', 'gov_gear'],
-)
 assert.equal(
-  syncedObservation.contentSha256,
-  intelligenceHash,
-)
-assert.equal(
-  JSON.stringify(syncedObservation).includes(secret),
+  JSON.stringify(syncedApplyInput).includes(secret),
   false,
 )
-assert.deepEqual(
-  syncedAllianceAuthorityInput,
-  {
-    userId: 'user-intelligence',
-    playerAccountId: '00000000-0000-0000-0000-000000000001',
-    kingdomId: 850,
-    allianceTag: 'SYN',
-    allianceName: 'Synthetic Alliance',
-    memberRole: 'r4',
-    observedAt: '2026-08-29T11:50:00.000Z',
-    fetchedAt,
-  },
+assert.equal(syncedApplyInput.userId, 'user-intelligence')
+assert.equal(
+  syncedApplyInput.playerAccountId,
+  '00000000-0000-0000-0000-000000000001',
+)
+assert.equal(syncedApplyInput.requestReason, 'sign-in')
+assert.equal(syncedApplyInput.contentSha256, intelligenceHash)
+assert.equal(syncedApplyInput.applyAllianceAuthority, true)
+assert.equal(syncedApplyInput.allianceTag, 'SYN')
+assert.equal(syncedApplyInput.allianceName, 'Synthetic Alliance')
+assert.equal(syncedApplyInput.memberRole, 'r4')
+assert.equal(
+  syncedApplyInput.authorityObservedAt,
+  '2026-08-29T11:50:00.000Z',
 )
 assert.equal(intelligenceResult.allianceAuthority.memberRole, 'r4')
 assert.equal(intelligenceResult.allianceAuthority.adminActive, true)
@@ -430,18 +424,14 @@ const replayResult = await syncLinkedPlayerIntelligence(
           lastRefreshedAt: fetchedAt,
         }
       },
-      async reserveProviderRequest() {
+      async applySync() {
+        throw new Error('same sign-in must not apply')
+      },
+    },
+    quotaRepository: {
+      async reserve() {
         replayQuotaCalls += 1
-        throw new Error('same sign-in must not reserve quota')
-      },
-      async updateLinkedPlayerIdentity() {
-        throw new Error('same sign-in must not update identity')
-      },
-      async appendObservation() {
-        throw new Error('same sign-in must not persist')
-      },
-      async syncAllianceAuthority() {
-        throw new Error('same sign-in must not sync Alliance authority')
+        throw new Error('same sign-in freshness check must not reserve quota')
       },
     },
     verifiedLastSignInAt: fetchedAt,
@@ -460,6 +450,56 @@ assert.equal(replayResult.source, 'cache')
 assert.equal(replayQuotaCalls, 0)
 assert.equal(replayProviderCalls, 0)
 
+let crossInstanceQuotaCalls = 0
+let crossInstanceProviderCalls = 0
+let crossInstanceApplyCalls = 0
+const crossInstanceDuplicate = await syncLinkedPlayerIntelligence(
+  'user-intelligence',
+  'sign-in',
+  {
+    repository: {
+      ...allowedRepository,
+      async applySync() {
+        crossInstanceApplyCalls += 1
+        throw new Error('duplicate sign-in must not apply')
+      },
+    },
+    quotaRepository: {
+      async reserve(input) {
+        crossInstanceQuotaCalls += 1
+        assert.equal(
+          input.idempotencyKey,
+          signInProviderIdempotencyKey('user-intelligence', fetchedAt),
+        )
+        return {
+          allowed: false,
+          duplicate: true,
+          reservationId: '00000000-0000-0000-0000-000000000002',
+          minuteUsed: 3,
+          dayUsed: 120,
+          minuteLimit: 60,
+          dayLimit: 5000,
+          normalDayLimit: 4500,
+        }
+      },
+    },
+    verifiedLastSignInAt: fetchedAt,
+    provider: {
+      async lookupPlayer() {
+        throw new Error('identity-only lookup must not run')
+      },
+      async lookupPlayerIntelligence() {
+        crossInstanceProviderCalls += 1
+        return intelligence
+      },
+    },
+  },
+)
+assert.equal(crossInstanceDuplicate.source, 'cache')
+assert.equal(crossInstanceQuotaCalls, 1)
+assert.equal(crossInstanceProviderCalls, 0)
+assert.equal(crossInstanceApplyCalls, 0)
+
 let deniedProviderCalls = 0
 await assert.rejects(
   () => syncLinkedPlayerIntelligence(
@@ -468,9 +508,15 @@ await assert.rejects(
     {
       repository: {
         ...allowedRepository,
-        async reserveProviderRequest() {
+        async applySync() {
+          throw new Error('quota-denied sync must not apply')
+        },
+      },
+      quotaRepository: {
+        async reserve() {
           return {
             allowed: false,
+            duplicate: false,
             reservationId: null,
             minuteUsed: 60,
             dayUsed: 4500,
@@ -478,9 +524,6 @@ await assert.rejects(
             dayLimit: 5000,
             normalDayLimit: 4500,
           }
-        },
-        async appendObservation() {
-          throw new Error('quota-denied sync must not persist')
         },
       },
       provider: {
@@ -502,7 +545,7 @@ await assert.rejects(
 )
 assert.equal(deniedProviderCalls, 0)
 
-let inconsistentPersisted = false
+let inconsistentApplied = false
 await assert.rejects(
   () => syncLinkedPlayerIntelligence(
     'user-intelligence',
@@ -510,11 +553,12 @@ await assert.rejects(
     {
       repository: {
         ...allowedRepository,
-        async appendObservation() {
-          inconsistentPersisted = true
-          return 'should-not-persist'
+        async applySync() {
+          inconsistentApplied = true
+          throw new Error('inconsistent response must not apply')
         },
       },
+      quotaRepository: allowedQuotaRepository,
       provider: {
         async lookupPlayer() {
           throw new Error('identity-only lookup must not run')
@@ -537,7 +581,7 @@ await assert.rejects(
     return true
   },
 )
-assert.equal(inconsistentPersisted, false)
+assert.equal(inconsistentApplied, false)
 
 const migrationSql = await readFile(
   new URL(
@@ -572,6 +616,18 @@ assert.match(
 )
 assert.match(
   migrationSql,
+  /provider_quota_reservations_idempotency_idx/iu,
+)
+assert.match(
+  migrationSql,
+  /p_idempotency_key text default null/iu,
+)
+assert.match(
+  migrationSql,
+  /duplicate boolean/iu,
+)
+assert.match(
+  migrationSql,
   /create or replace function public\.sync_mightpulse_alliance_membership/iu,
 )
 assert.match(
@@ -581,6 +637,18 @@ assert.match(
 assert.match(
   migrationSql,
   /'mightpulse_admin_synced'/iu,
+)
+assert.match(
+  migrationSql,
+  /create table if not exists public\.alliance_provider_authority_overrides/iu,
+)
+assert.match(
+  migrationSql,
+  /'mightpulse_manual_suspension_preserved'/iu,
+)
+assert.match(
+  migrationSql,
+  /'mightpulse_admin_suspension_preserved'/iu,
 )
 assert.match(
   migrationSql,
@@ -600,6 +668,14 @@ assert.match(
 )
 assert.match(
   migrationSql,
+  /create or replace function public\.apply_mightpulse_player_intelligence_sync/iu,
+)
+assert.match(
+  migrationSql,
+  /update public\.player_accounts[\s\S]*insert into public\.player_intelligence_observations[\s\S]*sync_mightpulse_alliance_membership/iu,
+)
+assert.match(
+  migrationSql,
   /can_manage_members = true/iu,
 )
 assert.match(
@@ -608,7 +684,11 @@ assert.match(
 )
 assert.doesNotMatch(
   migrationSql,
-  /grant .*authenticated.*player_intelligence_observations/iu,
+  /grant[^;]*player_intelligence_observations[^;]*authenticated/iu,
+)
+assert.doesNotMatch(
+  migrationSql,
+  /grant[^;]*alliance_provider_authority_overrides[^;]*authenticated/iu,
 )
 
 const hiddenGovernorGear = await providerFor(Response.json(validIntelligencePayload({
