@@ -216,7 +216,7 @@ export function PlayerIdentityProvider({
         && hasPostSignInPlayerSyncAttempted(session)
       ) {
         suppressedInitialSignInRefresh.current = signInMarker
-        const signInSync = getPostSignInPlayerSyncInFlight(user.id)
+        const signInSync = getPostSignInPlayerSyncInFlight(session)
         const signInResult = signInSync
           ? await signInSync
           : getPostSignInPlayerSyncOutcome(session)
