@@ -14,6 +14,7 @@ import {
   PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS,
   quotaClassForPlayerRefresh,
   resolvePlayerRefresh,
+  shouldEnforcePlayerProviderQuota,
 } from '../server/player-identity/linkedPlayerService.ts'
 import { PlayerAccountAttemptThrottle } from '../server/player-identity/playerAccountAttemptThrottle.ts'
 import {
@@ -33,6 +34,7 @@ import {
   syncLinkedPlayerIntelligence,
 } from '../server/player-intelligence/playerIntelligenceService.ts'
 import {
+  isProviderQuotaRuntimeEnabled,
   signInProviderIdempotencyKey,
 } from '../server/player-intelligence/providerQuota.ts'
 import { readFile } from 'node:fs/promises'
@@ -50,16 +52,71 @@ assert.equal(mapMightPulseAllianceRank(null), null)
 assert.equal(isAllianceManagementRank('r4'), true)
 assert.equal(isAllianceManagementRank('leader'), true)
 assert.equal(isAllianceManagementRank('officer'), false)
+assert.equal(isProviderQuotaRuntimeEnabled({}), false)
 assert.equal(
-  isPlayerIntelligenceRuntimeEnabled({ MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: 'true' }),
+  isProviderQuotaRuntimeEnabled({ MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'true' }),
   true,
 )
 assert.equal(
-  isPlayerIntelligenceRuntimeEnabled({ MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: ' TRUE ' }),
+  isProviderQuotaRuntimeEnabled({ MIGHTPULSE_PROVIDER_QUOTA_ENABLED: ' TRUE ' }),
   true,
 )
 assert.equal(
-  isPlayerIntelligenceRuntimeEnabled({ MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: 'false' }),
+  isProviderQuotaRuntimeEnabled({ MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'false' }),
+  false,
+)
+assert.equal(shouldEnforcePlayerProviderQuota(), false)
+assert.equal(
+  shouldEnforcePlayerProviderQuota({
+    environment: { MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'true' },
+  }),
+  true,
+)
+assert.equal(
+  shouldEnforcePlayerProviderQuota({
+    quotaRepositoryProvided: true,
+  }),
+  true,
+)
+assert.equal(
+  shouldEnforcePlayerProviderQuota({
+    quotaEnabled: false,
+    quotaRepositoryProvided: true,
+    environment: { MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'true' },
+  }),
+  false,
+)
+assert.equal(
+  isPlayerIntelligenceRuntimeEnabled({
+    MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: 'true',
+    MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'true',
+  }),
+  true,
+)
+assert.equal(
+  isPlayerIntelligenceRuntimeEnabled({
+    MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: ' TRUE ',
+    MIGHTPULSE_PROVIDER_QUOTA_ENABLED: ' TRUE ',
+  }),
+  true,
+)
+assert.equal(
+  isPlayerIntelligenceRuntimeEnabled({
+    MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: 'true',
+  }),
+  false,
+)
+assert.equal(
+  isPlayerIntelligenceRuntimeEnabled({
+    MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'true',
+  }),
+  false,
+)
+assert.equal(
+  isPlayerIntelligenceRuntimeEnabled({
+    MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: 'false',
+    MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'true',
+  }),
   false,
 )
 assert.equal(isPlayerIntelligenceRuntimeEnabled({}), false)
@@ -710,6 +767,14 @@ assert.match(
 assert.match(
   migrationSql,
   /'mightpulse_admin_suspension_preserved'/iu,
+)
+assert.match(
+  migrationSql,
+  /authority_override_history public\.alliance_provider_authority_overrides/iu,
+)
+assert.match(
+  migrationSql,
+  /previous_admin\.revoked_at > greatest\([\s\S]*authority_override_history\.cleared_at[\s\S]*authority_override_history\.suspended_until[\s\S]*authority_override_history\.updated_at/iu,
 )
 assert.match(
   migrationSql,
