@@ -44,7 +44,6 @@ import {
   syncLinkedPlayerIntelligence,
 } from '../server/player-intelligence/playerIntelligenceService.ts'
 import {
-  baseSignInProviderIdempotencyKey,
   isProviderQuotaRuntimeEnabled,
   readMightPulseProviderRequestStatus,
   signInProviderIdempotencyKey,
@@ -77,17 +76,13 @@ assert.equal(
   isProviderQuotaRuntimeEnabled({ MIGHTPULSE_PROVIDER_QUOTA_ENABLED: 'false' }),
   false,
 )
-assert.notEqual(
-  baseSignInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
+assert.equal(
+  signInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
   signInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
 )
-assert.equal(
-  baseSignInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
-  baseSignInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
-)
 assert.notEqual(
-  baseSignInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
-  baseSignInProviderIdempotencyKey(
+  signInProviderIdempotencyKey('user-sign-in-key', fetchedAt),
+  signInProviderIdempotencyKey(
     'user-sign-in-key',
     '2026-08-29T12:01:00.000Z',
   ),
@@ -1864,7 +1859,7 @@ const baseSignInRefresh = await resolvePlayerRefresh({
       assert.deepEqual(input, {
         category: 'player_sign_in',
         priority: 'high',
-        idempotencyKey: baseSignInProviderIdempotencyKey(
+        idempotencyKey: signInProviderIdempotencyKey(
           'user-base-quota',
           fetchedAt,
         ),
@@ -1924,7 +1919,7 @@ const duplicateBaseSignInRefresh = assert.rejects(
         assert.deepEqual(input, {
           category: 'player_sign_in',
           priority: 'high',
-          idempotencyKey: baseSignInProviderIdempotencyKey(
+          idempotencyKey: signInProviderIdempotencyKey(
             'user-base-quota',
             fetchedAt,
           ),
@@ -2811,7 +2806,15 @@ assert.match(
 )
 assert.match(
   playerAccountApiSource,
-  /const intelligenceEnabled = isPlayerIntelligenceRuntimeEnabled\(\)[\s\S]*baseSignInProviderIdempotencyKey\(/u,
+  /if \(input\.action === 'sign-in-status'\)[\s\S]*readMightPulseProviderRequestStatus\([\s\S]*signInProviderIdempotencyKey\(/u,
+)
+assert.doesNotMatch(
+  playerAccountApiSource,
+  /baseSignInProviderIdempotencyKey/u,
+)
+assert.doesNotMatch(
+  linkedPlayerServiceSource,
+  /baseSignInProviderIdempotencyKey/u,
 )
 assert.match(
   playerAccountApiSource,
