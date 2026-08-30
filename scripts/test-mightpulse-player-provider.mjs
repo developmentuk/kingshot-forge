@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import {
   createMightPulsePlayerProvider,
+  classifyInvalidAvatarShape,
   createMightPulsePlayerProviderForTest,
   normalizeAvatarUrl,
 } from '../server/player-identity/providers/mightPulsePlayerProvider.ts'
@@ -121,6 +122,17 @@ assert.deepEqual(normalizeAvatarUrl('https://cdn.example.test/avatar.png'), {
   status: 'accepted',
   reason: 'accepted',
 })
+for (const [rawAvatar, expectedShape] of [
+  ['//cdn.example.test/avatar.png', 'protocol_relative'],
+  ['/avatars/synthetic.png', 'root_relative'],
+  ['https%3A%2F%2Fcdn.example.test%2Favatar.png', 'encoded_https'],
+  ['"https://cdn.example.test/avatar.png"', 'quoted'],
+  ['avatars/synthetic.png', 'relative_path'],
+  ['synthetic avatar', 'other'],
+]) {
+  assert.equal(classifyInvalidAvatarShape(rawAvatar), expectedShape)
+}
+assert.equal(classifyInvalidAvatarShape(null), 'not_applicable')
 for (const [rejectedAvatar, expectedReason] of [
   ['data:text/html,unsafe', 'non_https'],
   ['http://cdn.example.test/avatar.png', 'non_https'],
@@ -146,6 +158,10 @@ try {
     .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
   assert.equal(unsafeAvatar.avatarUrl, null)
 
+  const relativeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: '/avatars/synthetic.png' })))
+    .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
+  assert.equal(relativeAvatar.avatarUrl, null)
+
   const safeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: 'https://cdn.example.test/avatar.png' })))
     .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
   assert.equal(safeAvatar.avatarUrl, 'https://cdn.example.test/avatar.png')
@@ -154,14 +170,19 @@ try {
 }
 assert.deepEqual(
   avatarDiagnostics.map((args) => args[1]?.avatarStatus),
-  ['missing', 'rejected', 'accepted'],
+  ['missing', 'rejected', 'rejected', 'accepted'],
 )
 assert.deepEqual(
   avatarDiagnostics.map((args) => args[1]?.avatarReason),
-  ['not_provided', 'non_https', 'accepted'],
+  ['not_provided', 'non_https', 'invalid_url', 'accepted'],
+)
+assert.deepEqual(
+  avatarDiagnostics.map((args) => args[1]?.avatarShape),
+  ['not_applicable', 'not_applicable', 'root_relative', 'not_applicable'],
 )
 const serializedAvatarDiagnostics = JSON.stringify(avatarDiagnostics)
 assert.equal(serializedAvatarDiagnostics.includes('https://cdn.example.test/avatar.png'), false)
+assert.equal(serializedAvatarDiagnostics.includes('/avatars/synthetic.png'), false)
 assert.equal(serializedAvatarDiagnostics.includes('125500338'), false)
 assert.equal(serializedAvatarDiagnostics.includes(secret), false)
 for (const [rawLevel, expected] of [[31, 31], [34, 34], [35, 35], [40, 40], [84, 84]]) {

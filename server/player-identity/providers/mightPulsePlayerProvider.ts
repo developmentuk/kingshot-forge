@@ -49,6 +49,30 @@ type AvatarDiagnosticReason =
   | 'credentials'
   | 'missing_hostname'
 
+type InvalidAvatarShape =
+  | 'not_applicable'
+  | 'protocol_relative'
+  | 'root_relative'
+  | 'encoded_https'
+  | 'quoted'
+  | 'relative_path'
+  | 'other'
+
+function classifyInvalidAvatarShape(value: unknown): InvalidAvatarShape {
+  if (typeof value !== 'string') return 'not_applicable'
+  const candidate = value.trim()
+  if (!candidate) return 'not_applicable'
+  if (candidate.startsWith('//')) return 'protocol_relative'
+  if (candidate.startsWith('/')) return 'root_relative'
+  if (/^https?%3a%2f%2f/iu.test(candidate)) return 'encoded_https'
+  if (
+    (candidate.startsWith('"') && candidate.endsWith('"'))
+    || (candidate.startsWith("'") && candidate.endsWith("'"))
+  ) return 'quoted'
+  if (/^(?:\.{1,2}\/|[\p{L}\p{N}._~-]+\/)/u.test(candidate)) return 'relative_path'
+  return 'other'
+}
+
 function normalizeAvatarUrl(value: unknown): {
   url: string | null
   status: AvatarDiagnosticStatus
@@ -147,6 +171,9 @@ function normalizeMightPulsePlayer(
   console.info('[mightpulse-player-provider]', {
     avatarStatus: avatar.status,
     avatarReason: avatar.reason,
+    avatarShape: avatar.reason === 'invalid_url'
+      ? classifyInvalidAvatarShape(player.avatar_url)
+      : 'not_applicable',
   })
 
   return {
@@ -307,4 +334,8 @@ export function createMightPulsePlayerProviderForTest(
   return createConfiguredMightPulsePlayerProvider(options, configuredBaseUrl(options.baseUrl))
 }
 
-export { normalizeAvatarUrl, normalizeMightPulsePlayer }
+export {
+  classifyInvalidAvatarShape,
+  normalizeAvatarUrl,
+  normalizeMightPulsePlayer,
+}
