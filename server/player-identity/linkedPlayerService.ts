@@ -12,6 +12,7 @@ import {
   isProviderQuotaRuntimeEnabled,
   reserveMightPulseProviderRequest,
   type ProviderQuotaRepository,
+  type ProviderQuotaReservation,
   type ProviderRequestCategory,
   type ProviderQuotaPriority,
 } from '../player-intelligence/providerQuota.js'
@@ -117,6 +118,10 @@ function createQuotaGovernedPlayerLookupOwner(
   }>,
   quotaRepository?: ProviderQuotaRepository,
   idempotencyKey: string | null = null,
+  options: Readonly<{
+    deferCompletion?: boolean
+    onReserved?: (reservation: ProviderQuotaReservation) => void
+  }> = {},
 ): PlayerLookupOwner {
   return async (request) => {
     const reservation = await reserveMightPulseProviderRequest(
@@ -130,7 +135,11 @@ function createQuotaGovernedPlayerLookupOwner(
     if (reservation.duplicate) {
       throw new PlayerProviderError(
         409,
-        'PLAYER_PROVIDER_REQUEST_ALREADY_CLAIMED',
+        reservation.state === 'in_progress'
+          ? 'PLAYER_PROVIDER_REQUEST_IN_PROGRESS'
+          : reservation.state === 'completed'
+            ? 'PLAYER_PROVIDER_REQUEST_COMPLETED'
+            : 'PLAYER_PROVIDER_REQUEST_ALREADY_CLAIMED',
         'This provider request has already been claimed.',
         true,
       )
@@ -151,6 +160,10 @@ function createQuotaGovernedPlayerLookupOwner(
 
     try {
       const result = await provider.lookupPlayer(request)
+      if (options.deferCompletion) {
+        options.onReserved?.(reservation)
+        return result
+      }
       try {
         await completeMightPulseProviderRequest(
           reservation,
@@ -324,7 +337,10 @@ export async function resolvePlayerRefresh(input: {
   userId?: string
   quotaRepository?: ProviderQuotaRepository
   enforceQuota?: boolean
-}): Promise<{ source: 'cache'; player: null } | { source: 'provider'; player: NormalizedPlayer }> {
+}): Promise<
+  | { source: 'cache'; player: null }
+  | { source: 'provider'; player: NormalizedPlayer; quotaReservation: ProviderQuotaReservation | null }
+> {
   if (input.action === 'link' && input.existingAccount) {
     if (input.existingAccount.player_id !== input.playerId) {
       throw new LinkedPlayerServiceError(
@@ -377,6 +393,7 @@ export async function resolvePlayerRefresh(input: {
     : null
 
   let player: NormalizedPlayer
+  let deferredQuotaReservation: ProviderQuotaReservation | null = null
   try {
     player = await lookupKingshotPlayerWithOwner(
     input.playerId,
@@ -388,6 +405,14 @@ export async function resolvePlayerRefresh(input: {
             quotaClass,
             input.quotaRepository,
             baseSignInIdempotencyKey,
+            baseSignInIdempotencyKey
+              ? {
+                  deferCompletion: true,
+                  onReserved: (reservation) => {
+                    deferredQuotaReservation = reservation
+                  },
+                }
+              : undefined,
           )
         : undefined,
       quotaClass
@@ -401,13 +426,21 @@ export async function resolvePlayerRefresh(input: {
     if (
       baseSignInIdempotencyKey
       && error instanceof LinkedPlayerServiceError
-      && error.code === 'PLAYER_PROVIDER_REQUEST_ALREADY_CLAIMED'
     ) {
-      return { source: 'cache', player: null }
+      if (error.code === 'PLAYER_PROVIDER_REQUEST_COMPLETED') {
+        return { source: 'cache', player: null }
+      }
+      if (error.code === 'PLAYER_PROVIDER_REQUEST_IN_PROGRESS') {
+        throw error
+      }
     }
     throw error
   }
-  return { source: 'provider', player }
+  return {
+    source: 'provider',
+    player,
+    quotaReservation: deferredQuotaReservation,
+  }
 }
 
 export function createProviderRefreshFields(player: NormalizedPlayer) {
@@ -530,6 +563,17 @@ export async function linkOrRevalidatePlayerAccount(
       ).select(ACCOUNT_FIELDS).single()
   const { data, error } = result
   if (error) {
+    if (resolution.quotaReservation) {
+      try {
+        await failMightPulseProviderRequest(
+          resolution.quotaReservation,
+          dependencies.quotaRepository,
+        )
+      } catch {
+        // Preserve the persistence error. A failed lifecycle marker remains
+        // retryable once the reservation lease expires.
+      }
+    }
     if (error.code === '23505') {
       throw new LinkedPlayerServiceError(
         409,
@@ -538,6 +582,18 @@ export async function linkOrRevalidatePlayerAccount(
       )
     }
     throw error
+  }
+
+  if (resolution.quotaReservation) {
+    try {
+      await completeMightPulseProviderRequest(
+        resolution.quotaReservation,
+        dependencies.quotaRepository,
+      )
+    } catch {
+      // The player account is already persisted. Completion remains
+      // best-effort; the account freshness guard suppresses a duplicate fetch.
+    }
   }
   return safeAccount(data)
 }
