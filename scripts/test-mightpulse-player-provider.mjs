@@ -2635,10 +2635,6 @@ assert.match(
   /PLAYER_PROVIDER_REQUEST_IN_PROGRESS'[\s\S]*status: 'success'[\s\S]*code: 'PLAYER_INTELLIGENCE_IN_PROGRESS'/u,
 )
 
-const linkedPlayerServiceSource = await readFile(
-  new URL('../server/player-identity/linkedPlayerService.ts', import.meta.url),
-  'utf8',
-)
 const accountPersistenceIndex = linkedPlayerServiceSource.indexOf(
   "const result = existing",
 )
