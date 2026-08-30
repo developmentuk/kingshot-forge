@@ -7,7 +7,7 @@ import {
 import { isTownCenterRawLevel } from '../../../shared/domains/player-identity/townCenterLevel.js'
 
 const DEFAULT_BASE_URL = 'https://api.mightpulse.com/v1'
-const TRUSTED_MIGHTPULSE_ORIGIN = 'https://api.mightpulse.com'
+const TRUSTED_MIGHTPULSE_AVATAR_ORIGIN = 'https://mightpulse.com'
 export const DEFAULT_MIGHTPULSE_TIMEOUT_MS = 45_000
 const MAX_CONFIGURED_TIMEOUT_MS = 55_000
 
@@ -100,9 +100,9 @@ function normalizeAvatarUrl(value: unknown): {
   try {
     const isRootRelative = candidate.startsWith('/') && !candidate.startsWith('//')
     const url = isRootRelative
-      ? new URL(candidate, TRUSTED_MIGHTPULSE_ORIGIN)
+      ? new URL(candidate, TRUSTED_MIGHTPULSE_AVATAR_ORIGIN)
       : new URL(candidate)
-    if (isRootRelative && url.origin !== TRUSTED_MIGHTPULSE_ORIGIN) {
+    if (isRootRelative && url.origin !== TRUSTED_MIGHTPULSE_AVATAR_ORIGIN) {
       return { url: null, status: 'rejected', reason: 'invalid_url' }
     }
     if (url.protocol !== 'https:') {

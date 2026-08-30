@@ -344,3 +344,23 @@ values remain rejected. Existing valid absolute HTTPS avatar URLs remain
 unchanged. A successfully resolved root-relative avatar follows the existing
 provider refresh mapping into `player_accounts.profile_photo`; no schema,
 ownership, verification or visibility behaviour changes.
+
+
+## Public avatar origin correction — 30 August 2026
+
+Production acceptance after PR #107 proved that a MightPulse root-relative avatar
+path is valid but does not render when resolved against the API origin
+`https://api.mightpulse.com`. Direct browser verification of the same governed
+path on the public MightPulse origin `https://mightpulse.com` returned the
+expected avatar image.
+
+The final contained correction therefore separates the two trusted origins:
+
+- player API requests remain pinned to `https://api.mightpulse.com/v1`;
+- root-relative avatar assets resolve only against `https://mightpulse.com`.
+
+The existing post-resolution exact-origin check remains in force for avatar
+paths, so authority-like and backslash-normalised values cannot escape to
+another host. Existing valid absolute HTTPS avatar URLs remain unchanged. No
+schema, ownership, verification, visibility or provider credential boundary is
+changed.
