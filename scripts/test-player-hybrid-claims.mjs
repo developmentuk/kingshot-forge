@@ -77,7 +77,7 @@ try {
   assert.match(claimUi, /Link live Kingshot player/u)
   assert.match(claimUi, /linkKingshotPlayer/u)
   assert.match(claimUi, /Ownership is not yet verified/u)
-  assert.match(claimUi, /const claimMutationPending = claiming \|\| linkingLivePlayer/u)
+  assert.match(claimUi, /const claimMutationPending = claiming \|\| linkingLivePlayer \|\| submittingEvidence/u)
   assert.match(
     claimUi,
     /disabled=\{claimMutationPending\}[\s\S]*Link live Kingshot player/u,
@@ -89,6 +89,11 @@ try {
   assert.match(claimClient, /\/api\/player\/account/u)
   assert.match(claimClient, /action: 'link'/u)
   assert.match(claimUi, /Submit for Verification/u)
+  assert.match(claimUi, /if \(!session\?\.access_token \|\| !ocrReview \|\| claimMutationPending\) return/u)
+  assert.match(
+    claimUi,
+    /disabled=\{claimMutationPending\}[\s\S]*Submit for Verification/u,
+  )
   assert.match(claimUi, /corrections: ocrReview\.userConfirmed/u)
   assert.doesNotMatch(claimUi, /getPlayer/u)
 

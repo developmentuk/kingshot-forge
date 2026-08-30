@@ -80,7 +80,7 @@ function HybridPlayerClaimPanel() {
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [ocrReview, setOcrReview] = useState<AccountLinkOcrReview | null>(null)
-  const claimMutationPending = claiming || linkingLivePlayer
+  const claimMutationPending = claiming || linkingLivePlayer || submittingEvidence
 
   function validateIdentityInputs() {
     const cleanId = cleanPlayerId(playerId)
@@ -209,7 +209,7 @@ function HybridPlayerClaimPanel() {
   }
 
   async function handleEvidenceSubmit() {
-    if (!session?.access_token || !ocrReview) return
+    if (!session?.access_token || !ocrReview || claimMutationPending) return
     setSubmittingEvidence(true)
     setErrorMessage('')
     setMessage('')
@@ -401,7 +401,7 @@ function HybridPlayerClaimPanel() {
             <div className="linked-player-preview__warning">
               <strong>Submit screenshot evidence</strong>
               <p>Review every extracted value above. Submission creates a pending claim; it does not immediately mark the account verified.</p>
-              <button type="button" className="button button--primary" disabled={submittingEvidence} onClick={() => void handleEvidenceSubmit()}>{submittingEvidence ? 'Submitting evidence…' : 'Submit for Verification'}</button>
+              <button type="button" className="button button--primary" disabled={claimMutationPending} onClick={() => void handleEvidenceSubmit()}>{submittingEvidence ? 'Submitting evidence…' : 'Submit for Verification'}</button>
             </div>
           )}
         </>
@@ -443,7 +443,7 @@ function HybridPlayerClaimPanel() {
                 <div className="linked-player-preview__warning">
                   <strong>Request verification</strong>
                   <p>The screenshot must show the same Player ID and State as your existing claim. Forge recomputes OCR server-side before accepting the request.</p>
-                  <button type="button" className="button button--primary" disabled={submittingEvidence} onClick={() => void handleEvidenceSubmit()}>{submittingEvidence ? 'Submitting evidence…' : 'Submit for Verification'}</button>
+                  <button type="button" className="button button--primary" disabled={claimMutationPending} onClick={() => void handleEvidenceSubmit()}>{submittingEvidence ? 'Submitting evidence…' : 'Submit for Verification'}</button>
                 </div>
               )}
             </>
