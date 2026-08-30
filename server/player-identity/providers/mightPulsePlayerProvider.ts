@@ -278,7 +278,7 @@ function normalizeAllianceIntelligence(value: unknown) {
 
   return {
     allianceId,
-    tag: requiredString(alliance.abbr, 32),
+    tag: requiredString(alliance.abbr, 12),
     name: requiredString(alliance.name, 160),
     rank: optionalInteger(alliance.rank, { min: 1, max: 5 }),
     rankLabel: optionalString(alliance.rank_label, 80),
