@@ -4,6 +4,7 @@ import type {
   PlayerClaimApiResponse,
   PlayerClaimSearchResult,
 } from '../types/playerClaim'
+import type { PlayerAccount } from '../types/playerAccount'
 
 async function readPayload<T>(response: Response): Promise<T> {
   const payload = await response.json().catch(() => null) as T | PlayerClaimApiError | null
@@ -64,5 +65,38 @@ export async function createSelfReportedClaim(
     body: JSON.stringify({ action: 'claim', ...input }),
   })
   const payload = await readPayload<PlayerClaimApiResponse<IndexedPlayerRecord>>(response)
+  return payload.data
+}
+
+
+export async function linkKingshotPlayer(
+  accessToken: string,
+  playerId: string,
+  kingdomId: string,
+): Promise<PlayerAccount> {
+  const response = await fetch('/api/player/account', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'link',
+      playerId,
+      kingdomId,
+    }),
+  })
+
+  const payload = await readPayload<{
+    status: 'success'
+    data: PlayerAccount
+  }>(response)
+
+  if (!payload?.data) {
+    throw new Error(
+      'The live player link returned no player record.',
+    )
+  }
+
   return payload.data
 }

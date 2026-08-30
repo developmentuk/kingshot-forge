@@ -4,6 +4,7 @@ import { usePlayerIdentity } from '../context/PlayerIdentityContext'
 import { supabase } from '../lib/supabase'
 import {
   createSelfReportedClaim,
+  linkKingshotPlayer,
   searchPlayerClaim,
 } from '../services/playerClaimService'
 import type { PlayerAccount } from '../types/playerAccount'
@@ -73,11 +74,13 @@ function HybridPlayerClaimPanel() {
   const [searchResult, setSearchResult] = useState<PlayerClaimSearchResult | null>(null)
   const [searching, setSearching] = useState(false)
   const [claiming, setClaiming] = useState(false)
+  const [linkingLivePlayer, setLinkingLivePlayer] = useState(false)
   const [submittingEvidence, setSubmittingEvidence] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [ocrReview, setOcrReview] = useState<AccountLinkOcrReview | null>(null)
+  const claimMutationPending = claiming || linkingLivePlayer || submittingEvidence
 
   function validateIdentityInputs() {
     const cleanId = cleanPlayerId(playerId)
@@ -91,6 +94,7 @@ function HybridPlayerClaimPanel() {
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (claimMutationPending) return
     setMessage('')
     setErrorMessage('')
     setSearchResult(null)
@@ -125,8 +129,56 @@ function HybridPlayerClaimPanel() {
     }
   }
 
+  async function handleLiveLink() {
+    if (
+      !session?.access_token
+      || !searchResult?.claimable
+      || claimMutationPending
+    ) return
+    setMessage('')
+    setErrorMessage('')
+
+    let identity: ReturnType<typeof validateIdentityInputs>
+    try {
+      identity = validateIdentityInputs()
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Review the player link details.',
+      )
+      return
+    }
+
+    setLinkingLivePlayer(true)
+    try {
+      await linkKingshotPlayer(
+        session.access_token,
+        identity.playerId,
+        identity.kingdomId,
+      )
+      setMessage(
+        'Kingshot player linked from the live player service. Ownership is not yet verified.',
+      )
+      notifyPlayerIdentityChanged()
+      await refreshPlayerIdentity()
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'The live Kingshot player could not be linked.',
+      )
+    } finally {
+      setLinkingLivePlayer(false)
+    }
+  }
+
   async function handleClaim() {
-    if (!session?.access_token || !searchResult?.claimable) return
+    if (
+      !session?.access_token
+      || !searchResult?.claimable
+      || claimMutationPending
+    ) return
     setMessage('')
     setErrorMessage('')
 
@@ -157,7 +209,7 @@ function HybridPlayerClaimPanel() {
   }
 
   async function handleEvidenceSubmit() {
-    if (!session?.access_token || !ocrReview) return
+    if (!session?.access_token || !ocrReview || claimMutationPending) return
     setSubmittingEvidence(true)
     setErrorMessage('')
     setMessage('')
@@ -300,7 +352,7 @@ function HybridPlayerClaimPanel() {
               <input id="hybrid-player-state" type="text" inputMode="numeric" autoComplete="off" value={kingdomId} maxLength={4} placeholder="e.g. 850" onChange={(event) => { setKingdomId(event.target.value); setSearchResult(null) }} />
               <span className="field__help">Enter the State shown on the same profile.</span>
             </div>
-            <button type="submit" className="button button--primary" disabled={searching}>{searching ? 'Checking Forge index…' : 'Check Player ID'}</button>
+            <button type="submit" className="button button--primary" disabled={searching || claimMutationPending}>{searching ? 'Checking Forge index…' : 'Check Player ID'}</button>
           </form>
 
           {searchResult?.player && <IndexedPlayerPreview player={searchResult.player} />}
@@ -309,8 +361,24 @@ function HybridPlayerClaimPanel() {
             <article className="linked-player-preview">
               <div className="linked-player-preview__warning">
                 <strong>No existing Forge record</strong>
-                <p>Create a self-reported claim now. This does not verify ownership or current profile values.</p>
+                <p>Link the current Kingshot record through the live player service, or use the self-reported fallback if live lookup is unavailable. Neither route verifies ownership.</p>
               </div>
+              <div className="linked-player-preview__actions">
+                <button
+                  type="button"
+                  className="button button--primary"
+                  disabled={claimMutationPending}
+                  onClick={() => void handleLiveLink()}
+                >
+                  {linkingLivePlayer
+                    ? 'Linking live player…'
+                    : 'Link live Kingshot player'}
+                </button>
+              </div>
+              <p className="field__help">
+                Live linking checks the current public player record and State.
+                It proves the player exists, not that you own the account.
+              </p>
               <div className="linked-player-search linked-player-search--state-aware">
                 <div className="field">
                   <label htmlFor="hybrid-player-name">Player name</label>
@@ -322,8 +390,8 @@ function HybridPlayerClaimPanel() {
                 </div>
               </div>
               <div className="linked-player-preview__actions">
-                <button type="button" className="button button--secondary" onClick={() => setSearchResult(null)}>Start again</button>
-                <button type="button" className="button button--primary" disabled={claiming} onClick={() => void handleClaim()}>{claiming ? 'Creating claim…' : 'Claim This Player'}</button>
+                <button type="button" className="button button--secondary" disabled={claimMutationPending} onClick={() => setSearchResult(null)}>Start again</button>
+                <button type="button" className="button button--primary" disabled={claimMutationPending} onClick={() => void handleClaim()}>{claiming ? 'Creating claim…' : 'Claim This Player'}</button>
               </div>
             </article>
           )}
@@ -333,7 +401,7 @@ function HybridPlayerClaimPanel() {
             <div className="linked-player-preview__warning">
               <strong>Submit screenshot evidence</strong>
               <p>Review every extracted value above. Submission creates a pending claim; it does not immediately mark the account verified.</p>
-              <button type="button" className="button button--primary" disabled={submittingEvidence} onClick={() => void handleEvidenceSubmit()}>{submittingEvidence ? 'Submitting evidence…' : 'Submit for Verification'}</button>
+              <button type="button" className="button button--primary" disabled={claimMutationPending} onClick={() => void handleEvidenceSubmit()}>{submittingEvidence ? 'Submitting evidence…' : 'Submit for Verification'}</button>
             </div>
           )}
         </>
@@ -375,7 +443,7 @@ function HybridPlayerClaimPanel() {
                 <div className="linked-player-preview__warning">
                   <strong>Request verification</strong>
                   <p>The screenshot must show the same Player ID and State as your existing claim. Forge recomputes OCR server-side before accepting the request.</p>
-                  <button type="button" className="button button--primary" disabled={submittingEvidence} onClick={() => void handleEvidenceSubmit()}>{submittingEvidence ? 'Submitting evidence…' : 'Submit for Verification'}</button>
+                  <button type="button" className="button button--primary" disabled={claimMutationPending} onClick={() => void handleEvidenceSubmit()}>{submittingEvidence ? 'Submitting evidence…' : 'Submit for Verification'}</button>
                 </div>
               )}
             </>

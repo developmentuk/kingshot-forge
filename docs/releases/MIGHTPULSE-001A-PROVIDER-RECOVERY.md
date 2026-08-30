@@ -111,7 +111,8 @@ add an atomic provider-link contract with Town Center and provenance semantics;
 
 A MightPulse lookup proves only that a public player record exists. New links
 through `/api/player/account` use `verification_status=linked`,
-`verification_method=none`, and null verification actor/time fields.
+`verification_method=none`, null verification actor/time fields, and default
+to private visibility until the owner explicitly opts in.
 Revalidation never changes existing verification state. A new or replaced
 provider-backed administrator link is not available in 001A because the legacy
 RPC cannot represent it without contradictory verification provenance.

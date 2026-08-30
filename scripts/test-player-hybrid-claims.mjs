@@ -47,6 +47,7 @@ try {
   const claimApi = readFileSync('api/player/claim.ts', 'utf8')
   const publicApi = readFileSync('api/player/indexed-lookup.ts', 'utf8')
   const claimUi = readFileSync('src/components/HybridPlayerClaimPanel.tsx', 'utf8')
+  const claimClient = readFileSync('src/services/playerClaimService.ts', 'utf8')
   const publicUi = readFileSync('src/pages/PlayerLookupPage.tsx', 'utf8')
   const ocrService = readFileSync('server/player-identity/ocrFallbackService.ts', 'utf8')
 
@@ -73,7 +74,26 @@ try {
   assert.doesNotMatch(publicUi, /Search Forge Index/u)
 
   assert.match(claimUi, /Self-reported claim/u)
+  assert.match(claimUi, /Link live Kingshot player/u)
+  assert.match(claimUi, /linkKingshotPlayer/u)
+  assert.match(claimUi, /Ownership is not yet verified/u)
+  assert.match(claimUi, /const claimMutationPending = claiming \|\| linkingLivePlayer \|\| submittingEvidence/u)
+  assert.match(
+    claimUi,
+    /disabled=\{claimMutationPending\}[\s\S]*Link live Kingshot player/u,
+  )
+  assert.match(
+    claimUi,
+    /disabled=\{claimMutationPending\}[\s\S]*Claim This Player/u,
+  )
+  assert.match(claimClient, /\/api\/player\/account/u)
+  assert.match(claimClient, /action: 'link'/u)
   assert.match(claimUi, /Submit for Verification/u)
+  assert.match(claimUi, /if \(!session\?\.access_token \|\| !ocrReview \|\| claimMutationPending\) return/u)
+  assert.match(
+    claimUi,
+    /disabled=\{claimMutationPending\}[\s\S]*Submit for Verification/u,
+  )
   assert.match(claimUi, /corrections: ocrReview\.userConfirmed/u)
   assert.doesNotMatch(claimUi, /getPlayer/u)
 

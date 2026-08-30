@@ -172,7 +172,7 @@ export function createNewLinkedPlayerFields(player: NormalizedPlayer, userId: st
     verified_by: null,
     verified_at: null,
     is_primary: true,
-    is_public: true,
+    is_public: false,
     created_at: player.providerFetchedAt,
   }
 }
