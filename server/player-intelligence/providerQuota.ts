@@ -20,6 +20,16 @@ export type ProviderQuotaReservationState =
   | 'completed'
   | 'quota_exhausted'
 
+export type ProviderRequestStatus =
+  | 'missing'
+  | 'pending'
+  | 'completed'
+  | 'failed'
+
+export interface ProviderRequestStatusRepository {
+  read(idempotencyKey: string): Promise<ProviderRequestStatus>
+}
+
 export type ProviderQuotaReservation = Readonly<{
   allowed: boolean
   duplicate: boolean
@@ -68,6 +78,30 @@ export function signInProviderIdempotencyKey(
       + verifiedLastSignInAt,
     )
     .digest('hex')
+}
+
+export class SupabaseProviderRequestStatusRepository
+implements ProviderRequestStatusRepository {
+  async read(idempotencyKey: string): Promise<ProviderRequestStatus> {
+    const admin = getSupabaseAdmin()
+    const { data, error } = await admin.rpc(
+      'get_provider_request_status',
+      {
+        p_provider: 'mightpulse',
+        p_idempotency_key: idempotencyKey,
+      },
+    )
+    if (error) throw error
+    if (
+      data !== 'missing'
+      && data !== 'pending'
+      && data !== 'completed'
+      && data !== 'failed'
+    ) {
+      throw new Error('Provider request status returned an invalid result.')
+    }
+    return data
+  }
 }
 
 export class SupabaseProviderQuotaRepository
@@ -183,6 +217,14 @@ implements ProviderQuotaRepository {
     }
     return data
   }
+}
+
+export async function readMightPulseProviderRequestStatus(
+  idempotencyKey: string,
+  repository: ProviderRequestStatusRepository =
+    new SupabaseProviderRequestStatusRepository(),
+): Promise<ProviderRequestStatus> {
+  return repository.read(idempotencyKey)
 }
 
 export async function reserveMightPulseProviderRequest(
