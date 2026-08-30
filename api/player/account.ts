@@ -13,7 +13,6 @@ import {
   syncLinkedPlayerIntelligence,
 } from '../../server/player-intelligence/playerIntelligenceService.js'
 import {
-  baseSignInProviderIdempotencyKey,
   readMightPulseProviderRequestStatus,
   signInProviderIdempotencyKey,
 } from '../../server/player-intelligence/providerQuota.js'
@@ -61,17 +60,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
         )
         return
       }
-      const intelligenceEnabled = isPlayerIntelligenceRuntimeEnabled()
       const state = await readMightPulseProviderRequestStatus(
-        intelligenceEnabled
-          ? signInProviderIdempotencyKey(
-              actor.userId,
-              actor.lastSignInAt,
-            )
-          : baseSignInProviderIdempotencyKey(
-              actor.userId,
-              actor.lastSignInAt,
-            ),
+        signInProviderIdempotencyKey(
+          actor.userId,
+          actor.lastSignInAt,
+        ),
       )
       response.status(200).json({
         status: 'success',
