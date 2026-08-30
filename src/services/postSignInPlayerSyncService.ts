@@ -69,24 +69,13 @@ function defaultSleep(milliseconds: number): Promise<void> {
   })
 }
 
-function hasNewerRefreshTimestamp(
-  baselineLastRefreshedAt: string | null,
-  candidateLastRefreshedAt: string | null,
-): boolean {
-  const candidateMs = Date.parse(candidateLastRefreshedAt ?? '')
-  if (!Number.isFinite(candidateMs)) return false
-
-  const baselineMs = Date.parse(baselineLastRefreshedAt ?? '')
-  return !Number.isFinite(baselineMs) || candidateMs > baselineMs
-}
-
-export async function waitForPostSignInPlayerRefreshCompletion(
-  baselineLastRefreshedAt: string | null,
-  readLastRefreshedAt: () => Promise<string | null>,
+export async function waitForPostSignInPlayerSyncCompletion(
+  session: Session,
   options: Readonly<{
     intervalMs?: number
     maxAttempts?: number
     sleepImplementation?: SleepImplementation
+    fetchImplementation?: FetchImplementation
     shouldStop?: () => boolean
   }> = {},
 ): Promise<boolean> {
@@ -95,20 +84,22 @@ export async function waitForPostSignInPlayerRefreshCompletion(
   const maxAttempts = options.maxAttempts
     ?? POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS
   const sleepImplementation = options.sleepImplementation ?? defaultSleep
+  const fetchImplementation = options.fetchImplementation ?? fetch
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     if (options.shouldStop?.()) return false
     if (attempt > 0) await sleepImplementation(intervalMs)
     if (options.shouldStop?.()) return false
 
-    const candidateLastRefreshedAt = await readLastRefreshedAt()
-    if (
-      hasNewerRefreshTimestamp(
-        baselineLastRefreshedAt,
-        candidateLastRefreshedAt,
-      )
-    ) {
+    const result = await performLinkedPlayerSignInSync(
+      session,
+      fetchImplementation,
+    )
+    if (result === 'updated' || result === 'no-linked-player') {
       return true
+    }
+    if (result === 'unavailable') {
+      return false
     }
   }
 
