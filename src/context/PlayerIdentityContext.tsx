@@ -66,7 +66,10 @@ export function PlayerIdentityProvider({
     useState<string | null>(null)
   const [playerIdentityRefreshWarning, setPlayerIdentityRefreshWarning] =
     useState<string | null>(null)
-  const suppressedInitialSignInRefresh = useRef<string | null>(null)
+  const suppressedInitialSignInRefresh = useRef<{
+    key: string
+    handledAt: number
+  } | null>(null)
 
   const loadPlayerIdentity = useCallback(async (): Promise<PlayerAccount | null> => {
     if (isVisionAcceptanceRoute) return null
@@ -191,9 +194,25 @@ export function PlayerIdentityProvider({
 
       const signInMarker = session?.user?.last_sign_in_at
         ?? String(session?.expires_at ?? '')
+      const signInSuppressionKey = session && user
+        ? `${user.id}:${signInMarker}`
+        : null
+      const existingSignInSuppression = suppressedInitialSignInRefresh.current
+      const sameHandledSignIn = signInSuppressionKey !== null
+        && existingSignInSuppression?.key === signInSuppressionKey
+
+      if (
+        sameHandledSignIn
+        && existingSignInSuppression
+        && Date.now() - existingSignInSuppression.handledAt < REFRESH_STALE_MS
+      ) {
+        return
+      }
+
       if (
         session
-        && suppressedInitialSignInRefresh.current !== signInMarker
+        && signInSuppressionKey !== null
+        && !sameHandledSignIn
         && hasPostSignInPlayerSyncAttempted(session)
       ) {
         const signInSync = getPostSignInPlayerSyncInFlight(session)
@@ -221,8 +240,13 @@ export function PlayerIdentityProvider({
             shouldSuppressAutomaticRefreshAfterPostSignInSync(signInResult)
         }
 
-        suppressedInitialSignInRefresh.current = signInMarker
-        if (suppressAutomaticRefresh) return
+        if (suppressAutomaticRefresh) {
+          suppressedInitialSignInRefresh.current = {
+            key: signInSuppressionKey,
+            handledAt: Date.now(),
+          }
+          return
+        }
       }
 
       const lastRefresh = Date.parse(currentAccount.last_refreshed_at ?? '')
