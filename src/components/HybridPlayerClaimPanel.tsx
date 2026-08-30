@@ -381,7 +381,7 @@ function HybridPlayerClaimPanel() {
               </div>
               <div className="linked-player-preview__actions">
                 <button type="button" className="button button--secondary" onClick={() => setSearchResult(null)}>Start again</button>
-                <button type="button" className="button button--primary" disabled={claiming} onClick={() => void handleClaim()}>{claiming ? 'Creating claim…' : 'Create Self-Reported Claim'}</button>
+                <button type="button" className="button button--primary" disabled={claiming} onClick={() => void handleClaim()}>{claiming ? 'Creating claim…' : 'Claim This Player'}</button>
               </div>
             </article>
           )}
