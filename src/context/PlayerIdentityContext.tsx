@@ -182,8 +182,9 @@ export function PlayerIdentityProvider({
 
     let cancelled = false
     async function establish() {
-      let account = await loadPlayerIdentity()
+      const account = await loadPlayerIdentity()
       if (!user || !account || cancelled) return
+      let currentAccount = account
 
       const signInMarker = session?.user?.last_sign_in_at
         ?? String(session?.expires_at ?? '')
@@ -196,16 +197,17 @@ export function PlayerIdentityProvider({
         const signInSync = getPostSignInPlayerSyncInFlight(user.id)
         if (signInSync) await signInSync
         if (cancelled) return
-        account = await loadPlayerIdentity()
-        if (!account || cancelled) return
+        const refreshedAfterSignIn = await loadPlayerIdentity()
+        if (!refreshedAfterSignIn || cancelled) return
+        currentAccount = refreshedAfterSignIn
         return
       }
 
-      const lastRefresh = Date.parse(account.last_refreshed_at ?? '')
+      const lastRefresh = Date.parse(currentAccount.last_refreshed_at ?? '')
       const throttled = Date.now() - (refreshAttemptAt.get(user.id) ?? 0) < REFRESH_THROTTLE_MS
       const stale = !Number.isFinite(lastRefresh) || Date.now() - lastRefresh > REFRESH_STALE_MS
       const shouldRefresh = canAutoRefresh && session?.access_token && (stale || !refreshAttemptAt.has(user.id)) && !throttled && refreshCoordinator.shouldAttempt(user.id, 'automatic')
-      if (!cancelled && shouldRefresh) await refreshPlayerIdentity('automatic', account)
+      if (!cancelled && shouldRefresh) await refreshPlayerIdentity('automatic', currentAccount)
     }
     void establish()
     return () => { cancelled = true }
