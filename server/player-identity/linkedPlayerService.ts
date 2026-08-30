@@ -6,6 +6,7 @@ import {
   type PlayerProvider,
 } from './providers/playerProvider.js'
 import {
+  baseSignInProviderIdempotencyKey,
   completeMightPulseProviderRequest,
   failMightPulseProviderRequest,
   isProviderQuotaRuntimeEnabled,
@@ -115,19 +116,28 @@ function createQuotaGovernedPlayerLookupOwner(
     priority: ProviderQuotaPriority
   }>,
   quotaRepository?: ProviderQuotaRepository,
+  idempotencyKey: string | null = null,
 ): PlayerLookupOwner {
   return async (request) => {
     const reservation = await reserveMightPulseProviderRequest(
       {
         ...quotaClass,
-        idempotencyKey: null,
+        idempotencyKey,
       },
       quotaRepository,
     )
 
+    if (reservation.duplicate) {
+      throw new PlayerProviderError(
+        409,
+        'PLAYER_PROVIDER_REQUEST_ALREADY_CLAIMED',
+        'This provider request has already been claimed.',
+        true,
+      )
+    }
+
     if (
-      reservation.duplicate
-      || reservation.state !== 'reserved'
+      reservation.state !== 'reserved'
       || reservation.reservationId === null
       || reservation.attemptToken === null
     ) {
@@ -355,22 +365,48 @@ export async function resolvePlayerRefresh(input: {
         input.refreshReason ?? 'automatic',
       )
     : null
+  const baseSignInIdempotencyKey = quotaClass
+    && input.action === 'revalidate'
+    && input.refreshReason === 'sign-in'
+    && input.userId
+    && input.verifiedLastSignInAt
+    ? baseSignInProviderIdempotencyKey(
+        input.userId,
+        input.verifiedLastSignInAt,
+      )
+    : null
 
-  const player = await lookupKingshotPlayerWithOwner(
+  let player: NormalizedPlayer
+  try {
+    player = await lookupKingshotPlayerWithOwner(
     input.playerId,
     input.kingdomId,
     input.provider,
-    quotaClass
-      ? createQuotaGovernedPlayerLookupOwner(
-          input.provider,
-          quotaClass,
-          input.quotaRepository,
-        )
-      : undefined,
-    quotaClass
-      ? `quota:${quotaClass.category}:${quotaClass.priority}`
-      : 'ungoverned',
-  )
+      quotaClass
+        ? createQuotaGovernedPlayerLookupOwner(
+            input.provider,
+            quotaClass,
+            input.quotaRepository,
+            baseSignInIdempotencyKey,
+          )
+        : undefined,
+      quotaClass
+        ? `quota:${quotaClass.category}:${quotaClass.priority}`
+          + (baseSignInIdempotencyKey
+            ? `:${baseSignInIdempotencyKey}`
+            : '')
+        : 'ungoverned',
+    )
+  } catch (error) {
+    if (
+      baseSignInIdempotencyKey
+      && error instanceof LinkedPlayerServiceError
+      && error.code === 'PLAYER_PROVIDER_REQUEST_ALREADY_CLAIMED'
+    ) {
+      return { source: 'cache', player: null }
+    }
+    throw error
+  }
   return { source: 'provider', player }
 }
 
