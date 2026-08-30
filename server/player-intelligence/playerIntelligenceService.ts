@@ -394,17 +394,28 @@ export async function syncLinkedPlayerIntelligence(
       : null
 
     const providerFetchedAt = intelligence.identity.providerFetchedAt
+    const fetchedAtMs = Date.parse(providerFetchedAt)
     const cachedAtMs = intelligence.providerCachedAt === null
       ? Number.NaN
       : Date.parse(intelligence.providerCachedAt)
-    const fetchedAtMs = Date.parse(providerFetchedAt)
+    const ageSeconds = intelligence.providerAgeSeconds
+    const ageObservedAtMs = Number.isFinite(fetchedAtMs)
+      && typeof ageSeconds === 'number'
+      && Number.isFinite(ageSeconds)
+      && ageSeconds >= 0
+      ? fetchedAtMs - (ageSeconds * 1_000)
+      : Number.NaN
     const authorityObservedAt = Number.isFinite(cachedAtMs)
       && Number.isFinite(fetchedAtMs)
       && cachedAtMs <= fetchedAtMs
       ? intelligence.providerCachedAt as string
-      : providerFetchedAt
+      : Number.isFinite(ageObservedAtMs)
+        && ageObservedAtMs <= fetchedAtMs
+        ? new Date(ageObservedAtMs).toISOString()
+        : null
 
-    const applyAllianceAuthority = !(alliance && mappedRole === null)
+    const applyAllianceAuthority = authorityObservedAt !== null
+      && !(alliance && mappedRole === null)
     const applied = await repository.applySync({
       userId,
       playerAccountId: linkedPlayer.playerAccountId,
