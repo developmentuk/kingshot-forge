@@ -122,6 +122,16 @@ assert.deepEqual(normalizeAvatarUrl('https://cdn.example.test/avatar.png'), {
   status: 'accepted',
   reason: 'accepted',
 })
+assert.deepEqual(normalizeAvatarUrl('/avatars/synthetic.png'), {
+  url: 'https://api.mightpulse.com/avatars/synthetic.png',
+  status: 'accepted',
+  reason: 'accepted',
+})
+assert.deepEqual(normalizeAvatarUrl('/avatar.png?size=128#profile'), {
+  url: 'https://api.mightpulse.com/avatar.png?size=128#profile',
+  status: 'accepted',
+  reason: 'accepted',
+})
 for (const [rawAvatar, expectedShape] of [
   ['//cdn.example.test/avatar.png', 'protocol_relative'],
   ['/avatars/synthetic.png', 'root_relative'],
@@ -139,6 +149,8 @@ for (const [rejectedAvatar, expectedReason] of [
   ['data:text/html,unsafe', 'non_https'],
   ['http://cdn.example.test/avatar.png', 'non_https'],
   ['https://user:pass@cdn.example.test/avatar.png', 'credentials'],
+  ['//outside.example/avatar.png', 'invalid_url'],
+  ['/\\outside.example/avatar.png', 'invalid_url'],
   ['not a url', 'invalid_url'],
   [{ url: 'https://cdn.example.test/avatar.png' }, 'not_string'],
 ]) {
@@ -162,7 +174,11 @@ try {
 
   const relativeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: '/avatars/synthetic.png' })))
     .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
-  assert.equal(relativeAvatar.avatarUrl, null)
+  assert.equal(relativeAvatar.avatarUrl, 'https://api.mightpulse.com/avatars/synthetic.png')
+  assert.equal(
+    createProviderRefreshFields(relativeAvatar).profile_photo,
+    'https://api.mightpulse.com/avatars/synthetic.png',
+  )
 
   const safeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: 'https://cdn.example.test/avatar.png' })))
     .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
@@ -172,11 +188,11 @@ try {
 }
 assert.deepEqual(
   avatarDiagnostics.map((args) => args[1]?.avatarStatus),
-  ['missing', 'rejected', 'rejected', 'accepted'],
+  ['missing', 'rejected', 'accepted', 'accepted'],
 )
 assert.deepEqual(
   avatarDiagnostics.map((args) => args[1]?.avatarReason),
-  ['not_provided', 'non_https', 'invalid_url', 'accepted'],
+  ['not_provided', 'non_https', 'accepted', 'accepted'],
 )
 assert.deepEqual(
   avatarDiagnostics.map((args) => args[1]?.avatarShape),

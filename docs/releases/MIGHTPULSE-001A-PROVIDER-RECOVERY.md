@@ -321,3 +321,26 @@ normalisation, persistence or refresh behaviour.
 The purpose is to obtain one safe production observation before deciding whether
 a narrowly trusted URL-resolution rule is justified. General URL validation must
 not be relaxed from this diagnostic alone.
+
+
+## Root-relative avatar acceptance — 30 August 2026
+
+Production acceptance on deployment `dpl_ECNXMGYLXWsUddVTZq45aSqufVAG`
+observed a successful MightPulse player refresh with
+`avatarStatus: rejected`, `avatarReason: invalid_url`, and the bounded
+diagnostic `avatarShape: root_relative`. No raw avatar path, Player ID, API key
+or provider payload was logged.
+
+The contained correction accepts only a single-leading-slash root-relative
+avatar reference and resolves it against the fixed trusted MightPulse origin
+`https://api.mightpulse.com`. The resolved URL must still have exactly that
+origin before it can pass the existing HTTPS, credential and hostname checks.
+This explicit origin pin prevents authority-like or backslash-normalised path
+forms from escaping to another host under WHATWG URL parsing.
+
+Protocol-relative values (`//host/...`), arbitrary relative paths, encoded or
+quoted URLs, non-HTTPS absolute URLs, credential-bearing URLs and malformed
+values remain rejected. Existing valid absolute HTTPS avatar URLs remain
+unchanged. A successfully resolved root-relative avatar follows the existing
+provider refresh mapping into `player_accounts.profile_photo`; no schema,
+ownership, verification or visibility behaviour changes.
