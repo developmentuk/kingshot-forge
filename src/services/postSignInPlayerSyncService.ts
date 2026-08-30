@@ -59,7 +59,7 @@ export function shouldSuppressAutomaticRefreshAfterPostSignInSync(
 }
 
 export const POST_SIGN_IN_COMPLETION_POLL_INTERVAL_MS = 3_000
-export const POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS = 34
+export const POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS = 42
 
 type SleepImplementation = (milliseconds: number) => Promise<void>
 
