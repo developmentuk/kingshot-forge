@@ -96,7 +96,19 @@ export async function waitForPostSignInPlayerSyncCompletion(
       fetchImplementation,
     )
     if (result === 'completed') return true
-    if (result === 'unavailable') return false
+    if (result === 'terminal') return false
+    if (result === 'retry-idempotent') {
+      const retryResult = await performLinkedPlayerSignInSync(
+        session,
+        fetchImplementation,
+      )
+      if (
+        retryResult === 'updated'
+        || retryResult === 'no-linked-player'
+      ) {
+        return true
+      }
+    }
   }
 
   return false
@@ -105,8 +117,14 @@ export async function waitForPostSignInPlayerSyncCompletion(
 async function performLinkedPlayerSignInStatusCheck(
   session: Session,
   fetchImplementation: FetchImplementation = fetch,
-): Promise<'completed' | 'in-progress' | 'unavailable'> {
-  if (!session.access_token) return 'unavailable'
+): Promise<
+  | 'completed'
+  | 'in-progress'
+  | 'retry-idempotent'
+  | 'transient'
+  | 'terminal'
+> {
+  if (!session.access_token) return 'terminal'
 
   try {
     const response = await fetchImplementation('/api/player/account', {
@@ -141,9 +159,24 @@ async function performLinkedPlayerSignInStatusCheck(
       return 'in-progress'
     }
 
-    return 'unavailable'
+    if (
+      response.ok
+      && payload?.status === 'success'
+      && (
+        payload.code === 'PLAYER_INTELLIGENCE_FAILED'
+        || payload.code === 'PLAYER_INTELLIGENCE_STATUS_MISSING'
+      )
+    ) {
+      return 'retry-idempotent'
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      return 'terminal'
+    }
+
+    return 'transient'
   } catch {
-    return 'unavailable'
+    return 'transient'
   }
 }
 
