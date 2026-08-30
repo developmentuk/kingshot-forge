@@ -233,6 +233,36 @@ revoke all on function public.reserve_provider_request(text, text, text)
 grant execute on function public.reserve_provider_request(text, text, text)
   to service_role;
 
+create table if not exists public.player_alliance_provider_state (
+  player_account_id uuid primary key
+    references public.player_accounts(id) on delete cascade,
+  user_id uuid not null
+    references public.profiles(id) on delete cascade,
+  provider text not null
+    check (provider = 'mightpulse'),
+  provider_observed_at timestamptz not null,
+  provider_fetched_at timestamptz not null,
+  alliance_tag text null,
+  member_role public.alliance_member_role null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (
+    (alliance_tag is null and member_role is null)
+    or (alliance_tag is not null and member_role is not null)
+  )
+);
+
+comment on table public.player_alliance_provider_state is
+  'Server-only last-applied MightPulse Alliance authority observation per linked Player. Used to prevent stale provider snapshots from rolling membership or rank backwards.';
+
+alter table public.player_alliance_provider_state enable row level security;
+
+revoke all on table public.player_alliance_provider_state from public;
+revoke all on table public.player_alliance_provider_state from anon;
+revoke all on table public.player_alliance_provider_state from authenticated;
+grant select, insert, update on table public.player_alliance_provider_state
+  to service_role;
+
 create or replace function public.sync_mightpulse_alliance_membership(
   p_user_id uuid,
   p_player_account_id uuid,
