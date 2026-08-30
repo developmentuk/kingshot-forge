@@ -6,11 +6,11 @@ import {
   type PlayerProvider,
 } from './providers/playerProvider.js'
 import {
-  baseSignInProviderIdempotencyKey,
   completeMightPulseProviderRequest,
   failMightPulseProviderRequest,
   isProviderQuotaRuntimeEnabled,
   reserveMightPulseProviderRequest,
+  signInProviderIdempotencyKey,
   type ProviderQuotaRepository,
   type ProviderQuotaReservation,
   type ProviderRequestCategory,
@@ -381,12 +381,12 @@ export async function resolvePlayerRefresh(input: {
         input.refreshReason ?? 'automatic',
       )
     : null
-  const baseSignInIdempotencyKey = quotaClass
+  const signInIdempotencyKey = quotaClass
     && input.action === 'revalidate'
     && input.refreshReason === 'sign-in'
     && input.userId
     && input.verifiedLastSignInAt
-    ? baseSignInProviderIdempotencyKey(
+    ? signInProviderIdempotencyKey(
         input.userId,
         input.verifiedLastSignInAt,
       )
@@ -404,8 +404,8 @@ export async function resolvePlayerRefresh(input: {
             input.provider,
             quotaClass,
             input.quotaRepository,
-            baseSignInIdempotencyKey,
-            baseSignInIdempotencyKey
+            signInIdempotencyKey,
+            signInIdempotencyKey
               ? {
                   deferCompletion: true,
                   onReserved: (reservation) => {
@@ -417,14 +417,14 @@ export async function resolvePlayerRefresh(input: {
         : undefined,
       quotaClass
         ? `quota:${quotaClass.category}:${quotaClass.priority}`
-          + (baseSignInIdempotencyKey
-            ? `:${baseSignInIdempotencyKey}`
+          + (signInIdempotencyKey
+            ? `:${signInIdempotencyKey}`
             : '')
         : 'ungoverned',
     )
   } catch (error) {
     if (
-      baseSignInIdempotencyKey
+      signInIdempotencyKey
       && error instanceof LinkedPlayerServiceError
     ) {
       if (error.code === 'PLAYER_PROVIDER_REQUEST_COMPLETED') {
