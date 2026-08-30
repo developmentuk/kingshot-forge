@@ -13,13 +13,10 @@ const signInSyncInFlight = new Map<
   string,
   Promise<PostSignInPlayerSyncResult>
 >()
-const signInSyncAttemptMarker = new Map<string, string>()
+const signInSyncAttempted = new Set<string>()
 const signInSyncOutcome = new Map<
   string,
-  Readonly<{
-    marker: string
-    result: Exclude<PostSignInPlayerSyncResult, 'already-attempted'>
-  }>
+  Exclude<PostSignInPlayerSyncResult, 'already-attempted'>
 >()
 
 function sessionSignInMarker(session: Session): string {
@@ -27,31 +24,31 @@ function sessionSignInMarker(session: Session): string {
     ?? String(session.expires_at ?? '')
 }
 
+function sessionSignInKey(session: Session): string | null {
+  const userId = session.user?.id
+  if (!userId) return null
+  return `${userId}\n${sessionSignInMarker(session)}`
+}
+
 export function hasPostSignInPlayerSyncAttempted(
   session: Session,
 ): boolean {
-  const userId = session.user?.id
-  if (!userId) return false
-  return signInSyncAttemptMarker.get(userId) === sessionSignInMarker(session)
+  const key = sessionSignInKey(session)
+  return key !== null && signInSyncAttempted.has(key)
 }
 
 export function getPostSignInPlayerSyncInFlight(
-  userId: string,
+  session: Session,
 ): Promise<PostSignInPlayerSyncResult> | null {
-  return signInSyncInFlight.get(userId) ?? null
+  const key = sessionSignInKey(session)
+  return key === null ? null : signInSyncInFlight.get(key) ?? null
 }
 
 export function getPostSignInPlayerSyncOutcome(
   session: Session,
 ): Exclude<PostSignInPlayerSyncResult, 'already-attempted'> | null {
-  const userId = session.user?.id
-  if (!userId) return null
-
-  const outcome = signInSyncOutcome.get(userId)
-  if (!outcome || outcome.marker !== sessionSignInMarker(session)) {
-    return null
-  }
-  return outcome.result
+  const key = sessionSignInKey(session)
+  return key === null ? null : signInSyncOutcome.get(key) ?? null
 }
 
 export function shouldSuppressAutomaticRefreshAfterPostSignInSync(
@@ -174,34 +171,30 @@ export async function syncLinkedPlayerAfterSignIn(
   session: Session,
   fetchImplementation: FetchImplementation = fetch,
 ): Promise<PostSignInPlayerSyncResult> {
-  const userId = session.user?.id
-  if (!userId) return 'unavailable'
+  const key = sessionSignInKey(session)
+  if (key === null) return 'unavailable'
 
-  const marker = sessionSignInMarker(session)
-  const existing = signInSyncInFlight.get(userId)
+  const existing = signInSyncInFlight.get(key)
   if (existing) return existing
 
-  if (signInSyncAttemptMarker.get(userId) === marker) {
+  if (signInSyncAttempted.has(key)) {
     return 'already-attempted'
   }
 
-  signInSyncAttemptMarker.set(userId, marker)
+  signInSyncAttempted.add(key)
 
   const request = performLinkedPlayerSignInSync(
     session,
     fetchImplementation,
   ).then((result) => {
-    signInSyncOutcome.set(userId, {
-      marker,
-      result,
-    })
+    signInSyncOutcome.set(key, result)
     return result
   }).finally(() => {
-    if (signInSyncInFlight.get(userId) === request) {
-      signInSyncInFlight.delete(userId)
+    if (signInSyncInFlight.get(key) === request) {
+      signInSyncInFlight.delete(key)
     }
   })
 
-  signInSyncInFlight.set(userId, request)
+  signInSyncInFlight.set(key, request)
   return request
 }
