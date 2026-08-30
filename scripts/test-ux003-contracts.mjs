@@ -41,6 +41,41 @@ assert.match(profileService, /town_center_level/)
 assert.match(profileEditor, /Refresh Player/)
 assert.match(profileEditor, /refreshPlayerIdentity\('manual'\)/)
 assert.match(profileEditor, /disabled=\{loadingPlayerAccount\}/)
+assert.match(profileEditor, /function mergeRefreshedPlayerProfile/)
+assert.match(profileEditor, /\.\.\.current/)
+for (const apiManagedField of [
+  'playerId',
+  'playerName',
+  'profilePhoto',
+  'kingdomId',
+  'playerLevel',
+  'townCenterLevel',
+  'levelImage',
+  'verificationStatus',
+  'lastRefreshedAt',
+]) {
+  assert.match(
+    profileEditor,
+    new RegExp(`${apiManagedField}:\\s*refreshed\\.${apiManagedField}`),
+    `${apiManagedField} must update from refreshed player data`,
+  )
+}
+for (const playerControlledField of [
+  'allianceName',
+  'vipLevel',
+  'aboutMe',
+  'playStyle',
+  'mainLanguage',
+  'transferStatus',
+  'activities',
+  'isPublic',
+]) {
+  assert.doesNotMatch(
+    profileEditor,
+    new RegExp(`${playerControlledField}:\\s*refreshed\\.${playerControlledField}`),
+    `${playerControlledField} must preserve unsaved editor state`,
+  )
+}
 assert.match(profileService, /normalizeTownCenterLevel\([\s\S]*player\.town_center_level/)
 assert.doesNotMatch(profileService, /return `Level \$\{player\.player_level\}`/)
 assert.match(profileService, /\.upsert\(/)
