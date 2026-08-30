@@ -673,6 +673,14 @@ assert.match(
 )
 assert.match(
   migrationSql,
+  /create table if not exists public\.provider_quota_reservations[\s\S]*idempotency_key text null[\s\S]*reserved_at timestamptz not null default clock_timestamp\(\)[\s\S]*\);[\s\S]*comment on table public\.provider_quota_reservations/iu,
+)
+assert.doesNotMatch(
+  migrationSql,
+  /idempotency_key ~ '\^\[0-9a-f\]\+/iu,
+)
+assert.match(
+  migrationSql,
   /p_idempotency_key text default null/iu,
 )
 assert.match(
