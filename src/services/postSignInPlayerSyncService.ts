@@ -59,7 +59,63 @@ export function shouldSuppressAutomaticRefreshAfterPostSignInSync(
 ): boolean {
   return result === 'updated'
     || result === 'no-linked-player'
-    || result === 'in-progress'
+}
+
+export const POST_SIGN_IN_COMPLETION_POLL_INTERVAL_MS = 3_000
+export const POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS = 34
+
+type SleepImplementation = (milliseconds: number) => Promise<void>
+
+function defaultSleep(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, milliseconds)
+  })
+}
+
+function hasNewerRefreshTimestamp(
+  baselineLastRefreshedAt: string | null,
+  candidateLastRefreshedAt: string | null,
+): boolean {
+  const candidateMs = Date.parse(candidateLastRefreshedAt ?? '')
+  if (!Number.isFinite(candidateMs)) return false
+
+  const baselineMs = Date.parse(baselineLastRefreshedAt ?? '')
+  return !Number.isFinite(baselineMs) || candidateMs > baselineMs
+}
+
+export async function waitForPostSignInPlayerRefreshCompletion(
+  baselineLastRefreshedAt: string | null,
+  readLastRefreshedAt: () => Promise<string | null>,
+  options: Readonly<{
+    intervalMs?: number
+    maxAttempts?: number
+    sleepImplementation?: SleepImplementation
+    shouldStop?: () => boolean
+  }> = {},
+): Promise<boolean> {
+  const intervalMs = options.intervalMs
+    ?? POST_SIGN_IN_COMPLETION_POLL_INTERVAL_MS
+  const maxAttempts = options.maxAttempts
+    ?? POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS
+  const sleepImplementation = options.sleepImplementation ?? defaultSleep
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    if (options.shouldStop?.()) return false
+    if (attempt > 0) await sleepImplementation(intervalMs)
+    if (options.shouldStop?.()) return false
+
+    const candidateLastRefreshedAt = await readLastRefreshedAt()
+    if (
+      hasNewerRefreshTimestamp(
+        baselineLastRefreshedAt,
+        candidateLastRefreshedAt,
+      )
+    ) {
+      return true
+    }
+  }
+
+  return false
 }
 
 async function performLinkedPlayerSignInSync(
