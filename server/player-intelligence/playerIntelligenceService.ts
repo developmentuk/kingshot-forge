@@ -7,7 +7,6 @@ import {
   type PlayerIntelligenceProvider,
 } from '../player-identity/providers/playerProvider.js'
 import {
-  hasNewVerifiedSignIn,
   validateKingdomId,
   validatePlayerId,
 } from '../player-identity/linkedPlayerService.js'
@@ -324,12 +323,13 @@ export async function syncLinkedPlayerIntelligence(
 
   if (
     reason === 'sign-in'
-    && !hasNewVerifiedSignIn(
-      dependencies.verifiedLastSignInAt,
-      linkedPlayer.lastRefreshedAt,
-    )
+    && !dependencies.verifiedLastSignInAt
   ) {
-    return Object.freeze({ source: 'cache' as const })
+    throw new PlayerProviderError(
+      400,
+      'PLAYER_SIGN_IN_MARKER_REQUIRED',
+      'A verified sign-in timestamp is required for sign-in intelligence refresh.',
+    )
   }
 
   const quotaClass = quotaClassForPlayerIntelligenceReason(reason)
