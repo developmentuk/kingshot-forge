@@ -700,6 +700,7 @@ function createConfiguredMightPulsePlayerProvider(
       return normalizeMightPulsePlayerIntelligence(payload, request, now().toISOString())
     },
   }
+}
 
 export function createMightPulsePlayerProvider(
   options: MightPulseRuntimeOptions = {},
