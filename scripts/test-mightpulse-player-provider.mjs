@@ -41,6 +41,7 @@ import {
 } from '../server/player-intelligence/playerIntelligenceService.ts'
 import {
   isProviderQuotaRuntimeEnabled,
+  readMightPulseProviderRequestStatus,
   signInProviderIdempotencyKey,
 } from '../server/player-intelligence/providerQuota.ts'
 import { readFile } from 'node:fs/promises'
@@ -126,6 +127,18 @@ assert.equal(
   false,
 )
 assert.equal(isPlayerIntelligenceRuntimeEnabled({}), false)
+assert.equal(
+  await readMightPulseProviderRequestStatus(
+    'a'.repeat(64),
+    {
+      async read(idempotencyKey) {
+        assert.equal(idempotencyKey, 'a'.repeat(64))
+        return 'completed'
+      },
+    },
+  ),
+  'completed',
+)
 
 function validPayload(overrides = {}, playerOverrides = {}) {
   return {
@@ -2282,7 +2295,7 @@ assert.equal(
         assert.equal(url, '/api/player/account')
         assert.deepEqual(
           JSON.parse(init.body),
-          { action: 'revalidate', refreshReason: 'sign-in' },
+          { action: 'sign-in-status' },
         )
         return completionPollCalls < 3
           ? Response.json({
@@ -2414,6 +2427,42 @@ assert.match(
 assert.match(
   playerAccountApiSource,
   /result\.source === 'in-progress'/u,
+)
+assert.match(
+  playerAccountApiSource,
+  /if \(input\.action === 'sign-in-status'\)[\s\S]*readMightPulseProviderRequestStatus[\s\S]*return[\s\S]*attemptThrottle\.enforce\(actor\.userId\)/u,
+)
+assert.doesNotMatch(
+  playerAccountApiSource,
+  /if \(input\.action === 'sign-in-status'\)[\s\S]*syncLinkedPlayerIntelligence\(/u,
+)
+
+const providerRequestStatusMigrationSql = await readFile(
+  new URL(
+    '../supabase/migrations/20260830183000_mightpulse_001b_provider_request_status.sql',
+    import.meta.url,
+  ),
+  'utf8',
+)
+assert.match(
+  providerRequestStatusMigrationSql,
+  /create or replace function public\.get_provider_request_status\(/u,
+)
+assert.match(
+  providerRequestStatusMigrationSql,
+  /security definer/u,
+)
+assert.match(
+  providerRequestStatusMigrationSql,
+  /return coalesce\(current_status, 'missing'\)/u,
+)
+assert.match(
+  providerRequestStatusMigrationSql,
+  /grant execute on function public\.get_provider_request_status\([\s\S]*to service_role/u,
+)
+assert.doesNotMatch(
+  providerRequestStatusMigrationSql,
+  /grant execute[\s\S]*to authenticated/u,
 )
 
 const playerIdentityContextSource = await readFile(
