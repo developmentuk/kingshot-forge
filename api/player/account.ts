@@ -8,6 +8,10 @@ import {
   isPlayerIntelligenceRuntimeEnabled,
   syncLinkedPlayerIntelligence,
 } from '../../server/player-intelligence/playerIntelligenceService.js'
+import {
+  readMightPulseProviderRequestStatus,
+  signInProviderIdempotencyKey,
+} from '../../server/player-intelligence/providerQuota.js'
 
 const attemptThrottle = new PlayerAccountAttemptThrottle()
 
@@ -35,8 +39,47 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const actor = await requireForgeActor(request)
     actorUserId = actor.userId
-    attemptThrottle.enforce(actor.userId)
     const input = body(request)
+
+    if (input.action === 'sign-in-status') {
+      if (!isPlayerIntelligenceRuntimeEnabled()) {
+        response.status(200).json({
+          status: 'success',
+          code: 'PLAYER_INTELLIGENCE_STATUS_UNAVAILABLE',
+          data: null,
+        })
+        return
+      }
+      if (!actor.lastSignInAt) {
+        fail(
+          response,
+          400,
+          'A verified sign-in timestamp is required.',
+          'PLAYER_SIGN_IN_MARKER_REQUIRED',
+        )
+        return
+      }
+      const state = await readMightPulseProviderRequestStatus(
+        signInProviderIdempotencyKey(
+          actor.userId,
+          actor.lastSignInAt,
+        ),
+      )
+      response.status(200).json({
+        status: 'success',
+        code: state === 'completed'
+          ? 'PLAYER_INTELLIGENCE_CACHED'
+          : state === 'pending'
+            ? 'PLAYER_INTELLIGENCE_IN_PROGRESS'
+            : state === 'failed'
+              ? 'PLAYER_INTELLIGENCE_FAILED'
+              : 'PLAYER_INTELLIGENCE_STATUS_MISSING',
+        data: null,
+      })
+      return
+    }
+
+    attemptThrottle.enforce(actor.userId)
     const action = input.action === 'revalidate' ? 'revalidate' : input.action === 'link' ? 'link' : null
     if (!action) { fail(response, 400, 'A valid player action is required.'); return }
     const refreshReason = input.refreshReason === 'sign-in'
