@@ -42,7 +42,18 @@ Private owner view for:
 - Governor Gear;
 - freshness and source attribution.
 
-### 4. Existing Forge integrations
+### 4. Login and Alliance-position synchronisation
+
+- linked users refresh from MightPulse once at genuine sign-in;
+- authentication success is not blocked by a provider outage;
+- latest successful Alliance membership/rank is synchronised automatically;
+- R1→member, R2→recruiter, R3→officer, R4→r4, R5→leader;
+- failed refresh preserves the last successfully confirmed Alliance state;
+- a newer successful provider observation promotes, demotes, moves or removes the
+  membership as required;
+- R4/R5 authority is scoped only to the reported canonical Alliance.
+
+### 5. Existing Forge integrations
 
 - Passport may consume approved/opt-in public-safe fields;
 - Personal Progression may offer provider-backed values as evidence, not silently
@@ -86,6 +97,9 @@ Required before merge:
 - concurrent request safety;
 - private/public field canaries;
 - no verification upgrade;
+- login refresh deduplication and provider-outage fallback;
+- Alliance rank promotion/demotion/move/removal mapping;
+- no Forge-global role escalation from provider rank;
 - no user-authored field overwrite;
 - lint, build, `git diff --check`, Player Identity suite and Final AEGIS;
 - fresh exact-head Codex review;
