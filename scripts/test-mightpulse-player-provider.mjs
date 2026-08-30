@@ -15,7 +15,11 @@ import {
   resolvePlayerRefresh,
 } from '../server/player-identity/linkedPlayerService.ts'
 import { PlayerAccountAttemptThrottle } from '../server/player-identity/playerAccountAttemptThrottle.ts'
-import { syncLinkedPlayerAfterSignIn } from '../src/services/postSignInPlayerSyncService.ts'
+import {
+  getPostSignInPlayerSyncInFlight,
+  hasPostSignInPlayerSyncAttempted,
+  syncLinkedPlayerAfterSignIn,
+} from '../src/services/postSignInPlayerSyncService.ts'
 import {
   isAllianceManagementRank,
   mapMightPulseAllianceRank,
@@ -1119,9 +1123,51 @@ assert.equal(newLink.verified_at, null)
 let signInRequest
 const signInSession = /** @type {import('@supabase/supabase-js').Session} */ ({
   access_token: 'synthetic-session-access-token',
+  expires_at: 1788010000,
+  user: {
+    id: 'user-sign-in-sync',
+    last_sign_in_at: fetchedAt,
+  },
 })
-const postSignInResult = await syncLinkedPlayerAfterSignIn(
+assert.equal(hasPostSignInPlayerSyncAttempted(signInSession), false)
+
+let releasePostSignInSync
+let concurrentSignInFetchCalls = 0
+const concurrentFirst = syncLinkedPlayerAfterSignIn(
   signInSession,
+  async () => {
+    concurrentSignInFetchCalls += 1
+    return new Promise((resolve) => {
+      releasePostSignInSync = () => resolve(
+        Response.json({ status: 'success', data: { id: 'synthetic-player' } }),
+      )
+    })
+  },
+)
+const concurrentSecond = syncLinkedPlayerAfterSignIn(
+  signInSession,
+  async () => {
+    concurrentSignInFetchCalls += 1
+    return Response.json({ status: 'success', data: { id: 'duplicate' } })
+  },
+)
+assert.equal(hasPostSignInPlayerSyncAttempted(signInSession), true)
+assert.ok(getPostSignInPlayerSyncInFlight('user-sign-in-sync'))
+assert.equal(concurrentSignInFetchCalls, 1)
+releasePostSignInSync()
+assert.equal(await concurrentFirst, 'updated')
+assert.equal(await concurrentSecond, 'updated')
+assert.equal(concurrentSignInFetchCalls, 1)
+assert.equal(getPostSignInPlayerSyncInFlight('user-sign-in-sync'), null)
+
+const postSignInResult = await syncLinkedPlayerAfterSignIn(
+  {
+    ...signInSession,
+    user: {
+      ...signInSession.user,
+      last_sign_in_at: '2026-08-29T12:05:00.000Z',
+    },
+  },
   async (url, init) => {
     signInRequest = { url, init }
     return Response.json({ status: 'success', data: { id: 'synthetic-player' } })
