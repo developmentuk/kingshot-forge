@@ -108,6 +108,65 @@ type PlayerLookupOwner = (
   }>,
 ) => Promise<NormalizedPlayer>
 
+function createQuotaGovernedPlayerLookupOwner(
+  provider: PlayerProvider,
+  quotaClass: Readonly<{
+    category: ProviderRequestCategory
+    priority: ProviderQuotaPriority
+  }>,
+  quotaRepository?: ProviderQuotaRepository,
+): PlayerLookupOwner {
+  return async (request) => {
+    const reservation = await reserveMightPulseProviderRequest(
+      {
+        ...quotaClass,
+        idempotencyKey: null,
+      },
+      quotaRepository,
+    )
+
+    if (
+      reservation.duplicate
+      || reservation.state !== 'reserved'
+      || reservation.reservationId === null
+      || reservation.attemptToken === null
+    ) {
+      throw new PlayerProviderError(
+        503,
+        'PLAYER_PROVIDER_QUOTA_STATE_INVALID',
+        'The provider request reservation is unavailable.',
+        true,
+      )
+    }
+
+    try {
+      const result = await provider.lookupPlayer(request)
+      try {
+        await completeMightPulseProviderRequest(
+          reservation,
+          quotaRepository,
+        )
+      } catch {
+        // Quota usage is already recorded in the immutable attempt ledger.
+        // Completion is best-effort for non-idempotent base/admin requests
+        // and must not discard a successful provider result.
+      }
+      return result
+    } catch (error) {
+      try {
+        await failMightPulseProviderRequest(
+          reservation,
+          quotaRepository,
+        )
+      } catch {
+        // Preserve the original provider error. The attempt remains counted
+        // even if its lifecycle marker cannot be updated.
+      }
+      throw error
+    }
+  }
+}
+
 async function lookupPlayerSingleFlight(
   provider: PlayerProvider,
   playerId: string,
@@ -164,6 +223,45 @@ export async function lookupKingshotPlayer(
     provider,
   )
 }
+
+export async function lookupKingshotPlayerGoverned(
+  playerIdInput: unknown,
+  kingdomIdInput: unknown,
+  options: Readonly<{
+    provider?: PlayerProvider
+    quotaRepository?: ProviderQuotaRepository
+    quotaEnabled?: boolean
+    category?: ProviderRequestCategory
+    priority?: ProviderQuotaPriority
+  }> = {},
+): Promise<NormalizedPlayer> {
+  const provider = options.provider ?? createMightPulsePlayerProvider()
+  const enforceQuota = shouldEnforcePlayerProviderQuota({
+    quotaEnabled: options.quotaEnabled,
+    quotaRepositoryProvided: options.quotaRepository !== undefined,
+  })
+  const quotaClass = {
+    category: options.category ?? 'player_manual',
+    priority: options.priority ?? 'high',
+  } satisfies Readonly<{
+    category: ProviderRequestCategory
+    priority: ProviderQuotaPriority
+  }>
+
+  return lookupKingshotPlayerWithOwner(
+    playerIdInput,
+    kingdomIdInput,
+    provider,
+    enforceQuota
+      ? createQuotaGovernedPlayerLookupOwner(
+          provider,
+          quotaClass,
+          options.quotaRepository,
+        )
+      : undefined,
+  )
+}
+
 
 function isPlayerAccountFreshWithin(
   lastRefreshedAt: unknown,
@@ -257,55 +355,11 @@ export async function resolvePlayerRefresh(input: {
     input.kingdomId,
     input.provider,
     quotaClass
-      ? async (request) => {
-          const reservation = await reserveMightPulseProviderRequest(
-            {
-              ...quotaClass,
-              idempotencyKey: null,
-            },
-            input.quotaRepository,
-          )
-
-          if (
-            reservation.duplicate
-            || reservation.state !== 'reserved'
-            || reservation.reservationId === null
-            || reservation.attemptToken === null
-          ) {
-            throw new PlayerProviderError(
-              503,
-              'PLAYER_PROVIDER_QUOTA_STATE_INVALID',
-              'The provider request reservation is unavailable.',
-              true,
-            )
-          }
-
-          try {
-            const result = await input.provider.lookupPlayer(request)
-            try {
-              await completeMightPulseProviderRequest(
-                reservation,
-                input.quotaRepository,
-              )
-            } catch {
-              // Quota usage is already recorded in the immutable attempt
-              // ledger. Completion is best-effort for non-idempotent base
-              // requests and must not discard a successful provider result.
-            }
-            return result
-          } catch (error) {
-            try {
-              await failMightPulseProviderRequest(
-                reservation,
-                input.quotaRepository,
-              )
-            } catch {
-              // Preserve the original provider error. The attempt remains
-              // counted even if its lifecycle marker cannot be updated.
-            }
-            throw error
-          }
-        }
+      ? createQuotaGovernedPlayerLookupOwner(
+          input.provider,
+          quotaClass,
+          input.quotaRepository,
+        )
       : undefined,
   )
   return { source: 'provider', player }
