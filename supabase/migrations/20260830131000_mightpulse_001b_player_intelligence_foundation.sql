@@ -103,7 +103,12 @@ create table if not exists public.provider_quota_reservations (
       idempotency_key is null
       or (
         char_length(idempotency_key) between 16 and 128
-        and idempotency_key ~ '^[0-9a-f]+
+        and idempotency_key = lower(idempotency_key)
+        and idempotency_key !~ '[^0-9a-f]'
+      )
+    ),
+  reserved_at timestamptz not null default clock_timestamp()
+);
 
 comment on table public.provider_quota_reservations is
   'Server-only rolling provider request reservations used to coordinate shared API-key limits across runtime instances. The daily budget is enforced over a conservative rolling 24-hour window.';
@@ -179,7 +184,8 @@ begin
   if p_idempotency_key is not null and (
     char_length(p_idempotency_key) < 16
     or char_length(p_idempotency_key) > 128
-    or p_idempotency_key !~ '^[0-9a-f]+$'
+    or p_idempotency_key <> lower(p_idempotency_key)
+    or p_idempotency_key ~ '[^0-9a-f]'
   ) then
     raise exception 'Invalid provider request idempotency key.'
       using errcode = '22023';
