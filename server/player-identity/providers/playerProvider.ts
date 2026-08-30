@@ -52,11 +52,11 @@ export type PlayerBaseIntelligence = Readonly<{
   kills: number | null
   office: string | null
   online: boolean | null
-  lastActiveAt: string | null
-  lastLoginAt: string | null
+  lastActiveAt: string | number | null
+  lastLoginAt: string | number | null
   language: string | null
-  shieldEndsAt: string | null
-  burnEndsAt: string | null
+  shieldEndsAt: string | number | null
+  burnEndsAt: string | number | null
   alliance: PlayerAllianceIntelligence | null
 }>
 
@@ -73,7 +73,7 @@ export type PlayerHeroGearIntelligence = Readonly<{
   enhancementLevel: number | null
   refineLevel: number | null
   gearLevel: number | null
-  quality: string | null
+  quality: string | number | null
   qualityKey: string | null
   qualityLabel: string | null
   red: boolean | null
@@ -107,7 +107,7 @@ export type PlayerHeroIntelligence = Readonly<{
   level: number | null
   stars: number | null
   starLabel: string | null
-  quality: string | null
+  quality: string | number | null
   power: number | null
   position: number | null
   skillLevels: ReadonlyArray<PlayerHeroSkillIntelligence>
@@ -141,7 +141,7 @@ export type PlayerGovernorGearItemIntelligence = Readonly<{
   slot: string
   name: string
   equipmentId: string
-  quality: string | null
+  quality: string | number | null
   tier: number | null
   star: number | null
   strengthLevel: number | null
