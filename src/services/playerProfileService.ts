@@ -389,24 +389,6 @@ export async function saveMyPlayerProfile(
     )
   }
 
-  const {
-    data: existingProfile,
-    error: lookupError,
-  } = await supabase
-    .from('player_profiles')
-    .select('id')
-    .eq(
-      'player_account_id',
-      values.playerAccountId,
-    )
-    .maybeSingle()
-
-  if (lookupError) {
-    throw new Error(
-      lookupError.message,
-    )
-  }
-
   const profilePayload = {
     player_account_id:
       values.playerAccountId,
@@ -450,24 +432,14 @@ export async function saveMyPlayerProfile(
       new Date().toISOString(),
   }
 
-  if (existingProfile) {
-    const { error } = await supabase
-      .from('player_profiles')
-      .update(profilePayload)
-      .eq('id', existingProfile.id)
-
-    if (error) {
-      throw new Error(
-        error.message,
-      )
-    }
-
-    return
-  }
-
   const { error } = await supabase
     .from('player_profiles')
-    .insert(profilePayload)
+    .upsert(
+      profilePayload,
+      {
+        onConflict: 'player_account_id',
+      },
+    )
 
   if (error) {
     throw new Error(
