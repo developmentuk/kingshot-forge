@@ -3244,7 +3244,7 @@ assert.doesNotMatch(
 
 const serviceRolePrivilegeHardeningMigrationSql = await readFile(
   new URL(
-    '../supabase/migrations/20260830224800_mightpulse_001b_service_role_table_privilege_hardening.sql',
+    '../supabase/migrations/20260830225343_mightpulse_001b_service_role_table_privilege_hardening.sql',
     import.meta.url,
   ),
   'utf8',
