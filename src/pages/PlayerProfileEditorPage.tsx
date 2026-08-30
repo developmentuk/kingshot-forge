@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from 'react'
@@ -60,13 +61,45 @@ type ForgeIdentity = Pick<
   'forge_id'
 >
 
+function mergeRefreshedPlayerProfile(
+  current: EditablePlayerProfile,
+  refreshed: EditablePlayerProfile,
+): EditablePlayerProfile {
+  if (
+    current.playerAccountId !==
+    refreshed.playerAccountId
+  ) {
+    return refreshed
+  }
+
+  return {
+    ...current,
+    playerId: refreshed.playerId,
+    playerName: refreshed.playerName,
+    profilePhoto: refreshed.profilePhoto,
+    kingdomId: refreshed.kingdomId,
+    playerLevel: refreshed.playerLevel,
+    townCenterLevel: refreshed.townCenterLevel,
+    levelImage: refreshed.levelImage,
+    verificationStatus:
+      refreshed.verificationStatus,
+    lastRefreshedAt:
+      refreshed.lastRefreshedAt,
+  }
+}
+
 export default function PlayerProfileEditorPage() {
   const {
     user,
     loading: authLoading,
     signInWithGoogle,
   } = useAuth()
-  const { playerAccount, loadingPlayerAccount } = usePlayerIdentity()
+  const {
+    playerAccount,
+    loadingPlayerAccount,
+    playerIdentityRefreshWarning,
+    refreshPlayerIdentity,
+  } = usePlayerIdentity()
 
   const [profile, setProfile] =
     useState<EditablePlayerProfile | null>(null)
@@ -83,6 +116,11 @@ export default function PlayerProfileEditorPage() {
   const [errorMessage, setErrorMessage] =
     useState('')
 
+  const loadedPlayerAccountIdRef =
+    useRef<string | null | undefined>(
+      undefined,
+    )
+
   useEffect(() => {
     let cancelled = false
 
@@ -92,12 +130,24 @@ export default function PlayerProfileEditorPage() {
       }
 
       if (!user) {
+        loadedPlayerAccountIdRef.current =
+          undefined
         setProfile(null)
         setLoading(false)
         return
       }
 
-      setLoading(true)
+      const nextPlayerAccountId =
+        playerAccount?.id ?? null
+
+      const isInitialOrDifferentPlayer =
+        loadedPlayerAccountIdRef.current !==
+        nextPlayerAccountId
+
+      if (isInitialOrDifferentPlayer) {
+        setLoading(true)
+      }
+
       setMessage('')
       setErrorMessage('')
 
@@ -123,7 +173,19 @@ export default function PlayerProfileEditorPage() {
           : null
 
         if (!cancelled) {
-          setProfile(result)
+          setProfile((current) => {
+            if (!current || !result) {
+              return result
+            }
+
+            return mergeRefreshedPlayerProfile(
+              current,
+              result,
+            )
+          })
+
+          loadedPlayerAccountIdRef.current =
+            nextPlayerAccountId
         }
       } catch (error) {
         if (!cancelled) {
@@ -134,7 +196,10 @@ export default function PlayerProfileEditorPage() {
           )
         }
       } finally {
-        if (!cancelled) {
+        if (
+          !cancelled &&
+          isInitialOrDifferentPlayer
+        ) {
           setLoading(false)
         }
       }
@@ -382,6 +447,19 @@ export default function PlayerProfileEditorPage() {
         </div>
 
         <div className="player-profile-editor-heading__actions">
+          <button
+            type="button"
+            className="button button--secondary"
+            disabled={loadingPlayerAccount}
+            onClick={() =>
+              void refreshPlayerIdentity('manual')
+            }
+          >
+            {loadingPlayerAccount
+              ? 'Refreshing…'
+              : 'Refresh Player'}
+          </button>
+
           <Link
             className="button button--secondary"
             to="/my-forge"
@@ -497,6 +575,15 @@ export default function PlayerProfileEditorPage() {
 <p className="player-profile-editor-note">
   Player name, avatar, kingdom and Town Center are supplied by the Kingshot API and cannot be edited here.
 </p>
+
+{playerIdentityRefreshWarning && (
+  <p
+    className="profile-panel__error"
+    role="status"
+  >
+    {playerIdentityRefreshWarning}
+  </p>
+)}
           </section>
 
           <section className="player-profile-editor-card">
