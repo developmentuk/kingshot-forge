@@ -2,7 +2,12 @@ import { LinkedPlayerServiceError } from './linkedPlayerService.js'
 
 export const PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS = 5 * 60 * 1000
 export const PLAYER_ACCOUNT_ATTEMPT_LIMIT = 20
-export const PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT = 100
+export const PLAYER_SIGN_IN_STATUS_POLL_BUDGET = 42
+export const PLAYER_SIGN_IN_STATUS_CONCURRENT_POLLER_ENVELOPE = 4
+// Four complete 42-check pollers leave bounded headroom for normal retries.
+export const PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT =
+  PLAYER_SIGN_IN_STATUS_POLL_BUDGET
+  * PLAYER_SIGN_IN_STATUS_CONCURRENT_POLLER_ENVELOPE
 
 type AttemptRecord = { count: number; resetAt: number }
 

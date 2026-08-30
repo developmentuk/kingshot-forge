@@ -455,6 +455,7 @@ const intelligenceResult = await syncLinkedPlayerIntelligence(
     repository: allowedRepository,
     quotaRepository: allowedQuotaRepository,
     verifiedLastSignInAt: fetchedAt,
+    nowMs: Date.parse(fetchedAt),
     provider: {
       async lookupPlayer() {
         throw new Error('identity-only lookup must not be used by intelligence sync')
@@ -543,6 +544,7 @@ const ageOnlyResult = await syncLinkedPlayerIntelligence(
       },
     },
     quotaRepository: allowedQuotaRepository,
+    nowMs: Date.parse(fetchedAt),
     provider: {
       async lookupPlayer() {
         throw new Error('identity-only lookup must not be used by intelligence sync')
@@ -587,6 +589,7 @@ const incompleteRankResult = await syncLinkedPlayerIntelligence(
       },
     },
     quotaRepository: allowedQuotaRepository,
+    nowMs: Date.parse(fetchedAt),
     provider: {
       async lookupPlayer() {
         throw new Error('identity-only lookup must not be used by intelligence sync')
@@ -656,6 +659,65 @@ const noEvidenceResult = await syncLinkedPlayerIntelligence(
 assert.equal(noEvidenceApplyInput.applyAllianceAuthority, false)
 assert.equal(noEvidenceApplyInput.authorityObservedAt, null)
 assert.equal(noEvidenceResult.allianceAuthority, null)
+
+async function authorityInputFor(providerValue) {
+  let applyInput
+  await syncLinkedPlayerIntelligence(
+    'user-intelligence',
+    'manual',
+    {
+      repository: {
+        ...allowedRepository,
+        async applySync(input) {
+          applyInput = input
+          return {
+            observationId: '00000000-0000-0000-0000-000000000010',
+            allianceAuthority: input.applyAllianceAuthority ? {
+              allianceId: 'alliance',
+              membershipId: 'membership',
+              memberRole: input.memberRole,
+              adminActive: input.memberRole === 'r4' || input.memberRole === 'leader',
+            } : null,
+          }
+        },
+      },
+      quotaRepository: allowedQuotaRepository,
+      nowMs: Date.parse(fetchedAt),
+      provider: {
+        async lookupPlayer() { throw new Error('identity-only lookup must not be used') },
+        async lookupPlayerIntelligence() { return providerValue },
+      },
+    },
+  )
+  return applyInput
+}
+
+const staleObservation = await authorityInputFor({
+  ...intelligence,
+  providerCachedAt: new Date(
+    Date.parse(fetchedAt) - PLAYER_PROVIDER_FRESHNESS_TTL_MS - 1,
+  ).toISOString(),
+  providerAgeSeconds: null,
+  providerFresh: true,
+})
+assert.equal(staleObservation.applyAllianceAuthority, false)
+assert.equal(staleObservation.authorityObservedAt, null)
+assert.equal(staleObservation.normalizedSnapshot.identity.playerId, '125500338')
+
+const staleAgeObservation = await authorityInputFor({
+  ...intelligence,
+  providerCachedAt: null,
+  providerAgeSeconds: 60 * 60 + 1,
+})
+assert.equal(staleAgeObservation.applyAllianceAuthority, false)
+assert.equal(staleAgeObservation.authorityObservedAt, null)
+
+const contradictoryFreshnessObservation = await authorityInputFor({
+  ...intelligence,
+  providerFresh: false,
+})
+assert.equal(contradictoryFreshnessObservation.applyAllianceAuthority, false)
+assert.equal(contradictoryFreshnessObservation.authorityObservedAt, null)
 
 let replayQuotaCalls = 0
 let replayProviderCalls = 0
@@ -2205,7 +2267,8 @@ await assert.rejects(
 )
 assert.equal(identityQuotaProviderCalls, 2)
 
-assert.equal(PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT, 100)
+assert.equal(PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT, 168)
+assert.equal(PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT, 4 * 42)
 assert.equal(PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS, 5 * 60 * 1000)
 const statusThrottle = new PlayerAccountAttemptThrottle(
   PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT,

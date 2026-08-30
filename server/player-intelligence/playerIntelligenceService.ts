@@ -9,6 +9,7 @@ import {
 import {
   validateKingdomId,
   validatePlayerId,
+  PLAYER_PROVIDER_FRESHNESS_TTL_MS,
 } from '../player-identity/linkedPlayerService.js'
 import {
   failMightPulseProviderRequest,
@@ -34,6 +35,9 @@ export const PLAYER_INTELLIGENCE_SECTIONS = Object.freeze([
   'ranks',
   'gov_gear',
 ] as const)
+
+export const PLAYER_INTELLIGENCE_AUTHORITY_FRESHNESS_TTL_MS =
+  PLAYER_PROVIDER_FRESHNESS_TTL_MS
 
 export type PlayerIntelligenceRefreshReason =
   | 'sign-in'
@@ -294,6 +298,7 @@ export async function syncLinkedPlayerIntelligence(
     provider?: PlayerIntelligenceProvider
     quotaRepository?: ProviderQuotaRepository
     verifiedLastSignInAt?: string | null
+    nowMs?: number
   }> = {},
 ): Promise<
   | Readonly<{ source: 'cache' }>
@@ -405,7 +410,7 @@ export async function syncLinkedPlayerIntelligence(
       && ageSeconds >= 0
       ? fetchedAtMs - (ageSeconds * 1_000)
       : Number.NaN
-    const authorityObservedAt = Number.isFinite(cachedAtMs)
+    const authorityObservationAt = Number.isFinite(cachedAtMs)
       && Number.isFinite(fetchedAtMs)
       && cachedAtMs <= fetchedAtMs
       ? intelligence.providerCachedAt as string
@@ -414,7 +419,17 @@ export async function syncLinkedPlayerIntelligence(
         ? new Date(ageObservedAtMs).toISOString()
         : null
 
-    const applyAllianceAuthority = authorityObservedAt !== null
+    const authorityObservedAtMs = authorityObservationAt === null
+      ? Number.NaN
+      : Date.parse(authorityObservationAt)
+    const nowMs = dependencies.nowMs ?? Date.now()
+    const authorityEvidenceFresh =
+      intelligence.providerFresh !== false
+      && Number.isFinite(authorityObservedAtMs)
+      && authorityObservedAtMs <= nowMs
+      && nowMs - authorityObservedAtMs
+        <= PLAYER_INTELLIGENCE_AUTHORITY_FRESHNESS_TTL_MS
+    const applyAllianceAuthority = authorityEvidenceFresh
     const applied = await repository.applySync({
       userId,
       playerAccountId: linkedPlayer.playerAccountId,
@@ -427,7 +442,7 @@ export async function syncLinkedPlayerIntelligence(
       allianceName: alliance?.name ?? null,
       memberRole: mappedRole,
       authorityObservedAt: applyAllianceAuthority
-        ? authorityObservedAt
+        ? authorityObservationAt
         : null,
       quotaReservationId: quota.reservationId,
       quotaAttemptToken: quota.attemptToken,
