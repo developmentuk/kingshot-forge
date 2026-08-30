@@ -33,6 +33,13 @@ export interface ProviderQuotaRepository {
   }>): Promise<ProviderQuotaReservation>
 }
 
+export function isProviderQuotaRuntimeEnabled(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): boolean {
+  return environment.MIGHTPULSE_PROVIDER_QUOTA_ENABLED?.trim().toLowerCase()
+    === 'true'
+}
+
 export function signInProviderIdempotencyKey(
   userId: string,
   verifiedLastSignInAt: string,
