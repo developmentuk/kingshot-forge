@@ -1,0 +1,1620 @@
+begin;
+
+create table if not exists public.player_intelligence_observations (
+  id uuid primary key default gen_random_uuid(),
+  player_account_id uuid not null
+    references public.player_accounts(id) on delete cascade,
+  provider text not null
+    check (provider = 'mightpulse'),
+  request_reason text not null
+    check (
+      request_reason = any (
+        array[
+          'sign-in'::text,
+          'automatic'::text,
+          'manual'::text,
+          'intelligence'::text
+        ]
+      )
+    ),
+  sections text[] not null
+    check (cardinality(sections) >= 1 and cardinality(sections) <= 8),
+  normalized_snapshot jsonb not null
+    check (jsonb_typeof(normalized_snapshot) = 'object'::text),
+  content_sha256 text not null
+    check (content_sha256 ~ '^[0-9a-f]{64}$'),
+  provider_fetched_at timestamptz not null,
+  provider_cached_at timestamptz null,
+  provider_age_seconds integer null
+    check (provider_age_seconds is null or provider_age_seconds >= 0),
+  provider_fresh boolean null,
+  created_at timestamptz not null default now()
+);
+
+comment on table public.player_intelligence_observations is
+  'Immutable, server-only allowlisted MightPulse Player intelligence observations. Raw provider payloads are not stored here.';
+
+comment on column public.player_intelligence_observations.normalized_snapshot is
+  'Validated Forge-normalised Player intelligence. Restricted fields remain server-only unless explicitly projected by a governed API.';
+
+create index if not exists player_intelligence_observations_latest_idx
+  on public.player_intelligence_observations (
+    player_account_id,
+    provider_fetched_at desc,
+    created_at desc
+  );
+
+create index if not exists player_intelligence_observations_hash_idx
+  on public.player_intelligence_observations (
+    player_account_id,
+    content_sha256
+  );
+
+create or replace function public.reject_player_intelligence_observation_mutation()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  raise exception 'Player intelligence observations are immutable.'
+    using errcode = '55000';
+end;
+$$;
+
+drop trigger if exists reject_player_intelligence_observation_mutation
+  on public.player_intelligence_observations;
+
+create trigger reject_player_intelligence_observation_mutation
+before update
+on public.player_intelligence_observations
+for each row
+execute function public.reject_player_intelligence_observation_mutation();
+
+alter table public.player_intelligence_observations enable row level security;
+
+revoke all on table public.player_intelligence_observations from public;
+revoke all on table public.player_intelligence_observations from anon;
+revoke all on table public.player_intelligence_observations from authenticated;
+grant select, insert on table public.player_intelligence_observations to service_role;
+
+create table if not exists public.provider_quota_reservations (
+  id uuid primary key default gen_random_uuid(),
+  provider text not null
+    check (provider = 'mightpulse'),
+  category text not null
+    check (
+      category = any (
+        array[
+          'player_link'::text,
+          'player_sign_in'::text,
+          'player_manual'::text,
+          'player_automatic'::text,
+          'player_intelligence'::text,
+          'alliance_roster'::text,
+          'kingdom'::text,
+          'kvk_target'::text
+        ]
+      )
+    ),
+  priority text not null
+    check (priority = any (array['high'::text, 'normal'::text, 'low'::text])),
+  idempotency_key text null
+    check (
+      idempotency_key is null
+      or (
+        char_length(idempotency_key) between 16 and 128
+        and idempotency_key = lower(idempotency_key)
+        and idempotency_key !~ '[^0-9a-f]'
+      )
+    ),
+  status text not null default 'pending'
+    check (status = any (array['pending'::text, 'completed'::text, 'failed'::text])),
+  attempt_token uuid not null default gen_random_uuid(),
+  reserved_at timestamptz not null default clock_timestamp(),
+  last_attempt_at timestamptz not null default clock_timestamp(),
+  lease_expires_at timestamptz not null default (clock_timestamp() + interval '120 seconds'),
+  completed_at timestamptz null,
+  failed_at timestamptz null,
+  check (lease_expires_at >= last_attempt_at),
+  check (
+    (status = 'pending' and completed_at is null and failed_at is null)
+    or (status = 'completed' and completed_at is not null and failed_at is null)
+    or (status = 'failed' and failed_at is not null and completed_at is null)
+  )
+);
+
+comment on table public.provider_quota_reservations is
+  'Server-only provider request reservation state and idempotency ownership. Rolling provider limits are calculated from the separate immutable attempt ledger.';
+
+create unique index if not exists provider_quota_reservations_idempotency_idx
+  on public.provider_quota_reservations (provider, idempotency_key)
+  where idempotency_key is not null;
+
+alter table public.provider_quota_reservations enable row level security;
+
+revoke all on table public.provider_quota_reservations from public;
+revoke all on table public.provider_quota_reservations from anon;
+revoke all on table public.provider_quota_reservations from authenticated;
+revoke all on table public.provider_quota_reservations from service_role;
+
+create table if not exists public.provider_quota_attempts (
+  id uuid primary key default gen_random_uuid(),
+  reservation_id uuid not null
+    references public.provider_quota_reservations(id)
+    on delete cascade,
+  provider text not null
+    check (provider = 'mightpulse'),
+  category text not null
+    check (
+      category = any (
+        array[
+          'player_link'::text,
+          'player_sign_in'::text,
+          'player_manual'::text,
+          'player_automatic'::text,
+          'player_intelligence'::text,
+          'alliance_roster'::text,
+          'kingdom'::text,
+          'kvk_target'::text
+        ]
+      )
+    ),
+  priority text not null
+    check (priority = any (array['high'::text, 'normal'::text, 'low'::text])),
+  attempt_token uuid not null,
+  attempted_at timestamptz not null default clock_timestamp()
+);
+
+comment on table public.provider_quota_attempts is
+  'Immutable server-only ledger containing one row for each actual MightPulse provider request attempt.';
+
+create index if not exists provider_quota_attempts_provider_time_idx
+  on public.provider_quota_attempts (provider, attempted_at desc);
+
+create unique index if not exists provider_quota_attempts_token_idx
+  on public.provider_quota_attempts (reservation_id, attempt_token);
+
+alter table public.provider_quota_attempts enable row level security;
+
+revoke all on table public.provider_quota_attempts from public;
+revoke all on table public.provider_quota_attempts from anon;
+revoke all on table public.provider_quota_attempts from authenticated;
+revoke all on table public.provider_quota_attempts from service_role;
+
+create or replace function public.reserve_provider_request(
+  p_provider text,
+  p_category text,
+  p_priority text default 'normal',
+  p_idempotency_key text default null
+)
+returns table (
+  allowed boolean,
+  duplicate boolean,
+  reservation_state text,
+  reservation_id uuid,
+  attempt_token uuid,
+  minute_used integer,
+  day_used integer,
+  minute_limit integer,
+  day_limit integer,
+  normal_day_limit integer
+)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $quota$
+declare
+  now_at timestamptz := clock_timestamp();
+  minute_count integer;
+  day_count integer;
+  effective_day_limit integer;
+  created_id uuid;
+  created_token uuid;
+  existing_row public.provider_quota_reservations;
+begin
+  if p_provider <> 'mightpulse' then
+    raise exception 'Unsupported provider.'
+      using errcode = '22023';
+  end if;
+
+  if p_category <> all (
+    array[
+      'player_link'::text,
+      'player_sign_in'::text,
+      'player_manual'::text,
+      'player_automatic'::text,
+      'player_intelligence'::text,
+      'alliance_roster'::text,
+      'kingdom'::text,
+      'kvk_target'::text
+    ]
+  ) then
+    raise exception 'Unsupported provider request category.'
+      using errcode = '22023';
+  end if;
+
+  if p_priority <> all (array['high'::text, 'normal'::text, 'low'::text]) then
+    raise exception 'Unsupported provider request priority.'
+      using errcode = '22023';
+  end if;
+
+  if p_idempotency_key is not null and (
+    char_length(p_idempotency_key) < 16
+    or char_length(p_idempotency_key) > 128
+    or p_idempotency_key <> lower(p_idempotency_key)
+    or p_idempotency_key ~ '[^0-9a-f]'
+  ) then
+    raise exception 'Invalid provider request idempotency key.'
+      using errcode = '22023';
+  end if;
+
+  minute_limit := 60;
+  day_limit := 5000;
+  normal_day_limit := 4500;
+  effective_day_limit := case
+    when p_priority = 'high' then day_limit
+    else normal_day_limit
+  end;
+
+  perform pg_advisory_xact_lock(
+    hashtextextended('forge-provider-quota:' || p_provider, 0)
+  );
+
+  select count(*)::integer
+  into minute_count
+  from public.provider_quota_attempts attempt
+  where attempt.provider = p_provider
+    and attempt.attempted_at > now_at - interval '60 seconds';
+
+  select count(*)::integer
+  into day_count
+  from public.provider_quota_attempts attempt
+  where attempt.provider = p_provider
+    and attempt.attempted_at > now_at - interval '24 hours';
+
+  if p_idempotency_key is not null then
+    select *
+    into existing_row
+    from public.provider_quota_reservations reservation
+    where reservation.provider = p_provider
+      and reservation.idempotency_key = p_idempotency_key
+    for update;
+
+    if existing_row.id is not null then
+      if existing_row.status = 'completed' then
+        allowed := false;
+        duplicate := true;
+        reservation_state := 'completed';
+        reservation_id := existing_row.id;
+        attempt_token := null;
+        minute_used := minute_count;
+        day_used := day_count;
+        return next;
+        return;
+      end if;
+
+      if existing_row.status = 'pending'
+        and existing_row.lease_expires_at > now_at then
+        allowed := false;
+        duplicate := true;
+        reservation_state := 'in_progress';
+        reservation_id := existing_row.id;
+        attempt_token := null;
+        minute_used := minute_count;
+        day_used := day_count;
+        return next;
+        return;
+      end if;
+
+      if minute_count >= minute_limit
+        or day_count >= effective_day_limit then
+        allowed := false;
+        duplicate := false;
+        reservation_state := 'quota_exhausted';
+        reservation_id := null;
+        attempt_token := null;
+        minute_used := minute_count;
+        day_used := day_count;
+        return next;
+        return;
+      end if;
+
+      created_token := gen_random_uuid();
+
+      update public.provider_quota_reservations
+      set
+        category = p_category,
+        priority = p_priority,
+        status = 'pending',
+        attempt_token = created_token,
+        last_attempt_at = now_at,
+        lease_expires_at = now_at + interval '120 seconds',
+        completed_at = null,
+        failed_at = null
+      where id = existing_row.id;
+
+      insert into public.provider_quota_attempts (
+        reservation_id,
+        provider,
+        category,
+        priority,
+        attempt_token,
+        attempted_at
+      )
+      values (
+        existing_row.id,
+        p_provider,
+        p_category,
+        p_priority,
+        created_token,
+        now_at
+      );
+
+      allowed := true;
+      duplicate := false;
+      reservation_state := 'reserved';
+      reservation_id := existing_row.id;
+      attempt_token := created_token;
+      minute_used := minute_count + 1;
+      day_used := day_count + 1;
+      return next;
+      return;
+    end if;
+  end if;
+
+  if minute_count >= minute_limit
+    or day_count >= effective_day_limit then
+    allowed := false;
+    duplicate := false;
+    reservation_state := 'quota_exhausted';
+    reservation_id := null;
+    attempt_token := null;
+    minute_used := minute_count;
+    day_used := day_count;
+    return next;
+    return;
+  end if;
+
+  created_id := gen_random_uuid();
+  created_token := gen_random_uuid();
+
+  insert into public.provider_quota_reservations (
+    id,
+    provider,
+    category,
+    priority,
+    idempotency_key,
+    status,
+    attempt_token,
+    reserved_at,
+    last_attempt_at,
+    lease_expires_at
+  )
+  values (
+    created_id,
+    p_provider,
+    p_category,
+    p_priority,
+    p_idempotency_key,
+    'pending',
+    created_token,
+    now_at,
+    now_at,
+    now_at + interval '120 seconds'
+  );
+
+  insert into public.provider_quota_attempts (
+    reservation_id,
+    provider,
+    category,
+    priority,
+    attempt_token,
+    attempted_at
+  )
+  values (
+    created_id,
+    p_provider,
+    p_category,
+    p_priority,
+    created_token,
+    now_at
+  );
+
+  allowed := true;
+  duplicate := false;
+  reservation_state := 'reserved';
+  reservation_id := created_id;
+  attempt_token := created_token;
+  minute_used := minute_count + 1;
+  day_used := day_count + 1;
+  return next;
+end;
+$quota$;
+
+revoke all on function public.reserve_provider_request(text, text, text, text)
+  from public;
+revoke all on function public.reserve_provider_request(text, text, text, text)
+  from anon;
+revoke all on function public.reserve_provider_request(text, text, text, text)
+  from authenticated;
+grant execute on function public.reserve_provider_request(text, text, text, text)
+  to service_role;
+
+create or replace function public.complete_provider_request(
+  p_reservation_id uuid,
+  p_attempt_token uuid
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $quota_complete$
+declare
+  changed integer;
+begin
+  update public.provider_quota_reservations
+  set
+    status = 'completed',
+    completed_at = clock_timestamp(),
+    failed_at = null,
+    lease_expires_at = clock_timestamp()
+  where id = p_reservation_id
+    and attempt_token = p_attempt_token
+    and status = 'pending';
+
+  get diagnostics changed = row_count;
+  return changed = 1;
+end;
+$quota_complete$;
+
+revoke all on function public.complete_provider_request(uuid, uuid) from public;
+revoke all on function public.complete_provider_request(uuid, uuid) from anon;
+revoke all on function public.complete_provider_request(uuid, uuid) from authenticated;
+grant execute on function public.complete_provider_request(uuid, uuid) to service_role;
+
+create or replace function public.fail_provider_request(
+  p_reservation_id uuid,
+  p_attempt_token uuid
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $quota_fail$
+declare
+  changed integer;
+begin
+  update public.provider_quota_reservations
+  set
+    status = 'failed',
+    failed_at = clock_timestamp(),
+    completed_at = null,
+    lease_expires_at = clock_timestamp()
+  where id = p_reservation_id
+    and attempt_token = p_attempt_token
+    and status = 'pending';
+
+  get diagnostics changed = row_count;
+  return changed = 1;
+end;
+$quota_fail$;
+
+revoke all on function public.fail_provider_request(uuid, uuid) from public;
+revoke all on function public.fail_provider_request(uuid, uuid) from anon;
+revoke all on function public.fail_provider_request(uuid, uuid) from authenticated;
+grant execute on function public.fail_provider_request(uuid, uuid) to service_role;
+
+create table if not exists public.player_alliance_provider_state (
+  player_account_id uuid primary key
+    references public.player_accounts(id) on delete cascade,
+  user_id uuid not null
+    references public.profiles(id) on delete cascade,
+  provider text not null
+    check (provider = 'mightpulse'),
+  provider_observed_at timestamptz not null,
+  provider_fetched_at timestamptz not null,
+  alliance_tag text null,
+  member_role public.alliance_member_role null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (
+    (alliance_tag is null and member_role is null)
+    or (alliance_tag is not null and member_role is not null)
+  )
+);
+
+comment on table public.player_alliance_provider_state is
+  'Server-only last-applied MightPulse Alliance authority observation per linked Player. Used to prevent stale provider snapshots from rolling membership or rank backwards.';
+
+alter table public.player_alliance_provider_state enable row level security;
+
+revoke all on table public.player_alliance_provider_state from public;
+revoke all on table public.player_alliance_provider_state from anon;
+revoke all on table public.player_alliance_provider_state from authenticated;
+grant select, insert, update on table public.player_alliance_provider_state
+  to service_role;
+
+create table if not exists public.alliance_provider_authority_overrides (
+  alliance_id uuid not null
+    references public.alliances(id) on delete cascade,
+  user_id uuid not null
+    references public.profiles(id) on delete cascade,
+  suspended_at timestamptz not null,
+  suspended_until timestamptz null,
+  reason text not null
+    check (char_length(btrim(reason)) between 1 and 500),
+  suspended_by uuid null
+    references public.profiles(id) on delete set null,
+  cleared_at timestamptz null,
+  cleared_by uuid null
+    references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (alliance_id, user_id),
+  check (
+    suspended_until is null
+    or suspended_until > suspended_at
+  ),
+  check (
+    (cleared_at is null and cleared_by is null)
+    or cleared_at is not null
+  )
+);
+
+comment on table public.alliance_provider_authority_overrides is
+  'Explicit manual/emergency suspension ceiling for MightPulse-derived R4/R5 Alliance authority. Active overrides prevent provider observations from reactivating Alliance-management grants.';
+
+alter table public.alliance_provider_authority_overrides enable row level security;
+
+revoke all on table public.alliance_provider_authority_overrides from public;
+revoke all on table public.alliance_provider_authority_overrides from anon;
+revoke all on table public.alliance_provider_authority_overrides from authenticated;
+grant select, insert, update on table public.alliance_provider_authority_overrides
+  to service_role;
+
+create or replace function public.sync_mightpulse_alliance_membership(
+  p_user_id uuid,
+  p_player_account_id uuid,
+  p_kingdom_number integer,
+  p_alliance_tag text,
+  p_alliance_name text,
+  p_member_role public.alliance_member_role,
+  p_observed_at timestamptz,
+  p_fetched_at timestamptz
+)
+returns table (
+  alliance_id uuid,
+  membership_id uuid,
+  member_role public.alliance_member_role,
+  admin_active boolean
+)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  player_row public.player_accounts;
+  kingdom_row public.kingdoms;
+  alliance_row public.alliances;
+  current_membership public.alliance_memberships;
+  resulting_membership public.alliance_memberships;
+  previous_admin public.alliance_admins;
+  resulting_admin public.alliance_admins;
+  authority_state public.player_alliance_provider_state;
+  authority_override public.alliance_provider_authority_overrides;
+  authority_override_history public.alliance_provider_authority_overrides;
+  normalized_tag text;
+  normalized_name text;
+  management_role boolean;
+begin
+  if p_user_id is null
+    or p_player_account_id is null
+    or p_kingdom_number < 1
+    or p_kingdom_number > 9999
+    or p_observed_at is null
+    or p_fetched_at is null
+    or p_observed_at > p_fetched_at then
+    raise exception 'Invalid MightPulse Alliance sync input.'
+      using errcode = '22023';
+  end if;
+
+  select *
+  into player_row
+  from public.player_accounts account
+  where account.id = p_player_account_id
+    and account.user_id = p_user_id
+    and account.is_primary = true
+  for update;
+
+  if player_row.id is null then
+    raise exception 'Linked Player account not found for Alliance sync.'
+      using errcode = 'P0002';
+  end if;
+
+  if player_row.kingdom_id <> p_kingdom_number then
+    raise exception 'Player State conflicts with Alliance sync State.'
+      using errcode = '22023';
+  end if;
+
+  select *
+  into authority_state
+  from public.player_alliance_provider_state state
+  where state.player_account_id = p_player_account_id
+  for update;
+
+  select *
+  into current_membership
+  from public.alliance_memberships membership
+  where membership.player_account_id = p_player_account_id
+    and membership.status = 'current'
+  for update;
+
+  if authority_state.player_account_id is not null
+    and p_observed_at <= authority_state.provider_observed_at then
+    alliance_id := current_membership.alliance_id;
+    membership_id := current_membership.id;
+    member_role := current_membership.member_role;
+    admin_active := current_membership.id is not null and exists (
+      select 1
+      from public.alliance_admins administrator
+      where administrator.alliance_id = current_membership.alliance_id
+        and administrator.user_id = p_user_id
+        and administrator.is_active = true
+        and administrator.revoked_at is null
+    );
+    return next;
+    return;
+  end if;
+
+  normalized_tag := upper(nullif(btrim(p_alliance_tag), ''));
+  normalized_name := nullif(btrim(p_alliance_name), '');
+
+  if normalized_tag is null then
+    if current_membership.id is not null then
+      update public.alliance_memberships
+      set
+        status = 'previous',
+        left_at = p_observed_at,
+        updated_at = p_observed_at,
+        review_notes = 'Membership superseded by MightPulse Alliance observation.'
+      where id = current_membership.id
+      returning * into resulting_membership;
+
+      select *
+      into previous_admin
+      from public.alliance_admins administrator
+      where administrator.alliance_id = current_membership.alliance_id
+        and administrator.user_id = p_user_id
+      for update;
+
+      if previous_admin.id is not null and previous_admin.is_active = true then
+        update public.alliance_admins
+        set
+          is_active = false,
+          revoked_at = p_observed_at,
+          updated_at = p_observed_at
+        where id = previous_admin.id
+        returning * into resulting_admin;
+
+        insert into public.alliance_audit_log (
+          alliance_id,
+          user_id,
+          player_account_id,
+          action,
+          previous_data,
+          new_data,
+          notes
+        )
+        values (
+          current_membership.alliance_id,
+          p_user_id,
+          p_player_account_id,
+          'mightpulse_admin_revoked',
+          to_jsonb(previous_admin),
+          to_jsonb(resulting_admin),
+          'MightPulse reported no current Alliance.'
+        );
+      end if;
+
+      insert into public.alliance_audit_log (
+        alliance_id,
+        user_id,
+        player_account_id,
+        action,
+        previous_data,
+        new_data,
+        notes
+      )
+      values (
+        current_membership.alliance_id,
+        p_user_id,
+        p_player_account_id,
+        'mightpulse_membership_ended',
+        to_jsonb(current_membership),
+        to_jsonb(resulting_membership),
+        'MightPulse reported no current Alliance.'
+      );
+    end if;
+
+    insert into public.player_alliance_provider_state (
+      player_account_id,
+      user_id,
+      provider,
+      provider_observed_at,
+      provider_fetched_at,
+      alliance_tag,
+      member_role,
+      updated_at
+    )
+    values (
+      p_player_account_id,
+      p_user_id,
+      'mightpulse',
+      p_observed_at,
+      p_fetched_at,
+      null,
+      null,
+      p_fetched_at
+    )
+    on conflict (player_account_id) do update
+    set
+      user_id = excluded.user_id,
+      provider = excluded.provider,
+      provider_observed_at = excluded.provider_observed_at,
+      provider_fetched_at = excluded.provider_fetched_at,
+      alliance_tag = excluded.alliance_tag,
+      member_role = excluded.member_role,
+      updated_at = excluded.updated_at;
+
+    alliance_id := null;
+    membership_id := null;
+    member_role := null;
+    admin_active := false;
+    return next;
+    return;
+  end if;
+
+  if char_length(normalized_tag) < 2
+    or char_length(normalized_tag) > 12
+    or normalized_name is null
+    or p_member_role is null then
+    raise exception 'Invalid MightPulse Alliance identity or rank.'
+      using errcode = '22023';
+  end if;
+
+  insert into public.kingdoms (
+    kingdom_number,
+    display_name
+  )
+  values (
+    p_kingdom_number,
+    'State ' || p_kingdom_number::text
+  )
+  on conflict (kingdom_number) do nothing;
+
+  select *
+  into kingdom_row
+  from public.kingdoms kingdom
+  where kingdom.kingdom_number = p_kingdom_number
+  for update;
+
+  if kingdom_row.id is null then
+    raise exception 'Unable to resolve canonical State.'
+      using errcode = 'P0002';
+  end if;
+
+  insert into public.alliances (
+    kingdom_id,
+    kingdom_number,
+    tag,
+    name,
+    verification_status,
+    recruitment_status,
+    is_public,
+    is_active
+  )
+  values (
+    kingdom_row.id,
+    p_kingdom_number,
+    normalized_tag,
+    normalized_name,
+    'unverified',
+    'unknown',
+    true,
+    true
+  )
+  on conflict (kingdom_id, tag) do nothing;
+
+  select *
+  into alliance_row
+  from public.alliances alliance
+  where alliance.kingdom_id = kingdom_row.id
+    and alliance.tag = normalized_tag
+  for update;
+
+  if alliance_row.id is null then
+    raise exception 'Unable to resolve canonical Alliance.'
+      using errcode = 'P0002';
+  end if;
+
+  if current_membership.id is not null
+    and current_membership.alliance_id <> alliance_row.id then
+    update public.alliance_memberships
+    set
+      status = 'previous',
+      left_at = p_observed_at,
+      updated_at = p_observed_at,
+      review_notes = 'Membership superseded by MightPulse Alliance observation.'
+    where id = current_membership.id
+    returning * into resulting_membership;
+
+    select *
+    into previous_admin
+    from public.alliance_admins administrator
+    where administrator.alliance_id = current_membership.alliance_id
+      and administrator.user_id = p_user_id
+    for update;
+
+    if previous_admin.id is not null and previous_admin.is_active = true then
+      update public.alliance_admins
+      set
+        is_active = false,
+        revoked_at = p_observed_at,
+        updated_at = p_observed_at
+      where id = previous_admin.id
+      returning * into resulting_admin;
+
+      insert into public.alliance_audit_log (
+        alliance_id,
+        user_id,
+        player_account_id,
+        action,
+        previous_data,
+        new_data,
+        notes
+      )
+      values (
+        current_membership.alliance_id,
+        p_user_id,
+        p_player_account_id,
+        'mightpulse_admin_revoked',
+        to_jsonb(previous_admin),
+        to_jsonb(resulting_admin),
+        'MightPulse reported a different current Alliance.'
+      );
+    end if;
+
+    insert into public.alliance_audit_log (
+      alliance_id,
+      user_id,
+      player_account_id,
+      action,
+      previous_data,
+      new_data,
+      notes
+    )
+    values (
+      current_membership.alliance_id,
+      p_user_id,
+      p_player_account_id,
+      'mightpulse_membership_moved',
+      to_jsonb(current_membership),
+      to_jsonb(resulting_membership),
+      'MightPulse reported a different current Alliance.'
+    );
+
+    current_membership := null;
+  end if;
+
+  update public.alliance_memberships
+  set
+    status = 'removed',
+    left_at = p_observed_at,
+    updated_at = p_observed_at,
+    review_notes = 'Pending request superseded by MightPulse current Alliance observation.'
+  where player_account_id = p_player_account_id
+    and status = 'pending';
+
+  if current_membership.id is null then
+    insert into public.alliance_memberships (
+      alliance_id,
+      player_account_id,
+      user_id,
+      kingdom_id,
+      kingdom_number,
+      status,
+      member_role,
+      joined_at,
+      left_at,
+      review_notes
+    )
+    values (
+      alliance_row.id,
+      p_player_account_id,
+      p_user_id,
+      kingdom_row.id,
+      p_kingdom_number,
+      'current',
+      p_member_role,
+      p_observed_at,
+      null,
+      'Membership synchronised from MightPulse.'
+    )
+    returning * into resulting_membership;
+
+    insert into public.alliance_audit_log (
+      alliance_id,
+      user_id,
+      player_account_id,
+      action,
+      new_data,
+      notes
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      p_player_account_id,
+      'mightpulse_membership_created',
+      to_jsonb(resulting_membership),
+      'Current Alliance membership synchronised from MightPulse.'
+    );
+  else
+    update public.alliance_memberships
+    set
+      kingdom_id = kingdom_row.id,
+      kingdom_number = p_kingdom_number,
+      member_role = p_member_role,
+      status = 'current',
+      left_at = null,
+      updated_at = p_observed_at,
+      review_notes = 'Membership synchronised from MightPulse.'
+    where id = current_membership.id
+    returning * into resulting_membership;
+
+    if current_membership.member_role is distinct from resulting_membership.member_role then
+      insert into public.alliance_audit_log (
+        alliance_id,
+        user_id,
+        player_account_id,
+        action,
+        previous_data,
+        new_data,
+        notes
+      )
+      values (
+        alliance_row.id,
+        p_user_id,
+        p_player_account_id,
+        'mightpulse_rank_changed',
+        to_jsonb(current_membership),
+        to_jsonb(resulting_membership),
+        'Alliance rank synchronised from MightPulse.'
+      );
+    end if;
+  end if;
+
+  management_role := p_member_role in ('r4', 'leader');
+
+  select *
+  into previous_admin
+  from public.alliance_admins administrator
+  where administrator.alliance_id = alliance_row.id
+    and administrator.user_id = p_user_id
+  for update;
+
+  select *
+  into authority_override
+  from public.alliance_provider_authority_overrides override_row
+  where override_row.alliance_id = alliance_row.id
+    and override_row.user_id = p_user_id
+    and override_row.cleared_at is null
+    and (
+      override_row.suspended_until is null
+      or override_row.suspended_until > p_fetched_at
+    )
+  for update;
+
+  select *
+  into authority_override_history
+  from public.alliance_provider_authority_overrides override_row
+  where override_row.alliance_id = alliance_row.id
+    and override_row.user_id = p_user_id
+  for update;
+
+  if management_role
+    and authority_override.alliance_id is null
+    and previous_admin.id is not null
+    and previous_admin.is_active = false
+    and previous_admin.revoked_at is not null
+    and (
+      (
+        authority_state.player_account_id is not null
+        and authority_state.alliance_tag = normalized_tag
+        and authority_state.member_role in ('r4', 'leader')
+        and previous_admin.revoked_at >= authority_state.provider_fetched_at
+      )
+      or (
+        authority_state.player_account_id is null
+        and previous_admin.role in ('r4', 'leader')
+      )
+    )
+    and (
+      authority_override_history.alliance_id is null
+      or previous_admin.revoked_at > greatest(
+        coalesce(
+          authority_override_history.cleared_at,
+          '-infinity'::timestamptz
+        ),
+        coalesce(
+          authority_override_history.suspended_until,
+          '-infinity'::timestamptz
+        ),
+        coalesce(
+          authority_override_history.updated_at,
+          '-infinity'::timestamptz
+        )
+      )
+    ) then
+
+    insert into public.alliance_provider_authority_overrides (
+      alliance_id,
+      user_id,
+      suspended_at,
+      suspended_until,
+      reason,
+      suspended_by,
+      cleared_at,
+      cleared_by,
+      updated_at
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      previous_admin.revoked_at,
+      null,
+      'Existing manual/emergency Alliance-admin revocation preserved against MightPulse reactivation.',
+      null,
+      null,
+      null,
+      p_fetched_at
+    )
+    on conflict (alliance_id, user_id) do update
+    set
+      suspended_at = excluded.suspended_at,
+      suspended_until = null,
+      reason = excluded.reason,
+      suspended_by = excluded.suspended_by,
+      cleared_at = null,
+      cleared_by = null,
+      updated_at = excluded.updated_at;
+
+    select *
+    into authority_override
+    from public.alliance_provider_authority_overrides override_row
+    where override_row.alliance_id = alliance_row.id
+      and override_row.user_id = p_user_id
+    for update;
+
+    insert into public.alliance_audit_log (
+      alliance_id,
+      user_id,
+      player_account_id,
+      action,
+      previous_data,
+      new_data,
+      notes
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      p_player_account_id,
+      'mightpulse_manual_suspension_preserved',
+      to_jsonb(previous_admin),
+      to_jsonb(authority_override),
+      'Manual/emergency Alliance-admin revocation converted into a provider-authority suspension ceiling.'
+    );
+  end if;
+
+  if management_role and authority_override.alliance_id is not null then
+    if previous_admin.id is not null then
+      update public.alliance_admins
+      set
+        role = p_member_role,
+        is_active = false,
+        revoked_at = coalesce(previous_admin.revoked_at, authority_override.suspended_at),
+        updated_at = greatest(previous_admin.updated_at, p_fetched_at)
+      where id = previous_admin.id
+      returning * into resulting_admin;
+    end if;
+
+    insert into public.alliance_audit_log (
+      alliance_id,
+      user_id,
+      player_account_id,
+      action,
+      previous_data,
+      new_data,
+      notes
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      p_player_account_id,
+      'mightpulse_admin_suspension_preserved',
+      case when previous_admin.id is null then null else to_jsonb(previous_admin) end,
+      case when resulting_admin.id is null then to_jsonb(authority_override) else to_jsonb(resulting_admin) end,
+      'Active manual/emergency suspension prevented MightPulse R4/R5 authority reactivation.'
+    );
+
+  elsif management_role then
+    if previous_admin.id is null then
+      insert into public.alliance_admins (
+        alliance_id,
+        user_id,
+        role,
+        can_manage_members,
+        can_manage_recruitment,
+        can_manage_transfers,
+        can_manage_discord,
+        can_manage_events,
+        granted_by,
+        granted_at,
+        revoked_at,
+        is_active,
+        updated_at
+      )
+      values (
+        alliance_row.id,
+        p_user_id,
+        p_member_role,
+        true,
+        true,
+        true,
+        true,
+        true,
+        null,
+        p_observed_at,
+        null,
+        true,
+        p_observed_at
+      )
+      returning * into resulting_admin;
+    else
+      update public.alliance_admins
+      set
+        role = p_member_role,
+        can_manage_members = true,
+        can_manage_recruitment = true,
+        can_manage_transfers = true,
+        can_manage_discord = true,
+        can_manage_events = true,
+        revoked_at = null,
+        is_active = true,
+        updated_at = p_observed_at
+      where id = previous_admin.id
+      returning * into resulting_admin;
+    end if;
+
+    insert into public.alliance_audit_log (
+      alliance_id,
+      user_id,
+      player_account_id,
+      action,
+      previous_data,
+      new_data,
+      notes
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      p_player_account_id,
+      'mightpulse_admin_synced',
+      case when previous_admin.id is null then null else to_jsonb(previous_admin) end,
+      to_jsonb(resulting_admin),
+      'R4/R5 Alliance-management authority synchronised from MightPulse.'
+    );
+  elsif previous_admin.id is not null and previous_admin.is_active = true then
+    update public.alliance_admins
+    set
+      role = p_member_role,
+      is_active = false,
+      revoked_at = p_observed_at,
+      updated_at = p_observed_at
+    where id = previous_admin.id
+    returning * into resulting_admin;
+
+    insert into public.alliance_audit_log (
+      alliance_id,
+      user_id,
+      player_account_id,
+      action,
+      previous_data,
+      new_data,
+      notes
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      p_player_account_id,
+      'mightpulse_admin_revoked',
+      to_jsonb(previous_admin),
+      to_jsonb(resulting_admin),
+      'MightPulse rank is below R4.'
+    );
+  end if;
+
+  insert into public.player_alliance_provider_state (
+    player_account_id,
+    user_id,
+    provider,
+    provider_observed_at,
+    provider_fetched_at,
+    alliance_tag,
+    member_role,
+    updated_at
+  )
+  values (
+    p_player_account_id,
+    p_user_id,
+    'mightpulse',
+    p_observed_at,
+    p_fetched_at,
+    normalized_tag,
+    p_member_role,
+    p_fetched_at
+  )
+  on conflict (player_account_id) do update
+  set
+    user_id = excluded.user_id,
+    provider = excluded.provider,
+    provider_observed_at = excluded.provider_observed_at,
+    provider_fetched_at = excluded.provider_fetched_at,
+    alliance_tag = excluded.alliance_tag,
+    member_role = excluded.member_role,
+    updated_at = excluded.updated_at;
+
+  alliance_id := alliance_row.id;
+  membership_id := resulting_membership.id;
+  member_role := resulting_membership.member_role;
+  admin_active := management_role
+    and authority_override.alliance_id is null;
+  return next;
+end;
+$$;
+
+revoke all on function public.sync_mightpulse_alliance_membership(
+  uuid,
+  uuid,
+  integer,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz,
+  timestamptz
+) from public;
+revoke all on function public.sync_mightpulse_alliance_membership(
+  uuid,
+  uuid,
+  integer,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz,
+  timestamptz
+) from anon;
+revoke all on function public.sync_mightpulse_alliance_membership(
+  uuid,
+  uuid,
+  integer,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz,
+  timestamptz
+) from authenticated;
+grant execute on function public.sync_mightpulse_alliance_membership(
+  uuid,
+  uuid,
+  integer,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz,
+  timestamptz
+) to service_role;
+
+create or replace function public.apply_mightpulse_player_intelligence_sync(
+  p_user_id uuid,
+  p_player_account_id uuid,
+  p_player_id text,
+  p_kingdom_number integer,
+  p_player_name text,
+  p_town_center_level integer,
+  p_avatar_url text,
+  p_request_reason text,
+  p_sections text[],
+  p_normalized_snapshot jsonb,
+  p_content_sha256 text,
+  p_provider_fetched_at timestamptz,
+  p_provider_cached_at timestamptz,
+  p_provider_age_seconds integer,
+  p_provider_fresh boolean,
+  p_apply_alliance_authority boolean,
+  p_alliance_tag text,
+  p_alliance_name text,
+  p_member_role public.alliance_member_role,
+  p_authority_observed_at timestamptz,
+  p_quota_reservation_id uuid,
+  p_quota_attempt_token uuid
+)
+returns table (
+  observation_id uuid,
+  alliance_id uuid,
+  membership_id uuid,
+  member_role public.alliance_member_role,
+  admin_active boolean
+)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $apply$
+declare
+  player_row public.player_accounts;
+  authority_result record;
+  quota_completed integer;
+begin
+  if p_user_id is null
+    or p_player_account_id is null
+    or p_player_id is null
+    or p_player_id !~ '^[0-9]{1,20}$'
+    or p_kingdom_number < 1
+    or p_kingdom_number > 9999
+    or p_player_name is null
+    or btrim(p_player_name) = ''
+    or p_request_reason <> all (
+      array[
+        'sign-in'::text,
+        'automatic'::text,
+        'manual'::text,
+        'intelligence'::text
+      ]
+    )
+    or p_sections is null
+    or cardinality(p_sections) < 1
+    or cardinality(p_sections) > 8
+    or jsonb_typeof(p_normalized_snapshot) <> 'object'
+    or p_content_sha256 !~ '^[0-9a-f]{64}$'
+    or p_provider_fetched_at is null
+    or p_quota_reservation_id is null
+    or p_quota_attempt_token is null
+    or (
+      p_provider_cached_at is not null
+      and p_provider_cached_at > p_provider_fetched_at
+    )
+    or (
+      p_provider_age_seconds is not null
+      and p_provider_age_seconds < 0
+    )
+    or (
+      p_town_center_level is not null
+      and (p_town_center_level < 1 or p_town_center_level > 84)
+    )
+    or (
+      p_authority_observed_at is not null
+      and p_authority_observed_at > p_provider_fetched_at
+    ) then
+    raise exception 'Invalid MightPulse Player intelligence sync input.'
+      using errcode = '22023';
+  end if;
+
+  select *
+  into player_row
+  from public.player_accounts account
+  where account.id = p_player_account_id
+    and account.user_id = p_user_id
+    and account.is_primary = true
+  for update;
+
+  if player_row.id is null then
+    raise exception 'Linked Player account not found for intelligence sync.'
+      using errcode = 'P0002';
+  end if;
+
+  if player_row.player_id <> p_player_id
+    or player_row.kingdom_id <> p_kingdom_number then
+    raise exception 'Player identity conflicts with intelligence sync.'
+      using errcode = '22023';
+  end if;
+
+  update public.player_accounts
+  set
+    player_name = p_player_name,
+    town_center_level = coalesce(
+      p_town_center_level,
+      player_row.town_center_level
+    ),
+    profile_photo = coalesce(
+      p_avatar_url,
+      player_row.profile_photo
+    ),
+    last_refreshed_at = p_provider_fetched_at,
+    updated_at = p_provider_fetched_at
+  where id = p_player_account_id
+    and user_id = p_user_id
+    and is_primary = true;
+
+  insert into public.player_intelligence_observations (
+    player_account_id,
+    provider,
+    request_reason,
+    sections,
+    normalized_snapshot,
+    content_sha256,
+    provider_fetched_at,
+    provider_cached_at,
+    provider_age_seconds,
+    provider_fresh
+  )
+  values (
+    p_player_account_id,
+    'mightpulse',
+    p_request_reason,
+    p_sections,
+    p_normalized_snapshot,
+    p_content_sha256,
+    p_provider_fetched_at,
+    p_provider_cached_at,
+    p_provider_age_seconds,
+    p_provider_fresh
+  )
+  returning id into observation_id;
+
+  alliance_id := null;
+  membership_id := null;
+  member_role := null;
+  admin_active := false;
+
+  if p_apply_alliance_authority then
+    if p_authority_observed_at is null then
+      raise exception 'Alliance authority sync requires an observation time.'
+        using errcode = '22023';
+    end if;
+
+    select *
+    into authority_result
+    from public.sync_mightpulse_alliance_membership(
+      p_user_id,
+      p_player_account_id,
+      p_kingdom_number,
+      p_alliance_tag,
+      p_alliance_name,
+      p_member_role,
+      p_authority_observed_at,
+      p_provider_fetched_at
+    );
+
+    alliance_id := authority_result.alliance_id;
+    membership_id := authority_result.membership_id;
+    member_role := authority_result.member_role;
+    admin_active := authority_result.admin_active;
+  end if;
+
+  update public.provider_quota_reservations
+  set
+    status = 'completed',
+    completed_at = clock_timestamp(),
+    failed_at = null,
+    lease_expires_at = clock_timestamp()
+  where id = p_quota_reservation_id
+    and attempt_token = p_quota_attempt_token
+    and status = 'pending';
+
+  get diagnostics quota_completed = row_count;
+
+  if quota_completed <> 1 then
+    raise exception 'Provider quota attempt is no longer active.'
+      using errcode = '55000';
+  end if;
+
+  return next;
+end;
+$apply$;
+
+revoke all on function public.apply_mightpulse_player_intelligence_sync(
+  uuid,
+  uuid,
+  text,
+  integer,
+  text,
+  integer,
+  text,
+  text,
+  text[],
+  jsonb,
+  text,
+  timestamptz,
+  timestamptz,
+  integer,
+  boolean,
+  boolean,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz,
+  uuid,
+  uuid
+) from public;
+revoke all on function public.apply_mightpulse_player_intelligence_sync(
+  uuid,
+  uuid,
+  text,
+  integer,
+  text,
+  integer,
+  text,
+  text,
+  text[],
+  jsonb,
+  text,
+  timestamptz,
+  timestamptz,
+  integer,
+  boolean,
+  boolean,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz,
+  uuid,
+  uuid
+) from anon;
+revoke all on function public.apply_mightpulse_player_intelligence_sync(
+  uuid,
+  uuid,
+  text,
+  integer,
+  text,
+  integer,
+  text,
+  text,
+  text[],
+  jsonb,
+  text,
+  timestamptz,
+  timestamptz,
+  integer,
+  boolean,
+  boolean,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz,
+  uuid,
+  uuid
+) from authenticated;
+grant execute on function public.apply_mightpulse_player_intelligence_sync(
+  uuid,
+  uuid,
+  text,
+  integer,
+  text,
+  integer,
+  text,
+  text,
+  text[],
+  jsonb,
+  text,
+  timestamptz,
+  timestamptz,
+  integer,
+  boolean,
+  boolean,
+  text,
+  text,
+  public.alliance_member_role,
+  timestamptz,
+  uuid,
+  uuid
+) to service_role;
+
+commit;

@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -11,6 +12,14 @@ import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { supabase } from '../lib/supabase'
 import type { PlayerAccount } from '../types/playerAccount'
+import {
+  getPostSignInPlayerSyncInFlight,
+  getPostSignInPlayerSyncOutcome,
+  hasPostSignInPlayerSyncAttempted,
+  postSignInSuppressionExpiresAt,
+  shouldSuppressAutomaticRefreshAfterPostSignInSync,
+  waitForPostSignInPlayerSyncCompletion,
+} from '../services/postSignInPlayerSyncService'
 import {
   isPlayerIdentityAutoRefreshRoute,
   PlayerIdentityRefreshCoordinator,
@@ -58,6 +67,10 @@ export function PlayerIdentityProvider({
     useState<string | null>(null)
   const [playerIdentityRefreshWarning, setPlayerIdentityRefreshWarning] =
     useState<string | null>(null)
+  const suppressedInitialSignInRefresh = useRef<{
+    key: string
+    expiresAt: number
+  } | null>(null)
 
   const loadPlayerIdentity = useCallback(async (): Promise<PlayerAccount | null> => {
     if (isVisionAcceptanceRoute) return null
@@ -178,20 +191,89 @@ export function PlayerIdentityProvider({
     async function establish() {
       const account = await loadPlayerIdentity()
       if (!user || !account || cancelled) return
-      const lastRefresh = Date.parse(account.last_refreshed_at ?? '')
+      let currentAccount = account
+
+      const signInMarker = session?.user?.last_sign_in_at
+        ?? String(session?.expires_at ?? '')
+      const signInSuppressionKey = session && user
+        ? `${user.id}:${signInMarker}`
+        : null
+      const existingSignInSuppression = suppressedInitialSignInRefresh.current
+      const sameHandledSignIn = signInSuppressionKey !== null
+        && existingSignInSuppression?.key === signInSuppressionKey
+
+      if (
+        sameHandledSignIn
+        && existingSignInSuppression
+        && Date.now() < existingSignInSuppression.expiresAt
+      ) {
+        return
+      }
+
+      if (
+        session
+        && signInSuppressionKey !== null
+        && !sameHandledSignIn
+        && hasPostSignInPlayerSyncAttempted(session)
+      ) {
+        const signInSync = getPostSignInPlayerSyncInFlight(session)
+        const signInResult = signInSync
+          ? await signInSync
+          : getPostSignInPlayerSyncOutcome(session)
+        if (cancelled) return
+
+        let suppressAutomaticRefresh = false
+        if (
+          signInResult === 'in-progress'
+          || signInResult === 'unavailable'
+        ) {
+          // Reconcile an unavailable response through the persistent sign-in
+          // claim before considering a non-idempotent automatic refresh.
+          suppressAutomaticRefresh = await waitForPostSignInPlayerSyncCompletion(
+            session,
+            { shouldStop: () => cancelled },
+          )
+          if (cancelled) return
+
+          const completedAccount = await loadPlayerIdentity()
+          if (!completedAccount || cancelled) return
+          currentAccount = completedAccount
+        } else {
+          const refreshedAfterSignIn = await loadPlayerIdentity()
+          if (!refreshedAfterSignIn || cancelled) return
+          currentAccount = refreshedAfterSignIn
+          suppressAutomaticRefresh =
+            shouldSuppressAutomaticRefreshAfterPostSignInSync(signInResult)
+        }
+
+        if (suppressAutomaticRefresh) {
+          const suppressionNow = Date.now()
+          suppressedInitialSignInRefresh.current = {
+            key: signInSuppressionKey,
+            expiresAt: postSignInSuppressionExpiresAt(
+              currentAccount.last_refreshed_at,
+              suppressionNow,
+              REFRESH_STALE_MS,
+            ),
+          }
+          return
+        }
+      }
+
+      const lastRefresh = Date.parse(currentAccount.last_refreshed_at ?? '')
       const throttled = Date.now() - (refreshAttemptAt.get(user.id) ?? 0) < REFRESH_THROTTLE_MS
       const stale = !Number.isFinite(lastRefresh) || Date.now() - lastRefresh > REFRESH_STALE_MS
       const shouldRefresh = canAutoRefresh && session?.access_token && (stale || !refreshAttemptAt.has(user.id)) && !throttled && refreshCoordinator.shouldAttempt(user.id, 'automatic')
-      if (!cancelled && shouldRefresh) await refreshPlayerIdentity('automatic', account)
+      if (!cancelled && shouldRefresh) await refreshPlayerIdentity('automatic', currentAccount)
     }
     void establish()
     return () => { cancelled = true }
-  }, [authLoading, canAutoRefresh, isVisionAcceptanceRoute, loadPlayerIdentity, refreshPlayerIdentity, session?.access_token, user])
+  }, [authLoading, canAutoRefresh, isVisionAcceptanceRoute, loadPlayerIdentity, refreshPlayerIdentity, session, session?.access_token, user])
 
   useEffect(() => {
     if (isVisionAcceptanceRoute) return
     function handlePlayerUpdate() {
-      void refreshPlayerIdentity('automatic')
+      void loadPlayerIdentity()
     }
 
     window.addEventListener(
@@ -205,7 +287,7 @@ export function PlayerIdentityProvider({
         handlePlayerUpdate,
       )
     }
-  }, [isVisionAcceptanceRoute, refreshPlayerIdentity])
+  }, [isVisionAcceptanceRoute, loadPlayerIdentity])
 
   const value =
     useMemo<PlayerIdentityContextValue>(

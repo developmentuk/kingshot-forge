@@ -1,7 +1,7 @@
 import type { ForgeActor } from '../auth/requireForgeActor.js'
 import { getSupabaseAdmin } from '../database/supabaseAdmin.js'
 import { notifyIdentityMutation } from '../notifications/notificationService.js'
-import { LinkedPlayerServiceError, lookupKingshotPlayer, validateKingdomId, validatePlayerId } from '../player-identity/linkedPlayerService.js'
+import { LinkedPlayerServiceError, lookupKingshotPlayerGoverned, validateKingdomId, validatePlayerId } from '../player-identity/linkedPlayerService.js'
 import { canAssignRole, dedupeCapabilities, isForgeRole, workspaceIdsForCapabilities, type ForgeRole } from './roleCapabilities.js'
 import type { AccountStatus, UserAuditEntry, UserDetail, UserListItem, UserRoleAssignment } from './contracts.js'
 
@@ -179,7 +179,14 @@ export async function lookupManagedPlayer(actor: ForgeActor, input: ManagedPlaye
   requireCapability(actor, 'users.manage_players')
   const { playerId, kingdomId } = playerInput(input)
   try {
-    const player = await lookupKingshotPlayer(playerId, kingdomId)
+    const player = await lookupKingshotPlayerGoverned(
+      playerId,
+      kingdomId,
+      {
+        category: 'player_manual',
+        priority: 'high',
+      },
+    )
     return { source: player.provider, player }
   } catch (error) {
     return mapLookupError(error)

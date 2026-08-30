@@ -2,9 +2,27 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ForgeAuthenticationError, requireForgeActor } from '../../server/auth/requireForgeActor.js'
 import { captureServerException } from '../../server/observability/sentry.js'
 import { LinkedPlayerServiceError, linkOrRevalidatePlayerAccount } from '../../server/player-identity/linkedPlayerService.js'
-import { PlayerAccountAttemptThrottle } from '../../server/player-identity/playerAccountAttemptThrottle.js'
+import { PlayerProviderError } from '../../server/player-identity/providers/playerProvider.js'
+import {
+  PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS,
+  PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT,
+  PlayerAccountAttemptThrottle,
+} from '../../server/player-identity/playerAccountAttemptThrottle.js'
+import {
+  isPlayerIntelligenceRuntimeEnabled,
+  syncLinkedPlayerIntelligence,
+} from '../../server/player-intelligence/playerIntelligenceService.js'
+import {
+  isProviderQuotaRuntimeEnabled,
+  readMightPulseProviderRequestStatus,
+  signInProviderIdempotencyKey,
+} from '../../server/player-intelligence/providerQuota.js'
 
 const attemptThrottle = new PlayerAccountAttemptThrottle()
+const signInStatusThrottle = new PlayerAccountAttemptThrottle(
+  PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT,
+  PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS,
+)
 
 function body(request: VercelRequest) {
   return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {}
@@ -30,21 +48,120 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const actor = await requireForgeActor(request)
     actorUserId = actor.userId
-    attemptThrottle.enforce(actor.userId)
     const input = body(request)
+
+    if (input.action === 'sign-in-status') {
+      signInStatusThrottle.enforce(actor.userId)
+      if (!actor.lastSignInAt) {
+        fail(
+          response,
+          400,
+          'A verified sign-in timestamp is required.',
+          'PLAYER_SIGN_IN_MARKER_REQUIRED',
+        )
+        return
+      }
+      if (!isProviderQuotaRuntimeEnabled()) {
+        response.status(200).json({
+          status: 'success',
+          code: 'PLAYER_INTELLIGENCE_STATUS_DISABLED',
+          data: null,
+        })
+        return
+      }
+      const state = await readMightPulseProviderRequestStatus(
+        signInProviderIdempotencyKey(
+          actor.userId,
+          actor.lastSignInAt,
+        ),
+      )
+      response.status(200).json({
+        status: 'success',
+        code: state === 'completed'
+          ? 'PLAYER_INTELLIGENCE_CACHED'
+          : state === 'pending'
+            ? 'PLAYER_INTELLIGENCE_IN_PROGRESS'
+            : state === 'failed'
+              ? 'PLAYER_INTELLIGENCE_FAILED'
+              : 'PLAYER_INTELLIGENCE_STATUS_MISSING',
+        data: null,
+      })
+      return
+    }
+
+    attemptThrottle.enforce(actor.userId)
     const action = input.action === 'revalidate' ? 'revalidate' : input.action === 'link' ? 'link' : null
     if (!action) { fail(response, 400, 'A valid player action is required.'); return }
+    const refreshReason = input.refreshReason === 'sign-in'
+      ? 'sign-in'
+      : input.forceProviderRefresh === true
+        ? 'manual'
+        : 'automatic'
+
+    if (
+      action === 'revalidate'
+      && refreshReason === 'sign-in'
+      && isPlayerIntelligenceRuntimeEnabled()
+    ) {
+      try {
+        const result = await syncLinkedPlayerIntelligence(
+          actor.userId,
+          'sign-in',
+          { verifiedLastSignInAt: actor.lastSignInAt },
+        )
+        response.status(200).json({
+          status: 'success',
+          code: result.source === 'provider'
+            ? 'PLAYER_INTELLIGENCE_SYNCED'
+            : result.source === 'in-progress'
+              ? 'PLAYER_INTELLIGENCE_IN_PROGRESS'
+              : 'PLAYER_INTELLIGENCE_CACHED',
+          data: null,
+        })
+        return
+      } catch (error) {
+        if (error instanceof PlayerProviderError && error.code === 'NO_LINKED_PLAYER') {
+          response.status(200).json({
+            status: 'success',
+            code: 'NO_LINKED_PLAYER',
+            data: null,
+          })
+          return
+        }
+        throw error
+      }
+    }
+
     const data = await linkOrRevalidatePlayerAccount(actor.userId, {
       action,
       playerId: input.playerId,
       kingdomId: input.kingdomId ?? input.state,
       forceProviderRefresh: input.forceProviderRefresh === true,
+      refreshReason,
+      verifiedLastSignInAt: refreshReason === 'sign-in'
+        ? actor.lastSignInAt
+        : null,
     })
     response.status(200).json(data === null
       ? { status: 'success', code: 'NO_LINKED_PLAYER', data: null }
       : { status: 'success', data })
   } catch (error) {
-    if (error instanceof ForgeAuthenticationError || error instanceof LinkedPlayerServiceError) {
+    if (
+      error instanceof ForgeAuthenticationError
+      || error instanceof LinkedPlayerServiceError
+      || error instanceof PlayerProviderError
+    ) {
+      if (
+        error instanceof LinkedPlayerServiceError
+        && error.code === 'PLAYER_PROVIDER_REQUEST_IN_PROGRESS'
+      ) {
+        response.status(200).json({
+          status: 'success',
+          code: 'PLAYER_INTELLIGENCE_IN_PROGRESS',
+          data: null,
+        })
+        return
+      }
       if (error instanceof LinkedPlayerServiceError && error.code === 'PLAYER_ACCOUNT_RATE_LIMITED') {
         response.setHeader('Retry-After', '300')
       }
@@ -52,7 +169,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
         response,
         error.statusCode,
         error.message,
-        error instanceof LinkedPlayerServiceError ? error.code : undefined,
+        error instanceof LinkedPlayerServiceError || error instanceof PlayerProviderError
+          ? error.code
+          : undefined,
       )
       return
     }

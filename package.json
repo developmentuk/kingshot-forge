@@ -29,7 +29,7 @@
     "test:verification-centre": "node scripts/test-verification-centre.mjs",
     "test:hero-skills-governance": "node scripts/test-hero-skills-governance.mjs",
     "validate:player-identity": "node scripts/validate-player-identity.mjs",
-    "test:player-identity": "node scripts/test-player-identity.mjs && node scripts/test-player-identity-vertical-slice.mjs && node scripts/test-player-verification-boundary.mjs && node scripts/test-player-link-service.mjs && node --import tsx scripts/test-player-hybrid-claims.mjs && node --import tsx scripts/test-mightpulse-player-provider.mjs && node scripts/test-player-identity-empty-state.mjs && node --import tsx scripts/test-player-linking-ocr.mjs && node scripts/test-player-linking-ui.mjs && node --import tsx scripts/test-vision-link-007.mjs",
+    "test:player-identity": "node scripts/test-player-identity.mjs && node scripts/test-player-identity-vertical-slice.mjs && node scripts/test-player-verification-boundary.mjs && node scripts/test-player-link-service.mjs && node --import tsx scripts/test-player-hybrid-claims.mjs && node --import tsx scripts/test-mightpulse-player-provider.mjs && node scripts/test-mightpulse-stale-rich-identity.mjs && node scripts/test-player-identity-empty-state.mjs && node --import tsx scripts/test-player-linking-ocr.mjs && node scripts/test-player-linking-ui.mjs && node --import tsx scripts/test-vision-link-007.mjs",
     "test:player-state-linking": "node --import tsx scripts/test-player-state-linking.mjs",
     "test:player-identity-resilience": "node --import tsx scripts/test-player-identity-resilience.mjs",
     "test:forge-vision-tesseract-js": "node --import tsx scripts/test-tesseract-js-account-linking.mjs",

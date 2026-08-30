@@ -16,6 +16,7 @@ export interface ForgeActor {
   permissionKeys: string[];
   capabilities: ForgeCapability[];
   accountStatus: 'active' | 'restricted' | 'suspended' | 'deactivated';
+  lastSignInAt: string | null;
 }
 
 function readBearerToken(
@@ -116,5 +117,8 @@ export async function requireForgeActor(
     permissionKeys: capabilities,
     capabilities,
     accountStatus: statusData?.status === 'restricted' || statusData?.status === 'suspended' || statusData?.status === 'deactivated' ? statusData.status : 'active',
+    lastSignInAt: typeof userData.user.last_sign_in_at === 'string'
+      ? userData.user.last_sign_in_at
+      : null,
   };
 }
