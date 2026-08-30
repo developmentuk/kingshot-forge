@@ -5,6 +5,7 @@ type FetchImplementation = typeof fetch
 export type PostSignInPlayerSyncResult =
   | 'updated'
   | 'no-linked-player'
+  | 'in-progress'
   | 'already-attempted'
   | 'unavailable'
 
@@ -56,7 +57,9 @@ export function getPostSignInPlayerSyncOutcome(
 export function shouldSuppressAutomaticRefreshAfterPostSignInSync(
   result: PostSignInPlayerSyncResult | null,
 ): boolean {
-  return result === 'updated' || result === 'no-linked-player'
+  return result === 'updated'
+    || result === 'no-linked-player'
+    || result === 'in-progress'
 }
 
 async function performLinkedPlayerSignInSync(
@@ -90,6 +93,14 @@ async function performLinkedPlayerSignInSync(
       && payload.code === 'NO_LINKED_PLAYER'
     ) {
       return 'no-linked-player'
+    }
+
+    if (
+      response.ok
+      && payload?.status === 'success'
+      && payload.code === 'PLAYER_INTELLIGENCE_IN_PROGRESS'
+    ) {
+      return 'in-progress'
     }
 
     if (response.ok && payload?.status === 'success') {
