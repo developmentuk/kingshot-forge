@@ -96,7 +96,10 @@ export async function waitForPostSignInPlayerSyncCompletion(
       session,
       fetchImplementation,
     )
-    if (result === 'completed') return true
+    if (
+      result === 'completed'
+      || result === 'settled-no-ledger'
+    ) return true
     if (result === 'terminal') return false
     if (result === 'retry-idempotent') {
       if (takeoverAttempted) {
@@ -136,6 +139,7 @@ async function performLinkedPlayerSignInStatusCheck(
   | 'completed'
   | 'in-progress'
   | 'retry-idempotent'
+  | 'settled-no-ledger'
   | 'transient'
   | 'terminal'
 > {
@@ -183,6 +187,14 @@ async function performLinkedPlayerSignInStatusCheck(
       )
     ) {
       return 'retry-idempotent'
+    }
+
+    if (
+      response.ok
+      && payload?.status === 'success'
+      && payload.code === 'PLAYER_INTELLIGENCE_STATUS_DISABLED'
+    ) {
+      return 'settled-no-ledger'
     }
 
     if (response.status === 401 || response.status === 403) {

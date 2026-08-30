@@ -13,6 +13,7 @@ import {
   syncLinkedPlayerIntelligence,
 } from '../../server/player-intelligence/playerIntelligenceService.js'
 import {
+  isProviderQuotaRuntimeEnabled,
   readMightPulseProviderRequestStatus,
   signInProviderIdempotencyKey,
 } from '../../server/player-intelligence/providerQuota.js'
@@ -58,6 +59,14 @@ export default async function handler(request: VercelRequest, response: VercelRe
           'A verified sign-in timestamp is required.',
           'PLAYER_SIGN_IN_MARKER_REQUIRED',
         )
+        return
+      }
+      if (!isProviderQuotaRuntimeEnabled()) {
+        response.status(200).json({
+          status: 'success',
+          code: 'PLAYER_INTELLIGENCE_STATUS_DISABLED',
+          data: null,
+        })
         return
       }
       const state = await readMightPulseProviderRequestStatus(

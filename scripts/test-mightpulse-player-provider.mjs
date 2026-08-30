@@ -2446,6 +2446,20 @@ assert.equal(merged.verification_status, 'officially_verified')
 assert.equal(merged.verification_method, 'century_games_code')
 assert.equal(merged.verified_at, '2026-08-01T00:00:00.000Z')
 
+const staleNewLinkPlayer = {
+  ...normalizedPlayer,
+  providerCachedAt: new Date(Date.parse(fetchedAt) - (2 * 60 * 60 * 1_000)).toISOString(),
+  providerAgeSeconds: 90 * 60,
+}
+const staleNewLink = createNewLinkedPlayerFields(
+  staleNewLinkPlayer,
+  'user-stale-new-link',
+)
+assert.equal(
+  staleNewLink.last_refreshed_at,
+  new Date(Date.parse(fetchedAt) - (2 * 60 * 60 * 1_000)).toISOString(),
+)
+
 const newLink = createNewLinkedPlayerFields(normalizedPlayer, 'user-synthetic')
 assert.equal(newLink.player_level, null)
 assert.equal(newLink.town_center_level, 29)
@@ -2683,6 +2697,28 @@ assert.equal(
 )
 assert.equal(completionPollCalls, 3)
 assert.equal(completionSleepCalls, 2)
+
+let disabledLedgerStatusCalls = 0
+assert.equal(
+  await waitForPostSignInPlayerSyncCompletion(
+    inProgressSession,
+    {
+      intervalMs: 1,
+      maxAttempts: 3,
+      sleepImplementation: async () => {},
+      fetchImplementation: async () => {
+        disabledLedgerStatusCalls += 1
+        return Response.json({
+          status: 'success',
+          code: 'PLAYER_INTELLIGENCE_STATUS_DISABLED',
+          data: null,
+        })
+      },
+    },
+  ),
+  true,
+)
+assert.equal(disabledLedgerStatusCalls, 1)
 
 let transientPollCalls = 0
 assert.equal(
@@ -2952,6 +2988,10 @@ const signInStatusThrottleIndex = playerAccountApiSource.indexOf(
   'signInStatusThrottle.enforce(actor.userId)',
   signInStatusActionIndex,
 )
+const signInStatusQuotaGuardIndex = playerAccountApiSource.indexOf(
+  'if (!isProviderQuotaRuntimeEnabled())',
+  signInStatusActionIndex,
+)
 const signInStatusReadIndex = playerAccountApiSource.indexOf(
   'readMightPulseProviderRequestStatus(',
   signInStatusActionIndex,
@@ -2966,7 +3006,8 @@ const richSyncIndex = playerAccountApiSource.indexOf(
 )
 assert.ok(signInStatusActionIndex >= 0)
 assert.ok(signInStatusThrottleIndex > signInStatusActionIndex)
-assert.ok(signInStatusReadIndex > signInStatusThrottleIndex)
+assert.ok(signInStatusQuotaGuardIndex > signInStatusThrottleIndex)
+assert.ok(signInStatusReadIndex > signInStatusQuotaGuardIndex)
 assert.ok(accountThrottleIndex > signInStatusReadIndex)
 assert.ok(richSyncIndex > accountThrottleIndex)
 assert.match(
@@ -2976,6 +3017,10 @@ assert.match(
 assert.match(
   playerAccountApiSource,
   /if \(input\.action === 'sign-in-status'\)[\s\S]*readMightPulseProviderRequestStatus\([\s\S]*signInProviderIdempotencyKey\(/u,
+)
+assert.match(
+  playerAccountApiSource,
+  /if \(!isProviderQuotaRuntimeEnabled\(\)\)[\s\S]*PLAYER_INTELLIGENCE_STATUS_DISABLED[\s\S]*return[\s\S]*readMightPulseProviderRequestStatus\(/u,
 )
 assert.doesNotMatch(
   playerAccountApiSource,
@@ -3016,6 +3061,14 @@ assert.match(
 assert.match(
   linkedPlayerServiceSource,
   /const \{ data, error \} = result[\s\S]*if \(error\)[\s\S]*if \(resolution\.quotaReservation\)[\s\S]*await completeMightPulseProviderRequest\(/u,
+)
+assert.match(
+  linkedPlayerServiceSource,
+  /\.lte\('last_refreshed_at', providerObservedAt\)[\s\S]*\.maybeSingle\(\)/u,
+)
+assert.match(
+  linkedPlayerServiceSource,
+  /return safeAccount\(data \?\? existing\)/u,
 )
 
 const firstAuthorityGuardMigrationSql = await readFile(

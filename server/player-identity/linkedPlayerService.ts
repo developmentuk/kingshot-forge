@@ -505,8 +505,10 @@ export function createProviderRefreshFields(
 }
 
 export function createNewLinkedPlayerFields(player: NormalizedPlayer, userId: string) {
+  const providerObservedAt =
+    providerIdentityObservedAt(player) ?? player.providerFetchedAt
   return {
-    ...createProviderRefreshFields(player),
+    ...createProviderRefreshFields(player, providerObservedAt),
     user_id: userId,
     player_level: null,
     town_center_level: player.townCenterLevel,
@@ -617,7 +619,12 @@ export async function linkOrRevalidatePlayerAccount(
           ),
           is_public: existing.is_public,
           is_primary: true,
-        }).eq('id', existing.id).eq('user_id', userId).select(ACCOUNT_FIELDS).single()
+        })
+          .eq('id', existing.id)
+          .eq('user_id', userId)
+          .lte('last_refreshed_at', providerObservedAt)
+          .select(ACCOUNT_FIELDS)
+          .maybeSingle()
       : { data: existing, error: null }
     : await admin.from('player_accounts').insert(
         createNewLinkedPlayerFields(resolution.player, userId),
@@ -656,5 +663,5 @@ export async function linkOrRevalidatePlayerAccount(
       // best-effort; the account freshness guard suppresses a duplicate fetch.
     }
   }
-  return safeAccount(data)
+  return safeAccount(data ?? existing)
 }
