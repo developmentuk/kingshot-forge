@@ -17,7 +17,11 @@ import {
   resolvePlayerRefresh,
   shouldEnforcePlayerProviderQuota,
 } from '../server/player-identity/linkedPlayerService.ts'
-import { PlayerAccountAttemptThrottle } from '../server/player-identity/playerAccountAttemptThrottle.ts'
+import {
+  PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS,
+  PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT,
+  PlayerAccountAttemptThrottle,
+} from '../server/player-identity/playerAccountAttemptThrottle.ts'
 import {
   getPostSignInPlayerSyncInFlight,
   getPostSignInPlayerSyncOutcome,
@@ -2206,6 +2210,27 @@ await assert.rejects(
 )
 assert.equal(identityQuotaProviderCalls, 2)
 
+assert.equal(PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT, 100)
+assert.equal(PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS, 5 * 60 * 1000)
+const statusThrottle = new PlayerAccountAttemptThrottle(
+  PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT,
+  PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS,
+)
+for (let index = 0; index < PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT; index += 1) {
+  statusThrottle.enforce('status-poll-user', nowMs + index)
+}
+assert.throws(
+  () => statusThrottle.enforce(
+    'status-poll-user',
+    nowMs + PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT,
+  ),
+  (error) => {
+    assert.equal(error.statusCode, 429)
+    assert.equal(error.code, 'PLAYER_ACCOUNT_RATE_LIMITED')
+    return true
+  },
+)
+
 const attemptThrottle = new PlayerAccountAttemptThrottle(2, PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS)
 attemptThrottle.enforce('authenticated-user', nowMs)
 attemptThrottle.enforce('authenticated-user', nowMs + 1)
@@ -2495,6 +2520,78 @@ assert.equal(
 assert.equal(completionPollCalls, 3)
 assert.equal(completionSleepCalls, 2)
 
+let transientPollCalls = 0
+assert.equal(
+  await waitForPostSignInPlayerSyncCompletion(
+    inProgressSession,
+    {
+      intervalMs: 1,
+      maxAttempts: 4,
+      sleepImplementation: async () => {},
+      fetchImplementation: async () => {
+        transientPollCalls += 1
+        if (transientPollCalls === 1) {
+          return new Response('temporary failure', { status: 503 })
+        }
+        if (transientPollCalls === 2) {
+          return new Response('{malformed', {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+        return transientPollCalls === 3
+          ? Response.json({
+              status: 'success',
+              code: 'PLAYER_INTELLIGENCE_IN_PROGRESS',
+              data: null,
+            })
+          : Response.json({
+              status: 'success',
+              code: 'PLAYER_INTELLIGENCE_CACHED',
+              data: null,
+            })
+      },
+    },
+  ),
+  true,
+)
+assert.equal(transientPollCalls, 4)
+
+let terminalRetryCalls = 0
+assert.equal(
+  await waitForPostSignInPlayerSyncCompletion(
+    inProgressSession,
+    {
+      intervalMs: 1,
+      maxAttempts: 2,
+      sleepImplementation: async () => {},
+      fetchImplementation: async (url, init) => {
+        terminalRetryCalls += 1
+        assert.equal(url, '/api/player/account')
+        const requestBody = JSON.parse(init.body)
+        if (terminalRetryCalls === 1) {
+          assert.deepEqual(requestBody, { action: 'sign-in-status' })
+          return Response.json({
+            status: 'success',
+            code: 'PLAYER_INTELLIGENCE_STATUS_MISSING',
+            data: null,
+          })
+        }
+        assert.deepEqual(
+          requestBody,
+          { action: 'revalidate', refreshReason: 'sign-in' },
+        )
+        return Response.json({
+          status: 'success',
+          data: { id: 'retried-idempotently' },
+        })
+      },
+    },
+  ),
+  true,
+)
+assert.equal(terminalRetryCalls, 2)
+
 let timeoutPollCalls = 0
 assert.equal(
   await waitForPostSignInPlayerSyncCompletion(
@@ -2610,6 +2707,10 @@ assert.match(
 const signInStatusActionIndex = playerAccountApiSource.indexOf(
   "if (input.action === 'sign-in-status')",
 )
+const signInStatusThrottleIndex = playerAccountApiSource.indexOf(
+  'signInStatusThrottle.enforce(actor.userId)',
+  signInStatusActionIndex,
+)
 const signInStatusReadIndex = playerAccountApiSource.indexOf(
   'readMightPulseProviderRequestStatus(',
   signInStatusActionIndex,
@@ -2623,9 +2724,14 @@ const richSyncIndex = playerAccountApiSource.indexOf(
   signInStatusActionIndex,
 )
 assert.ok(signInStatusActionIndex >= 0)
-assert.ok(signInStatusReadIndex > signInStatusActionIndex)
+assert.ok(signInStatusThrottleIndex > signInStatusActionIndex)
+assert.ok(signInStatusReadIndex > signInStatusThrottleIndex)
 assert.ok(accountThrottleIndex > signInStatusReadIndex)
 assert.ok(richSyncIndex > accountThrottleIndex)
+assert.match(
+  playerAccountApiSource,
+  /const signInStatusThrottle = new PlayerAccountAttemptThrottle\([\s\S]*PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT[\s\S]*PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS/u,
+)
 assert.match(
   playerAccountApiSource,
   /const intelligenceEnabled = isPlayerIntelligenceRuntimeEnabled\(\)[\s\S]*baseSignInProviderIdempotencyKey\(/u,
