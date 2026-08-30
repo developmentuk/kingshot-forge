@@ -140,7 +140,10 @@ export function PrivatePlayerIdentityPage() {
 
   return (
     <PlayerIdentityPageFrame>
-      <IdentitySummary playerAccount={playerAccount} />
+      <IdentitySummary
+        playerAccount={playerAccount}
+        onRefresh={() => void refreshPlayerIdentity('manual')}
+      />
       {playerIdentityRefreshWarning && (
         <section className="player-identity__notice" role="status">
           <div>
@@ -218,8 +221,10 @@ export function PrivatePlayerIdentityPage() {
 
 function IdentitySummary({
   playerAccount,
+  onRefresh,
 }: {
   playerAccount: PlayerAccount
+  onRefresh: () => void
 }) {
   return (
     <section
@@ -244,6 +249,15 @@ function IdentitySummary({
           <div><dt>Player ID</dt><dd>{playerAccount.player_id}</dd></div>
           <div><dt>Last refreshed</dt><dd>{formatDate(playerAccount.last_refreshed_at)}</dd></div>
         </dl>
+        <div className="player-identity__actions">
+          <button
+            className="player-identity__button player-identity__button--secondary"
+            type="button"
+            onClick={onRefresh}
+          >
+            Refresh Player
+          </button>
+        </div>
       </div>
       {playerAccount.profile_photo ? (
         <img
