@@ -284,6 +284,7 @@ assert.deepEqual(
 
 let syncedObservation
 let syncedQuotaInput
+let syncedAllianceAuthorityInput
 let intelligenceProviderCalls = 0
 const allowedRepository = {
   async loadPrimaryLinkedPlayer(userId) {
@@ -309,6 +310,15 @@ const allowedRepository = {
   async appendObservation(input) {
     syncedObservation = input
     return '00000000-0000-0000-0000-000000000003'
+  },
+  async syncAllianceAuthority(input) {
+    syncedAllianceAuthorityInput = input
+    return {
+      allianceId: '00000000-0000-0000-0000-000000000004',
+      membershipId: '00000000-0000-0000-0000-000000000005',
+      memberRole: input.memberRole,
+      adminActive: input.memberRole === 'r4' || input.memberRole === 'leader',
+    }
   },
 }
 const intelligenceResult = await syncLinkedPlayerIntelligence(
@@ -355,6 +365,20 @@ assert.equal(
   JSON.stringify(syncedObservation).includes(secret),
   false,
 )
+assert.deepEqual(
+  syncedAllianceAuthorityInput,
+  {
+    userId: 'user-intelligence',
+    playerAccountId: '00000000-0000-0000-0000-000000000001',
+    kingdomId: 850,
+    allianceTag: 'SYN',
+    allianceName: 'Synthetic Alliance',
+    memberRole: 'r4',
+    observedAt: fetchedAt,
+  },
+)
+assert.equal(intelligenceResult.allianceAuthority.memberRole, 'r4')
+assert.equal(intelligenceResult.allianceAuthority.adminActive, true)
 
 let deniedProviderCalls = 0
 await assert.rejects(
@@ -465,6 +489,26 @@ assert.match(
 assert.match(
   migrationSql,
   /normal_day_limit := 4500/iu,
+)
+assert.match(
+  migrationSql,
+  /create or replace function public\.sync_mightpulse_alliance_membership/iu,
+)
+assert.match(
+  migrationSql,
+  /'mightpulse_rank_changed'/iu,
+)
+assert.match(
+  migrationSql,
+  /'mightpulse_admin_synced'/iu,
+)
+assert.match(
+  migrationSql,
+  /can_manage_members = true/iu,
+)
+assert.match(
+  migrationSql,
+  /can_manage_events = true/iu,
 )
 assert.doesNotMatch(
   migrationSql,
