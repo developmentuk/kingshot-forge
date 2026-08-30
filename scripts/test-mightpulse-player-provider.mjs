@@ -2275,7 +2275,7 @@ assert.equal(
 assert.ok(
   (POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS - 1)
     * POST_SIGN_IN_COMPLETION_POLL_INTERVAL_MS
-    >= 90_000,
+    > 120_000,
 )
 
 let completionPollCalls = 0
@@ -2490,15 +2490,34 @@ assert.match(
 )
 assert.match(
   playerIdentityContextSource,
-  /signInResult === 'in-progress'[\s\S]*waitForPostSignInPlayerSyncCompletion\(\s*session,[\s\S]*loadPlayerIdentity\(\)[\s\S]*return/u,
+  /signInResult === 'in-progress'[\s\S]*suppressAutomaticRefresh = await waitForPostSignInPlayerSyncCompletion\(\s*session,[\s\S]*currentAccount = completedAccount/u,
+)
+const signInResultIndex = playerIdentityContextSource.indexOf(
+  'const signInResult = signInSync',
+)
+const completionWaitIndex = playerIdentityContextSource.indexOf(
+  'waitForPostSignInPlayerSyncCompletion(',
+  signInResultIndex,
+)
+const suppressionMarkerIndex = playerIdentityContextSource.indexOf(
+  'suppressedInitialSignInRefresh.current = signInMarker',
+  signInResultIndex,
+)
+const ordinaryRefreshIndex = playerIdentityContextSource.indexOf(
+  'const lastRefresh = Date.parse',
+  signInResultIndex,
+)
+assert.ok(signInResultIndex >= 0)
+assert.ok(completionWaitIndex > signInResultIndex)
+assert.ok(suppressionMarkerIndex > completionWaitIndex)
+assert.ok(ordinaryRefreshIndex > suppressionMarkerIndex)
+assert.match(
+  playerIdentityContextSource,
+  /suppressedInitialSignInRefresh\.current = signInMarker\s*if \(suppressAutomaticRefresh\) return\s*\}\s*const lastRefresh = Date\.parse/u,
 )
 assert.doesNotMatch(
   playerIdentityContextSource,
   /\.select\('last_refreshed_at'\)/u,
-)
-assert.doesNotMatch(
-  playerIdentityContextSource,
-  /currentAccount = refreshedAfterSignIn\s*\n\s*return/u,
 )
 assert.match(
   playerIdentityContextSource,
