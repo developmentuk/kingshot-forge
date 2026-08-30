@@ -10,6 +10,10 @@ import {
   validateKingdomId,
   validatePlayerId,
 } from '../player-identity/linkedPlayerService.js'
+import {
+  mapMightPulseAllianceRank,
+  type ForgeAllianceMemberRole,
+} from '../../shared/domains/player-identity/mightPulseAllianceRank.js'
 
 export const PLAYER_INTELLIGENCE_SNAPSHOT_VERSION =
   'mightpulse-player-intelligence-v1' as const
@@ -58,6 +62,13 @@ export type PlayerIntelligenceObservationWrite = Readonly<{
   providerFresh: boolean | null
 }>
 
+export type AllianceAuthoritySyncResult = Readonly<{
+  allianceId: string | null
+  membershipId: string | null
+  memberRole: ForgeAllianceMemberRole | null
+  adminActive: boolean
+}>
+
 export interface PlayerIntelligenceRepository {
   loadPrimaryLinkedPlayer(userId: string): Promise<LinkedPlayerIdentity | null>
   reserveProviderRequest(input: Readonly<{
@@ -69,6 +80,15 @@ export interface PlayerIntelligenceRepository {
     priority: ProviderQuotaPriority
   }>): Promise<ProviderQuotaReservation>
   appendObservation(input: PlayerIntelligenceObservationWrite): Promise<string>
+  syncAllianceAuthority(input: Readonly<{
+    userId: string
+    playerAccountId: string
+    kingdomId: number
+    allianceTag: string | null
+    allianceName: string | null
+    memberRole: ForgeAllianceMemberRole | null
+    observedAt: string
+  }>): Promise<AllianceAuthoritySyncResult>
 }
 
 function stableJson(value: unknown): string {
@@ -249,6 +269,67 @@ implements PlayerIntelligenceRepository {
     }
     return String(data.id)
   }
+
+
+  async syncAllianceAuthority(
+    input: Readonly<{
+      userId: string
+      playerAccountId: string
+      kingdomId: number
+      allianceTag: string | null
+      allianceName: string | null
+      memberRole: ForgeAllianceMemberRole | null
+      observedAt: string
+    }>,
+  ): Promise<AllianceAuthoritySyncResult> {
+    const admin = getSupabaseAdmin()
+    const { data, error } = await admin.rpc(
+      'sync_mightpulse_alliance_membership',
+      {
+        p_user_id: input.userId,
+        p_player_account_id: input.playerAccountId,
+        p_kingdom_number: input.kingdomId,
+        p_alliance_tag: input.allianceTag,
+        p_alliance_name: input.allianceName,
+        p_member_role: input.memberRole,
+        p_observed_at: input.observedAt,
+      },
+    )
+    if (error) throw error
+
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row || typeof row !== 'object') {
+      throw new Error('Alliance authority sync returned an invalid result.')
+    }
+    const value = row as Record<string, unknown>
+    const allianceId = value.alliance_id
+    const membershipId = value.membership_id
+    const memberRole = value.member_role
+    const adminActive = value.admin_active
+
+    if (
+      (allianceId !== null && typeof allianceId !== 'string')
+      || (membershipId !== null && typeof membershipId !== 'string')
+      || (
+        memberRole !== null
+        && memberRole !== 'member'
+        && memberRole !== 'recruiter'
+        && memberRole !== 'officer'
+        && memberRole !== 'r4'
+        && memberRole !== 'leader'
+      )
+      || typeof adminActive !== 'boolean'
+    ) {
+      throw new Error('Alliance authority sync returned an invalid result.')
+    }
+
+    return {
+      allianceId: allianceId as string | null,
+      membershipId: membershipId as string | null,
+      memberRole: memberRole as ForgeAllianceMemberRole | null,
+      adminActive,
+    }
+  }
 }
 
 export async function syncLinkedPlayerIntelligence(
@@ -263,6 +344,7 @@ export async function syncLinkedPlayerIntelligence(
   contentSha256: string
   intelligence: NormalizedPlayerIntelligence
   quota: ProviderQuotaReservation
+  allianceAuthority: AllianceAuthoritySyncResult | null
 }>> {
   const repository =
     dependencies.repository ?? new SupabasePlayerIntelligenceRepository()
@@ -321,10 +403,28 @@ export async function syncLinkedPlayerIntelligence(
     providerFresh: intelligence.providerFresh,
   })
 
+  const alliance = intelligence.base.alliance
+  const mappedRole = alliance
+    ? mapMightPulseAllianceRank(alliance.rank)
+    : null
+
+  const allianceAuthority = alliance && mappedRole === null
+    ? null
+    : await repository.syncAllianceAuthority({
+        userId,
+        playerAccountId: linkedPlayer.playerAccountId,
+        kingdomId: linkedPlayer.kingdomId,
+        allianceTag: alliance?.tag ?? null,
+        allianceName: alliance?.name ?? null,
+        memberRole: mappedRole,
+        observedAt: intelligence.identity.providerFetchedAt,
+      })
+
   return Object.freeze({
     observationId,
     contentSha256,
     intelligence,
     quota,
+    allianceAuthority,
   })
 }
