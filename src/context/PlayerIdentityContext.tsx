@@ -17,6 +17,7 @@ import {
   getPostSignInPlayerSyncOutcome,
   hasPostSignInPlayerSyncAttempted,
   shouldSuppressAutomaticRefreshAfterPostSignInSync,
+  waitForPostSignInPlayerRefreshCompletion,
 } from '../services/postSignInPlayerSyncService'
 import {
   isPlayerIdentityAutoRefreshRoute,
@@ -132,6 +133,25 @@ export function PlayerIdentityProvider({
     return account
   }, [isVisionAcceptanceRoute, user])
 
+  const readPlayerIdentityLastRefreshedAt = useCallback(
+    async (): Promise<string | null> => {
+      if (isVisionAcceptanceRoute || !user) return null
+
+      const { data, error } = await supabase
+        .from('player_accounts')
+        .select('last_refreshed_at')
+        .eq('user_id', user.id)
+        .eq('is_primary', true)
+        .maybeSingle()
+
+      if (error) return null
+      return typeof data?.last_refreshed_at === 'string'
+        ? data.last_refreshed_at
+        : null
+    },
+    [isVisionAcceptanceRoute, user],
+  )
+
   const refreshPlayerIdentity = useCallback(async (reason: PlayerIdentityRefreshReason = 'manual', knownAccount?: PlayerAccount | null) => {
     if (isVisionAcceptanceRoute) return
     if (!user || !session?.access_token) {
@@ -202,6 +222,22 @@ export function PlayerIdentityProvider({
           : getPostSignInPlayerSyncOutcome(session)
         if (cancelled) return
 
+        if (signInResult === 'in-progress') {
+          const completed = await waitForPostSignInPlayerRefreshCompletion(
+            account.last_refreshed_at,
+            readPlayerIdentityLastRefreshedAt,
+            { shouldStop: () => cancelled },
+          )
+          if (cancelled) return
+
+          if (completed) {
+            const completedAccount = await loadPlayerIdentity()
+            if (!completedAccount || cancelled) return
+            currentAccount = completedAccount
+            return
+          }
+        }
+
         const refreshedAfterSignIn = await loadPlayerIdentity()
         if (!refreshedAfterSignIn || cancelled) return
         currentAccount = refreshedAfterSignIn
@@ -221,7 +257,7 @@ export function PlayerIdentityProvider({
     }
     void establish()
     return () => { cancelled = true }
-  }, [authLoading, canAutoRefresh, isVisionAcceptanceRoute, loadPlayerIdentity, refreshPlayerIdentity, session?.access_token, user])
+  }, [authLoading, canAutoRefresh, isVisionAcceptanceRoute, loadPlayerIdentity, readPlayerIdentityLastRefreshedAt, refreshPlayerIdentity, session?.access_token, user])
 
   useEffect(() => {
     if (isVisionAcceptanceRoute) return
