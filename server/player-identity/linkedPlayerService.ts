@@ -119,17 +119,15 @@ async function lookupPlayerSingleFlight(
   if (existing) return existing
 
   const request = { playerId, expectedKingdomId }
-  const lookup = Promise.resolve()
-    .then(() => (
-      ownerLookup
-        ? ownerLookup(request)
-        : provider.lookupPlayer(request)
-    ))
-    .finally(() => {
-      if (providerLookupsInFlight.get(key) === lookup) {
-        providerLookupsInFlight.delete(key)
-      }
-    })
+  const lookup = (
+    ownerLookup
+      ? ownerLookup(request)
+      : provider.lookupPlayer(request)
+  ).finally(() => {
+    if (providerLookupsInFlight.get(key) === lookup) {
+      providerLookupsInFlight.delete(key)
+    }
+  })
 
   providerLookupsInFlight.set(key, lookup)
   return lookup
