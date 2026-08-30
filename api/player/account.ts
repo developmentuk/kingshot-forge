@@ -34,11 +34,20 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const input = body(request)
     const action = input.action === 'revalidate' ? 'revalidate' : input.action === 'link' ? 'link' : null
     if (!action) { fail(response, 400, 'A valid player action is required.'); return }
+    const refreshReason = input.refreshReason === 'sign-in'
+      ? 'sign-in'
+      : input.forceProviderRefresh === true
+        ? 'manual'
+        : 'automatic'
     const data = await linkOrRevalidatePlayerAccount(actor.userId, {
       action,
       playerId: input.playerId,
       kingdomId: input.kingdomId ?? input.state,
       forceProviderRefresh: input.forceProviderRefresh === true,
+      refreshReason,
+      verifiedLastSignInAt: refreshReason === 'sign-in'
+        ? actor.lastSignInAt
+        : null,
     })
     response.status(200).json(data === null
       ? { status: 'success', code: 'NO_LINKED_PLAYER', data: null }
