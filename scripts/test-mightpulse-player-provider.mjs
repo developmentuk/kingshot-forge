@@ -789,6 +789,18 @@ assert.match(
 )
 assert.match(
   migrationSql,
+  /create trigger reject_player_intelligence_observation_mutation\s*before update\s*on public\.player_intelligence_observations/iu,
+)
+assert.doesNotMatch(
+  migrationSql,
+  /before update or delete\s*on public\.player_intelligence_observations/iu,
+)
+assert.doesNotMatch(
+  migrationSql,
+  /grant[^;]*delete[^;]*player_intelligence_observations/iu,
+)
+assert.match(
+  migrationSql,
   /create or replace function public\.reserve_provider_request/iu,
 )
 assert.match(
@@ -822,6 +834,46 @@ assert.match(
 assert.match(
   migrationSql,
   /duplicate boolean/iu,
+)
+assert.match(
+  migrationSql,
+  /reservation_state text/iu,
+)
+assert.match(
+  migrationSql,
+  /attempt_token uuid/iu,
+)
+assert.match(
+  migrationSql,
+  /attempt_count integer not null default 1/iu,
+)
+assert.match(
+  migrationSql,
+  /lease_expires_at timestamptz not null/iu,
+)
+assert.match(
+  migrationSql,
+  /status text not null default 'pending'/iu,
+)
+assert.match(
+  migrationSql,
+  /create or replace function public\.complete_provider_request/iu,
+)
+assert.match(
+  migrationSql,
+  /create or replace function public\.fail_provider_request/iu,
+)
+assert.match(
+  migrationSql,
+  /existing_row\.status = 'pending'[\s\S]*existing_row\.lease_expires_at > now_at/iu,
+)
+assert.match(
+  migrationSql,
+  /attempt_count = existing_row\.attempt_count \+ 1/iu,
+)
+assert.match(
+  migrationSql,
+  /then reservation\.attempt_count/iu,
 )
 assert.match(
   migrationSql,
@@ -886,6 +938,18 @@ assert.match(
 assert.match(
   migrationSql,
   /update public\.player_accounts[\s\S]*insert into public\.player_intelligence_observations[\s\S]*sync_mightpulse_alliance_membership/iu,
+)
+assert.match(
+  migrationSql,
+  /p_quota_reservation_id uuid/iu,
+)
+assert.match(
+  migrationSql,
+  /p_quota_attempt_token uuid/iu,
+)
+assert.match(
+  migrationSql,
+  /update public\.provider_quota_reservations[\s\S]*attempt_token = p_quota_attempt_token[\s\S]*status = 'pending'[\s\S]*get diagnostics quota_completed = row_count/iu,
 )
 assert.match(
   migrationSql,
