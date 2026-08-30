@@ -425,6 +425,36 @@ begin
       );
     end if;
 
+    insert into public.player_alliance_provider_state (
+      player_account_id,
+      user_id,
+      provider,
+      provider_observed_at,
+      provider_fetched_at,
+      alliance_tag,
+      member_role,
+      updated_at
+    )
+    values (
+      p_player_account_id,
+      p_user_id,
+      'mightpulse',
+      p_observed_at,
+      p_fetched_at,
+      null,
+      null,
+      p_fetched_at
+    )
+    on conflict (player_account_id) do update
+    set
+      user_id = excluded.user_id,
+      provider = excluded.provider,
+      provider_observed_at = excluded.provider_observed_at,
+      provider_fetched_at = excluded.provider_fetched_at,
+      alliance_tag = excluded.alliance_tag,
+      member_role = excluded.member_role,
+      updated_at = excluded.updated_at;
+
     alliance_id := null;
     membership_id := null;
     member_role := null;
@@ -757,6 +787,36 @@ begin
       'MightPulse rank is below R4.'
     );
   end if;
+
+  insert into public.player_alliance_provider_state (
+    player_account_id,
+    user_id,
+    provider,
+    provider_observed_at,
+    provider_fetched_at,
+    alliance_tag,
+    member_role,
+    updated_at
+  )
+  values (
+    p_player_account_id,
+    p_user_id,
+    'mightpulse',
+    p_observed_at,
+    p_fetched_at,
+    normalized_tag,
+    p_member_role,
+    p_fetched_at
+  )
+  on conflict (player_account_id) do update
+  set
+    user_id = excluded.user_id,
+    provider = excluded.provider,
+    provider_observed_at = excluded.provider_observed_at,
+    provider_fetched_at = excluded.provider_fetched_at,
+    alliance_tag = excluded.alliance_tag,
+    member_role = excluded.member_role,
+    updated_at = excluded.updated_at;
 
   alliance_id := alliance_row.id;
   membership_id := resulting_membership.id;
