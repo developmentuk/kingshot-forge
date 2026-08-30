@@ -554,10 +554,11 @@ const crossInstanceDuplicate = await syncLinkedPlayerIntelligence(
     },
   },
 )
-assert.equal(crossInstanceDuplicate.source, 'cache')
+assert.equal(crossInstanceDuplicate.source, 'in-progress')
 assert.equal(crossInstanceQuotaCalls, 1)
 assert.equal(crossInstanceProviderCalls, 0)
 assert.equal(crossInstanceApplyCalls, 0)
+assert.notEqual(crossInstanceDuplicate.source, 'provider')
 
 let deniedProviderCalls = 0
 await assert.rejects(
@@ -1608,6 +1609,35 @@ assert.deepEqual(
   { action: 'revalidate', refreshReason: 'sign-in' },
 )
 
+const inProgressSession = {
+  ...signInSession,
+  user: {
+    ...signInSession.user,
+    last_sign_in_at: '2026-08-29T12:07:30.000Z',
+  },
+}
+assert.equal(
+  await syncLinkedPlayerAfterSignIn(
+    inProgressSession,
+    async () => Response.json({
+      status: 'success',
+      code: 'PLAYER_INTELLIGENCE_IN_PROGRESS',
+      data: null,
+    }),
+  ),
+  'in-progress',
+)
+assert.equal(
+  getPostSignInPlayerSyncOutcome(inProgressSession),
+  'in-progress',
+)
+assert.equal(
+  shouldSuppressAutomaticRefreshAfterPostSignInSync(
+    getPostSignInPlayerSyncOutcome(inProgressSession),
+  ),
+  true,
+)
+
 assert.equal(
   await syncLinkedPlayerAfterSignIn(
     {
@@ -1684,6 +1714,19 @@ assert.equal(
     async () => { throw new Error('synthetic network failure') },
   ),
   'unavailable',
+)
+
+const playerAccountApiSource = await readFile(
+  new URL('../api/player/account.ts', import.meta.url),
+  'utf8',
+)
+assert.match(
+  playerAccountApiSource,
+  /PLAYER_INTELLIGENCE_IN_PROGRESS/u,
+)
+assert.match(
+  playerAccountApiSource,
+  /result\.source === 'in-progress'/u,
 )
 
 const playerIdentityContextSource = await readFile(
