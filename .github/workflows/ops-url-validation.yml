@@ -13,6 +13,13 @@ on:
     paths:
       - 'api/**'
       - 'server/**'
+      - 'shared/**'
+      - 'src/**'
+      - 'supabase/functions/**'
+      - 'supabase/migrations/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vercel.json'
       - 'scripts/test-ops-url-001.mjs'
       - 'docs/releases/OPS-URL-001-WHATWG-REQUEST-QUERY.md'
       - '.github/workflows/ops-url-validation.yml'
