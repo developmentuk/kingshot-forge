@@ -16,9 +16,24 @@ import {
 } from '../server/player-identity/linkedPlayerService.ts'
 import { PlayerAccountAttemptThrottle } from '../server/player-identity/playerAccountAttemptThrottle.ts'
 import { syncLinkedPlayerAfterSignIn } from '../src/services/postSignInPlayerSyncService.ts'
+import {
+  isAllianceManagementRank,
+  mapMightPulseAllianceRank,
+} from '../shared/domains/player-identity/mightPulseAllianceRank.ts'
 
 const secret = 'synthetic-test-secret-never-log'
 const fetchedAt = '2026-08-29T12:00:00.000Z'
+
+assert.deepEqual(
+  [1, 2, 3, 4, 5].map(mapMightPulseAllianceRank),
+  ['member', 'recruiter', 'officer', 'r4', 'leader'],
+)
+assert.equal(mapMightPulseAllianceRank(0), null)
+assert.equal(mapMightPulseAllianceRank(6), null)
+assert.equal(mapMightPulseAllianceRank(null), null)
+assert.equal(isAllianceManagementRank('r4'), true)
+assert.equal(isAllianceManagementRank('leader'), true)
+assert.equal(isAllianceManagementRank('officer'), false)
 
 function validPayload(overrides = {}, playerOverrides = {}) {
   return {
