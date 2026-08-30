@@ -39,6 +39,10 @@ export interface ProviderQuotaRepository {
     priority: ProviderQuotaPriority
     idempotencyKey?: string | null
   }>): Promise<ProviderQuotaReservation>
+  complete(input: Readonly<{
+    reservationId: string
+    attemptToken: string
+  }>): Promise<boolean>
   fail(input: Readonly<{
     reservationId: string
     attemptToken: string
@@ -138,6 +142,27 @@ implements ProviderQuotaRepository {
     }
   }
 
+  async complete(
+    input: Readonly<{
+      reservationId: string
+      attemptToken: string
+    }>,
+  ): Promise<boolean> {
+    const admin = getSupabaseAdmin()
+    const { data, error } = await admin.rpc(
+      'complete_provider_request',
+      {
+        p_reservation_id: input.reservationId,
+        p_attempt_token: input.attemptToken,
+      },
+    )
+    if (error) throw error
+    if (typeof data !== 'boolean') {
+      throw new Error('Provider quota completion update returned an invalid result.')
+    }
+    return data
+  }
+
   async fail(
     input: Readonly<{
       reservationId: string
@@ -181,6 +206,25 @@ export async function reserveMightPulseProviderRequest(
   return reservation
 }
 
+
+export async function completeMightPulseProviderRequest(
+  reservation: ProviderQuotaReservation,
+  repository: ProviderQuotaRepository =
+    new SupabaseProviderQuotaRepository(),
+): Promise<boolean> {
+  if (
+    reservation.state !== 'reserved'
+    || reservation.reservationId === null
+    || reservation.attemptToken === null
+  ) {
+    return false
+  }
+
+  return repository.complete({
+    reservationId: reservation.reservationId,
+    attemptToken: reservation.attemptToken,
+  })
+}
 
 export async function failMightPulseProviderRequest(
   reservation: ProviderQuotaReservation,
