@@ -622,7 +622,9 @@ export async function linkOrRevalidatePlayerAccount(
         })
           .eq('id', existing.id)
           .eq('user_id', userId)
-          .lte('last_refreshed_at', providerObservedAt)
+          .or(
+            `last_refreshed_at.is.null,last_refreshed_at.lte.${providerObservedAt}`,
+          )
           .select(ACCOUNT_FIELDS)
           .maybeSingle()
       : { data: existing, error: null }

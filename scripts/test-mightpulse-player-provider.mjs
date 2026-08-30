@@ -30,6 +30,7 @@ import {
   hasPostSignInPlayerSyncAttempted,
   POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS,
   POST_SIGN_IN_COMPLETION_POLL_INTERVAL_MS,
+  postSignInSuppressionExpiresAt,
   shouldSuppressAutomaticRefreshAfterPostSignInSync,
   syncLinkedPlayerAfterSignIn,
   waitForPostSignInPlayerSyncCompletion,
@@ -2403,6 +2404,13 @@ assert.equal(
   ),
   false,
 )
+assert.equal(
+  shouldApplyProviderIdentityRefresh(
+    baseFreshnessPlayer,
+    null,
+  ),
+  true,
+)
 const futureBaseCachedAtPlayer = {
   ...normalizedPlayer,
   providerCachedAt: new Date(Date.parse(fetchedAt) + 1_000).toISOString(),
@@ -2521,6 +2529,40 @@ assert.equal(
     getPostSignInPlayerSyncOutcome(signInSession),
   ),
   true,
+)
+
+const suppressionNowMs = Date.parse('2026-08-30T22:00:00.000Z')
+assert.equal(
+  postSignInSuppressionExpiresAt(
+    '2026-08-30T21:59:00.000Z',
+    suppressionNowMs,
+    PLAYER_PROVIDER_FRESHNESS_TTL_MS,
+  ),
+  Date.parse('2026-08-30T22:59:00.000Z'),
+)
+assert.equal(
+  postSignInSuppressionExpiresAt(
+    '2026-08-30T21:01:00.000Z',
+    suppressionNowMs,
+    PLAYER_PROVIDER_FRESHNESS_TTL_MS,
+  ),
+  Date.parse('2026-08-30T22:01:00.000Z'),
+)
+assert.equal(
+  postSignInSuppressionExpiresAt(
+    '2026-08-30T20:59:00.000Z',
+    suppressionNowMs,
+    PLAYER_PROVIDER_FRESHNESS_TTL_MS,
+  ),
+  Date.parse('2026-08-30T21:59:00.000Z'),
+)
+assert.equal(
+  postSignInSuppressionExpiresAt(
+    null,
+    suppressionNowMs,
+    PLAYER_PROVIDER_FRESHNESS_TTL_MS,
+  ),
+  suppressionNowMs,
 )
 
 const markerRaceOldSession = /** @type {import('@supabase/supabase-js').Session} */ ({
@@ -3068,7 +3110,7 @@ assert.match(
 )
 assert.match(
   linkedPlayerServiceSource,
-  /\.lte\('last_refreshed_at', providerObservedAt\)[\s\S]*\.maybeSingle\(\)/u,
+  /\.or\([\s\S]*last_refreshed_at\.is\.null,last_refreshed_at\.lte\.\$\{providerObservedAt\}[\s\S]*\.maybeSingle\(\)/u,
 )
 assert.match(
   linkedPlayerServiceSource,
@@ -3211,6 +3253,18 @@ assert.match(
 assert.match(
   playerIdentityContextSource,
   /shouldSuppressAutomaticRefreshAfterPostSignInSync\(signInResult\)/u,
+)
+assert.match(
+  playerIdentityContextSource,
+  /Date\.now\(\) < existingSignInSuppression\.expiresAt/u,
+)
+assert.match(
+  playerIdentityContextSource,
+  /expiresAt: postSignInSuppressionExpiresAt\([\s\S]*currentAccount\.last_refreshed_at,[\s\S]*REFRESH_STALE_MS/u,
+)
+assert.doesNotMatch(
+  playerIdentityContextSource,
+  /existingSignInSuppression\.handledAt/u,
 )
 assert.match(
   playerIdentityContextSource,

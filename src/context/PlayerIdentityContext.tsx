@@ -16,6 +16,7 @@ import {
   getPostSignInPlayerSyncInFlight,
   getPostSignInPlayerSyncOutcome,
   hasPostSignInPlayerSyncAttempted,
+  postSignInSuppressionExpiresAt,
   shouldSuppressAutomaticRefreshAfterPostSignInSync,
   waitForPostSignInPlayerSyncCompletion,
 } from '../services/postSignInPlayerSyncService'
@@ -68,7 +69,7 @@ export function PlayerIdentityProvider({
     useState<string | null>(null)
   const suppressedInitialSignInRefresh = useRef<{
     key: string
-    handledAt: number
+    expiresAt: number
   } | null>(null)
 
   const loadPlayerIdentity = useCallback(async (): Promise<PlayerAccount | null> => {
@@ -204,7 +205,7 @@ export function PlayerIdentityProvider({
       if (
         sameHandledSignIn
         && existingSignInSuppression
-        && Date.now() - existingSignInSuppression.handledAt < REFRESH_STALE_MS
+        && Date.now() < existingSignInSuppression.expiresAt
       ) {
         return
       }
@@ -246,9 +247,14 @@ export function PlayerIdentityProvider({
         }
 
         if (suppressAutomaticRefresh) {
+          const suppressionNow = Date.now()
           suppressedInitialSignInRefresh.current = {
             key: signInSuppressionKey,
-            handledAt: Date.now(),
+            expiresAt: postSignInSuppressionExpiresAt(
+              currentAccount.last_refreshed_at,
+              suppressionNow,
+              REFRESH_STALE_MS,
+            ),
           }
           return
         }

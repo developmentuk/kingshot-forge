@@ -2,6 +2,22 @@ import type { Session } from '@supabase/supabase-js'
 
 type FetchImplementation = typeof fetch
 
+export function postSignInSuppressionExpiresAt(
+  lastRefreshedAt: unknown,
+  nowMs = Date.now(),
+  freshnessMs = 60 * 60 * 1000,
+): number {
+  const refreshedAtMs = typeof lastRefreshedAt === 'string'
+    ? Date.parse(lastRefreshedAt)
+    : Number.NaN
+  if (!Number.isFinite(refreshedAtMs)) return nowMs
+
+  return Math.min(
+    nowMs + freshnessMs,
+    refreshedAtMs + freshnessMs,
+  )
+}
+
 export type PostSignInPlayerSyncResult =
   | 'updated'
   | 'no-linked-player'
