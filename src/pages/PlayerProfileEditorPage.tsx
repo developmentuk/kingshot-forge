@@ -66,7 +66,12 @@ export default function PlayerProfileEditorPage() {
     loading: authLoading,
     signInWithGoogle,
   } = useAuth()
-  const { playerAccount, loadingPlayerAccount } = usePlayerIdentity()
+  const {
+    playerAccount,
+    loadingPlayerAccount,
+    playerIdentityRefreshWarning,
+    refreshPlayerIdentity,
+  } = usePlayerIdentity()
 
   const [profile, setProfile] =
     useState<EditablePlayerProfile | null>(null)
@@ -382,6 +387,19 @@ export default function PlayerProfileEditorPage() {
         </div>
 
         <div className="player-profile-editor-heading__actions">
+          <button
+            type="button"
+            className="button button--secondary"
+            disabled={loadingPlayerAccount}
+            onClick={() =>
+              void refreshPlayerIdentity('manual')
+            }
+          >
+            {loadingPlayerAccount
+              ? 'Refreshing…'
+              : 'Refresh Player'}
+          </button>
+
           <Link
             className="button button--secondary"
             to="/my-forge"
@@ -497,6 +515,15 @@ export default function PlayerProfileEditorPage() {
 <p className="player-profile-editor-note">
   Player name, avatar, kingdom and Town Center are supplied by the Kingshot API and cannot be edited here.
 </p>
+
+{playerIdentityRefreshWarning && (
+  <p
+    className="profile-panel__error"
+    role="status"
+  >
+    {playerIdentityRefreshWarning}
+  </p>
+)}
           </section>
 
           <section className="player-profile-editor-card">
