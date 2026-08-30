@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   createMightPulsePlayerProvider,
   createMightPulsePlayerProviderForTest,
+  normalizeAvatarUrl,
 } from '../server/player-identity/providers/mightPulsePlayerProvider.ts'
 import {
   createNewLinkedPlayerFields,
@@ -100,12 +101,50 @@ assert.equal(runtimeRequestUrl.pathname, '/v1/players/125500338')
 if (previousConfiguredBaseUrl === undefined) delete process.env.MIGHTPULSE_API_BASE_URL
 else process.env.MIGHTPULSE_API_BASE_URL = previousConfiguredBaseUrl
 
-const noAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: undefined })))
-  .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
-assert.equal(noAvatar.avatarUrl, null)
-const unsafeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: 'data:text/html,unsafe' })))
-  .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
-assert.equal(unsafeAvatar.avatarUrl, null)
+assert.deepEqual(normalizeAvatarUrl(undefined), { url: null, status: 'missing' })
+assert.deepEqual(normalizeAvatarUrl(null), { url: null, status: 'missing' })
+assert.deepEqual(normalizeAvatarUrl('   '), { url: null, status: 'missing' })
+assert.deepEqual(normalizeAvatarUrl('https://cdn.example.test/avatar.png'), {
+  url: 'https://cdn.example.test/avatar.png',
+  status: 'accepted',
+})
+for (const rejectedAvatar of [
+  'data:text/html,unsafe',
+  'http://cdn.example.test/avatar.png',
+  'https://user:pass@cdn.example.test/avatar.png',
+  'not a url',
+  { url: 'https://cdn.example.test/avatar.png' },
+]) {
+  assert.equal(normalizeAvatarUrl(rejectedAvatar).status, 'rejected')
+  assert.equal(normalizeAvatarUrl(rejectedAvatar).url, null)
+}
+
+const avatarDiagnostics = []
+const originalConsoleInfo = console.info
+console.info = (...args) => { avatarDiagnostics.push(args) }
+try {
+  const noAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: undefined })))
+    .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
+  assert.equal(noAvatar.avatarUrl, null)
+
+  const unsafeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: 'data:text/html,unsafe' })))
+    .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
+  assert.equal(unsafeAvatar.avatarUrl, null)
+
+  const safeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: 'https://cdn.example.test/avatar.png' })))
+    .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
+  assert.equal(safeAvatar.avatarUrl, 'https://cdn.example.test/avatar.png')
+} finally {
+  console.info = originalConsoleInfo
+}
+assert.deepEqual(
+  avatarDiagnostics.map((args) => args[1]?.avatarStatus),
+  ['missing', 'rejected', 'accepted'],
+)
+const serializedAvatarDiagnostics = JSON.stringify(avatarDiagnostics)
+assert.equal(serializedAvatarDiagnostics.includes('https://cdn.example.test/avatar.png'), false)
+assert.equal(serializedAvatarDiagnostics.includes('125500338'), false)
+assert.equal(serializedAvatarDiagnostics.includes(secret), false)
 for (const [rawLevel, expected] of [[31, 31], [34, 34], [35, 35], [40, 40], [84, 84]]) {
   const accepted = await providerFor(Response.json(validPayload({}, { town_center_level: rawLevel })))
     .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
@@ -399,4 +438,4 @@ assert.equal(newLink.verification_method, 'none')
 assert.equal(newLink.verified_by, null)
 assert.equal(newLink.verified_at, null)
 
-console.log('MightPulse provider, freshness, preservation and ownership-boundary tests passed.')
+console.log('MightPulse provider, avatar diagnostics, freshness, preservation and ownership-boundary tests passed.')

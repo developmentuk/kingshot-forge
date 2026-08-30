@@ -288,3 +288,16 @@ historical observations, activity/online status, coordinates, shields,
 Alliance rosters and Kingdom intelligence remain deferred. A later approved
 milestone must define canonical ownership, retention, quota and publication
 contracts before persisting those fields.
+
+
+## Avatar acceptance diagnostic
+
+Production acceptance confirmed the MightPulse refresh path succeeds and that Town Center raw values are persisted/rendered correctly, but the accepted player record retained a null `profile_photo`.
+
+A contained follow-up adds a server-only avatar normalisation diagnostic with three outcomes:
+
+- `accepted` — a valid HTTPS avatar URL was supplied;
+- `missing` — no meaningful avatar value was supplied;
+- `rejected` — a value was supplied but failed the existing safe-URL boundary.
+
+The diagnostic never records the avatar URL, Player ID, API key or raw MightPulse payload. Persistence behaviour is unchanged: accepted URLs may update `profile_photo`; missing/rejected values do not clear or replace an existing image.

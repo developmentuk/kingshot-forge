@@ -37,16 +37,24 @@ function providerPlayerId(value: unknown): string {
     : ''
 }
 
-function safeAvatarUrl(value: unknown): string | null {
-  if (typeof value !== 'string') return null
+type AvatarDiagnosticStatus = 'accepted' | 'missing' | 'rejected'
+
+function normalizeAvatarUrl(value: unknown): { url: string | null; status: AvatarDiagnosticStatus } {
+  if (value === null || value === undefined) return { url: null, status: 'missing' }
+  if (typeof value !== 'string') return { url: null, status: 'rejected' }
+
   const candidate = value.trim()
-  if (!candidate || candidate.length > 2048) return null
+  if (!candidate) return { url: null, status: 'missing' }
+  if (candidate.length > 2048) return { url: null, status: 'rejected' }
+
   try {
     const url = new URL(candidate)
-    if (url.protocol !== 'https:' || url.username || url.password || !url.hostname) return null
-    return url.toString()
+    if (url.protocol !== 'https:' || url.username || url.password || !url.hostname) {
+      return { url: null, status: 'rejected' }
+    }
+    return { url: url.toString(), status: 'accepted' }
   } catch {
-    return null
+    return { url: null, status: 'rejected' }
   }
 }
 
@@ -103,12 +111,15 @@ function normalizeMightPulsePlayer(
     )
   }
 
+  const avatar = normalizeAvatarUrl(player.avatar_url)
+  console.info('[mightpulse-player-provider]', { avatarStatus: avatar.status })
+
   return {
     playerId: returnedPlayerId,
     name,
     kingdomId: Number(kingdomId),
     townCenterLevel,
-    avatarUrl: safeAvatarUrl(player.avatar_url),
+    avatarUrl: avatar.url,
     provider: 'mightpulse',
     providerFetchedAt,
   }
@@ -261,4 +272,4 @@ export function createMightPulsePlayerProviderForTest(
   return createConfiguredMightPulsePlayerProvider(options, configuredBaseUrl(options.baseUrl))
 }
 
-export { normalizeMightPulsePlayer }
+export { normalizeAvatarUrl, normalizeMightPulsePlayer }
