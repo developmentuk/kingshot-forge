@@ -65,7 +65,7 @@ drop trigger if exists reject_player_intelligence_observation_mutation
   on public.player_intelligence_observations;
 
 create trigger reject_player_intelligence_observation_mutation
-before update or delete
+before update
 on public.player_intelligence_observations
 for each row
 execute function public.reject_player_intelligence_observation_mutation();
@@ -107,14 +107,29 @@ create table if not exists public.provider_quota_reservations (
         and idempotency_key !~ '[^0-9a-f]'
       )
     ),
-  reserved_at timestamptz not null default clock_timestamp()
+  status text not null default 'pending'
+    check (status = any (array['pending'::text, 'completed'::text, 'failed'::text])),
+  attempt_token uuid not null default gen_random_uuid(),
+  attempt_count integer not null default 1
+    check (attempt_count >= 1),
+  reserved_at timestamptz not null default clock_timestamp(),
+  last_attempt_at timestamptz not null default clock_timestamp(),
+  lease_expires_at timestamptz not null default (clock_timestamp() + interval '120 seconds'),
+  completed_at timestamptz null,
+  failed_at timestamptz null,
+  check (lease_expires_at >= last_attempt_at),
+  check (
+    (status = 'pending' and completed_at is null and failed_at is null)
+    or (status = 'completed' and completed_at is not null and failed_at is null)
+    or (status = 'failed' and failed_at is not null and completed_at is null)
+  )
 );
 
 comment on table public.provider_quota_reservations is
   'Server-only rolling provider request reservations used to coordinate shared API-key limits across runtime instances. The daily budget is enforced over a conservative rolling 24-hour window.';
 
 create index if not exists provider_quota_reservations_provider_time_idx
-  on public.provider_quota_reservations (provider, reserved_at desc);
+  on public.provider_quota_reservations (provider, last_attempt_at desc);
 
 create unique index if not exists provider_quota_reservations_idempotency_idx
   on public.provider_quota_reservations (provider, idempotency_key)
@@ -136,7 +151,9 @@ create or replace function public.reserve_provider_request(
 returns table (
   allowed boolean,
   duplicate boolean,
+  reservation_state text,
   reservation_id uuid,
+  attempt_token uuid,
   minute_used integer,
   day_used integer,
   minute_limit integer,
@@ -153,7 +170,8 @@ declare
   day_count integer;
   effective_day_limit integer;
   created_id uuid;
-  existing_id uuid;
+  created_token uuid;
+  existing_row public.provider_quota_reservations;
 begin
   if p_provider <> 'mightpulse' then
     raise exception 'Unsupported provider.'
@@ -203,32 +221,92 @@ begin
     hashtextextended('forge-provider-quota:' || p_provider, 0)
   );
 
-  select count(*)::integer
+  select coalesce(sum(
+    case
+      when reservation.last_attempt_at > now_at - interval '60 seconds'
+        then 1
+      else 0
+    end
+  ), 0)::integer
   into minute_count
   from public.provider_quota_reservations reservation
-  where reservation.provider = p_provider
-    and reservation.reserved_at > now_at - interval '60 seconds';
+  where reservation.provider = p_provider;
 
-  select count(*)::integer
+  select coalesce(sum(reservation.attempt_count), 0)::integer
   into day_count
   from public.provider_quota_reservations reservation
   where reservation.provider = p_provider
-    and reservation.reserved_at > now_at - interval '24 hours';
+    and reservation.last_attempt_at > now_at - interval '24 hours';
 
   if p_idempotency_key is not null then
-    select reservation.id
-    into existing_id
+    select *
+    into existing_row
     from public.provider_quota_reservations reservation
     where reservation.provider = p_provider
       and reservation.idempotency_key = p_idempotency_key
-    limit 1;
+    for update;
 
-    if existing_id is not null then
-      allowed := false;
-      duplicate := true;
-      reservation_id := existing_id;
-      minute_used := minute_count;
-      day_used := day_count;
+    if existing_row.id is not null then
+      if existing_row.status = 'completed' then
+        allowed := false;
+        duplicate := true;
+        reservation_state := 'completed';
+        reservation_id := existing_row.id;
+        attempt_token := null;
+        minute_used := minute_count;
+        day_used := day_count;
+        return next;
+        return;
+      end if;
+
+      if existing_row.status = 'pending'
+        and existing_row.lease_expires_at > now_at then
+        allowed := false;
+        duplicate := true;
+        reservation_state := 'in_progress';
+        reservation_id := existing_row.id;
+        attempt_token := null;
+        minute_used := minute_count;
+        day_used := day_count;
+        return next;
+        return;
+      end if;
+
+      if minute_count >= minute_limit
+        or day_count >= effective_day_limit then
+        allowed := false;
+        duplicate := false;
+        reservation_state := 'quota_exhausted';
+        reservation_id := null;
+        attempt_token := null;
+        minute_used := minute_count;
+        day_used := day_count;
+        return next;
+        return;
+      end if;
+
+      created_token := gen_random_uuid();
+
+      update public.provider_quota_reservations
+      set
+        category = p_category,
+        priority = p_priority,
+        status = 'pending',
+        attempt_token = created_token,
+        attempt_count = existing_row.attempt_count + 1,
+        last_attempt_at = now_at,
+        lease_expires_at = now_at + interval '120 seconds',
+        completed_at = null,
+        failed_at = null
+      where id = existing_row.id;
+
+      allowed := true;
+      duplicate := false;
+      reservation_state := 'reserved';
+      reservation_id := existing_row.id;
+      attempt_token := created_token;
+      minute_used := minute_count + 1;
+      day_used := day_count + 1;
       return next;
       return;
     end if;
@@ -238,7 +316,9 @@ begin
     or day_count >= effective_day_limit then
     allowed := false;
     duplicate := false;
+    reservation_state := 'quota_exhausted';
     reservation_id := null;
+    attempt_token := null;
     minute_used := minute_count;
     day_used := day_count;
     return next;
@@ -246,6 +326,7 @@ begin
   end if;
 
   created_id := gen_random_uuid();
+  created_token := gen_random_uuid();
 
   insert into public.provider_quota_reservations (
     id,
@@ -253,7 +334,12 @@ begin
     category,
     priority,
     idempotency_key,
-    reserved_at
+    status,
+    attempt_token,
+    attempt_count,
+    reserved_at,
+    last_attempt_at,
+    lease_expires_at
   )
   values (
     created_id,
@@ -261,12 +347,19 @@ begin
     p_category,
     p_priority,
     p_idempotency_key,
-    now_at
+    'pending',
+    created_token,
+    1,
+    now_at,
+    now_at,
+    now_at + interval '120 seconds'
   );
 
   allowed := true;
   duplicate := false;
+  reservation_state := 'reserved';
   reservation_id := created_id;
+  attempt_token := created_token;
   minute_used := minute_count + 1;
   day_used := day_count + 1;
   return next;
@@ -281,6 +374,70 @@ revoke all on function public.reserve_provider_request(text, text, text, text)
   from authenticated;
 grant execute on function public.reserve_provider_request(text, text, text, text)
   to service_role;
+
+create or replace function public.complete_provider_request(
+  p_reservation_id uuid,
+  p_attempt_token uuid
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $quota_complete$
+declare
+  changed integer;
+begin
+  update public.provider_quota_reservations
+  set
+    status = 'completed',
+    completed_at = clock_timestamp(),
+    failed_at = null,
+    lease_expires_at = clock_timestamp()
+  where id = p_reservation_id
+    and attempt_token = p_attempt_token
+    and status = 'pending';
+
+  get diagnostics changed = row_count;
+  return changed = 1;
+end;
+$quota_complete$;
+
+revoke all on function public.complete_provider_request(uuid, uuid) from public;
+revoke all on function public.complete_provider_request(uuid, uuid) from anon;
+revoke all on function public.complete_provider_request(uuid, uuid) from authenticated;
+grant execute on function public.complete_provider_request(uuid, uuid) to service_role;
+
+create or replace function public.fail_provider_request(
+  p_reservation_id uuid,
+  p_attempt_token uuid
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $quota_fail$
+declare
+  changed integer;
+begin
+  update public.provider_quota_reservations
+  set
+    status = 'failed',
+    failed_at = clock_timestamp(),
+    completed_at = null,
+    lease_expires_at = clock_timestamp()
+  where id = p_reservation_id
+    and attempt_token = p_attempt_token
+    and status = 'pending';
+
+  get diagnostics changed = row_count;
+  return changed = 1;
+end;
+$quota_fail$;
+
+revoke all on function public.fail_provider_request(uuid, uuid) from public;
+revoke all on function public.fail_provider_request(uuid, uuid) from anon;
+revoke all on function public.fail_provider_request(uuid, uuid) from authenticated;
+grant execute on function public.fail_provider_request(uuid, uuid) to service_role;
 
 create table if not exists public.player_alliance_provider_state (
   player_account_id uuid primary key
