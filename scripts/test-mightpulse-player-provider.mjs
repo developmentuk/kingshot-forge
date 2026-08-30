@@ -19,7 +19,9 @@ import {
 import { PlayerAccountAttemptThrottle } from '../server/player-identity/playerAccountAttemptThrottle.ts'
 import {
   getPostSignInPlayerSyncInFlight,
+  getPostSignInPlayerSyncOutcome,
   hasPostSignInPlayerSyncAttempted,
+  shouldSuppressAutomaticRefreshAfterPostSignInSync,
   syncLinkedPlayerAfterSignIn,
 } from '../src/services/postSignInPlayerSyncService.ts'
 import {
@@ -1554,6 +1556,16 @@ assert.equal(await concurrentFirst, 'updated')
 assert.equal(await concurrentSecond, 'updated')
 assert.equal(concurrentSignInFetchCalls, 1)
 assert.equal(getPostSignInPlayerSyncInFlight('user-sign-in-sync'), null)
+assert.equal(
+  getPostSignInPlayerSyncOutcome(signInSession),
+  'updated',
+)
+assert.equal(
+  shouldSuppressAutomaticRefreshAfterPostSignInSync(
+    getPostSignInPlayerSyncOutcome(signInSession),
+  ),
+  true,
+)
 
 let settledDuplicateFetchCalls = 0
 assert.equal(
@@ -1613,6 +1625,23 @@ assert.equal(
   ),
   'no-linked-player',
 )
+const noLinkedSession = {
+  ...signInSession,
+  user: {
+    ...signInSession.user,
+    last_sign_in_at: '2026-08-29T12:10:00.000Z',
+  },
+}
+assert.equal(
+  getPostSignInPlayerSyncOutcome(noLinkedSession),
+  'no-linked-player',
+)
+assert.equal(
+  shouldSuppressAutomaticRefreshAfterPostSignInSync(
+    getPostSignInPlayerSyncOutcome(noLinkedSession),
+  ),
+  true,
+)
 assert.equal(
   await syncLinkedPlayerAfterSignIn(
     {
@@ -1626,6 +1655,23 @@ assert.equal(
   ),
   'unavailable',
 )
+const unavailableSession = {
+  ...signInSession,
+  user: {
+    ...signInSession.user,
+    last_sign_in_at: '2026-08-29T12:15:00.000Z',
+  },
+}
+assert.equal(
+  getPostSignInPlayerSyncOutcome(unavailableSession),
+  'unavailable',
+)
+assert.equal(
+  shouldSuppressAutomaticRefreshAfterPostSignInSync(
+    getPostSignInPlayerSyncOutcome(unavailableSession),
+  ),
+  false,
+)
 assert.equal(
   await syncLinkedPlayerAfterSignIn(
     {
@@ -1638,6 +1684,23 @@ assert.equal(
     async () => { throw new Error('synthetic network failure') },
   ),
   'unavailable',
+)
+
+const playerIdentityContextSource = await readFile(
+  new URL('../src/context/PlayerIdentityContext.tsx', import.meta.url),
+  'utf8',
+)
+assert.match(
+  playerIdentityContextSource,
+  /const signInResult = signInSync[\s\S]*getPostSignInPlayerSyncOutcome\(session\)/u,
+)
+assert.match(
+  playerIdentityContextSource,
+  /shouldSuppressAutomaticRefreshAfterPostSignInSync\(signInResult\)/u,
+)
+assert.doesNotMatch(
+  playerIdentityContextSource,
+  /currentAccount = refreshedAfterSignIn\s*\n\s*return/u,
 )
 
 console.log('MightPulse provider, avatar diagnostics, freshness, verified sign-in refresh, preservation and ownership-boundary tests passed.')
