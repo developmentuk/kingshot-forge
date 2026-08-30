@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from 'react'
@@ -60,6 +61,33 @@ type ForgeIdentity = Pick<
   'forge_id'
 >
 
+function mergeRefreshedPlayerProfile(
+  current: EditablePlayerProfile,
+  refreshed: EditablePlayerProfile,
+): EditablePlayerProfile {
+  if (
+    current.playerAccountId !==
+    refreshed.playerAccountId
+  ) {
+    return refreshed
+  }
+
+  return {
+    ...current,
+    playerId: refreshed.playerId,
+    playerName: refreshed.playerName,
+    profilePhoto: refreshed.profilePhoto,
+    kingdomId: refreshed.kingdomId,
+    playerLevel: refreshed.playerLevel,
+    townCenterLevel: refreshed.townCenterLevel,
+    levelImage: refreshed.levelImage,
+    verificationStatus:
+      refreshed.verificationStatus,
+    lastRefreshedAt:
+      refreshed.lastRefreshedAt,
+  }
+}
+
 export default function PlayerProfileEditorPage() {
   const {
     user,
@@ -88,6 +116,9 @@ export default function PlayerProfileEditorPage() {
   const [errorMessage, setErrorMessage] =
     useState('')
 
+  const loadedPlayerAccountIdRef =
+    useRef<string | null>(null)
+
   useEffect(() => {
     let cancelled = false
 
@@ -97,12 +128,23 @@ export default function PlayerProfileEditorPage() {
       }
 
       if (!user) {
+        loadedPlayerAccountIdRef.current = null
         setProfile(null)
         setLoading(false)
         return
       }
 
-      setLoading(true)
+      const nextPlayerAccountId =
+        playerAccount?.id ?? null
+
+      const isInitialOrDifferentPlayer =
+        loadedPlayerAccountIdRef.current !==
+        nextPlayerAccountId
+
+      if (isInitialOrDifferentPlayer) {
+        setLoading(true)
+      }
+
       setMessage('')
       setErrorMessage('')
 
@@ -128,7 +170,19 @@ export default function PlayerProfileEditorPage() {
           : null
 
         if (!cancelled) {
-          setProfile(result)
+          setProfile((current) => {
+            if (!current || !result) {
+              return result
+            }
+
+            return mergeRefreshedPlayerProfile(
+              current,
+              result,
+            )
+          })
+
+          loadedPlayerAccountIdRef.current =
+            nextPlayerAccountId
         }
       } catch (error) {
         if (!cancelled) {
@@ -139,7 +193,10 @@ export default function PlayerProfileEditorPage() {
           )
         }
       } finally {
-        if (!cancelled) {
+        if (
+          !cancelled &&
+          isInitialOrDifferentPlayer
+        ) {
           setLoading(false)
         }
       }
