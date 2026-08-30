@@ -102,7 +102,7 @@ create table if not exists public.provider_quota_reservations (
 );
 
 comment on table public.provider_quota_reservations is
-  'Server-only rolling provider request reservations used to coordinate shared API-key limits across runtime instances.';
+  'Server-only rolling provider request reservations used to coordinate shared API-key limits across runtime instances. The daily budget is enforced over a conservative rolling 24-hour window.';
 
 create index if not exists provider_quota_reservations_provider_time_idx
   on public.provider_quota_reservations (provider, reserved_at desc);
@@ -134,7 +134,6 @@ set search_path = public, pg_temp
 as $$
 declare
   now_at timestamptz := clock_timestamp();
-  day_start timestamptz;
   minute_count integer;
   day_count integer;
   effective_day_limit integer;
@@ -174,11 +173,6 @@ begin
     else normal_day_limit
   end;
 
-  day_start := (
-    date_trunc('day', now_at at time zone 'UTC')
-    at time zone 'UTC'
-  );
-
   perform pg_advisory_xact_lock(
     hashtextextended('forge-provider-quota:' || p_provider, 0)
   );
@@ -193,7 +187,7 @@ begin
   into day_count
   from public.provider_quota_reservations reservation
   where reservation.provider = p_provider
-    and reservation.reserved_at >= day_start;
+    and reservation.reserved_at > now_at - interval '24 hours';
 
   if minute_count >= minute_limit
     or day_count >= effective_day_limit then
