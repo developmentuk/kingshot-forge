@@ -7,11 +7,18 @@ import {
   type PlayerIntelligenceProvider,
 } from '../player-identity/providers/playerProvider.js'
 import {
-  createProviderRefreshFields,
   hasNewVerifiedSignIn,
   validateKingdomId,
   validatePlayerId,
 } from '../player-identity/linkedPlayerService.js'
+import {
+  reserveMightPulseProviderRequest,
+  signInProviderIdempotencyKey,
+  type ProviderQuotaPriority,
+  type ProviderQuotaRepository,
+  type ProviderQuotaReservation,
+  type ProviderRequestCategory,
+} from './providerQuota.js'
 import {
   mapMightPulseAllianceRank,
   type ForgeAllianceMemberRole,
@@ -32,18 +39,6 @@ export type PlayerIntelligenceRefreshReason =
   | 'automatic'
   | 'manual'
   | 'intelligence'
-
-export type ProviderQuotaPriority = 'high' | 'normal' | 'low'
-
-export type ProviderQuotaReservation = Readonly<{
-  allowed: boolean
-  reservationId: string | null
-  minuteUsed: number
-  dayUsed: number
-  minuteLimit: number
-  dayLimit: number
-  normalDayLimit: number
-}>
 
 export type LinkedPlayerIdentity = Readonly<{
   playerAccountId: string
@@ -72,110 +67,26 @@ export type AllianceAuthoritySyncResult = Readonly<{
   adminActive: boolean
 }>
 
+export type PlayerIntelligenceApplyWrite = Readonly<{
+  userId: string
+  playerAccountId: string
+  requestReason: PlayerIntelligenceRefreshReason
+  intelligence: NormalizedPlayerIntelligence
+  normalizedSnapshot: Readonly<Record<string, unknown>>
+  contentSha256: string
+  applyAllianceAuthority: boolean
+  allianceTag: string | null
+  allianceName: string | null
+  memberRole: ForgeAllianceMemberRole | null
+  authorityObservedAt: string | null
+}>
+
 export interface PlayerIntelligenceRepository {
   loadPrimaryLinkedPlayer(userId: string): Promise<LinkedPlayerIdentity | null>
-  reserveProviderRequest(input: Readonly<{
-    category:
-      | 'player_sign_in'
-      | 'player_manual'
-      | 'player_automatic'
-      | 'player_intelligence'
-    priority: ProviderQuotaPriority
-  }>): Promise<ProviderQuotaReservation>
-  updateLinkedPlayerIdentity(input: Readonly<{
-    userId: string
-    playerAccountId: string
-    player: NormalizedPlayerIntelligence['identity']
-  }>): Promise<void>
-  appendObservation(input: PlayerIntelligenceObservationWrite): Promise<string>
-  syncAllianceAuthority(input: Readonly<{
-    userId: string
-    playerAccountId: string
-    kingdomId: number
-    allianceTag: string | null
-    allianceName: string | null
-    memberRole: ForgeAllianceMemberRole | null
-    observedAt: string
-    fetchedAt: string
-  }>): Promise<AllianceAuthoritySyncResult>
-}
-
-function stableJson(value: unknown): string {
-  if (value === null) return 'null'
-  if (typeof value === 'string' || typeof value === 'boolean') {
-    return JSON.stringify(value)
-  }
-  if (typeof value === 'number') {
-    if (!Number.isFinite(value)) {
-      throw new Error('Player intelligence canonical JSON requires finite numbers.')
-    }
-    return JSON.stringify(value)
-  }
-  if (Array.isArray(value)) {
-    return '[' + value.map(stableJson).join(',') + ']'
-  }
-  if (typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
-      .map(([key, item]) => JSON.stringify(key) + ':' + stableJson(item))
-    return '{' + entries.join(',') + '}'
-  }
-  throw new Error(
-    'Player intelligence canonical JSON does not support ' + typeof value + ' values.',
-  )
-}
-
-export function projectPlayerIntelligenceSnapshot(
-  intelligence: NormalizedPlayerIntelligence,
-): Readonly<Record<string, unknown>> {
-  return Object.freeze({
-    schemaVersion: PLAYER_INTELLIGENCE_SNAPSHOT_VERSION,
-    identity: Object.freeze({
-      playerId: intelligence.identity.playerId,
-      name: intelligence.identity.name,
-      kingdomId: intelligence.identity.kingdomId,
-      townCenterLevel: intelligence.identity.townCenterLevel,
-      avatarUrl: intelligence.identity.avatarUrl,
-    }),
-    base: intelligence.base,
-    heroes: intelligence.heroes,
-    ranks: intelligence.ranks,
-    governorGear: intelligence.governorGear,
-  })
-}
-
-export function hashPlayerIntelligenceSnapshot(
-  snapshot: Readonly<Record<string, unknown>>,
-): string {
-  return createHash('sha256')
-    .update(
-      PLAYER_INTELLIGENCE_SNAPSHOT_VERSION
-      + '\n'
-      + stableJson(snapshot),
-    )
-    .digest('hex')
-}
-
-export function quotaClassForPlayerIntelligenceReason(
-  reason: PlayerIntelligenceRefreshReason,
-): Readonly<{
-  category:
-    | 'player_sign_in'
-    | 'player_manual'
-    | 'player_automatic'
-    | 'player_intelligence'
-  priority: ProviderQuotaPriority
-}> {
-  switch (reason) {
-    case 'sign-in':
-      return { category: 'player_sign_in', priority: 'high' }
-    case 'manual':
-      return { category: 'player_manual', priority: 'high' }
-    case 'automatic':
-      return { category: 'player_automatic', priority: 'low' }
-    case 'intelligence':
-      return { category: 'player_intelligence', priority: 'normal' }
-  }
+  applySync(input: PlayerIntelligenceApplyWrite): Promise<Readonly<{
+    observationId: string
+    allianceAuthority: AllianceAuthoritySyncResult | null
+  }>>
 }
 
 export class SupabasePlayerIntelligenceRepository
@@ -204,141 +115,51 @@ implements PlayerIntelligenceRepository {
     }
   }
 
-  async reserveProviderRequest(
-    input: Readonly<{
-      category:
-        | 'player_sign_in'
-        | 'player_manual'
-        | 'player_automatic'
-        | 'player_intelligence'
-      priority: ProviderQuotaPriority
-    }>,
-  ): Promise<ProviderQuotaReservation> {
+  async applySync(
+    input: PlayerIntelligenceApplyWrite,
+  ): Promise<Readonly<{
+    observationId: string
+    allianceAuthority: AllianceAuthoritySyncResult | null
+  }>> {
     const admin = getSupabaseAdmin()
+    const identity = input.intelligence.identity
     const { data, error } = await admin.rpc(
-      'reserve_provider_request',
-      {
-        p_provider: 'mightpulse',
-        p_category: input.category,
-        p_priority: input.priority,
-      },
-    )
-    if (error) throw error
-
-    const row = Array.isArray(data) ? data[0] : data
-    if (!row || typeof row !== 'object') {
-      throw new Error('Provider quota reservation returned an invalid result.')
-    }
-
-    const value = row as Record<string, unknown>
-    if (
-      typeof value.allowed !== 'boolean'
-      || (value.reservation_id !== null && typeof value.reservation_id !== 'string')
-      || typeof value.minute_used !== 'number'
-      || !Number.isInteger(value.minute_used)
-      || typeof value.day_used !== 'number'
-      || !Number.isInteger(value.day_used)
-      || typeof value.minute_limit !== 'number'
-      || !Number.isInteger(value.minute_limit)
-      || typeof value.day_limit !== 'number'
-      || !Number.isInteger(value.day_limit)
-      || typeof value.normal_day_limit !== 'number'
-      || !Number.isInteger(value.normal_day_limit)
-    ) {
-      throw new Error('Provider quota reservation returned an invalid result.')
-    }
-
-    return {
-      allowed: value.allowed,
-      reservationId: value.reservation_id as string | null,
-      minuteUsed: Number(value.minute_used),
-      dayUsed: Number(value.day_used),
-      minuteLimit: Number(value.minute_limit),
-      dayLimit: Number(value.day_limit),
-      normalDayLimit: Number(value.normal_day_limit),
-    }
-  }
-
-  async updateLinkedPlayerIdentity(
-    input: Readonly<{
-      userId: string
-      playerAccountId: string
-      player: NormalizedPlayerIntelligence['identity']
-    }>,
-  ): Promise<void> {
-    const admin = getSupabaseAdmin()
-    const { error } = await admin
-      .from('player_accounts')
-      .update(createProviderRefreshFields(input.player))
-      .eq('id', input.playerAccountId)
-      .eq('user_id', input.userId)
-      .eq('is_primary', true)
-
-    if (error) throw error
-  }
-
-  async appendObservation(
-    input: PlayerIntelligenceObservationWrite,
-  ): Promise<string> {
-    const admin = getSupabaseAdmin()
-    const { data, error } = await admin
-      .from('player_intelligence_observations')
-      .insert({
-        player_account_id: input.playerAccountId,
-        provider: input.provider,
-        request_reason: input.requestReason,
-        sections: [...input.sections],
-        normalized_snapshot: input.normalizedSnapshot,
-        content_sha256: input.contentSha256,
-        provider_fetched_at: input.providerFetchedAt,
-        provider_cached_at: input.providerCachedAt,
-        provider_age_seconds: input.providerAgeSeconds,
-        provider_fresh: input.providerFresh,
-      })
-      .select('id')
-      .single()
-
-    if (error) throw error
-    if (!data?.id) {
-      throw new Error('Player intelligence observation was not persisted.')
-    }
-    return String(data.id)
-  }
-
-
-  async syncAllianceAuthority(
-    input: Readonly<{
-      userId: string
-      playerAccountId: string
-      kingdomId: number
-      allianceTag: string | null
-      allianceName: string | null
-      memberRole: ForgeAllianceMemberRole | null
-      observedAt: string
-      fetchedAt: string
-    }>,
-  ): Promise<AllianceAuthoritySyncResult> {
-    const admin = getSupabaseAdmin()
-    const { data, error } = await admin.rpc(
-      'sync_mightpulse_alliance_membership',
+      'apply_mightpulse_player_intelligence_sync',
       {
         p_user_id: input.userId,
         p_player_account_id: input.playerAccountId,
-        p_kingdom_number: input.kingdomId,
+        p_player_id: identity.playerId,
+        p_kingdom_number: identity.kingdomId,
+        p_player_name: identity.name,
+        p_town_center_level: identity.townCenterLevel,
+        p_avatar_url: identity.avatarUrl,
+        p_request_reason: input.requestReason,
+        p_sections: [...PLAYER_INTELLIGENCE_SECTIONS],
+        p_normalized_snapshot: input.normalizedSnapshot,
+        p_content_sha256: input.contentSha256,
+        p_provider_fetched_at: identity.providerFetchedAt,
+        p_provider_cached_at: input.intelligence.providerCachedAt,
+        p_provider_age_seconds: input.intelligence.providerAgeSeconds,
+        p_provider_fresh: input.intelligence.providerFresh,
+        p_apply_alliance_authority: input.applyAllianceAuthority,
         p_alliance_tag: input.allianceTag,
         p_alliance_name: input.allianceName,
         p_member_role: input.memberRole,
-        p_observed_at: input.observedAt,
-        p_fetched_at: input.fetchedAt,
+        p_authority_observed_at: input.authorityObservedAt,
       },
     )
     if (error) throw error
 
     const row = Array.isArray(data) ? data[0] : data
     if (!row || typeof row !== 'object') {
-      throw new Error('Alliance authority sync returned an invalid result.')
+      throw new Error('Player intelligence sync returned an invalid result.')
     }
+
     const value = row as Record<string, unknown>
+    if (typeof value.observation_id !== 'string') {
+      throw new Error('Player intelligence sync did not return an observation.')
+    }
+
     const allianceId = value.alliance_id
     const membershipId = value.membership_id
     const memberRole = value.member_role
@@ -357,14 +178,21 @@ implements PlayerIntelligenceRepository {
       )
       || typeof adminActive !== 'boolean'
     ) {
-      throw new Error('Alliance authority sync returned an invalid result.')
+      throw new Error('Player intelligence sync returned invalid Alliance authority.')
     }
 
+    const allianceAuthority = input.applyAllianceAuthority
+      ? {
+          allianceId: allianceId as string | null,
+          membershipId: membershipId as string | null,
+          memberRole: memberRole as ForgeAllianceMemberRole | null,
+          adminActive,
+        }
+      : null
+
     return {
-      allianceId: allianceId as string | null,
-      membershipId: membershipId as string | null,
-      memberRole: memberRole as ForgeAllianceMemberRole | null,
-      adminActive,
+      observationId: value.observation_id,
+      allianceAuthority,
     }
   }
 }
@@ -382,6 +210,7 @@ export async function syncLinkedPlayerIntelligence(
   dependencies: Readonly<{
     repository?: PlayerIntelligenceRepository
     provider?: PlayerIntelligenceProvider
+    quotaRepository?: ProviderQuotaRepository
     verifiedLastSignInAt?: string | null
   }> = {},
 ): Promise<
@@ -420,14 +249,22 @@ export async function syncLinkedPlayerIntelligence(
   }
 
   const quotaClass = quotaClassForPlayerIntelligenceReason(reason)
-  const quota = await repository.reserveProviderRequest(quotaClass)
-  if (!quota.allowed) {
-    throw new PlayerProviderError(
-      429,
-      'PLAYER_PROVIDER_QUOTA_EXHAUSTED',
-      'The player intelligence refresh budget is temporarily exhausted. Cached data is still available.',
-      true,
-    )
+  const idempotencyKey = reason === 'sign-in'
+    && dependencies.verifiedLastSignInAt
+    ? signInProviderIdempotencyKey(
+        userId,
+        dependencies.verifiedLastSignInAt,
+      )
+    : null
+  const quota = await reserveMightPulseProviderRequest(
+    {
+      ...quotaClass,
+      idempotencyKey,
+    },
+    dependencies.quotaRepository,
+  )
+  if (quota.duplicate) {
+    return Object.freeze({ source: 'cache' as const })
   }
 
   const intelligence = await provider.lookupPlayerIntelligence({
@@ -447,26 +284,8 @@ export async function syncLinkedPlayerIntelligence(
     )
   }
 
-  await repository.updateLinkedPlayerIdentity({
-    userId,
-    playerAccountId: linkedPlayer.playerAccountId,
-    player: intelligence.identity,
-  })
-
   const snapshot = projectPlayerIntelligenceSnapshot(intelligence)
   const contentSha256 = hashPlayerIntelligenceSnapshot(snapshot)
-  const observationId = await repository.appendObservation({
-    playerAccountId: linkedPlayer.playerAccountId,
-    provider: 'mightpulse',
-    requestReason: reason,
-    sections: PLAYER_INTELLIGENCE_SECTIONS,
-    normalizedSnapshot: snapshot,
-    contentSha256,
-    providerFetchedAt: intelligence.identity.providerFetchedAt,
-    providerCachedAt: intelligence.providerCachedAt,
-    providerAgeSeconds: intelligence.providerAgeSeconds,
-    providerFresh: intelligence.providerFresh,
-  })
 
   const alliance = intelligence.base.alliance
   const mappedRole = alliance
@@ -484,25 +303,29 @@ export async function syncLinkedPlayerIntelligence(
     ? intelligence.providerCachedAt as string
     : providerFetchedAt
 
-  const allianceAuthority = alliance && mappedRole === null
-    ? null
-    : await repository.syncAllianceAuthority({
-        userId,
-        playerAccountId: linkedPlayer.playerAccountId,
-        kingdomId: linkedPlayer.kingdomId,
-        allianceTag: alliance?.tag ?? null,
-        allianceName: alliance?.name ?? null,
-        memberRole: mappedRole,
-        observedAt: authorityObservedAt,
-        fetchedAt: providerFetchedAt,
-      })
+  const applyAllianceAuthority = !(alliance && mappedRole === null)
+  const applied = await repository.applySync({
+    userId,
+    playerAccountId: linkedPlayer.playerAccountId,
+    requestReason: reason,
+    intelligence,
+    normalizedSnapshot: snapshot,
+    contentSha256,
+    applyAllianceAuthority,
+    allianceTag: alliance?.tag ?? null,
+    allianceName: alliance?.name ?? null,
+    memberRole: mappedRole,
+    authorityObservedAt: applyAllianceAuthority
+      ? authorityObservedAt
+      : null,
+  })
 
   return Object.freeze({
     source: 'provider' as const,
-    observationId,
+    observationId: applied.observationId,
     contentSha256,
     intelligence,
     quota,
-    allianceAuthority,
+    allianceAuthority: applied.allianceAuthority,
   })
 }
