@@ -42,6 +42,112 @@ function validPayload(overrides = {}, playerOverrides = {}) {
   }
 }
 
+
+function validIntelligencePayload(overrides = {}, playerOverrides = {}) {
+  return validPayload({
+    include: ['base', 'heroes', 'ranks', 'gov_gear'],
+    heroes: [{
+      id: 101,
+      name: 'Synthetic Hero',
+      level: 80,
+      stars: 5,
+      star_label: '5 Star',
+      quality: 5,
+      power: 1234567,
+      position: 1,
+      skill_levels: [
+        { id: 1001, level: 5 },
+        { id: 1002, level: 4 },
+      ],
+      exclusive_gear_level: 7,
+      exclusive_gear: {
+        id: 9001,
+        name: 'Synthetic Widget',
+        level: 7,
+        slot: 'exclusive',
+        atk_ratio: 0.15,
+        hp_ratio: 0.2,
+        def_ratio: 0.1,
+        power_ratio: 0.05,
+        slg_skill_id: 7001,
+        pve_skill_id: 7002,
+        slg_attr: [{ id: 1, value: 0.08, label: 'Attack' }],
+      },
+      gear: [{
+        eid: 5001,
+        sid: 6001,
+        slot: 'helmet',
+        name: 'Synthetic Helmet',
+        enhancement_level: 101,
+        refine_level: 12,
+        gear_level: 3,
+        quality: 6,
+        quality_key: 'mythic',
+        quality_label: 'Mythic',
+        red: true,
+        troop: 'infantry',
+        troop_label: 'Infantry',
+      }],
+    }],
+    ranks: {
+      power: 987654321,
+      power_rank: 12,
+      kills: 7654321,
+      kills_rank: 8,
+      town_center_level: 35,
+      town_center_rank: 4,
+      mystic_trial: 3210,
+      mystic_rank: 17,
+      leaderboards: [
+        { name: 'Pet Power', value: 456789, kingdom_rank: 21 },
+      ],
+    },
+    gov_gear: {
+      hidden: false,
+      message: null,
+      items: [{
+        slot: 'helmet',
+        name: 'Governor Crown',
+        equipid: 4001,
+        quality: 6,
+        tier: 2,
+        star: 3,
+        strength_level: 45,
+        score: 12345,
+        combat: 54321,
+        icon: '/cdn/gear/governor-crown.png',
+        gems: [{ slot: 1, id: 8001 }],
+      }],
+    },
+    ...overrides,
+  }, {
+    power: 987654321,
+    vip: 11,
+    x: 123,
+    y: 456,
+    kills: 7654321,
+    office: 'Minister',
+    online: true,
+    last_active_at: '2026-08-29T11:59:00.000Z',
+    last_login: 1788000000,
+    language: 'en',
+    shield_endtime: '2026-08-29T14:00:00.000Z',
+    burn_endtime: null,
+    alliance: {
+      aid: 4242,
+      abbr: 'SYN',
+      name: 'Synthetic Alliance',
+      rank: 4,
+      rank_label: 'R4',
+      power: 1234567890,
+      count: 92,
+      flag_url: '/cdn/alliance/syn.png',
+      leader_name: 'Synthetic Leader',
+    },
+    ...playerOverrides,
+  })
+}
+
 function providerFor(response, capture) {
   return createMightPulsePlayerProviderForTest({
     apiKey: secret,
@@ -86,6 +192,92 @@ assert.deepEqual(valid, {
 assert.equal(requestUrl.toString(), 'https://api.mightpulse.test/v1/players/125500338?include=base')
 assert.equal(requestInit.headers.Authorization, `Bearer ${secret}`)
 assert.equal(requestUrl.toString().includes(secret), false)
+
+
+let intelligenceRequestUrl
+const intelligenceProvider = providerFor(
+  Response.json(validIntelligencePayload()),
+  (url) => { intelligenceRequestUrl = url },
+)
+const intelligence = await intelligenceProvider.lookupPlayerIntelligence({
+  playerId: '125500338',
+  expectedKingdomId: 850,
+})
+assert.equal(
+  intelligenceRequestUrl.toString(),
+  'https://api.mightpulse.test/v1/players/125500338?include=base%2Cheroes%2Cranks%2Cgov_gear',
+)
+assert.equal(intelligence.identity.playerId, '125500338')
+assert.equal(intelligence.identity.townCenterLevel, 35)
+assert.equal(intelligence.base.power, 987654321)
+assert.equal(intelligence.base.vip, 11)
+assert.equal(intelligence.base.x, 123)
+assert.equal(intelligence.base.y, 456)
+assert.equal(intelligence.base.online, true)
+assert.equal(intelligence.base.alliance.tag, 'SYN')
+assert.equal(intelligence.base.alliance.rank, 4)
+assert.equal(intelligence.base.alliance.rankLabel, 'R4')
+assert.equal(intelligence.base.alliance.flagUrl, 'https://mightpulse.com/cdn/alliance/syn.png')
+assert.equal(intelligence.heroes.length, 1)
+assert.equal(intelligence.heroes[0].name, 'Synthetic Hero')
+assert.equal(intelligence.heroes[0].skillLevels[1].level, 4)
+assert.equal(intelligence.heroes[0].exclusiveGear.name, 'Synthetic Widget')
+assert.equal(intelligence.heroes[0].exclusiveGear.strategyAttributes[0].label, 'Attack')
+assert.equal(intelligence.heroes[0].gear[0].red, true)
+assert.equal(intelligence.ranks.powerRank, 12)
+assert.equal(intelligence.ranks.leaderboards[0].kingdomRank, 21)
+assert.equal(intelligence.governorGear.hidden, false)
+assert.equal(intelligence.governorGear.items[0].equipmentId, '4001')
+assert.equal(
+  intelligence.governorGear.items[0].icon,
+  'https://mightpulse.com/cdn/gear/governor-crown.png',
+)
+assert.equal(intelligence.providerCachedAt, '2026-08-29T11:50:00.000Z')
+assert.equal(intelligence.providerAgeSeconds, 600)
+assert.equal(intelligence.providerFresh, true)
+
+const hiddenGovernorGear = await providerFor(Response.json(validIntelligencePayload({
+  gov_gear: {
+    hidden: true,
+    message: 'Governor Gear is hidden.',
+    items: [],
+  },
+}))).lookupPlayerIntelligence({
+  playerId: '125500338',
+  expectedKingdomId: 850,
+})
+assert.equal(hiddenGovernorGear.governorGear.hidden, true)
+assert.equal(hiddenGovernorGear.governorGear.items.length, 0)
+assert.equal(hiddenGovernorGear.governorGear.message, 'Governor Gear is hidden.')
+
+await assert.rejects(
+  () => providerFor(Response.json(validIntelligencePayload({
+    include: ['base', 'heroes', 'ranks'],
+  }))).lookupPlayerIntelligence({
+    playerId: '125500338',
+    expectedKingdomId: 850,
+  }),
+  (error) => error.statusCode === 502 && error.code === 'PLAYER_PROVIDER_INVALID_RESPONSE',
+)
+
+await assert.rejects(
+  () => providerFor(Response.json(validIntelligencePayload({
+    gov_gear: {
+      hidden: true,
+      message: 'Hidden but inconsistent.',
+      items: [{
+        slot: 'helmet',
+        name: 'Should not be present',
+        equipid: 1,
+        gems: [],
+      }],
+    },
+  }))).lookupPlayerIntelligence({
+    playerId: '125500338',
+    expectedKingdomId: 850,
+  }),
+  (error) => error.statusCode === 502 && error.code === 'PLAYER_PROVIDER_INVALID_RESPONSE',
+)
 
 const previousConfiguredBaseUrl = process.env.MIGHTPULSE_API_BASE_URL
 process.env.MIGHTPULSE_API_BASE_URL = 'https://api.mightpulse.com.evil.example/v1'
