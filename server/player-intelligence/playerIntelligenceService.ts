@@ -415,7 +415,6 @@ export async function syncLinkedPlayerIntelligence(
         : null
 
     const applyAllianceAuthority = authorityObservedAt !== null
-      && !(alliance && mappedRole === null)
     const applied = await repository.applySync({
       userId,
       playerAccountId: linkedPlayer.playerAccountId,
