@@ -10,6 +10,7 @@ import {
   createProviderRefreshFields,
   hasNewVerifiedSignIn,
   lookupKingshotPlayer,
+  lookupKingshotPlayerGoverned,
   PLAYER_PROVIDER_FRESHNESS_TTL_MS,
   PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS,
   quotaClassForPlayerRefresh,
@@ -1008,6 +1009,15 @@ assert.doesNotMatch(
   /if \(input\.enforceQuota === true\)[\s\S]*reserveMightPulseProviderRequest[\s\S]*lookupKingshotPlayer\(/iu,
 )
 
+const userManagementServiceSource = await readFile(
+  new URL('../server/identity/userManagementService.ts', import.meta.url),
+  'utf8',
+)
+assert.match(
+  userManagementServiceSource,
+  /lookupKingshotPlayerGoverned[\s\S]*category: 'player_manual'[\s\S]*priority: 'high'/iu,
+)
+
 const playerIntelligenceServiceSource = await readFile(
   new URL(
     '../server/player-intelligence/playerIntelligenceService.ts',
@@ -1322,6 +1332,62 @@ releaseSingleFlight()
 assert.equal(await firstLookup, normalizedPlayer)
 assert.equal(await secondLookup, normalizedPlayer)
 assert.equal(singleFlightCalls, 1)
+
+let adminLookupQuotaReservations = 0
+let adminLookupQuotaCompletions = 0
+let adminLookupProviderCalls = 0
+const governedAdminLookup = await lookupKingshotPlayerGoverned(
+  '125500338',
+  850,
+  {
+    provider: {
+      async lookupPlayer() {
+        adminLookupProviderCalls += 1
+        return normalizedPlayer
+      },
+    },
+    quotaEnabled: true,
+    category: 'player_manual',
+    priority: 'high',
+    quotaRepository: {
+      async reserve(input) {
+        adminLookupQuotaReservations += 1
+        assert.deepEqual(input, {
+          category: 'player_manual',
+          priority: 'high',
+          idempotencyKey: null,
+        })
+        return {
+          allowed: true,
+          duplicate: false,
+          state: 'reserved',
+          reservationId: '00000000-0000-0000-0000-000000000016',
+          attemptToken: '00000000-0000-0000-0000-000000000017',
+          minuteUsed: 1,
+          dayUsed: 1,
+          minuteLimit: 60,
+          dayLimit: 5000,
+          normalDayLimit: 4500,
+        }
+      },
+      async complete(input) {
+        adminLookupQuotaCompletions += 1
+        assert.deepEqual(input, {
+          reservationId: '00000000-0000-0000-0000-000000000016',
+          attemptToken: '00000000-0000-0000-0000-000000000017',
+        })
+        return true
+      },
+      async fail() {
+        throw new Error('successful administrator lookup must not fail quota')
+      },
+    },
+  },
+)
+assert.equal(governedAdminLookup, normalizedPlayer)
+assert.equal(adminLookupQuotaReservations, 1)
+assert.equal(adminLookupQuotaCompletions, 1)
+assert.equal(adminLookupProviderCalls, 1)
 
 const countingProvider = {
   async lookupPlayer() {
@@ -1860,13 +1926,13 @@ const concurrentSecond = syncLinkedPlayerAfterSignIn(
   },
 )
 assert.equal(hasPostSignInPlayerSyncAttempted(signInSession), true)
-assert.ok(getPostSignInPlayerSyncInFlight('user-sign-in-sync'))
+assert.ok(getPostSignInPlayerSyncInFlight(signInSession))
 assert.equal(concurrentSignInFetchCalls, 1)
 releasePostSignInSync()
 assert.equal(await concurrentFirst, 'updated')
 assert.equal(await concurrentSecond, 'updated')
 assert.equal(concurrentSignInFetchCalls, 1)
-assert.equal(getPostSignInPlayerSyncInFlight('user-sign-in-sync'), null)
+assert.equal(getPostSignInPlayerSyncInFlight(signInSession), null)
 assert.equal(
   getPostSignInPlayerSyncOutcome(signInSession),
   'updated',
@@ -1876,6 +1942,72 @@ assert.equal(
     getPostSignInPlayerSyncOutcome(signInSession),
   ),
   true,
+)
+
+const markerRaceOldSession = /** @type {import('@supabase/supabase-js').Session} */ ({
+  ...signInSession,
+  user: {
+    ...signInSession.user,
+    id: 'user-sign-in-marker-race',
+    last_sign_in_at: '2026-08-29T12:30:00.000Z',
+  },
+})
+const markerRaceNewSession = /** @type {import('@supabase/supabase-js').Session} */ ({
+  ...markerRaceOldSession,
+  user: {
+    ...markerRaceOldSession.user,
+    last_sign_in_at: '2026-08-29T12:31:00.000Z',
+  },
+})
+let markerRaceFetchCalls = 0
+let releaseMarkerRaceOld
+const markerRaceOld = syncLinkedPlayerAfterSignIn(
+  markerRaceOldSession,
+  async () => {
+    markerRaceFetchCalls += 1
+    return new Promise((resolve) => {
+      releaseMarkerRaceOld = () => resolve(
+        Response.json({
+          status: 'success',
+          data: { id: 'old-marker-player' },
+        }),
+      )
+    })
+  },
+)
+assert.ok(getPostSignInPlayerSyncInFlight(markerRaceOldSession))
+
+const markerRaceNew = syncLinkedPlayerAfterSignIn(
+  markerRaceNewSession,
+  async () => {
+    markerRaceFetchCalls += 1
+    return Response.json({
+      status: 'success',
+      data: { id: 'new-marker-player' },
+    })
+  },
+)
+assert.equal(markerRaceFetchCalls, 2)
+assert.ok(getPostSignInPlayerSyncInFlight(markerRaceNewSession))
+assert.equal(await markerRaceNew, 'updated')
+releaseMarkerRaceOld()
+assert.equal(await markerRaceOld, 'updated')
+assert.equal(markerRaceFetchCalls, 2)
+assert.equal(
+  getPostSignInPlayerSyncInFlight(markerRaceOldSession),
+  null,
+)
+assert.equal(
+  getPostSignInPlayerSyncInFlight(markerRaceNewSession),
+  null,
+)
+assert.equal(
+  getPostSignInPlayerSyncOutcome(markerRaceOldSession),
+  'updated',
+)
+assert.equal(
+  getPostSignInPlayerSyncOutcome(markerRaceNewSession),
+  'updated',
 )
 
 let settledDuplicateFetchCalls = 0
