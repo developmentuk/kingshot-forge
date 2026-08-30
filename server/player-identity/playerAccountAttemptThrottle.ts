@@ -2,6 +2,7 @@ import { LinkedPlayerServiceError } from './linkedPlayerService.js'
 
 export const PLAYER_ACCOUNT_ATTEMPT_WINDOW_MS = 5 * 60 * 1000
 export const PLAYER_ACCOUNT_ATTEMPT_LIMIT = 20
+export const PLAYER_SIGN_IN_STATUS_ATTEMPT_LIMIT = 100
 
 type AttemptRecord = { count: number; resetAt: number }
 
