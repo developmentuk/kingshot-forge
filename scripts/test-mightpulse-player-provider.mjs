@@ -22,6 +22,7 @@ import {
 } from '../shared/domains/player-identity/mightPulseAllianceRank.ts'
 import {
   hashPlayerIntelligenceSnapshot,
+  isPlayerIntelligenceRuntimeEnabled,
   projectPlayerIntelligenceSnapshot,
   quotaClassForPlayerIntelligenceReason,
   syncLinkedPlayerIntelligence,
@@ -41,6 +42,19 @@ assert.equal(mapMightPulseAllianceRank(null), null)
 assert.equal(isAllianceManagementRank('r4'), true)
 assert.equal(isAllianceManagementRank('leader'), true)
 assert.equal(isAllianceManagementRank('officer'), false)
+assert.equal(
+  isPlayerIntelligenceRuntimeEnabled({ MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: 'true' }),
+  true,
+)
+assert.equal(
+  isPlayerIntelligenceRuntimeEnabled({ MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: ' TRUE ' }),
+  true,
+)
+assert.equal(
+  isPlayerIntelligenceRuntimeEnabled({ MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED: 'false' }),
+  false,
+)
+assert.equal(isPlayerIntelligenceRuntimeEnabled({}), false)
 
 function validPayload(overrides = {}, playerOverrides = {}) {
   return {
@@ -285,6 +299,7 @@ assert.deepEqual(
 let syncedObservation
 let syncedQuotaInput
 let syncedAllianceAuthorityInput
+let syncedLinkedIdentityInput
 let intelligenceProviderCalls = 0
 const allowedRepository = {
   async loadPrimaryLinkedPlayer(userId) {
@@ -293,6 +308,7 @@ const allowedRepository = {
       playerAccountId: '00000000-0000-0000-0000-000000000001',
       playerId: '125500338',
       kingdomId: 850,
+      lastRefreshedAt: '2026-08-29T11:00:00.000Z',
     }
   },
   async reserveProviderRequest(input) {
@@ -306,6 +322,9 @@ const allowedRepository = {
       dayLimit: 5000,
       normalDayLimit: 4500,
     }
+  },
+  async updateLinkedPlayerIdentity(input) {
+    syncedLinkedIdentityInput = input
   },
   async appendObservation(input) {
     syncedObservation = input
@@ -326,6 +345,7 @@ const intelligenceResult = await syncLinkedPlayerIntelligence(
   'sign-in',
   {
     repository: allowedRepository,
+    verifiedLastSignInAt: fetchedAt,
     provider: {
       async lookupPlayer() {
         throw new Error('identity-only lookup must not be used by intelligence sync')
@@ -342,6 +362,15 @@ const intelligenceResult = await syncLinkedPlayerIntelligence(
   },
 )
 assert.equal(intelligenceProviderCalls, 1)
+assert.equal(intelligenceResult.source, 'provider')
+assert.deepEqual(
+  syncedLinkedIdentityInput,
+  {
+    userId: 'user-intelligence',
+    playerAccountId: '00000000-0000-0000-0000-000000000001',
+    player: intelligence.identity,
+  },
+)
 assert.deepEqual(
   syncedQuotaInput,
   { category: 'player_sign_in', priority: 'high' },
@@ -379,6 +408,52 @@ assert.deepEqual(
 )
 assert.equal(intelligenceResult.allianceAuthority.memberRole, 'r4')
 assert.equal(intelligenceResult.allianceAuthority.adminActive, true)
+
+let replayQuotaCalls = 0
+let replayProviderCalls = 0
+const replayResult = await syncLinkedPlayerIntelligence(
+  'user-intelligence',
+  'sign-in',
+  {
+    repository: {
+      ...allowedRepository,
+      async loadPrimaryLinkedPlayer() {
+        return {
+          playerAccountId: '00000000-0000-0000-0000-000000000001',
+          playerId: '125500338',
+          kingdomId: 850,
+          lastRefreshedAt: fetchedAt,
+        }
+      },
+      async reserveProviderRequest() {
+        replayQuotaCalls += 1
+        throw new Error('same sign-in must not reserve quota')
+      },
+      async updateLinkedPlayerIdentity() {
+        throw new Error('same sign-in must not update identity')
+      },
+      async appendObservation() {
+        throw new Error('same sign-in must not persist')
+      },
+      async syncAllianceAuthority() {
+        throw new Error('same sign-in must not sync Alliance authority')
+      },
+    },
+    verifiedLastSignInAt: fetchedAt,
+    provider: {
+      async lookupPlayer() {
+        throw new Error('identity-only lookup must not run')
+      },
+      async lookupPlayerIntelligence() {
+        replayProviderCalls += 1
+        return intelligence
+      },
+    },
+  },
+)
+assert.equal(replayResult.source, 'cache')
+assert.equal(replayQuotaCalls, 0)
+assert.equal(replayProviderCalls, 0)
 
 let deniedProviderCalls = 0
 await assert.rejects(
