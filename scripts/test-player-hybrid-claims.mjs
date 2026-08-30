@@ -77,6 +77,15 @@ try {
   assert.match(claimUi, /Link live Kingshot player/u)
   assert.match(claimUi, /linkKingshotPlayer/u)
   assert.match(claimUi, /Ownership is not yet verified/u)
+  assert.match(claimUi, /const claimMutationPending = claiming \|\| linkingLivePlayer/u)
+  assert.match(
+    claimUi,
+    /disabled=\{claimMutationPending\}[\s\S]*Link live Kingshot player/u,
+  )
+  assert.match(
+    claimUi,
+    /disabled=\{claimMutationPending\}[\s\S]*Claim This Player/u,
+  )
   assert.match(claimClient, /\/api\/player\/account/u)
   assert.match(claimClient, /action: 'link'/u)
   assert.match(claimUi, /Submit for Verification/u)
