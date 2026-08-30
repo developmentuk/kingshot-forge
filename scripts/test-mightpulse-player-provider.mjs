@@ -8,12 +8,14 @@ import {
 import {
   createNewLinkedPlayerFields,
   createProviderRefreshFields,
+  hasNewVerifiedSignIn,
   lookupKingshotPlayer,
   PLAYER_PROVIDER_FRESHNESS_TTL_MS,
   PLAYER_PROVIDER_MANUAL_REFRESH_MIN_INTERVAL_MS,
   resolvePlayerRefresh,
 } from '../server/player-identity/linkedPlayerService.ts'
 import { PlayerAccountAttemptThrottle } from '../server/player-identity/playerAccountAttemptThrottle.ts'
+import { syncLinkedPlayerAfterSignIn } from '../src/services/postSignInPlayerSyncService.ts'
 
 const secret = 'synthetic-test-secret-never-log'
 const fetchedAt = '2026-08-29T12:00:00.000Z'
@@ -353,6 +355,77 @@ const cached = await resolvePlayerRefresh({
 assert.equal(cached.source, 'cache')
 assert.equal(providerCalls, 0)
 
+assert.equal(
+  hasNewVerifiedSignIn(
+    new Date(nowMs).toISOString(),
+    new Date(nowMs - 60_000).toISOString(),
+  ),
+  true,
+)
+assert.equal(
+  hasNewVerifiedSignIn(
+    new Date(nowMs).toISOString(),
+    new Date(nowMs).toISOString(),
+  ),
+  false,
+)
+assert.equal(hasNewVerifiedSignIn(null, recentAccount.last_refreshed_at), false)
+
+let signInProviderCalls = 0
+const signInProvider = {
+  async lookupPlayer() {
+    signInProviderCalls += 1
+    return normalizedPlayer
+  },
+}
+const verifiedSignInRefresh = await resolvePlayerRefresh({
+  action: 'revalidate',
+  existingAccount: {
+    ...recentAccount,
+    last_refreshed_at: new Date(nowMs - 60_000).toISOString(),
+  },
+  playerId: '125500338',
+  kingdomId: 850,
+  refreshReason: 'sign-in',
+  verifiedLastSignInAt: new Date(nowMs).toISOString(),
+  provider: signInProvider,
+  nowMs,
+})
+assert.equal(verifiedSignInRefresh.source, 'provider')
+assert.equal(signInProviderCalls, 1)
+
+const repeatedSignInRefresh = await resolvePlayerRefresh({
+  action: 'revalidate',
+  existingAccount: {
+    ...recentAccount,
+    last_refreshed_at: new Date(nowMs).toISOString(),
+  },
+  playerId: '125500338',
+  kingdomId: 850,
+  refreshReason: 'sign-in',
+  verifiedLastSignInAt: new Date(nowMs).toISOString(),
+  provider: signInProvider,
+  nowMs,
+})
+assert.equal(repeatedSignInRefresh.source, 'cache')
+assert.equal(signInProviderCalls, 1)
+
+const unverifiedSignInRefresh = await resolvePlayerRefresh({
+  action: 'revalidate',
+  existingAccount: {
+    ...recentAccount,
+    last_refreshed_at: new Date(nowMs - 60_000).toISOString(),
+  },
+  playerId: '125500338',
+  kingdomId: 850,
+  refreshReason: 'sign-in',
+  verifiedLastSignInAt: null,
+  provider: signInProvider,
+  nowMs,
+})
+assert.equal(unverifiedSignInRefresh.source, 'cache')
+assert.equal(signInProviderCalls, 1)
+
 const samePlayerLink = await resolvePlayerRefresh({
   action: 'link',
   existingAccount: recentAccount,
@@ -497,4 +570,53 @@ assert.equal(newLink.is_public, false)
 assert.equal(newLink.verified_by, null)
 assert.equal(newLink.verified_at, null)
 
-console.log('MightPulse provider, avatar diagnostics, freshness, preservation and ownership-boundary tests passed.')
+let signInRequest
+const signInSession = /** @type {import('@supabase/supabase-js').Session} */ ({
+  access_token: 'synthetic-session-access-token',
+})
+const postSignInResult = await syncLinkedPlayerAfterSignIn(
+  signInSession,
+  async (url, init) => {
+    signInRequest = { url, init }
+    return Response.json({ status: 'success', data: { id: 'synthetic-player' } })
+  },
+)
+assert.equal(postSignInResult, 'updated')
+assert.equal(signInRequest.url, '/api/player/account')
+assert.equal(signInRequest.init.method, 'POST')
+assert.equal(
+  signInRequest.init.headers.Authorization,
+  'Bearer synthetic-session-access-token',
+)
+assert.deepEqual(
+  JSON.parse(signInRequest.init.body),
+  { action: 'revalidate', refreshReason: 'sign-in' },
+)
+
+assert.equal(
+  await syncLinkedPlayerAfterSignIn(
+    signInSession,
+    async () => Response.json({
+      status: 'success',
+      code: 'NO_LINKED_PLAYER',
+      data: null,
+    }),
+  ),
+  'no-linked-player',
+)
+assert.equal(
+  await syncLinkedPlayerAfterSignIn(
+    signInSession,
+    async () => new Response('provider unavailable', { status: 503 }),
+  ),
+  'unavailable',
+)
+assert.equal(
+  await syncLinkedPlayerAfterSignIn(
+    signInSession,
+    async () => { throw new Error('synthetic network failure') },
+  ),
+  'unavailable',
+)
+
+console.log('MightPulse provider, avatar diagnostics, freshness, verified sign-in refresh, preservation and ownership-boundary tests passed.')
