@@ -2332,5 +2332,13 @@ assert.doesNotMatch(
   playerIdentityContextSource,
   /currentAccount = refreshedAfterSignIn\s*\n\s*return/u,
 )
+assert.match(
+  playerIdentityContextSource,
+  /function handlePlayerUpdate\(\) \{\s*void loadPlayerIdentity\(\)\s*\}/u,
+)
+assert.doesNotMatch(
+  playerIdentityContextSource,
+  /function handlePlayerUpdate\(\) \{\s*void refreshPlayerIdentity\('automatic'\)\s*\}/u,
+)
 
 console.log('MightPulse provider, avatar diagnostics, freshness, verified sign-in refresh, preservation and ownership-boundary tests passed.')
