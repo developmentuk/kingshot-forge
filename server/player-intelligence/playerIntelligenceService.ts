@@ -12,6 +12,7 @@ import {
   validatePlayerId,
 } from '../player-identity/linkedPlayerService.js'
 import {
+  isProviderQuotaRuntimeEnabled,
   reserveMightPulseProviderRequest,
   signInProviderIdempotencyKey,
   type ProviderQuotaPriority,
@@ -274,8 +275,11 @@ implements PlayerIntelligenceRepository {
 export function isPlayerIntelligenceRuntimeEnabled(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): boolean {
-  return environment.MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED?.trim().toLowerCase()
-    === 'true'
+  return (
+    environment.MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED?.trim().toLowerCase()
+      === 'true'
+    && isProviderQuotaRuntimeEnabled(environment)
+  )
 }
 
 export async function syncLinkedPlayerIntelligence(
