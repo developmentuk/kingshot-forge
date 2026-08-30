@@ -454,6 +454,7 @@ assert.equal(newLink.player_level, null)
 assert.equal(newLink.town_center_level, 29)
 assert.equal(newLink.verification_status, 'linked')
 assert.equal(newLink.verification_method, 'none')
+assert.equal(newLink.is_public, false)
 assert.equal(newLink.verified_by, null)
 assert.equal(newLink.verified_at, null)
 
