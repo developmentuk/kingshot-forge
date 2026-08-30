@@ -503,17 +503,41 @@ const replayResult = await syncLinkedPlayerIntelligence(
           playerAccountId: '00000000-0000-0000-0000-000000000001',
           playerId: '125500338',
           kingdomId: 850,
-          lastRefreshedAt: fetchedAt,
+          // Simulate a base refresh that happened after this sign-in marker.
+          // Rich sign-in completion must still be decided by its ledger row.
+          lastRefreshedAt: '2026-08-29T12:05:00.000Z',
         }
       },
       async applySync() {
-        throw new Error('same sign-in must not apply')
+        throw new Error('completed rich sign-in must not apply')
       },
     },
     quotaRepository: {
-      async reserve() {
+      async reserve(input) {
         replayQuotaCalls += 1
-        throw new Error('same sign-in freshness check must not reserve quota')
+        assert.deepEqual(input, {
+          category: 'player_sign_in',
+          priority: 'high',
+          idempotencyKey: signInProviderIdempotencyKey(
+            'user-intelligence',
+            fetchedAt,
+          ),
+        })
+        return {
+          allowed: false,
+          duplicate: true,
+          state: 'completed',
+          reservationId: '00000000-0000-0000-0000-000000000002',
+          attemptToken: null,
+          minuteUsed: 3,
+          dayUsed: 120,
+          minuteLimit: 60,
+          dayLimit: 5000,
+          normalDayLimit: 4500,
+        }
+      },
+      async fail() {
+        throw new Error('completed rich sign-in must not be failed')
       },
     },
     verifiedLastSignInAt: fetchedAt,
@@ -529,7 +553,7 @@ const replayResult = await syncLinkedPlayerIntelligence(
   },
 )
 assert.equal(replayResult.source, 'cache')
-assert.equal(replayQuotaCalls, 0)
+assert.equal(replayQuotaCalls, 1)
 assert.equal(replayProviderCalls, 0)
 
 let crossInstanceQuotaCalls = 0
@@ -845,15 +869,43 @@ assert.match(
 )
 assert.match(
   migrationSql,
-  /attempt_count integer not null default 1/iu,
-)
-assert.match(
-  migrationSql,
   /lease_expires_at timestamptz not null/iu,
 )
 assert.match(
   migrationSql,
   /status text not null default 'pending'/iu,
+)
+assert.match(
+  migrationSql,
+  /create table if not exists public\.provider_quota_attempts/iu,
+)
+assert.match(
+  migrationSql,
+  /attempted_at timestamptz not null default clock_timestamp\(\)/iu,
+)
+assert.match(
+  migrationSql,
+  /provider_quota_attempts_provider_time_idx/iu,
+)
+assert.match(
+  migrationSql,
+  /insert into public\.provider_quota_attempts/iu,
+)
+assert.match(
+  migrationSql,
+  /from public\.provider_quota_attempts attempt[\s\S]*attempt\.attempted_at > now_at - interval '60 seconds'/iu,
+)
+assert.match(
+  migrationSql,
+  /from public\.provider_quota_attempts attempt[\s\S]*attempt\.attempted_at > now_at - interval '24 hours'/iu,
+)
+assert.doesNotMatch(
+  migrationSql,
+  /attempt_count integer/iu,
+)
+assert.doesNotMatch(
+  migrationSql,
+  /sum\(reservation\.attempt_count\)/iu,
 )
 assert.match(
   migrationSql,
@@ -866,14 +918,6 @@ assert.match(
 assert.match(
   migrationSql,
   /existing_row\.status = 'pending'[\s\S]*existing_row\.lease_expires_at > now_at/iu,
-)
-assert.match(
-  migrationSql,
-  /attempt_count = existing_row\.attempt_count \+ 1/iu,
-)
-assert.match(
-  migrationSql,
-  /then reservation\.attempt_count/iu,
 )
 assert.match(
   migrationSql,
@@ -946,6 +990,21 @@ assert.match(
 assert.match(
   migrationSql,
   /p_quota_attempt_token uuid/iu,
+)
+const playerIntelligenceServiceSource = await readFile(
+  new URL(
+    '../server/player-intelligence/playerIntelligenceService.ts',
+    import.meta.url,
+  ),
+  'utf8',
+)
+assert.doesNotMatch(
+  playerIntelligenceServiceSource,
+  /hasNewVerifiedSignIn/u,
+)
+assert.match(
+  playerIntelligenceServiceSource,
+  /PLAYER_SIGN_IN_MARKER_REQUIRED/u,
 )
 assert.match(
   migrationSql,
