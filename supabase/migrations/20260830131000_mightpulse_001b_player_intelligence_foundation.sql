@@ -1029,6 +1029,7 @@ begin
     and (
       (
         authority_state.player_account_id is not null
+        and authority_state.alliance_tag = normalized_tag
         and authority_state.member_role in ('r4', 'leader')
         and previous_admin.revoked_at >= authority_state.provider_fetched_at
       )
