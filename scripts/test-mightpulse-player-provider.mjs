@@ -101,22 +101,37 @@ assert.equal(runtimeRequestUrl.pathname, '/v1/players/125500338')
 if (previousConfiguredBaseUrl === undefined) delete process.env.MIGHTPULSE_API_BASE_URL
 else process.env.MIGHTPULSE_API_BASE_URL = previousConfiguredBaseUrl
 
-assert.deepEqual(normalizeAvatarUrl(undefined), { url: null, status: 'missing' })
-assert.deepEqual(normalizeAvatarUrl(null), { url: null, status: 'missing' })
-assert.deepEqual(normalizeAvatarUrl('   '), { url: null, status: 'missing' })
+assert.deepEqual(normalizeAvatarUrl(undefined), {
+  url: null,
+  status: 'missing',
+  reason: 'not_provided',
+})
+assert.deepEqual(normalizeAvatarUrl(null), {
+  url: null,
+  status: 'missing',
+  reason: 'not_provided',
+})
+assert.deepEqual(normalizeAvatarUrl('   '), {
+  url: null,
+  status: 'missing',
+  reason: 'empty',
+})
 assert.deepEqual(normalizeAvatarUrl('https://cdn.example.test/avatar.png'), {
   url: 'https://cdn.example.test/avatar.png',
   status: 'accepted',
+  reason: 'accepted',
 })
-for (const rejectedAvatar of [
-  'data:text/html,unsafe',
-  'http://cdn.example.test/avatar.png',
-  'https://user:pass@cdn.example.test/avatar.png',
-  'not a url',
-  { url: 'https://cdn.example.test/avatar.png' },
+for (const [rejectedAvatar, expectedReason] of [
+  ['data:text/html,unsafe', 'non_https'],
+  ['http://cdn.example.test/avatar.png', 'non_https'],
+  ['https://user:pass@cdn.example.test/avatar.png', 'credentials'],
+  ['not a url', 'invalid_url'],
+  [{ url: 'https://cdn.example.test/avatar.png' }, 'not_string'],
 ]) {
-  assert.equal(normalizeAvatarUrl(rejectedAvatar).status, 'rejected')
-  assert.equal(normalizeAvatarUrl(rejectedAvatar).url, null)
+  const normalizedAvatar = normalizeAvatarUrl(rejectedAvatar)
+  assert.equal(normalizedAvatar.status, 'rejected')
+  assert.equal(normalizedAvatar.url, null)
+  assert.equal(normalizedAvatar.reason, expectedReason)
 }
 
 const avatarDiagnostics = []
@@ -140,6 +155,10 @@ try {
 assert.deepEqual(
   avatarDiagnostics.map((args) => args[1]?.avatarStatus),
   ['missing', 'rejected', 'accepted'],
+)
+assert.deepEqual(
+  avatarDiagnostics.map((args) => args[1]?.avatarReason),
+  ['not_provided', 'non_https', 'accepted'],
 )
 const serializedAvatarDiagnostics = JSON.stringify(avatarDiagnostics)
 assert.equal(serializedAvatarDiagnostics.includes('https://cdn.example.test/avatar.png'), false)
