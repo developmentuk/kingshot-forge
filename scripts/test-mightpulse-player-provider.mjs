@@ -3242,6 +3242,38 @@ assert.doesNotMatch(
   /grant execute[\s\S]*to authenticated/u,
 )
 
+const serviceRolePrivilegeHardeningMigrationSql = await readFile(
+  new URL(
+    '../supabase/migrations/20260830224500_mightpulse_001b_service_role_table_privilege_hardening.sql',
+    import.meta.url,
+  ),
+  'utf8',
+)
+assert.equal(
+  (serviceRolePrivilegeHardeningMigrationSql.match(/\bbegin;/giu) ?? []).length,
+  1,
+)
+assert.equal(
+  (serviceRolePrivilegeHardeningMigrationSql.match(/\bcommit;/giu) ?? []).length,
+  1,
+)
+assert.match(
+  serviceRolePrivilegeHardeningMigrationSql,
+  /revoke all on table public\.player_intelligence_observations from service_role;[\s\S]*grant select, insert on table public\.player_intelligence_observations to service_role;/u,
+)
+assert.match(
+  serviceRolePrivilegeHardeningMigrationSql,
+  /revoke all on table public\.player_alliance_provider_state from service_role;[\s\S]*grant select, insert, update on table public\.player_alliance_provider_state[\s\S]*to service_role;/u,
+)
+assert.match(
+  serviceRolePrivilegeHardeningMigrationSql,
+  /revoke all on table public\.alliance_provider_authority_overrides from service_role;[\s\S]*grant select, insert, update on table public\.alliance_provider_authority_overrides[\s\S]*to service_role;/u,
+)
+assert.doesNotMatch(
+  serviceRolePrivilegeHardeningMigrationSql,
+  /grant[\s\S]*(delete|truncate|references|trigger)[\s\S]*to service_role/iu,
+)
+
 const playerIdentityContextSource = await readFile(
   new URL('../src/context/PlayerIdentityContext.tsx', import.meta.url),
   'utf8',
