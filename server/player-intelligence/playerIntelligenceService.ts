@@ -293,6 +293,7 @@ export async function syncLinkedPlayerIntelligence(
   }> = {},
 ): Promise<
   | Readonly<{ source: 'cache' }>
+  | Readonly<{ source: 'in-progress' }>
   | Readonly<{
       source: 'provider'
       observationId: string
@@ -342,7 +343,7 @@ export async function syncLinkedPlayerIntelligence(
     dependencies.quotaRepository,
   )
   if (quota.duplicate) {
-    return Object.freeze({ source: 'cache' as const })
+    return Object.freeze({ source: 'in-progress' as const })
   }
 
   const intelligence = await provider.lookupPlayerIntelligence({
