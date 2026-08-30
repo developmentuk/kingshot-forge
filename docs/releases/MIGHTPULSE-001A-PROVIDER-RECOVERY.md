@@ -302,3 +302,22 @@ A contained follow-up adds a server-only avatar normalisation diagnostic with th
 - `rejected` — a value was supplied but failed the existing safe-URL boundary.
 
 The diagnostic never records the avatar URL, Player ID, API key or raw MightPulse payload. Persistence behaviour is unchanged: accepted URLs may update `profile_photo`; missing/rejected values do not clear or replace an existing image.
+
+
+## Avatar invalid-URL shape diagnostic — 30 August 2026
+
+Production acceptance after PR #105 confirmed a successful live refresh can still
+return `avatarStatus: rejected` with `avatarReason: invalid_url`. The runtime
+does not log the raw avatar value, so this proves only that MightPulse supplied a
+non-empty string that cannot be parsed as a standalone absolute URL.
+
+A contained diagnostic follow-up classifies only the rejected value's structural
+shape as one of `protocol_relative`, `root_relative`, `encoded_https`,
+`quoted`, `relative_path` or `other`. Non-`invalid_url` outcomes report
+`not_applicable`. The classifier records no hostname, path, query, Player ID,
+API key or raw provider payload, and it does not alter URL acceptance,
+normalisation, persistence or refresh behaviour.
+
+The purpose is to obtain one safe production observation before deciding whether
+a narrowly trusted URL-resolution rule is justified. General URL validation must
+not be relaxed from this diagnostic alone.
