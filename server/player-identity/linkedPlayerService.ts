@@ -40,6 +40,21 @@ export function quotaClassForPlayerRefresh(
   return { category: 'player_automatic', priority: 'low' }
 }
 
+export function shouldEnforcePlayerProviderQuota(
+  input: Readonly<{
+    quotaEnabled?: boolean
+    quotaRepositoryProvided?: boolean
+    environment?: Readonly<Record<string, string | undefined>>
+  }> = {},
+): boolean {
+  return input.quotaEnabled
+    ?? (
+      input.quotaRepositoryProvided === true
+        ? true
+        : isProviderQuotaRuntimeEnabled(input.environment)
+    )
+}
+
 type LookupRecord = Readonly<Record<string, unknown>>
 
 export class LinkedPlayerServiceError extends Error {
@@ -332,12 +347,10 @@ export async function linkOrRevalidatePlayerAccount(
     nowMs: dependencies.nowMs,
     userId,
     quotaRepository: dependencies.quotaRepository,
-    enforceQuota: dependencies.quotaEnabled
-      ?? (
-        dependencies.quotaRepository !== undefined
-          ? true
-          : isProviderQuotaRuntimeEnabled()
-      ),
+    enforceQuota: shouldEnforcePlayerProviderQuota({
+      quotaEnabled: dependencies.quotaEnabled,
+      quotaRepositoryProvided: dependencies.quotaRepository !== undefined,
+    }),
   })
   if (resolution.source === 'cache') return safeAccount(existing)
 
