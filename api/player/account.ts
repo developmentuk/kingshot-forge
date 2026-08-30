@@ -60,7 +60,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
           status: 'success',
           code: result.source === 'provider'
             ? 'PLAYER_INTELLIGENCE_SYNCED'
-            : 'PLAYER_INTELLIGENCE_CACHED',
+            : result.source === 'in-progress'
+              ? 'PLAYER_INTELLIGENCE_IN_PROGRESS'
+              : 'PLAYER_INTELLIGENCE_CACHED',
           data: null,
         })
         return
