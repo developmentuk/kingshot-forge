@@ -91,19 +91,60 @@ export async function waitForPostSignInPlayerSyncCompletion(
     if (attempt > 0) await sleepImplementation(intervalMs)
     if (options.shouldStop?.()) return false
 
-    const result = await performLinkedPlayerSignInSync(
+    const result = await performLinkedPlayerSignInStatusCheck(
       session,
       fetchImplementation,
     )
-    if (result === 'updated' || result === 'no-linked-player') {
-      return true
-    }
-    if (result === 'unavailable') {
-      return false
-    }
+    if (result === 'completed') return true
+    if (result === 'unavailable') return false
   }
 
   return false
+}
+
+async function performLinkedPlayerSignInStatusCheck(
+  session: Session,
+  fetchImplementation: FetchImplementation = fetch,
+): Promise<'completed' | 'in-progress' | 'unavailable'> {
+  if (!session.access_token) return 'unavailable'
+
+  try {
+    const response = await fetchImplementation('/api/player/account', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'sign-in-status',
+      }),
+    })
+
+    const payload = await response.json().catch(() => null) as {
+      status?: string
+      code?: string
+    } | null
+
+    if (
+      response.ok
+      && payload?.status === 'success'
+      && payload.code === 'PLAYER_INTELLIGENCE_CACHED'
+    ) {
+      return 'completed'
+    }
+
+    if (
+      response.ok
+      && payload?.status === 'success'
+      && payload.code === 'PLAYER_INTELLIGENCE_IN_PROGRESS'
+    ) {
+      return 'in-progress'
+    }
+
+    return 'unavailable'
+  } catch {
+    return 'unavailable'
+  }
 }
 
 async function performLinkedPlayerSignInSync(
