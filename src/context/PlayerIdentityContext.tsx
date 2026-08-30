@@ -262,7 +262,7 @@ export function PlayerIdentityProvider({
   useEffect(() => {
     if (isVisionAcceptanceRoute) return
     function handlePlayerUpdate() {
-      void refreshPlayerIdentity('automatic')
+      void loadPlayerIdentity()
     }
 
     window.addEventListener(
@@ -276,7 +276,7 @@ export function PlayerIdentityProvider({
         handlePlayerUpdate,
       )
     }
-  }, [isVisionAcceptanceRoute, refreshPlayerIdentity])
+  }, [isVisionAcceptanceRoute, loadPlayerIdentity])
 
   const value =
     useMemo<PlayerIdentityContextValue>(
