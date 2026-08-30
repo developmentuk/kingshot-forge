@@ -1837,6 +1837,7 @@ assert.equal(identityQuotaInput.priority, 'high')
 assert.equal(identityQuotaProviderCalls, 2)
 
 let baseSignInProviderCalls = 0
+let baseSignInCompletionCalls = 0
 const baseSignInRefresh = await resolvePlayerRefresh({
   action: 'revalidate',
   existingAccount: {
@@ -1877,16 +1878,81 @@ const baseSignInRefresh = await resolvePlayerRefresh({
         normalDayLimit: 4500,
       }
     },
+    async complete() {
+      baseSignInCompletionCalls += 1
+      return true
+    },
   },
   enforceQuota: true,
   nowMs,
 })
 assert.equal(baseSignInRefresh.source, 'provider')
 assert.equal(baseSignInProviderCalls, 1)
+assert.equal(baseSignInCompletionCalls, 0)
+assert.equal(
+  baseSignInRefresh.quotaReservation?.reservationId,
+  '00000000-0000-0000-0000-000000000011',
+)
 
 let duplicateBaseSignInProviderCalls = 0
 let duplicateBaseSignInReservations = 0
-const duplicateBaseSignInRefresh = await resolvePlayerRefresh({
+const duplicateBaseSignInRefresh = assert.rejects(
+  () => resolvePlayerRefresh({
+    action: 'revalidate',
+    existingAccount: {
+      ...recentAccount,
+      last_refreshed_at: new Date(nowMs - 60_000).toISOString(),
+    },
+    playerId: '125500338',
+    kingdomId: 850,
+    provider: {
+      async lookupPlayer() {
+        duplicateBaseSignInProviderCalls += 1
+        return normalizedPlayer
+      },
+    },
+    refreshReason: 'sign-in',
+    verifiedLastSignInAt: fetchedAt,
+    userId: 'user-base-quota',
+    quotaRepository: {
+      async reserve(input) {
+        duplicateBaseSignInReservations += 1
+        assert.deepEqual(input, {
+          category: 'player_sign_in',
+          priority: 'high',
+          idempotencyKey: baseSignInProviderIdempotencyKey(
+            'user-base-quota',
+            fetchedAt,
+          ),
+        })
+        return {
+          allowed: false,
+          duplicate: true,
+          state: 'in_progress',
+          reservationId: '00000000-0000-0000-0000-000000000011',
+          attemptToken: null,
+          minuteUsed: 2,
+          dayUsed: 2,
+          minuteLimit: 60,
+          dayLimit: 5000,
+          normalDayLimit: 4500,
+        }
+      },
+    },
+    enforceQuota: true,
+    nowMs,
+  }),
+  (error) => {
+    assert.equal(error.code, 'PLAYER_PROVIDER_REQUEST_IN_PROGRESS')
+    return true
+  },
+)
+await duplicateBaseSignInRefresh
+assert.equal(duplicateBaseSignInReservations, 1)
+assert.equal(duplicateBaseSignInProviderCalls, 0)
+
+let completedBaseSignInProviderCalls = 0
+const completedBaseSignInRefresh = await resolvePlayerRefresh({
   action: 'revalidate',
   existingAccount: {
     ...recentAccount,
@@ -1896,7 +1962,7 @@ const duplicateBaseSignInRefresh = await resolvePlayerRefresh({
   kingdomId: 850,
   provider: {
     async lookupPlayer() {
-      duplicateBaseSignInProviderCalls += 1
+      completedBaseSignInProviderCalls += 1
       return normalizedPlayer
     },
   },
@@ -1904,20 +1970,11 @@ const duplicateBaseSignInRefresh = await resolvePlayerRefresh({
   verifiedLastSignInAt: fetchedAt,
   userId: 'user-base-quota',
   quotaRepository: {
-    async reserve(input) {
-      duplicateBaseSignInReservations += 1
-      assert.deepEqual(input, {
-        category: 'player_sign_in',
-        priority: 'high',
-        idempotencyKey: baseSignInProviderIdempotencyKey(
-          'user-base-quota',
-          fetchedAt,
-        ),
-      })
+    async reserve() {
       return {
         allowed: false,
         duplicate: true,
-        state: 'in_progress',
+        state: 'completed',
         reservationId: '00000000-0000-0000-0000-000000000011',
         attemptToken: null,
         minuteUsed: 2,
@@ -1931,9 +1988,8 @@ const duplicateBaseSignInRefresh = await resolvePlayerRefresh({
   enforceQuota: true,
   nowMs,
 })
-assert.equal(duplicateBaseSignInRefresh.source, 'cache')
-assert.equal(duplicateBaseSignInReservations, 1)
-assert.equal(duplicateBaseSignInProviderCalls, 0)
+assert.equal(completedBaseSignInRefresh.source, 'cache')
+assert.equal(completedBaseSignInProviderCalls, 0)
 
 let singleFlightQuotaReservations = 0
 let singleFlightQuotaCompletions = 0
@@ -2570,6 +2626,66 @@ assert.ok(signInStatusActionIndex >= 0)
 assert.ok(signInStatusReadIndex > signInStatusActionIndex)
 assert.ok(accountThrottleIndex > signInStatusReadIndex)
 assert.ok(richSyncIndex > accountThrottleIndex)
+assert.match(
+  playerAccountApiSource,
+  /const intelligenceEnabled = isPlayerIntelligenceRuntimeEnabled\(\)[\s\S]*baseSignInProviderIdempotencyKey\(/u,
+)
+assert.match(
+  playerAccountApiSource,
+  /PLAYER_PROVIDER_REQUEST_IN_PROGRESS'[\s\S]*status: 'success'[\s\S]*code: 'PLAYER_INTELLIGENCE_IN_PROGRESS'/u,
+)
+
+const linkedPlayerServiceSource = await readFile(
+  new URL('../server/player-identity/linkedPlayerService.ts', import.meta.url),
+  'utf8',
+)
+const accountPersistenceIndex = linkedPlayerServiceSource.indexOf(
+  "const result = existing",
+)
+const accountPersistenceResultIndex = linkedPlayerServiceSource.indexOf(
+  'const { data, error } = result',
+  accountPersistenceIndex,
+)
+const deferredCompletionIndex = linkedPlayerServiceSource.indexOf(
+  'await completeMightPulseProviderRequest(',
+  accountPersistenceResultIndex,
+)
+const persistenceFailureIndex = linkedPlayerServiceSource.indexOf(
+  'await failMightPulseProviderRequest(',
+  accountPersistenceResultIndex,
+)
+assert.ok(accountPersistenceIndex >= 0)
+assert.ok(accountPersistenceResultIndex > accountPersistenceIndex)
+assert.ok(persistenceFailureIndex > accountPersistenceResultIndex)
+assert.ok(deferredCompletionIndex > persistenceFailureIndex)
+assert.match(
+  linkedPlayerServiceSource,
+  /if \(resolution\.quotaReservation\) \{[\s\S]*await failMightPulseProviderRequest\([\s\S]*if \(error\.code === '23505'\)/u,
+)
+assert.match(
+  linkedPlayerServiceSource,
+  /const \{ data, error \} = result[\s\S]*if \(error\)[\s\S]*if \(resolution\.quotaReservation\)[\s\S]*await completeMightPulseProviderRequest\(/u,
+)
+
+const firstAuthorityGuardMigrationSql = await readFile(
+  new URL(
+    '../supabase/migrations/20260830200500_mightpulse_001b_first_authority_watermark_guard.sql',
+    import.meta.url,
+  ),
+  'utf8',
+)
+assert.match(
+  firstAuthorityGuardMigrationSql,
+  /authority_state\.player_account_id is null[\s\S]*current_membership\.id is not null[\s\S]*p_authority_observed_at <= current_membership\.updated_at/u,
+)
+assert.match(
+  firstAuthorityGuardMigrationSql,
+  /p_authority_observed_at <= current_membership\.updated_at then[\s\S]*alliance_id := current_membership\.alliance_id[\s\S]*membership_id := current_membership\.id[\s\S]*member_role := current_membership\.member_role/u,
+)
+assert.match(
+  firstAuthorityGuardMigrationSql,
+  /elsif nullif\(btrim\(p_alliance_tag\), ''\) is not null/u,
+)
 
 const incompleteRankWatermarkMigrationSql = await readFile(
   new URL(
