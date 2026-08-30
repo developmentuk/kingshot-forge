@@ -89,6 +89,80 @@ export interface PlayerIntelligenceRepository {
   }>>
 }
 
+function stableJson(value: unknown): string {
+  if (value === null) return 'null'
+  if (typeof value === 'string' || typeof value === 'boolean') {
+    return JSON.stringify(value)
+  }
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) {
+      throw new Error('Player intelligence canonical JSON requires finite numbers.')
+    }
+    return JSON.stringify(value)
+  }
+  if (Array.isArray(value)) {
+    return '[' + value.map(stableJson).join(',') + ']'
+  }
+  if (typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
+      .map(([key, item]) => JSON.stringify(key) + ':' + stableJson(item))
+    return '{' + entries.join(',') + '}'
+  }
+  throw new Error(
+    'Player intelligence canonical JSON does not support ' + typeof value + ' values.',
+  )
+}
+
+export function projectPlayerIntelligenceSnapshot(
+  intelligence: NormalizedPlayerIntelligence,
+): Readonly<Record<string, unknown>> {
+  return Object.freeze({
+    schemaVersion: PLAYER_INTELLIGENCE_SNAPSHOT_VERSION,
+    identity: Object.freeze({
+      playerId: intelligence.identity.playerId,
+      name: intelligence.identity.name,
+      kingdomId: intelligence.identity.kingdomId,
+      townCenterLevel: intelligence.identity.townCenterLevel,
+      avatarUrl: intelligence.identity.avatarUrl,
+    }),
+    base: intelligence.base,
+    heroes: intelligence.heroes,
+    ranks: intelligence.ranks,
+    governorGear: intelligence.governorGear,
+  })
+}
+
+export function hashPlayerIntelligenceSnapshot(
+  snapshot: Readonly<Record<string, unknown>>,
+): string {
+  return createHash('sha256')
+    .update(
+      PLAYER_INTELLIGENCE_SNAPSHOT_VERSION
+      + '\n'
+      + stableJson(snapshot),
+    )
+    .digest('hex')
+}
+
+export function quotaClassForPlayerIntelligenceReason(
+  reason: PlayerIntelligenceRefreshReason,
+): Readonly<{
+  category: ProviderRequestCategory
+  priority: ProviderQuotaPriority
+}> {
+  switch (reason) {
+    case 'sign-in':
+      return { category: 'player_sign_in', priority: 'high' }
+    case 'manual':
+      return { category: 'player_manual', priority: 'high' }
+    case 'automatic':
+      return { category: 'player_automatic', priority: 'low' }
+    case 'intelligence':
+      return { category: 'player_intelligence', priority: 'normal' }
+  }
+}
+
 export class SupabasePlayerIntelligenceRepository
 implements PlayerIntelligenceRepository {
   async loadPrimaryLinkedPlayer(
