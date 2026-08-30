@@ -7,6 +7,8 @@ import {
   type PlayerIntelligenceProvider,
 } from '../player-identity/providers/playerProvider.js'
 import {
+  createProviderRefreshFields,
+  hasNewVerifiedSignIn,
   validateKingdomId,
   validatePlayerId,
 } from '../player-identity/linkedPlayerService.js'
@@ -47,6 +49,7 @@ export type LinkedPlayerIdentity = Readonly<{
   playerAccountId: string
   playerId: string
   kingdomId: number
+  lastRefreshedAt: string | null
 }>
 
 export type PlayerIntelligenceObservationWrite = Readonly<{
@@ -79,6 +82,11 @@ export interface PlayerIntelligenceRepository {
       | 'player_intelligence'
     priority: ProviderQuotaPriority
   }>): Promise<ProviderQuotaReservation>
+  updateLinkedPlayerIdentity(input: Readonly<{
+    userId: string
+    playerAccountId: string
+    player: NormalizedPlayerIntelligence['identity']
+  }>): Promise<void>
   appendObservation(input: PlayerIntelligenceObservationWrite): Promise<string>
   syncAllianceAuthority(input: Readonly<{
     userId: string
@@ -177,7 +185,7 @@ implements PlayerIntelligenceRepository {
     const admin = getSupabaseAdmin()
     const { data, error } = await admin
       .from('player_accounts')
-      .select('id,player_id,kingdom_id')
+      .select('id,player_id,kingdom_id,last_refreshed_at')
       .eq('user_id', userId)
       .eq('is_primary', true)
       .maybeSingle()
@@ -189,6 +197,9 @@ implements PlayerIntelligenceRepository {
       playerAccountId: String(data.id),
       playerId: validatePlayerId(data.player_id),
       kingdomId: validateKingdomId(data.kingdom_id),
+      lastRefreshedAt: typeof data.last_refreshed_at === 'string'
+        ? data.last_refreshed_at
+        : null,
     }
   }
 
@@ -240,6 +251,24 @@ implements PlayerIntelligenceRepository {
       dayLimit: Number(value.day_limit),
       normalDayLimit: Number(value.normal_day_limit),
     }
+  }
+
+  async updateLinkedPlayerIdentity(
+    input: Readonly<{
+      userId: string
+      playerAccountId: string
+      player: NormalizedPlayerIntelligence['identity']
+    }>,
+  ): Promise<void> {
+    const admin = getSupabaseAdmin()
+    const { error } = await admin
+      .from('player_accounts')
+      .update(createProviderRefreshFields(input.player))
+      .eq('id', input.playerAccountId)
+      .eq('user_id', input.userId)
+      .eq('is_primary', true)
+
+    if (error) throw error
   }
 
   async appendObservation(
@@ -332,20 +361,32 @@ implements PlayerIntelligenceRepository {
   }
 }
 
+export function isPlayerIntelligenceRuntimeEnabled(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): boolean {
+  return environment.MIGHTPULSE_PLAYER_INTELLIGENCE_ENABLED?.trim().toLowerCase()
+    === 'true'
+}
+
 export async function syncLinkedPlayerIntelligence(
   userId: string,
   reason: PlayerIntelligenceRefreshReason,
   dependencies: Readonly<{
     repository?: PlayerIntelligenceRepository
     provider?: PlayerIntelligenceProvider
+    verifiedLastSignInAt?: string | null
   }> = {},
-): Promise<Readonly<{
-  observationId: string
-  contentSha256: string
-  intelligence: NormalizedPlayerIntelligence
-  quota: ProviderQuotaReservation
-  allianceAuthority: AllianceAuthoritySyncResult | null
-}>> {
+): Promise<
+  | Readonly<{ source: 'cache' }>
+  | Readonly<{
+      source: 'provider'
+      observationId: string
+      contentSha256: string
+      intelligence: NormalizedPlayerIntelligence
+      quota: ProviderQuotaReservation
+      allianceAuthority: AllianceAuthoritySyncResult | null
+    }>
+> {
   const repository =
     dependencies.repository ?? new SupabasePlayerIntelligenceRepository()
   const provider =
@@ -358,6 +399,16 @@ export async function syncLinkedPlayerIntelligence(
       'NO_LINKED_PLAYER',
       'No linked Kingshot player was found.',
     )
+  }
+
+  if (
+    reason === 'sign-in'
+    && !hasNewVerifiedSignIn(
+      dependencies.verifiedLastSignInAt,
+      linkedPlayer.lastRefreshedAt,
+    )
+  ) {
+    return Object.freeze({ source: 'cache' as const })
   }
 
   const quotaClass = quotaClassForPlayerIntelligenceReason(reason)
@@ -387,6 +438,12 @@ export async function syncLinkedPlayerIntelligence(
       true,
     )
   }
+
+  await repository.updateLinkedPlayerIdentity({
+    userId,
+    playerAccountId: linkedPlayer.playerAccountId,
+    player: intelligence.identity,
+  })
 
   const snapshot = projectPlayerIntelligenceSnapshot(intelligence)
   const contentSha256 = hashPlayerIntelligenceSnapshot(snapshot)
@@ -421,6 +478,7 @@ export async function syncLinkedPlayerIntelligence(
       })
 
   return Object.freeze({
+    source: 'provider' as const,
     observationId,
     contentSha256,
     intelligence,
