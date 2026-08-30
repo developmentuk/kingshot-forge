@@ -306,6 +306,44 @@ revoke all on table public.player_alliance_provider_state from authenticated;
 grant select, insert, update on table public.player_alliance_provider_state
   to service_role;
 
+create table if not exists public.alliance_provider_authority_overrides (
+  alliance_id uuid not null
+    references public.alliances(id) on delete cascade,
+  user_id uuid not null
+    references public.profiles(id) on delete cascade,
+  suspended_at timestamptz not null,
+  suspended_until timestamptz null,
+  reason text not null
+    check (char_length(btrim(reason)) between 1 and 500),
+  suspended_by uuid null
+    references public.profiles(id) on delete set null,
+  cleared_at timestamptz null,
+  cleared_by uuid null
+    references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (alliance_id, user_id),
+  check (
+    suspended_until is null
+    or suspended_until > suspended_at
+  ),
+  check (
+    (cleared_at is null and cleared_by is null)
+    or cleared_at is not null
+  )
+);
+
+comment on table public.alliance_provider_authority_overrides is
+  'Explicit manual/emergency suspension ceiling for MightPulse-derived R4/R5 Alliance authority. Active overrides prevent provider observations from reactivating Alliance-management grants.';
+
+alter table public.alliance_provider_authority_overrides enable row level security;
+
+revoke all on table public.alliance_provider_authority_overrides from public;
+revoke all on table public.alliance_provider_authority_overrides from anon;
+revoke all on table public.alliance_provider_authority_overrides from authenticated;
+grant select, insert, update on table public.alliance_provider_authority_overrides
+  to service_role;
+
 create or replace function public.sync_mightpulse_alliance_membership(
   p_user_id uuid,
   p_player_account_id uuid,
@@ -335,6 +373,7 @@ declare
   previous_admin public.alliance_admins;
   resulting_admin public.alliance_admins;
   authority_state public.player_alliance_provider_state;
+  authority_override public.alliance_provider_authority_overrides;
   normalized_tag text;
   normalized_name text;
   management_role boolean;
@@ -734,7 +773,117 @@ begin
     and administrator.user_id = p_user_id
   for update;
 
-  if management_role then
+  select *
+  into authority_override
+  from public.alliance_provider_authority_overrides override_row
+  where override_row.alliance_id = alliance_row.id
+    and override_row.user_id = p_user_id
+    and override_row.cleared_at is null
+    and (
+      override_row.suspended_until is null
+      or override_row.suspended_until > p_fetched_at
+    )
+  for update;
+
+  if management_role
+    and authority_override.alliance_id is null
+    and previous_admin.id is not null
+    and previous_admin.is_active = false
+    and previous_admin.revoked_at is not null
+    and authority_state.member_role in ('r4', 'leader')
+    and previous_admin.revoked_at >= authority_state.provider_fetched_at then
+
+    insert into public.alliance_provider_authority_overrides (
+      alliance_id,
+      user_id,
+      suspended_at,
+      suspended_until,
+      reason,
+      suspended_by,
+      cleared_at,
+      cleared_by,
+      updated_at
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      previous_admin.revoked_at,
+      null,
+      'Existing manual/emergency Alliance-admin revocation preserved against MightPulse reactivation.',
+      null,
+      null,
+      null,
+      p_fetched_at
+    )
+    on conflict (alliance_id, user_id) do update
+    set
+      suspended_at = excluded.suspended_at,
+      suspended_until = null,
+      reason = excluded.reason,
+      suspended_by = excluded.suspended_by,
+      cleared_at = null,
+      cleared_by = null,
+      updated_at = excluded.updated_at;
+
+    select *
+    into authority_override
+    from public.alliance_provider_authority_overrides override_row
+    where override_row.alliance_id = alliance_row.id
+      and override_row.user_id = p_user_id
+    for update;
+
+    insert into public.alliance_audit_log (
+      alliance_id,
+      user_id,
+      player_account_id,
+      action,
+      previous_data,
+      new_data,
+      notes
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      p_player_account_id,
+      'mightpulse_manual_suspension_preserved',
+      to_jsonb(previous_admin),
+      to_jsonb(authority_override),
+      'Manual/emergency Alliance-admin revocation converted into a provider-authority suspension ceiling.'
+    );
+  end if;
+
+  if management_role and authority_override.alliance_id is not null then
+    if previous_admin.id is not null then
+      update public.alliance_admins
+      set
+        role = p_member_role,
+        is_active = false,
+        revoked_at = coalesce(previous_admin.revoked_at, authority_override.suspended_at),
+        updated_at = greatest(previous_admin.updated_at, p_fetched_at)
+      where id = previous_admin.id
+      returning * into resulting_admin;
+    end if;
+
+    insert into public.alliance_audit_log (
+      alliance_id,
+      user_id,
+      player_account_id,
+      action,
+      previous_data,
+      new_data,
+      notes
+    )
+    values (
+      alliance_row.id,
+      p_user_id,
+      p_player_account_id,
+      'mightpulse_admin_suspension_preserved',
+      case when previous_admin.id is null then null else to_jsonb(previous_admin) end,
+      case when resulting_admin.id is null then to_jsonb(authority_override) else to_jsonb(resulting_admin) end,
+      'Active manual/emergency suspension prevented MightPulse R4/R5 authority reactivation.'
+    );
+
+  elsif management_role then
     if previous_admin.id is null then
       insert into public.alliance_admins (
         alliance_id,
@@ -864,7 +1013,8 @@ begin
   alliance_id := alliance_row.id;
   membership_id := resulting_membership.id;
   member_role := resulting_membership.member_role;
-  admin_active := management_role;
+  admin_active := management_role
+    and authority_override.alliance_id is null;
   return next;
 end;
 $$;
