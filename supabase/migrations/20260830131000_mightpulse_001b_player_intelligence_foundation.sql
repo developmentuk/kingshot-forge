@@ -270,7 +270,8 @@ create or replace function public.sync_mightpulse_alliance_membership(
   p_alliance_tag text,
   p_alliance_name text,
   p_member_role public.alliance_member_role,
-  p_observed_at timestamptz
+  p_observed_at timestamptz,
+  p_fetched_at timestamptz
 )
 returns table (
   alliance_id uuid,
@@ -290,6 +291,7 @@ declare
   resulting_membership public.alliance_memberships;
   previous_admin public.alliance_admins;
   resulting_admin public.alliance_admins;
+  authority_state public.player_alliance_provider_state;
   normalized_tag text;
   normalized_name text;
   management_role boolean;
@@ -298,7 +300,9 @@ begin
     or p_player_account_id is null
     or p_kingdom_number < 1
     or p_kingdom_number > 9999
-    or p_observed_at is null then
+    or p_observed_at is null
+    or p_fetched_at is null
+    or p_observed_at > p_fetched_at then
     raise exception 'Invalid MightPulse Alliance sync input.'
       using errcode = '22023';
   end if;
@@ -322,11 +326,34 @@ begin
   end if;
 
   select *
+  into authority_state
+  from public.player_alliance_provider_state state
+  where state.player_account_id = p_player_account_id
+  for update;
+
+  select *
   into current_membership
   from public.alliance_memberships membership
   where membership.player_account_id = p_player_account_id
     and membership.status = 'current'
   for update;
+
+  if authority_state.player_account_id is not null
+    and p_observed_at <= authority_state.provider_observed_at then
+    alliance_id := current_membership.alliance_id;
+    membership_id := current_membership.id;
+    member_role := current_membership.member_role;
+    admin_active := current_membership.id is not null and exists (
+      select 1
+      from public.alliance_admins administrator
+      where administrator.alliance_id = current_membership.alliance_id
+        and administrator.user_id = p_user_id
+        and administrator.is_active = true
+        and administrator.revoked_at is null
+    );
+    return next;
+    return;
+  end if;
 
   normalized_tag := nullif(btrim(p_alliance_tag), '');
   normalized_name := nullif(btrim(p_alliance_name), '');
