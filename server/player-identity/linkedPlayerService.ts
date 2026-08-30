@@ -443,14 +443,63 @@ export async function resolvePlayerRefresh(input: {
   }
 }
 
-export function createProviderRefreshFields(player: NormalizedPlayer) {
+export function providerIdentityObservedAt(
+  player: NormalizedPlayer,
+): string | null {
+  const fetchedAtMs = Date.parse(player.providerFetchedAt)
+  if (!Number.isFinite(fetchedAtMs)) return null
+
+  const cachedAtMs = player.providerCachedAt === null
+    || player.providerCachedAt === undefined
+    ? Number.NaN
+    : Date.parse(player.providerCachedAt)
+  const ageSeconds = player.providerAgeSeconds
+  const ageObservedAtMs = typeof ageSeconds === 'number'
+    && Number.isFinite(ageSeconds)
+    && ageSeconds >= 0
+    ? fetchedAtMs - (ageSeconds * 1_000)
+    : Number.NaN
+  const candidates = [
+    Number.isFinite(cachedAtMs) && cachedAtMs <= fetchedAtMs
+      ? cachedAtMs
+      : Number.NaN,
+    Number.isFinite(ageObservedAtMs) && ageObservedAtMs <= fetchedAtMs
+      ? ageObservedAtMs
+      : Number.NaN,
+  ].filter(Number.isFinite)
+
+  return candidates.length > 0
+    ? new Date(Math.min(...candidates)).toISOString()
+    : null
+}
+
+export function shouldApplyProviderIdentityRefresh(
+  player: NormalizedPlayer,
+  currentLastRefreshedAt: unknown,
+): boolean {
+  const observedAt = providerIdentityObservedAt(player)
+  if (observedAt === null) return false
+
+  const observedAtMs = Date.parse(observedAt)
+  const currentLastRefreshedAtMs = typeof currentLastRefreshedAt === 'string'
+    ? Date.parse(currentLastRefreshedAt)
+    : Number.NaN
+
+  return !Number.isFinite(currentLastRefreshedAtMs)
+    || observedAtMs >= currentLastRefreshedAtMs
+}
+
+export function createProviderRefreshFields(
+  player: NormalizedPlayer,
+  providerObservedAt = player.providerFetchedAt,
+) {
   return {
     player_id: player.playerId,
     player_name: player.name,
     kingdom_id: player.kingdomId,
     ...(player.townCenterLevel !== null ? { town_center_level: player.townCenterLevel } : {}),
     ...(player.avatarUrl ? { profile_photo: player.avatarUrl } : {}),
-    last_refreshed_at: player.providerFetchedAt,
+    last_refreshed_at: providerObservedAt,
     updated_at: player.providerFetchedAt,
   }
 }
@@ -552,12 +601,24 @@ export async function linkOrRevalidatePlayerAccount(
   })
   if (resolution.source === 'cache') return safeAccount(existing)
 
+  const providerObservedAt = existing
+    ? providerIdentityObservedAt(resolution.player)
+    : null
   const result = existing
-    ? await admin.from('player_accounts').update({
-        ...createProviderRefreshFields(resolution.player),
-        is_public: existing.is_public,
-        is_primary: true,
-      }).eq('id', existing.id).eq('user_id', userId).select(ACCOUNT_FIELDS).single()
+    ? providerObservedAt !== null
+      && shouldApplyProviderIdentityRefresh(
+        resolution.player,
+        existing.last_refreshed_at,
+      )
+      ? await admin.from('player_accounts').update({
+          ...createProviderRefreshFields(
+            resolution.player,
+            providerObservedAt,
+          ),
+          is_public: existing.is_public,
+          is_primary: true,
+        }).eq('id', existing.id).eq('user_id', userId).select(ACCOUNT_FIELDS).single()
+      : { data: existing, error: null }
     : await admin.from('player_accounts').insert(
         createNewLinkedPlayerFields(resolution.player, userId),
       ).select(ACCOUNT_FIELDS).single()

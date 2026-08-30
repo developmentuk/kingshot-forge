@@ -196,6 +196,9 @@ function normalizeMightPulsePlayer(
     avatarUrl: avatar.url,
     provider: 'mightpulse',
     providerFetchedAt,
+    providerCachedAt: optionalTimestamp(wrapper.cached_at),
+    providerAgeSeconds: optionalNumber(wrapper.age_seconds),
+    providerFresh: optionalBoolean(wrapper.fresh),
   }
 }
 

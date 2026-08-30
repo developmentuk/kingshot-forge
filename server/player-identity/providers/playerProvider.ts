@@ -8,6 +8,9 @@ export type NormalizedPlayer = Readonly<{
   avatarUrl: string | null
   provider: PlayerProviderName
   providerFetchedAt: string
+  providerCachedAt?: string | null
+  providerAgeSeconds?: number | null
+  providerFresh?: boolean | null
 }>
 
 export type PlayerLookupRequest = Readonly<{

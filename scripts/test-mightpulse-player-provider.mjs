@@ -8,6 +8,8 @@ import {
 import {
   createNewLinkedPlayerFields,
   createProviderRefreshFields,
+  providerIdentityObservedAt,
+  shouldApplyProviderIdentityRefresh,
   hasNewVerifiedSignIn,
   lookupKingshotPlayer,
   lookupKingshotPlayerGoverned,
@@ -324,6 +326,9 @@ assert.deepEqual(valid, {
   avatarUrl: 'https://cdn.example.test/avatar.png',
   provider: 'mightpulse',
   providerFetchedAt: fetchedAt,
+  providerCachedAt: '2026-08-29T11:50:00.000Z',
+  providerAgeSeconds: 600,
+  providerFresh: true,
 })
 assert.equal(requestUrl.toString(), 'https://api.mightpulse.test/v1/players/125500338?include=base')
 assert.equal(requestInit.headers.Authorization, `Bearer ${secret}`)
@@ -2376,6 +2381,54 @@ assert.equal(manyUsersThrottle.attempts.size, 1_000)
 manyUsersThrottle.enforce('bounded-sweep-trigger', 10)
 assert.equal(manyUsersThrottle.attempts.size, 1)
 assert.equal(manyUsersThrottle.attempts.has('bounded-sweep-trigger'), true)
+
+const baseFreshnessPlayer = {
+  ...normalizedPlayer,
+  providerCachedAt: new Date(Date.parse(fetchedAt) - (5 * 60 * 1_000)).toISOString(),
+  providerAgeSeconds: 2 * 60 * 60,
+  providerFresh: true,
+}
+assert.equal(
+  providerIdentityObservedAt(baseFreshnessPlayer),
+  new Date(Date.parse(fetchedAt) - (2 * 60 * 60 * 1_000)).toISOString(),
+)
+assert.equal(
+  shouldApplyProviderIdentityRefresh(
+    baseFreshnessPlayer,
+    new Date(Date.parse(fetchedAt) - (60 * 60 * 1_000)).toISOString(),
+  ),
+  false,
+)
+const futureBaseCachedAtPlayer = {
+  ...normalizedPlayer,
+  providerCachedAt: new Date(Date.parse(fetchedAt) + 1_000).toISOString(),
+  providerAgeSeconds: 10 * 60,
+}
+assert.equal(
+  providerIdentityObservedAt(futureBaseCachedAtPlayer),
+  new Date(Date.parse(fetchedAt) - (10 * 60 * 1_000)).toISOString(),
+)
+const futureOnlyBaseCachedAtPlayer = {
+  ...normalizedPlayer,
+  providerCachedAt: new Date(Date.parse(fetchedAt) + 1_000).toISOString(),
+  providerAgeSeconds: null,
+}
+assert.equal(providerIdentityObservedAt(futureOnlyBaseCachedAtPlayer), null)
+assert.equal(
+  shouldApplyProviderIdentityRefresh(
+    futureOnlyBaseCachedAtPlayer,
+    recentAccount.last_refreshed_at,
+  ),
+  false,
+)
+const orderedBaseRefreshFields = createProviderRefreshFields(
+  baseFreshnessPlayer,
+  providerIdentityObservedAt(baseFreshnessPlayer),
+)
+assert.equal(
+  orderedBaseRefreshFields.last_refreshed_at,
+  new Date(Date.parse(fetchedAt) - (2 * 60 * 60 * 1_000)).toISOString(),
+)
 
 const refreshFields = createProviderRefreshFields(normalizedPlayer)
 assert.equal('player_level' in refreshFields, false)
