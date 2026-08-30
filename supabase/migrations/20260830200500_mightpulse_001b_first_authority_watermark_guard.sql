@@ -68,10 +68,6 @@ begin
     or p_quota_reservation_id is null
     or p_quota_attempt_token is null
     or (
-      p_provider_cached_at is not null
-      and p_provider_cached_at > p_provider_fetched_at
-    )
-    or (
       p_provider_age_seconds is not null
       and p_provider_age_seconds < 0
     )
@@ -106,8 +102,19 @@ begin
       using errcode = '22023';
   end if;
 
+  -- Raw provider cache evidence is preserved in the immutable observation below,
+  -- but only usable freshness signals may order canonical Player identity.
   identity_observed_at := case
-    when p_provider_cached_at is not null then p_provider_cached_at
+    when p_provider_cached_at is not null
+      and p_provider_cached_at <= p_provider_fetched_at
+      and p_provider_age_seconds is not null then
+      least(
+        p_provider_cached_at,
+        p_provider_fetched_at - make_interval(secs => p_provider_age_seconds)
+      )
+    when p_provider_cached_at is not null
+      and p_provider_cached_at <= p_provider_fetched_at then
+      p_provider_cached_at
     when p_provider_age_seconds is not null then
       p_provider_fetched_at - make_interval(secs => p_provider_age_seconds)
     else null

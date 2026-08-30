@@ -2985,6 +2985,23 @@ assert.match(
   /elsif nullif\(btrim\(p_alliance_tag\), ''\) is not null/u,
 )
 
+assert.doesNotMatch(
+  firstAuthorityGuardMigrationSql,
+  /or \(\s*p_provider_cached_at is not null\s*and p_provider_cached_at > p_provider_fetched_at\s*\)/u,
+)
+assert.match(
+  firstAuthorityGuardMigrationSql,
+  /identity_observed_at := case[\s\S]*p_provider_cached_at <= p_provider_fetched_at[\s\S]*p_provider_age_seconds is not null then[\s\S]*least\([\s\S]*p_provider_cached_at,[\s\S]*p_provider_fetched_at - make_interval\(secs => p_provider_age_seconds\)[\s\S]*\)/u,
+)
+assert.match(
+  firstAuthorityGuardMigrationSql,
+  /when p_provider_cached_at is not null[\s\S]*p_provider_cached_at <= p_provider_fetched_at then[\s\S]*p_provider_cached_at[\s\S]*when p_provider_age_seconds is not null then[\s\S]*p_provider_fetched_at - make_interval\(secs => p_provider_age_seconds\)/u,
+)
+assert.match(
+  firstAuthorityGuardMigrationSql,
+  /insert into public\.player_intelligence_observations \([\s\S]*provider_cached_at,[\s\S]*values \([\s\S]*p_provider_cached_at,/u,
+)
+
 const incompleteRankWatermarkMigrationSql = await readFile(
   new URL(
     '../supabase/migrations/20260830193000_mightpulse_001b_incomplete_rank_watermark.sql',
