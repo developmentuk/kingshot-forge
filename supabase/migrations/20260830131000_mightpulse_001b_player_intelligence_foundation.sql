@@ -110,8 +110,6 @@ create table if not exists public.provider_quota_reservations (
   status text not null default 'pending'
     check (status = any (array['pending'::text, 'completed'::text, 'failed'::text])),
   attempt_token uuid not null default gen_random_uuid(),
-  attempt_count integer not null default 1
-    check (attempt_count >= 1),
   reserved_at timestamptz not null default clock_timestamp(),
   last_attempt_at timestamptz not null default clock_timestamp(),
   lease_expires_at timestamptz not null default (clock_timestamp() + interval '120 seconds'),
@@ -126,10 +124,7 @@ create table if not exists public.provider_quota_reservations (
 );
 
 comment on table public.provider_quota_reservations is
-  'Server-only rolling provider request reservations used to coordinate shared API-key limits across runtime instances. The daily budget is enforced over a conservative rolling 24-hour window.';
-
-create index if not exists provider_quota_reservations_provider_time_idx
-  on public.provider_quota_reservations (provider, last_attempt_at desc);
+  'Server-only provider request reservation state and idempotency ownership. Rolling provider limits are calculated from the separate immutable attempt ledger.';
 
 create unique index if not exists provider_quota_reservations_idempotency_idx
   on public.provider_quota_reservations (provider, idempotency_key)
@@ -141,6 +136,50 @@ revoke all on table public.provider_quota_reservations from public;
 revoke all on table public.provider_quota_reservations from anon;
 revoke all on table public.provider_quota_reservations from authenticated;
 revoke all on table public.provider_quota_reservations from service_role;
+
+create table if not exists public.provider_quota_attempts (
+  id uuid primary key default gen_random_uuid(),
+  reservation_id uuid not null
+    references public.provider_quota_reservations(id)
+    on delete cascade,
+  provider text not null
+    check (provider = 'mightpulse'),
+  category text not null
+    check (
+      category = any (
+        array[
+          'player_link'::text,
+          'player_sign_in'::text,
+          'player_manual'::text,
+          'player_automatic'::text,
+          'player_intelligence'::text,
+          'alliance_roster'::text,
+          'kingdom'::text,
+          'kvk_target'::text
+        ]
+      )
+    ),
+  priority text not null
+    check (priority = any (array['high'::text, 'normal'::text, 'low'::text])),
+  attempt_token uuid not null,
+  attempted_at timestamptz not null default clock_timestamp()
+);
+
+comment on table public.provider_quota_attempts is
+  'Immutable server-only ledger containing one row for each actual MightPulse provider request attempt.';
+
+create index if not exists provider_quota_attempts_provider_time_idx
+  on public.provider_quota_attempts (provider, attempted_at desc);
+
+create unique index if not exists provider_quota_attempts_token_idx
+  on public.provider_quota_attempts (reservation_id, attempt_token);
+
+alter table public.provider_quota_attempts enable row level security;
+
+revoke all on table public.provider_quota_attempts from public;
+revoke all on table public.provider_quota_attempts from anon;
+revoke all on table public.provider_quota_attempts from authenticated;
+revoke all on table public.provider_quota_attempts from service_role;
 
 create or replace function public.reserve_provider_request(
   p_provider text,
@@ -221,22 +260,17 @@ begin
     hashtextextended('forge-provider-quota:' || p_provider, 0)
   );
 
-  select coalesce(sum(
-    case
-      when reservation.last_attempt_at > now_at - interval '60 seconds'
-        then reservation.attempt_count
-      else 0
-    end
-  ), 0)::integer
+  select count(*)::integer
   into minute_count
-  from public.provider_quota_reservations reservation
-  where reservation.provider = p_provider;
+  from public.provider_quota_attempts attempt
+  where attempt.provider = p_provider
+    and attempt.attempted_at > now_at - interval '60 seconds';
 
-  select coalesce(sum(reservation.attempt_count), 0)::integer
+  select count(*)::integer
   into day_count
-  from public.provider_quota_reservations reservation
-  where reservation.provider = p_provider
-    and reservation.last_attempt_at > now_at - interval '24 hours';
+  from public.provider_quota_attempts attempt
+  where attempt.provider = p_provider
+    and attempt.attempted_at > now_at - interval '24 hours';
 
   if p_idempotency_key is not null then
     select *
@@ -293,12 +327,28 @@ begin
         priority = p_priority,
         status = 'pending',
         attempt_token = created_token,
-        attempt_count = existing_row.attempt_count + 1,
         last_attempt_at = now_at,
         lease_expires_at = now_at + interval '120 seconds',
         completed_at = null,
         failed_at = null
       where id = existing_row.id;
+
+      insert into public.provider_quota_attempts (
+        reservation_id,
+        provider,
+        category,
+        priority,
+        attempt_token,
+        attempted_at
+      )
+      values (
+        existing_row.id,
+        p_provider,
+        p_category,
+        p_priority,
+        created_token,
+        now_at
+      );
 
       allowed := true;
       duplicate := false;
@@ -336,7 +386,6 @@ begin
     idempotency_key,
     status,
     attempt_token,
-    attempt_count,
     reserved_at,
     last_attempt_at,
     lease_expires_at
@@ -349,10 +398,26 @@ begin
     p_idempotency_key,
     'pending',
     created_token,
-    1,
     now_at,
     now_at,
     now_at + interval '120 seconds'
+  );
+
+  insert into public.provider_quota_attempts (
+    reservation_id,
+    provider,
+    category,
+    priority,
+    attempt_token,
+    attempted_at
+  )
+  values (
+    created_id,
+    p_provider,
+    p_category,
+    p_priority,
+    created_token,
+    now_at
   );
 
   allowed := true;
