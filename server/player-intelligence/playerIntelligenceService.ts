@@ -233,10 +233,15 @@ implements PlayerIntelligenceRepository {
     if (
       typeof value.allowed !== 'boolean'
       || (value.reservation_id !== null && typeof value.reservation_id !== 'string')
+      || typeof value.minute_used !== 'number'
       || !Number.isInteger(value.minute_used)
+      || typeof value.day_used !== 'number'
       || !Number.isInteger(value.day_used)
+      || typeof value.minute_limit !== 'number'
       || !Number.isInteger(value.minute_limit)
+      || typeof value.day_limit !== 'number'
       || !Number.isInteger(value.day_limit)
+      || typeof value.normal_day_limit !== 'number'
       || !Number.isInteger(value.normal_day_limit)
     ) {
       throw new Error('Provider quota reservation returned an invalid result.')
