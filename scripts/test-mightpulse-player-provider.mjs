@@ -491,6 +491,91 @@ assert.equal(failedQuotaAttempts, 0)
 assert.equal(intelligenceResult.allianceAuthority.memberRole, 'r4')
 assert.equal(intelligenceResult.allianceAuthority.adminActive, true)
 
+let ageOnlyApplyInput
+const ageOnlyResult = await syncLinkedPlayerIntelligence(
+  'user-intelligence',
+  'manual',
+  {
+    repository: {
+      ...allowedRepository,
+      async applySync(input) {
+        ageOnlyApplyInput = input
+        return {
+          observationId: '00000000-0000-0000-0000-000000000007',
+          allianceAuthority: input.applyAllianceAuthority
+            ? {
+                allianceId: '00000000-0000-0000-0000-000000000004',
+                membershipId: '00000000-0000-0000-0000-000000000005',
+                memberRole: input.memberRole,
+                adminActive: input.memberRole === 'r4' || input.memberRole === 'leader',
+              }
+            : null,
+        }
+      },
+    },
+    quotaRepository: allowedQuotaRepository,
+    provider: {
+      async lookupPlayer() {
+        throw new Error('identity-only lookup must not be used by intelligence sync')
+      },
+      async lookupPlayerIntelligence() {
+        return {
+          ...intelligence,
+          providerCachedAt: null,
+          providerAgeSeconds: 600,
+        }
+      },
+    },
+  },
+)
+assert.equal(ageOnlyApplyInput.applyAllianceAuthority, true)
+assert.equal(
+  ageOnlyApplyInput.authorityObservedAt,
+  '2026-08-29T11:50:00.000Z',
+)
+assert.equal(ageOnlyResult.allianceAuthority.memberRole, 'r4')
+
+let noEvidenceApplyInput
+const noEvidenceResult = await syncLinkedPlayerIntelligence(
+  'user-intelligence',
+  'manual',
+  {
+    repository: {
+      ...allowedRepository,
+      async applySync(input) {
+        noEvidenceApplyInput = input
+        return {
+          observationId: '00000000-0000-0000-0000-000000000008',
+          allianceAuthority: input.applyAllianceAuthority
+            ? {
+                allianceId: '00000000-0000-0000-0000-000000000004',
+                membershipId: '00000000-0000-0000-0000-000000000005',
+                memberRole: input.memberRole,
+                adminActive: input.memberRole === 'r4' || input.memberRole === 'leader',
+              }
+            : null,
+        }
+      },
+    },
+    quotaRepository: allowedQuotaRepository,
+    provider: {
+      async lookupPlayer() {
+        throw new Error('identity-only lookup must not be used by intelligence sync')
+      },
+      async lookupPlayerIntelligence() {
+        return {
+          ...intelligence,
+          providerCachedAt: null,
+          providerAgeSeconds: null,
+        }
+      },
+    },
+  },
+)
+assert.equal(noEvidenceApplyInput.applyAllianceAuthority, false)
+assert.equal(noEvidenceApplyInput.authorityObservedAt, null)
+assert.equal(noEvidenceResult.allianceAuthority, null)
+
 let replayQuotaCalls = 0
 let replayProviderCalls = 0
 const replayResult = await syncLinkedPlayerIntelligence(
