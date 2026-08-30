@@ -117,7 +117,9 @@ export default function PlayerProfileEditorPage() {
     useState('')
 
   const loadedPlayerAccountIdRef =
-    useRef<string | null>(null)
+    useRef<string | null | undefined>(
+      undefined,
+    )
 
   useEffect(() => {
     let cancelled = false
@@ -128,7 +130,8 @@ export default function PlayerProfileEditorPage() {
       }
 
       if (!user) {
-        loadedPlayerAccountIdRef.current = null
+        loadedPlayerAccountIdRef.current =
+          undefined
         setProfile(null)
         setLoading(false)
         return
