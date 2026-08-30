@@ -1555,6 +1555,22 @@ assert.equal(await concurrentSecond, 'updated')
 assert.equal(concurrentSignInFetchCalls, 1)
 assert.equal(getPostSignInPlayerSyncInFlight('user-sign-in-sync'), null)
 
+let settledDuplicateFetchCalls = 0
+assert.equal(
+  await syncLinkedPlayerAfterSignIn(
+    signInSession,
+    async () => {
+      settledDuplicateFetchCalls += 1
+      return Response.json({
+        status: 'success',
+        data: { id: 'must-not-run' },
+      })
+    },
+  ),
+  'already-attempted',
+)
+assert.equal(settledDuplicateFetchCalls, 0)
+
 const postSignInResult = await syncLinkedPlayerAfterSignIn(
   {
     ...signInSession,
@@ -1582,7 +1598,13 @@ assert.deepEqual(
 
 assert.equal(
   await syncLinkedPlayerAfterSignIn(
-    signInSession,
+    {
+      ...signInSession,
+      user: {
+        ...signInSession.user,
+        last_sign_in_at: '2026-08-29T12:10:00.000Z',
+      },
+    },
     async () => Response.json({
       status: 'success',
       code: 'NO_LINKED_PLAYER',
@@ -1593,14 +1615,26 @@ assert.equal(
 )
 assert.equal(
   await syncLinkedPlayerAfterSignIn(
-    signInSession,
+    {
+      ...signInSession,
+      user: {
+        ...signInSession.user,
+        last_sign_in_at: '2026-08-29T12:15:00.000Z',
+      },
+    },
     async () => new Response('provider unavailable', { status: 503 }),
   ),
   'unavailable',
 )
 assert.equal(
   await syncLinkedPlayerAfterSignIn(
-    signInSession,
+    {
+      ...signInSession,
+      user: {
+        ...signInSession.user,
+        last_sign_in_at: '2026-08-29T12:20:00.000Z',
+      },
+    },
     async () => { throw new Error('synthetic network failure') },
   ),
   'unavailable',
