@@ -13,6 +13,7 @@ const passport = await read('src/features/player-identity/PrivatePlayerIdentityP
 const townCenterMigration = await read('supabase/migrations/20260829212144_mightpulse_player_account_town_center_level.sql')
 const townCenterRangeMigration = await read('supabase/migrations/20260829213913_mightpulse_town_center_raw_level_range.sql')
 const townCenterContract = await read('shared/domains/player-identity/townCenterLevel.ts')
+const privateProfileOwnerMigration = await read('supabase/migrations/20260830103000_player_profiles_private_owner_read.sql')
 const rolePage = await read('src/features/operations/UserManagementPage.tsx')
 const render = await read('src/features/admin/RenderEngineCalibrationPage.tsx')
 const heroCss = await read('src/pages/HeroCompanionPage.css')
