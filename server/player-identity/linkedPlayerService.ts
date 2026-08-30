@@ -8,7 +8,6 @@ import {
 import {
   isProviderQuotaRuntimeEnabled,
   reserveMightPulseProviderRequest,
-  signInProviderIdempotencyKey,
   type ProviderQuotaRepository,
   type ProviderRequestCategory,
   type ProviderQuotaPriority,
@@ -216,20 +215,11 @@ export async function resolvePlayerRefresh(input: {
       input.action,
       input.refreshReason ?? 'automatic',
     )
-    const idempotencyKey = input.refreshReason === 'sign-in'
-      && input.userId
-      && input.verifiedLastSignInAt
-      ? signInProviderIdempotencyKey(
-          input.userId,
-          input.verifiedLastSignInAt,
-        )
-      : null
-
     try {
       const reservation = await reserveMightPulseProviderRequest(
         {
           ...quotaClass,
-          idempotencyKey,
+          idempotencyKey: null,
         },
         input.quotaRepository,
       )
