@@ -7,7 +7,18 @@ export type PostSignInPlayerSyncResult =
   | 'no-linked-player'
   | 'unavailable'
 
-export async function syncLinkedPlayerAfterSignIn(
+const signInSyncInFlight = new Map<
+  string,
+  Promise<PostSignInPlayerSyncResult>
+>()
+
+export function getPostSignInPlayerSyncInFlight(
+  userId: string,
+): Promise<PostSignInPlayerSyncResult> | null {
+  return signInSyncInFlight.get(userId) ?? null
+}
+
+async function performLinkedPlayerSignInSync(
   session: Session,
   fetchImplementation: FetchImplementation = fetch,
 ): Promise<PostSignInPlayerSyncResult> {
@@ -48,4 +59,28 @@ export async function syncLinkedPlayerAfterSignIn(
   } catch {
     return 'unavailable'
   }
+}
+
+
+export async function syncLinkedPlayerAfterSignIn(
+  session: Session,
+  fetchImplementation: FetchImplementation = fetch,
+): Promise<PostSignInPlayerSyncResult> {
+  const userId = session.user?.id
+  if (!userId) return 'unavailable'
+
+  const existing = signInSyncInFlight.get(userId)
+  if (existing) return existing
+
+  const request = performLinkedPlayerSignInSync(
+    session,
+    fetchImplementation,
+  ).finally(() => {
+    if (signInSyncInFlight.get(userId) === request) {
+      signInSyncInFlight.delete(userId)
+    }
+  })
+
+  signInSyncInFlight.set(userId, request)
+  return request
 }
