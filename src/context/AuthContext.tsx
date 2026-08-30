@@ -12,6 +12,7 @@ import type {
   User,
 } from '@supabase/supabase-js'
 import { beginOAuthAuthentication, getCurrentForgeSession, observeForgeAuthState, signOutForgeUser } from '../services/authService'
+import { syncLinkedPlayerAfterSignIn } from '../services/postSignInPlayerSyncService'
 import { track } from '../platform/analytics/analytics'
 
 type AuthContextValue = {
@@ -77,7 +78,14 @@ export function AuthProvider({
 
         setSession(nextSession)
         setLoading(false)
-        if (nextSession && _event === 'SIGNED_IN') track('login')
+        if (nextSession && _event === 'SIGNED_IN') {
+          track('login')
+          void syncLinkedPlayerAfterSignIn(nextSession).then((result) => {
+            if (result === 'updated') {
+              window.dispatchEvent(new CustomEvent('kingshot-player-updated'))
+            }
+          })
+        }
         if (_event === 'SIGNED_OUT') track('logout')
       },
     )
