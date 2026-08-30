@@ -1070,6 +1070,10 @@ assert.equal(
   ).length,
   1,
 )
+assert.match(
+  migrationSql,
+  /normalized_tag := upper\(nullif\(btrim\(p_alliance_tag\), ''\)\);/u,
+)
 assert.equal(
   (
     migrationSql.match(

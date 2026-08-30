@@ -666,7 +666,7 @@ begin
     return;
   end if;
 
-  normalized_tag := nullif(btrim(p_alliance_tag), '');
+  normalized_tag := upper(nullif(btrim(p_alliance_tag), ''));
   normalized_name := nullif(btrim(p_alliance_name), '');
 
   if normalized_tag is null then
