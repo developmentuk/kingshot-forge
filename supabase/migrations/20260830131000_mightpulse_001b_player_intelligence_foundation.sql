@@ -1277,7 +1277,9 @@ create or replace function public.apply_mightpulse_player_intelligence_sync(
   p_alliance_tag text,
   p_alliance_name text,
   p_member_role public.alliance_member_role,
-  p_authority_observed_at timestamptz
+  p_authority_observed_at timestamptz,
+  p_quota_reservation_id uuid,
+  p_quota_attempt_token uuid
 )
 returns table (
   observation_id uuid,
@@ -1293,6 +1295,7 @@ as $apply$
 declare
   player_row public.player_accounts;
   authority_result record;
+  quota_completed integer;
 begin
   if p_user_id is null
     or p_player_account_id is null
@@ -1316,6 +1319,8 @@ begin
     or jsonb_typeof(p_normalized_snapshot) <> 'object'
     or p_content_sha256 !~ '^[0-9a-f]{64}$'
     or p_provider_fetched_at is null
+    or p_quota_reservation_id is null
+    or p_quota_attempt_token is null
     or (
       p_provider_cached_at is not null
       and p_provider_cached_at > p_provider_fetched_at
@@ -1428,6 +1433,23 @@ begin
     admin_active := authority_result.admin_active;
   end if;
 
+  update public.provider_quota_reservations
+  set
+    status = 'completed',
+    completed_at = clock_timestamp(),
+    failed_at = null,
+    lease_expires_at = clock_timestamp()
+  where id = p_quota_reservation_id
+    and attempt_token = p_quota_attempt_token
+    and status = 'pending';
+
+  get diagnostics quota_completed = row_count;
+
+  if quota_completed <> 1 then
+    raise exception 'Provider quota attempt is no longer active.'
+      using errcode = '55000';
+  end if;
+
   return next;
 end;
 $apply$;
@@ -1452,7 +1474,9 @@ revoke all on function public.apply_mightpulse_player_intelligence_sync(
   text,
   text,
   public.alliance_member_role,
-  timestamptz
+  timestamptz,
+  uuid,
+  uuid
 ) from public;
 revoke all on function public.apply_mightpulse_player_intelligence_sync(
   uuid,
@@ -1474,7 +1498,9 @@ revoke all on function public.apply_mightpulse_player_intelligence_sync(
   text,
   text,
   public.alliance_member_role,
-  timestamptz
+  timestamptz,
+  uuid,
+  uuid
 ) from anon;
 revoke all on function public.apply_mightpulse_player_intelligence_sync(
   uuid,
@@ -1496,7 +1522,9 @@ revoke all on function public.apply_mightpulse_player_intelligence_sync(
   text,
   text,
   public.alliance_member_role,
-  timestamptz
+  timestamptz,
+  uuid,
+  uuid
 ) from authenticated;
 grant execute on function public.apply_mightpulse_player_intelligence_sync(
   uuid,
@@ -1518,7 +1546,9 @@ grant execute on function public.apply_mightpulse_player_intelligence_sync(
   text,
   text,
   public.alliance_member_role,
-  timestamptz
+  timestamptz,
+  uuid,
+  uuid
 ) to service_role;
 
 commit;
