@@ -224,7 +224,7 @@ begin
   select coalesce(sum(
     case
       when reservation.last_attempt_at > now_at - interval '60 seconds'
-        then 1
+        then reservation.attempt_count
       else 0
     end
   ), 0)::integer
