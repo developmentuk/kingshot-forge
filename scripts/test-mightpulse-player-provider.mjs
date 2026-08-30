@@ -997,7 +997,7 @@ const linkedPlayerServiceSource = await readFile(
 )
 assert.match(
   linkedPlayerServiceSource,
-  /lookupPlayerSingleFlight[\s\S]*ownerLookup\? PlayerLookupOwner/iu,
+  /lookupPlayerSingleFlight[\s\S]*ownerLookup\?: PlayerLookupOwner/iu,
 )
 assert.match(
   linkedPlayerServiceSource,
