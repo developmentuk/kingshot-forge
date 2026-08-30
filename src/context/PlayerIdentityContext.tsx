@@ -196,15 +196,15 @@ export function PlayerIdentityProvider({
         && suppressedInitialSignInRefresh.current !== signInMarker
         && hasPostSignInPlayerSyncAttempted(session)
       ) {
-        suppressedInitialSignInRefresh.current = signInMarker
         const signInSync = getPostSignInPlayerSyncInFlight(session)
         const signInResult = signInSync
           ? await signInSync
           : getPostSignInPlayerSyncOutcome(session)
         if (cancelled) return
 
+        let suppressAutomaticRefresh = false
         if (signInResult === 'in-progress') {
-          await waitForPostSignInPlayerSyncCompletion(
+          suppressAutomaticRefresh = await waitForPostSignInPlayerSyncCompletion(
             session,
             { shouldStop: () => cancelled },
           )
@@ -213,18 +213,16 @@ export function PlayerIdentityProvider({
           const completedAccount = await loadPlayerIdentity()
           if (!completedAccount || cancelled) return
           currentAccount = completedAccount
-          return
+        } else {
+          const refreshedAfterSignIn = await loadPlayerIdentity()
+          if (!refreshedAfterSignIn || cancelled) return
+          currentAccount = refreshedAfterSignIn
+          suppressAutomaticRefresh =
+            shouldSuppressAutomaticRefreshAfterPostSignInSync(signInResult)
         }
 
-        const refreshedAfterSignIn = await loadPlayerIdentity()
-        if (!refreshedAfterSignIn || cancelled) return
-        currentAccount = refreshedAfterSignIn
-
-        if (
-          shouldSuppressAutomaticRefreshAfterPostSignInSync(signInResult)
-        ) {
-          return
-        }
+        suppressedInitialSignInRefresh.current = signInMarker
+        if (suppressAutomaticRefresh) return
       }
 
       const lastRefresh = Date.parse(currentAccount.last_refreshed_at ?? '')
