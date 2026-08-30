@@ -2592,6 +2592,83 @@ assert.equal(
 )
 assert.equal(terminalRetryCalls, 2)
 
+let failedTakeoverCalls = 0
+assert.equal(
+  await waitForPostSignInPlayerSyncCompletion(
+    inProgressSession,
+    {
+      intervalMs: 1,
+      maxAttempts: 5,
+      sleepImplementation: async () => {},
+      fetchImplementation: async (url, init) => {
+        failedTakeoverCalls += 1
+        assert.equal(url, '/api/player/account')
+        const requestBody = JSON.parse(init.body)
+        if (failedTakeoverCalls === 1) {
+          assert.deepEqual(requestBody, { action: 'sign-in-status' })
+          return Response.json({
+            status: 'success',
+            code: 'PLAYER_INTELLIGENCE_FAILED',
+            data: null,
+          })
+        }
+        assert.equal(failedTakeoverCalls, 2)
+        assert.deepEqual(
+          requestBody,
+          { action: 'revalidate', refreshReason: 'sign-in' },
+        )
+        return new Response('provider unavailable', { status: 503 })
+      },
+    },
+  ),
+  true,
+)
+assert.equal(failedTakeoverCalls, 2)
+
+let repeatedFailedStatusCalls = 0
+assert.equal(
+  await waitForPostSignInPlayerSyncCompletion(
+    inProgressSession,
+    {
+      intervalMs: 1,
+      maxAttempts: 5,
+      sleepImplementation: async () => {},
+      fetchImplementation: async (url, init) => {
+        repeatedFailedStatusCalls += 1
+        assert.equal(url, '/api/player/account')
+        const requestBody = JSON.parse(init.body)
+        if (repeatedFailedStatusCalls === 1) {
+          assert.deepEqual(requestBody, { action: 'sign-in-status' })
+          return Response.json({
+            status: 'success',
+            code: 'PLAYER_INTELLIGENCE_FAILED',
+            data: null,
+          })
+        }
+        if (repeatedFailedStatusCalls === 2) {
+          assert.deepEqual(
+            requestBody,
+            { action: 'revalidate', refreshReason: 'sign-in' },
+          )
+          return Response.json({
+            status: 'success',
+            code: 'PLAYER_INTELLIGENCE_IN_PROGRESS',
+            data: null,
+          })
+        }
+        assert.deepEqual(requestBody, { action: 'sign-in-status' })
+        return Response.json({
+          status: 'success',
+          code: 'PLAYER_INTELLIGENCE_FAILED',
+          data: null,
+        })
+      },
+    },
+  ),
+  true,
+)
+assert.equal(repeatedFailedStatusCalls, 3)
+
 let timeoutPollCalls = 0
 assert.equal(
   await waitForPostSignInPlayerSyncCompletion(
@@ -2864,6 +2941,22 @@ assert.match(
 assert.match(
   playerIdentityContextSource,
   /signInResult === 'in-progress'[\s\S]*suppressAutomaticRefresh = await waitForPostSignInPlayerSyncCompletion\(\s*session,[\s\S]*currentAccount = completedAccount/u,
+)
+const postSignInSyncServiceSource = await readFile(
+  new URL('../src/services/postSignInPlayerSyncService.ts', import.meta.url),
+  'utf8',
+)
+assert.match(
+  postSignInSyncServiceSource,
+  /let takeoverAttempted = false/u,
+)
+assert.match(
+  postSignInSyncServiceSource,
+  /if \(result === 'retry-idempotent'\) \{[\s\S]*if \(takeoverAttempted\)[\s\S]*return true[\s\S]*takeoverAttempted = true[\s\S]*performLinkedPlayerSignInSync/u,
+)
+assert.match(
+  postSignInSyncServiceSource,
+  /if \(retryResult === 'unavailable'\) \{[\s\S]*return true/u,
 )
 const signInResultIndex = playerIdentityContextSource.indexOf(
   'const signInResult = signInSync',
