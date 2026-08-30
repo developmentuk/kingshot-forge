@@ -12,6 +12,7 @@ import {
   validatePlayerId,
 } from '../player-identity/linkedPlayerService.js'
 import {
+  failMightPulseProviderRequest,
   isProviderQuotaRuntimeEnabled,
   reserveMightPulseProviderRequest,
   signInProviderIdempotencyKey,
@@ -80,6 +81,8 @@ export type PlayerIntelligenceApplyWrite = Readonly<{
   allianceName: string | null
   memberRole: ForgeAllianceMemberRole | null
   authorityObservedAt: string | null
+  quotaReservationId: string
+  quotaAttemptToken: string
 }>
 
 export interface PlayerIntelligenceRepository {
@@ -221,6 +224,8 @@ implements PlayerIntelligenceRepository {
         p_alliance_name: input.allianceName,
         p_member_role: input.memberRole,
         p_authority_observed_at: input.authorityObservedAt,
+        p_quota_reservation_id: input.quotaReservationId,
+        p_quota_attempt_token: input.quotaAttemptToken,
       },
     )
     if (error) throw error
@@ -343,68 +348,99 @@ export async function syncLinkedPlayerIntelligence(
     dependencies.quotaRepository,
   )
   if (quota.duplicate) {
+    if (quota.state === 'completed') {
+      return Object.freeze({ source: 'cache' as const })
+    }
     return Object.freeze({ source: 'in-progress' as const })
   }
 
-  const intelligence = await provider.lookupPlayerIntelligence({
-    playerId: linkedPlayer.playerId,
-    expectedKingdomId: linkedPlayer.kingdomId,
-  })
-
   if (
-    intelligence.identity.playerId !== linkedPlayer.playerId
-    || intelligence.identity.kingdomId !== linkedPlayer.kingdomId
+    quota.state !== 'reserved'
+    || quota.reservationId === null
+    || quota.attemptToken === null
   ) {
     throw new PlayerProviderError(
-      502,
-      'PLAYER_PROVIDER_INVALID_RESPONSE',
-      'The player provider returned an inconsistent player record.',
+      503,
+      'PLAYER_PROVIDER_QUOTA_STATE_INVALID',
+      'The provider request reservation is unavailable.',
       true,
     )
   }
 
-  const snapshot = projectPlayerIntelligenceSnapshot(intelligence)
-  const contentSha256 = hashPlayerIntelligenceSnapshot(snapshot)
+  try {
+    const intelligence = await provider.lookupPlayerIntelligence({
+      playerId: linkedPlayer.playerId,
+      expectedKingdomId: linkedPlayer.kingdomId,
+    })
 
-  const alliance = intelligence.base.alliance
-  const mappedRole = alliance
-    ? mapMightPulseAllianceRank(alliance.rank)
-    : null
+    if (
+      intelligence.identity.playerId !== linkedPlayer.playerId
+      || intelligence.identity.kingdomId !== linkedPlayer.kingdomId
+    ) {
+      throw new PlayerProviderError(
+        502,
+        'PLAYER_PROVIDER_INVALID_RESPONSE',
+        'The player provider returned an inconsistent player record.',
+        true,
+      )
+    }
 
-  const providerFetchedAt = intelligence.identity.providerFetchedAt
-  const cachedAtMs = intelligence.providerCachedAt === null
-    ? Number.NaN
-    : Date.parse(intelligence.providerCachedAt)
-  const fetchedAtMs = Date.parse(providerFetchedAt)
-  const authorityObservedAt = Number.isFinite(cachedAtMs)
-    && Number.isFinite(fetchedAtMs)
-    && cachedAtMs <= fetchedAtMs
-    ? intelligence.providerCachedAt as string
-    : providerFetchedAt
+    const snapshot = projectPlayerIntelligenceSnapshot(intelligence)
+    const contentSha256 = hashPlayerIntelligenceSnapshot(snapshot)
 
-  const applyAllianceAuthority = !(alliance && mappedRole === null)
-  const applied = await repository.applySync({
-    userId,
-    playerAccountId: linkedPlayer.playerAccountId,
-    requestReason: reason,
-    intelligence,
-    normalizedSnapshot: snapshot,
-    contentSha256,
-    applyAllianceAuthority,
-    allianceTag: alliance?.tag ?? null,
-    allianceName: alliance?.name ?? null,
-    memberRole: mappedRole,
-    authorityObservedAt: applyAllianceAuthority
-      ? authorityObservedAt
-      : null,
-  })
+    const alliance = intelligence.base.alliance
+    const mappedRole = alliance
+      ? mapMightPulseAllianceRank(alliance.rank)
+      : null
 
-  return Object.freeze({
-    source: 'provider' as const,
-    observationId: applied.observationId,
-    contentSha256,
-    intelligence,
-    quota,
-    allianceAuthority: applied.allianceAuthority,
-  })
+    const providerFetchedAt = intelligence.identity.providerFetchedAt
+    const cachedAtMs = intelligence.providerCachedAt === null
+      ? Number.NaN
+      : Date.parse(intelligence.providerCachedAt)
+    const fetchedAtMs = Date.parse(providerFetchedAt)
+    const authorityObservedAt = Number.isFinite(cachedAtMs)
+      && Number.isFinite(fetchedAtMs)
+      && cachedAtMs <= fetchedAtMs
+      ? intelligence.providerCachedAt as string
+      : providerFetchedAt
+
+    const applyAllianceAuthority = !(alliance && mappedRole === null)
+    const applied = await repository.applySync({
+      userId,
+      playerAccountId: linkedPlayer.playerAccountId,
+      requestReason: reason,
+      intelligence,
+      normalizedSnapshot: snapshot,
+      contentSha256,
+      applyAllianceAuthority,
+      allianceTag: alliance?.tag ?? null,
+      allianceName: alliance?.name ?? null,
+      memberRole: mappedRole,
+      authorityObservedAt: applyAllianceAuthority
+        ? authorityObservedAt
+        : null,
+      quotaReservationId: quota.reservationId,
+      quotaAttemptToken: quota.attemptToken,
+    })
+
+    return Object.freeze({
+      source: 'provider' as const,
+      observationId: applied.observationId,
+      contentSha256,
+      intelligence,
+      quota,
+      allianceAuthority: applied.allianceAuthority,
+    })
+  } catch (error) {
+    try {
+      await failMightPulseProviderRequest(
+        quota,
+        dependencies.quotaRepository,
+      )
+    } catch {
+      // Preserve the original provider/apply failure; a crashed failure marker
+      // remains retryable once the reservation lease expires.
+    }
+    throw error
+  }
 }
