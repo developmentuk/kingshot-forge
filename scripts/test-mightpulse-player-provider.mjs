@@ -1002,7 +1002,11 @@ assert.match(
 )
 assert.match(
   linkedPlayerServiceSource,
-  /lookupKingshotPlayerWithOwner[\s\S]*quotaClass[\s\S]*reserveMightPulseProviderRequest/iu,
+  /createQuotaGovernedPlayerLookupOwner[\s\S]*reserveMightPulseProviderRequest[\s\S]*completeMightPulseProviderRequest[\s\S]*failMightPulseProviderRequest/iu,
+)
+assert.match(
+  linkedPlayerServiceSource,
+  /lookupKingshotPlayerWithOwner[\s\S]*createQuotaGovernedPlayerLookupOwner/iu,
 )
 assert.doesNotMatch(
   linkedPlayerServiceSource,
