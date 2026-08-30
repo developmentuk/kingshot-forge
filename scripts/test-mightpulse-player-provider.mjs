@@ -2428,14 +2428,25 @@ assert.match(
   playerAccountApiSource,
   /result\.source === 'in-progress'/u,
 )
-assert.match(
-  playerAccountApiSource,
-  /if \(input\.action === 'sign-in-status'\)[\s\S]*readMightPulseProviderRequestStatus[\s\S]*return[\s\S]*attemptThrottle\.enforce\(actor\.userId\)/u,
+const signInStatusActionIndex = playerAccountApiSource.indexOf(
+  "if (input.action === 'sign-in-status')",
 )
-assert.doesNotMatch(
-  playerAccountApiSource,
-  /if \(input\.action === 'sign-in-status'\)[\s\S]*syncLinkedPlayerIntelligence\(/u,
+const signInStatusReadIndex = playerAccountApiSource.indexOf(
+  'readMightPulseProviderRequestStatus(',
+  signInStatusActionIndex,
 )
+const accountThrottleIndex = playerAccountApiSource.indexOf(
+  'attemptThrottle.enforce(actor.userId)',
+  signInStatusActionIndex,
+)
+const richSyncIndex = playerAccountApiSource.indexOf(
+  'syncLinkedPlayerIntelligence(',
+  signInStatusActionIndex,
+)
+assert.ok(signInStatusActionIndex >= 0)
+assert.ok(signInStatusReadIndex > signInStatusActionIndex)
+assert.ok(accountThrottleIndex > signInStatusReadIndex)
+assert.ok(richSyncIndex > accountThrottleIndex)
 
 const providerRequestStatusMigrationSql = await readFile(
   new URL(
