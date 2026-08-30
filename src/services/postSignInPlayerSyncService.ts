@@ -11,6 +11,20 @@ const signInSyncInFlight = new Map<
   string,
   Promise<PostSignInPlayerSyncResult>
 >()
+const signInSyncAttemptMarker = new Map<string, string>()
+
+function sessionSignInMarker(session: Session): string {
+  return session.user?.last_sign_in_at
+    ?? String(session.expires_at ?? '')
+}
+
+export function hasPostSignInPlayerSyncAttempted(
+  session: Session,
+): boolean {
+  const userId = session.user?.id
+  if (!userId) return false
+  return signInSyncAttemptMarker.get(userId) === sessionSignInMarker(session)
+}
 
 export function getPostSignInPlayerSyncInFlight(
   userId: string,
@@ -68,6 +82,8 @@ export async function syncLinkedPlayerAfterSignIn(
 ): Promise<PostSignInPlayerSyncResult> {
   const userId = session.user?.id
   if (!userId) return 'unavailable'
+
+  signInSyncAttemptMarker.set(userId, sessionSignInMarker(session))
 
   const existing = signInSyncInFlight.get(userId)
   if (existing) return existing
