@@ -7,6 +7,7 @@ import {
 import { isTownCenterRawLevel } from '../../../shared/domains/player-identity/townCenterLevel.js'
 
 const DEFAULT_BASE_URL = 'https://api.mightpulse.com/v1'
+const TRUSTED_MIGHTPULSE_ORIGIN = 'https://api.mightpulse.com'
 export const DEFAULT_MIGHTPULSE_TIMEOUT_MS = 45_000
 const MAX_CONFIGURED_TIMEOUT_MS = 55_000
 
@@ -97,7 +98,13 @@ function normalizeAvatarUrl(value: unknown): {
   }
 
   try {
-    const url = new URL(candidate)
+    const isRootRelative = candidate.startsWith('/') && !candidate.startsWith('//')
+    const url = isRootRelative
+      ? new URL(candidate, TRUSTED_MIGHTPULSE_ORIGIN)
+      : new URL(candidate)
+    if (isRootRelative && url.origin !== TRUSTED_MIGHTPULSE_ORIGIN) {
+      return { url: null, status: 'rejected', reason: 'invalid_url' }
+    }
     if (url.protocol !== 'https:') {
       return { url: null, status: 'rejected', reason: 'non_https' }
     }
@@ -170,12 +177,13 @@ function normalizeMightPulsePlayer(
     )
   }
 
+  const avatarShape = classifyInvalidAvatarShape(player.avatar_url)
   const avatar = normalizeAvatarUrl(player.avatar_url)
   console.info('[mightpulse-player-provider]', {
     avatarStatus: avatar.status,
     avatarReason: avatar.reason,
-    avatarShape: avatar.reason === 'invalid_url'
-      ? classifyInvalidAvatarShape(player.avatar_url)
+    avatarShape: avatarShape === 'root_relative' || avatar.reason === 'invalid_url'
+      ? avatarShape
       : 'not_applicable',
   })
 
