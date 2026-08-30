@@ -380,6 +380,7 @@ declare
   resulting_admin public.alliance_admins;
   authority_state public.player_alliance_provider_state;
   authority_override public.alliance_provider_authority_overrides;
+  authority_override_history public.alliance_provider_authority_overrides;
   normalized_tag text;
   normalized_name text;
   management_role boolean;
@@ -791,13 +792,37 @@ begin
     )
   for update;
 
+  select *
+  into authority_override_history
+  from public.alliance_provider_authority_overrides override_row
+  where override_row.alliance_id = alliance_row.id
+    and override_row.user_id = p_user_id
+  for update;
+
   if management_role
     and authority_override.alliance_id is null
     and previous_admin.id is not null
     and previous_admin.is_active = false
     and previous_admin.revoked_at is not null
     and authority_state.member_role in ('r4', 'leader')
-    and previous_admin.revoked_at >= authority_state.provider_fetched_at then
+    and previous_admin.revoked_at >= authority_state.provider_fetched_at
+    and (
+      authority_override_history.alliance_id is null
+      or previous_admin.revoked_at > greatest(
+        coalesce(
+          authority_override_history.cleared_at,
+          '-infinity'::timestamptz
+        ),
+        coalesce(
+          authority_override_history.suspended_until,
+          '-infinity'::timestamptz
+        ),
+        coalesce(
+          authority_override_history.updated_at,
+          '-infinity'::timestamptz
+        )
+      )
+    ) then
 
     insert into public.alliance_provider_authority_overrides (
       alliance_id,
