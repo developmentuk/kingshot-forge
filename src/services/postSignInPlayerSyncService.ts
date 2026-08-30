@@ -85,6 +85,7 @@ export async function waitForPostSignInPlayerSyncCompletion(
     ?? POST_SIGN_IN_COMPLETION_MAX_ATTEMPTS
   const sleepImplementation = options.sleepImplementation ?? defaultSleep
   const fetchImplementation = options.fetchImplementation ?? fetch
+  let takeoverAttempted = false
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     if (options.shouldStop?.()) return false
@@ -98,6 +99,14 @@ export async function waitForPostSignInPlayerSyncCompletion(
     if (result === 'completed') return true
     if (result === 'terminal') return false
     if (result === 'retry-idempotent') {
+      if (takeoverAttempted) {
+        // A failed/missing reservation gets at most one idempotent takeover
+        // attempt per genuine sign-in. Suppress ordinary automatic refresh
+        // after that attempt so a provider outage cannot multiply requests.
+        return true
+      }
+
+      takeoverAttempted = true
       const retryResult = await performLinkedPlayerSignInSync(
         session,
         fetchImplementation,
@@ -106,6 +115,12 @@ export async function waitForPostSignInPlayerSyncCompletion(
         retryResult === 'updated'
         || retryResult === 'no-linked-player'
       ) {
+        return true
+      }
+      if (retryResult === 'unavailable') {
+        // The takeover itself failed or its response was unavailable. Treat
+        // the sign-in refresh as settled for this client and keep cached data
+        // rather than falling through to a non-idempotent automatic refresh.
         return true
       }
     }
