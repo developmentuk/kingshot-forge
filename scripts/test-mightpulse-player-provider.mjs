@@ -123,12 +123,12 @@ assert.deepEqual(normalizeAvatarUrl('https://cdn.example.test/avatar.png'), {
   reason: 'accepted',
 })
 assert.deepEqual(normalizeAvatarUrl('/avatars/synthetic.png'), {
-  url: 'https://api.mightpulse.com/avatars/synthetic.png',
+  url: 'https://mightpulse.com/avatars/synthetic.png',
   status: 'accepted',
   reason: 'accepted',
 })
 assert.deepEqual(normalizeAvatarUrl('/avatar.png?size=128#profile'), {
-  url: 'https://api.mightpulse.com/avatar.png?size=128#profile',
+  url: 'https://mightpulse.com/avatar.png?size=128#profile',
   status: 'accepted',
   reason: 'accepted',
 })
@@ -174,10 +174,10 @@ try {
 
   const relativeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: '/avatars/synthetic.png' })))
     .lookupPlayer({ playerId: '125500338', expectedKingdomId: 850 })
-  assert.equal(relativeAvatar.avatarUrl, 'https://api.mightpulse.com/avatars/synthetic.png')
+  assert.equal(relativeAvatar.avatarUrl, 'https://mightpulse.com/avatars/synthetic.png')
   assert.equal(
     createProviderRefreshFields(relativeAvatar).profile_photo,
-    'https://api.mightpulse.com/avatars/synthetic.png',
+    'https://mightpulse.com/avatars/synthetic.png',
   )
 
   const safeAvatar = await providerFor(Response.json(validPayload({}, { avatar_url: 'https://cdn.example.test/avatar.png' })))
