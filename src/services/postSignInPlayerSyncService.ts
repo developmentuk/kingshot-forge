@@ -62,7 +62,7 @@ export function shouldSuppressAutomaticRefreshAfterPostSignInSync(
 async function performLinkedPlayerSignInSync(
   session: Session,
   fetchImplementation: FetchImplementation = fetch,
-): Promise<PostSignInPlayerSyncResult> {
+): Promise<Exclude<PostSignInPlayerSyncResult, 'already-attempted'>> {
   if (!session.access_token) return 'unavailable'
 
   try {
