@@ -1033,7 +1033,7 @@ assert.equal(completedDuplicate.source, 'cache')
 
 const migrationSql = await readFile(
   new URL(
-    '../supabase/migrations/20260830131000_mightpulse_001b_player_intelligence_foundation.sql',
+    '../supabase/migrations/20260830224442_mightpulse_001b_player_intelligence_foundation.sql',
     import.meta.url,
   ),
   'utf8',
@@ -3119,7 +3119,7 @@ assert.match(
 
 const firstAuthorityGuardMigrationSql = await readFile(
   new URL(
-    '../supabase/migrations/20260830200500_mightpulse_001b_first_authority_watermark_guard.sql',
+    '../supabase/migrations/20260830224520_mightpulse_001b_first_authority_watermark_guard.sql',
     import.meta.url,
   ),
   'utf8',
@@ -3156,7 +3156,7 @@ assert.match(
 
 const incompleteRankWatermarkMigrationSql = await readFile(
   new URL(
-    '../supabase/migrations/20260830193000_mightpulse_001b_incomplete_rank_watermark.sql',
+    '../supabase/migrations/20260830224507_mightpulse_001b_incomplete_rank_watermark.sql',
     import.meta.url,
   ),
   'utf8',
@@ -3188,7 +3188,7 @@ assert.doesNotMatch(
 
 const providerRequestStatusMigrationSql = await readFile(
   new URL(
-    '../supabase/migrations/20260830183000_mightpulse_001b_provider_request_status.sql',
+    '../supabase/migrations/20260830224502_mightpulse_001b_provider_request_status.sql',
     import.meta.url,
   ),
   'utf8',
@@ -3216,7 +3216,7 @@ assert.doesNotMatch(
 
 const expiredProviderStatusMigrationSql = await readFile(
   new URL(
-    '../supabase/migrations/20260830204500_mightpulse_001b_expired_provider_status.sql',
+    '../supabase/migrations/20260830224526_mightpulse_001b_expired_provider_status.sql',
     import.meta.url,
   ),
   'utf8',
@@ -3244,7 +3244,7 @@ assert.doesNotMatch(
 
 const serviceRolePrivilegeHardeningMigrationSql = await readFile(
   new URL(
-    '../supabase/migrations/20260830224500_mightpulse_001b_service_role_table_privilege_hardening.sql',
+    '../supabase/migrations/20260830224800_mightpulse_001b_service_role_table_privilege_hardening.sql',
     import.meta.url,
   ),
   'utf8',
