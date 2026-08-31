@@ -168,7 +168,7 @@ const callbackPageSource = await readFile(
 )
 assert.match(
   callbackPageSource,
-  /onSessionResolved:\s*\(session\)\s*=>\s*\{[\s\S]*?void syncLinkedPlayerAfterSignIn\(session\)/u,
+  /onExchangedSession:\s*\(session\)\s*=>\s*\{[\s\S]*?void syncLinkedPlayerAfterSignIn\(session\)/u,
   'AuthCallbackPage must prime Player Intelligence before navigating',
 )
 const syncIndex = callbackPageSource.indexOf(
