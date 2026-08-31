@@ -508,6 +508,38 @@ assert.equal(
   false,
 )
 
+const baseFieldDiagnostics = []
+const originalBaseFieldConsoleInfo = console.info
+console.info = (...args) => {
+  if (args[0] === '[mightpulse-player-intelligence-invalid]') {
+    baseFieldDiagnostics.push(args[1])
+    return
+  }
+  originalBaseFieldConsoleInfo(...args)
+}
+try {
+  await assert.rejects(
+    () => providerFor(Response.json(
+      validIntelligencePayload({}, { online: 'yes' }),
+    )).lookupPlayerIntelligence({
+      playerId: '125500338',
+      expectedKingdomId: 850,
+    }),
+    (error) => {
+      assert.equal(error.statusCode, 502)
+      assert.equal(error.code, 'PLAYER_PROVIDER_INVALID_RESPONSE')
+      return true
+    },
+  )
+} finally {
+  console.info = originalBaseFieldConsoleInfo
+}
+assert.deepEqual(baseFieldDiagnostics, [{ stage: 'base.online' }])
+assert.equal(
+  JSON.stringify(baseFieldDiagnostics).includes('yes'),
+  false,
+)
+
 const intelligenceSnapshot = projectPlayerIntelligenceSnapshot(intelligence)
 const intelligenceHash = hashPlayerIntelligenceSnapshot(intelligenceSnapshot)
 assert.match(intelligenceHash, /^[0-9a-f]{64}$/u)
