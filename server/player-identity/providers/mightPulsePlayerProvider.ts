@@ -608,47 +608,90 @@ function normalizeGovernorGear(value: unknown) {
   } as const
 }
 
+type PlayerIntelligenceValidationStage =
+  | 'wrapper'
+  | 'include'
+  | 'identity'
+  | 'base'
+  | 'heroes'
+  | 'ranks'
+  | 'gov_gear'
+  | 'freshness'
+
+function withPlayerIntelligenceValidationStage<T>(
+  stage: PlayerIntelligenceValidationStage,
+  operation: () => T,
+): T {
+  try {
+    return operation()
+  } catch (error) {
+    if (
+      error instanceof PlayerProviderError
+      && error.code === 'PLAYER_PROVIDER_INVALID_RESPONSE'
+    ) {
+      console.info('[mightpulse-player-intelligence-invalid]', { stage })
+    }
+    throw error
+  }
+}
+
 function normalizeMightPulsePlayerIntelligence(
   value: unknown,
   request: PlayerLookupRequest,
   providerFetchedAt: string,
 ): NormalizedPlayerIntelligence {
-  const wrapper = plainRecord(value)
-  const player = plainRecord(wrapper?.player)
-  if (!wrapper || !player) invalidResponse()
-
-  const include = Array.isArray(wrapper.include)
-    ? wrapper.include.map((entry) => typeof entry === 'string' ? entry : invalidResponse())
-    : invalidResponse()
-  for (const requiredSection of PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS) {
-    if (!include.includes(requiredSection)) invalidResponse()
-  }
-
-  const identity = normalizeMightPulsePlayer(value, request, providerFetchedAt)
-  const heroes = Array.isArray(wrapper.heroes)
-    ? wrapper.heroes.map(normalizeHero)
-    : invalidResponse()
-
-  return {
-    identity,
-    base: {
-      power: optionalNumber(player.power),
-      vip: optionalInteger(player.vip, { min: 0 }),
-      x: optionalNumber(player.x, false),
-      y: optionalNumber(player.y, false),
-      kills: optionalNumber(player.kills),
-      office: optionalString(player.office, 120),
-      online: optionalBoolean(player.online),
-      lastActiveAt: optionalTemporal(player.last_active_at),
-      lastLoginAt: optionalTemporal(player.last_login),
-      language: optionalString(player.language, 80),
-      shieldEndsAt: optionalTemporal(player.shield_endtime),
-      burnEndsAt: optionalTemporal(player.burn_endtime),
-      alliance: normalizeAllianceIntelligence(player.alliance),
+  const { wrapper, player } = withPlayerIntelligenceValidationStage(
+    'wrapper',
+    () => {
+      const wrapperValue = plainRecord(value)
+      const playerValue = plainRecord(wrapperValue?.player)
+      if (!wrapperValue || !playerValue) invalidResponse()
+      return { wrapper: wrapperValue, player: playerValue }
     },
-    heroes,
-    ranks: normalizeRanks(wrapper.ranks),
-    governorGear: normalizeGovernorGear(wrapper.gov_gear),
+  )
+
+  withPlayerIntelligenceValidationStage('include', () => {
+    const includeValue = Array.isArray(wrapper.include)
+      ? wrapper.include.map((entry) =>
+          typeof entry === 'string' ? entry : invalidResponse())
+      : invalidResponse()
+    for (const requiredSection of PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS) {
+      if (!includeValue.includes(requiredSection)) invalidResponse()
+    }
+  })
+
+  const identity = withPlayerIntelligenceValidationStage(
+    'identity',
+    () => normalizeMightPulsePlayer(value, request, providerFetchedAt),
+  )
+  const base = withPlayerIntelligenceValidationStage('base', () => ({
+    power: optionalNumber(player.power),
+    vip: optionalInteger(player.vip, { min: 0 }),
+    x: optionalNumber(player.x, false),
+    y: optionalNumber(player.y, false),
+    kills: optionalNumber(player.kills),
+    office: optionalString(player.office, 120),
+    online: optionalBoolean(player.online),
+    lastActiveAt: optionalTemporal(player.last_active_at),
+    lastLoginAt: optionalTemporal(player.last_login),
+    language: optionalString(player.language, 80),
+    shieldEndsAt: optionalTemporal(player.shield_endtime),
+    burnEndsAt: optionalTemporal(player.burn_endtime),
+    alliance: normalizeAllianceIntelligence(player.alliance),
+  }))
+  const heroes = withPlayerIntelligenceValidationStage('heroes', () =>
+    Array.isArray(wrapper.heroes)
+      ? wrapper.heroes.map(normalizeHero)
+      : invalidResponse())
+  const ranks = withPlayerIntelligenceValidationStage(
+    'ranks',
+    () => normalizeRanks(wrapper.ranks),
+  )
+  const governorGear = withPlayerIntelligenceValidationStage(
+    'gov_gear',
+    () => normalizeGovernorGear(wrapper.gov_gear),
+  )
+  const freshness = withPlayerIntelligenceValidationStage('freshness', () => ({
     providerCachedAt: aggregateFreshnessTimestamp(
       wrapper.cached_at,
       PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS,
@@ -661,6 +704,15 @@ function normalizeMightPulsePlayerIntelligence(
       wrapper.fresh,
       PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS,
     ),
+  }))
+
+  return {
+    identity,
+    base,
+    heroes,
+    ranks,
+    governorGear,
+    ...freshness,
   }
 }
 

@@ -476,6 +476,38 @@ assert.equal(incompleteSectionFreshness.providerCachedAt, null)
 assert.equal(incompleteSectionFreshness.providerAgeSeconds, null)
 assert.equal(incompleteSectionFreshness.providerFresh, null)
 
+const intelligenceDiagnostics = []
+const originalConsoleInfo = console.info
+console.info = (...args) => {
+  if (args[0] === '[mightpulse-player-intelligence-invalid]') {
+    intelligenceDiagnostics.push(args[1])
+    return
+  }
+  originalConsoleInfo(...args)
+}
+try {
+  await assert.rejects(
+    () => providerFor(Response.json(
+      validIntelligencePayload({ ranks: [] }),
+    )).lookupPlayerIntelligence({
+      playerId: '125500338',
+      expectedKingdomId: 850,
+    }),
+    (error) => {
+      assert.equal(error.statusCode, 502)
+      assert.equal(error.code, 'PLAYER_PROVIDER_INVALID_RESPONSE')
+      return true
+    },
+  )
+} finally {
+  console.info = originalConsoleInfo
+}
+assert.deepEqual(intelligenceDiagnostics, [{ stage: 'ranks' }])
+assert.equal(
+  JSON.stringify(intelligenceDiagnostics).includes('Synthetic Governor'),
+  false,
+)
+
 const intelligenceSnapshot = projectPlayerIntelligenceSnapshot(intelligence)
 const intelligenceHash = hashPlayerIntelligenceSnapshot(intelligenceSnapshot)
 assert.match(intelligenceHash, /^[0-9a-f]{64}$/u)
