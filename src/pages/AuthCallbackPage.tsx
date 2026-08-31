@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { resolveAuthError, type UserFacingAuthError } from '../auth/authErrors'
 import { completeAuthCallback } from '../auth/callbackFlow'
 import { exchangeForgeCallbackCode, getCurrentForgeSession } from '../services/authService'
+import { syncLinkedPlayerAfterSignIn } from '../services/postSignInPlayerSyncService'
 import '../styles/authCallback.css'
 
 type CallbackState = { status: 'loading' } | { status: 'error'; error: UserFacingAuthError }
@@ -26,7 +27,19 @@ export default function AuthCallbackPage() {
       try {
         const current = await getCurrentForgeSession()
         if (current.error) throw current.error
-        const result = await completeAuthCallback({ search: callbackSearch, existingSession: current.data.session, exchangeCode: exchangeForgeCallbackCode })
+        const result = await completeAuthCallback({
+          search: callbackSearch,
+          existingSession: current.data.session,
+          exchangeCode: exchangeForgeCallbackCode,
+          onExchangedSession: (session) => {
+            // Only a successfully exchanged OAuth session is a genuine
+            // sign-in signal. Prime the idempotent sync before navigation mounts
+            // PlayerIdentityContext on an auto-refresh route. The request is
+            // intentionally not awaited so provider availability cannot block
+            // authentication success.
+            void syncLinkedPlayerAfterSignIn(session)
+          },
+        })
         navigate(result.destination, { replace: true })
       } catch (error) {
         const mapped = resolveAuthError(error)
