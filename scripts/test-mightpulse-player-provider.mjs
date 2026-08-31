@@ -335,6 +335,31 @@ assert.equal(requestUrl.toString(), 'https://api.mightpulse.test/v1/players/1255
 assert.equal(requestInit.headers.Authorization, `Bearer ${secret}`)
 assert.equal(requestUrl.toString().includes(secret), false)
 
+const sectionFreshBase = await providerFor(Response.json(validPayload({
+  fresh: { base: true },
+  cached_at: { base: '2026-08-29T11:45:00.000Z' },
+  age_seconds: { base: 900 },
+}))).lookupPlayer({
+  playerId: '125500338',
+  expectedKingdomId: 850,
+})
+assert.equal(sectionFreshBase.providerCachedAt, '2026-08-29T11:45:00.000Z')
+assert.equal(sectionFreshBase.providerAgeSeconds, 900)
+assert.equal(sectionFreshBase.providerFresh, true)
+
+const unknownBaseFreshness = await providerFor(Response.json(validPayload({
+  fresh: { heroes: true },
+  cached_at: { base: { unsupported: true } },
+  age_seconds: { base: '600' },
+}))).lookupPlayer({
+  playerId: '125500338',
+  expectedKingdomId: 850,
+})
+assert.equal(unknownBaseFreshness.playerId, '125500338')
+assert.equal(unknownBaseFreshness.providerCachedAt, null)
+assert.equal(unknownBaseFreshness.providerAgeSeconds, null)
+assert.equal(unknownBaseFreshness.providerFresh, null)
+
 
 let intelligenceRequestUrl
 const intelligenceProvider = providerFor(
@@ -377,6 +402,79 @@ assert.equal(
 assert.equal(intelligence.providerCachedAt, '2026-08-29T11:50:00.000Z')
 assert.equal(intelligence.providerAgeSeconds, 600)
 assert.equal(intelligence.providerFresh, true)
+
+const sectionFreshIntelligence = await providerFor(Response.json(
+  validIntelligencePayload({
+    fresh: {
+      base: true,
+      heroes: true,
+      ranks: true,
+      gov_gear: true,
+    },
+    cached_at: {
+      base: '2026-08-29T11:55:00.000Z',
+      heroes: '2026-08-29T11:40:00.000Z',
+      ranks: '2026-08-29T11:50:00.000Z',
+      gov_gear: '2026-08-29T11:45:00.000Z',
+    },
+    age_seconds: {
+      base: 300,
+      heroes: 1200,
+      ranks: 600,
+      gov_gear: 900,
+    },
+  }),
+)).lookupPlayerIntelligence({
+  playerId: '125500338',
+  expectedKingdomId: 850,
+})
+assert.equal(
+  sectionFreshIntelligence.providerCachedAt,
+  '2026-08-29T11:40:00.000Z',
+)
+assert.equal(sectionFreshIntelligence.providerAgeSeconds, 1200)
+assert.equal(sectionFreshIntelligence.providerFresh, true)
+
+const sectionStaleIntelligence = await providerFor(Response.json(
+  validIntelligencePayload({
+    fresh: {
+      base: true,
+      heroes: false,
+      ranks: true,
+      gov_gear: true,
+    },
+  }),
+)).lookupPlayerIntelligence({
+  playerId: '125500338',
+  expectedKingdomId: 850,
+})
+assert.equal(sectionStaleIntelligence.providerFresh, false)
+
+const incompleteSectionFreshness = await providerFor(Response.json(
+  validIntelligencePayload({
+    fresh: {
+      base: true,
+      heroes: true,
+      ranks: true,
+    },
+    cached_at: {
+      base: '2026-08-29T11:55:00.000Z',
+      heroes: '2026-08-29T11:40:00.000Z',
+      ranks: '2026-08-29T11:50:00.000Z',
+    },
+    age_seconds: {
+      base: 300,
+      heroes: 1200,
+      ranks: 600,
+    },
+  }),
+)).lookupPlayerIntelligence({
+  playerId: '125500338',
+  expectedKingdomId: 850,
+})
+assert.equal(incompleteSectionFreshness.providerCachedAt, null)
+assert.equal(incompleteSectionFreshness.providerAgeSeconds, null)
+assert.equal(incompleteSectionFreshness.providerFresh, null)
 
 const intelligenceSnapshot = projectPlayerIntelligenceSnapshot(intelligence)
 const intelligenceHash = hashPlayerIntelligenceSnapshot(intelligenceSnapshot)

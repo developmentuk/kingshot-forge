@@ -24,6 +24,13 @@ type MightPulseProviderOptions = Readonly<{
 }>
 type MightPulseRuntimeOptions = Omit<MightPulseProviderOptions, 'baseUrl'>
 
+const PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS = [
+  'base',
+  'heroes',
+  'ranks',
+  'gov_gear',
+] as const
+
 function plainRecord(value: unknown): JsonRecord | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const prototype = Object.getPrototypeOf(value)
@@ -196,9 +203,9 @@ function normalizeMightPulsePlayer(
     avatarUrl: avatar.url,
     provider: 'mightpulse',
     providerFetchedAt,
-    providerCachedAt: optionalTimestamp(wrapper.cached_at),
-    providerAgeSeconds: optionalNumber(wrapper.age_seconds),
-    providerFresh: optionalBoolean(wrapper.fresh),
+    providerCachedAt: baseFreshnessTimestamp(wrapper.cached_at),
+    providerAgeSeconds: baseFreshnessNumber(wrapper.age_seconds),
+    providerFresh: baseFreshnessBoolean(wrapper.fresh),
   }
 }
 
@@ -264,11 +271,95 @@ function optionalTemporal(value: unknown): string | number | null {
   return text
 }
 
-function optionalTimestamp(value: unknown): string | null {
-  const text = optionalString(value, 80)
-  if (text === null) return null
-  if (!Number.isFinite(Date.parse(text))) invalidResponse()
+function freshnessSectionCandidate(
+  value: unknown,
+  section: string,
+): unknown {
+  const bySection = plainRecord(value)
+  return bySection ? bySection[section] : value
+}
+
+function optionalFreshnessTimestamp(value: unknown): string | null {
+  if (value === null || value === undefined || typeof value !== 'string') {
+    return null
+  }
+  const text = value.trim()
+  if (!text || text.length > 80 || !Number.isFinite(Date.parse(text))) {
+    return null
+  }
   return text
+}
+
+function optionalFreshnessNumber(value: unknown): number | null {
+  return typeof value === 'number'
+    && Number.isFinite(value)
+    && value >= 0
+    ? value
+    : null
+}
+
+function optionalFreshnessBoolean(value: unknown): boolean | null {
+  return typeof value === 'boolean' ? value : null
+}
+
+function baseFreshnessTimestamp(value: unknown): string | null {
+  return optionalFreshnessTimestamp(
+    freshnessSectionCandidate(value, 'base'),
+  )
+}
+
+function baseFreshnessNumber(value: unknown): number | null {
+  return optionalFreshnessNumber(
+    freshnessSectionCandidate(value, 'base'),
+  )
+}
+
+function baseFreshnessBoolean(value: unknown): boolean | null {
+  return optionalFreshnessBoolean(
+    freshnessSectionCandidate(value, 'base'),
+  )
+}
+
+function aggregateFreshnessTimestamp(
+  value: unknown,
+  sections: readonly string[],
+): string | null {
+  const bySection = plainRecord(value)
+  if (!bySection) return optionalFreshnessTimestamp(value)
+
+  const timestamps = sections.map((section) =>
+    optionalFreshnessTimestamp(bySection[section]))
+  if (timestamps.some((timestamp) => timestamp === null)) return null
+
+  return (timestamps as string[]).reduce((oldest, timestamp) =>
+    Date.parse(timestamp) < Date.parse(oldest) ? timestamp : oldest)
+}
+
+function aggregateFreshnessNumber(
+  value: unknown,
+  sections: readonly string[],
+): number | null {
+  const bySection = plainRecord(value)
+  if (!bySection) return optionalFreshnessNumber(value)
+
+  const ages = sections.map((section) =>
+    optionalFreshnessNumber(bySection[section]))
+  if (ages.some((age) => age === null)) return null
+
+  return Math.max(...(ages as number[]))
+}
+
+function aggregateFreshnessBoolean(
+  value: unknown,
+  sections: readonly string[],
+): boolean | null {
+  const bySection = plainRecord(value)
+  if (!bySection) return optionalFreshnessBoolean(value)
+
+  const freshness = sections.map((section) =>
+    optionalFreshnessBoolean(bySection[section]))
+  if (freshness.some((entry) => entry === false)) return false
+  return freshness.every((entry) => entry === true) ? true : null
 }
 
 function normalizedAssetUrl(value: unknown): string | null {
@@ -529,7 +620,7 @@ function normalizeMightPulsePlayerIntelligence(
   const include = Array.isArray(wrapper.include)
     ? wrapper.include.map((entry) => typeof entry === 'string' ? entry : invalidResponse())
     : invalidResponse()
-  for (const requiredSection of ['base', 'heroes', 'ranks', 'gov_gear']) {
+  for (const requiredSection of PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS) {
     if (!include.includes(requiredSection)) invalidResponse()
   }
 
@@ -558,9 +649,18 @@ function normalizeMightPulsePlayerIntelligence(
     heroes,
     ranks: normalizeRanks(wrapper.ranks),
     governorGear: normalizeGovernorGear(wrapper.gov_gear),
-    providerCachedAt: optionalTimestamp(wrapper.cached_at),
-    providerAgeSeconds: optionalNumber(wrapper.age_seconds),
-    providerFresh: optionalBoolean(wrapper.fresh),
+    providerCachedAt: aggregateFreshnessTimestamp(
+      wrapper.cached_at,
+      PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS,
+    ),
+    providerAgeSeconds: aggregateFreshnessNumber(
+      wrapper.age_seconds,
+      PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS,
+    ),
+    providerFresh: aggregateFreshnessBoolean(
+      wrapper.fresh,
+      PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS,
+    ),
   }
 }
 
