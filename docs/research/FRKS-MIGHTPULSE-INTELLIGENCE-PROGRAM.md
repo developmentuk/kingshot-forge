@@ -257,13 +257,19 @@ MIGHTPULSE-001C begins from the exact accepted production baseline
 001C must build on the existing 001B provider/quota/freshness/authority
 foundation rather than create a parallel Alliance source of truth.
 
-A Gate-0 identity-contract reconciliation is mandatory before implementation:
-the current 001B production path canonicalises provider Alliance tags to
-uppercase before lookup/state storage, while issue #111 still describes an
-exact case-sensitive tag binding. 001C must preserve one canonical Alliance
-identity and must not create duplicate logical Alliances from tag case
-variants. Any deliberate change to the canonicalisation contract requires a
-separate explicit owner decision.
+Gate 0 is resolved for the provider boundary. The current 001B production
+path continues to canonicalise Player-observed Alliance tags to uppercase as
+an accepted compatibility contract, but MightPulse Alliance API lookup uses a
+separate provider binding: exact case-sensitive `kid + tag`, with returned
+`aid` available as an additional provider identity when persistence is later
+designed. Outbound 001C Alliance requests must preserve provider tag case and
+must prove exact returned Kingdom/tag identity. Provider case variants must
+never create duplicate logical Forge Alliances.
+
+001C-A extracts the shared fixed-origin MightPulse transport and implements the
+strict Alliance `info,roster` provider contract with synthetic tests. It is
+not wired to quota, persistence, routes, UI, Alliance authority or Castle
+Command.
 
 No merge, migration application, deployment or runtime change is authorised by
 this handoff.
