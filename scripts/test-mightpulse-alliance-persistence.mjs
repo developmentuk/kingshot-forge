@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { observationFingerprint, prepareAllianceObservation, refreshEnvelopeFingerprint } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
+import { observationFingerprint, prepareAllianceObservation, refreshEnvelopeFingerprint, serializeAllianceObservationForPersistence } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
 
 const base = {
   bindingId: 'binding-1', refreshId: '11111111-1111-4111-8111-111111111111', provider: 'mightpulse', providerKingdomNumber: 123,
@@ -7,6 +7,8 @@ const base = {
   infoFresh: true, rosterFresh: true, providerFresh: true,
   providerCachedAt: null, providerAgeSeconds: null, providerFetchedAt: '2026-08-31T12:00:00Z',
   observedAt: '2026-08-31T12:00:00Z',
+  source: 'test-source', allianceName: 'Alliance', alliancePower: 42, memberCount: 1,
+  leaderIdentity: '125500337', leaderName: 'Leader', flagReference: 'flag-1', powerRank: 1,
   roster: [{ governorId: 'g-1', providerInternalUid: 'u-1', providerFid: 'f-1', matchStatus: 'unmatched' }],
 };
 
@@ -35,6 +37,16 @@ assert.throws(() => prepareAllianceObservation({ ...base, providerFresh: true, r
 assert.equal(prepareAllianceObservation({ ...base, providerFresh: null, infoFresh: null, rosterFresh: null }, new Set()).providerFresh, null);
 assert.equal(prepareAllianceObservation({ ...base, providerFresh: false, infoFresh: false, rosterFresh: true }, new Set()).providerFresh, false);
 assert.equal(prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'existing', matchStatus: 'matched' }] }, new Set(['existing'])).roster[0].playerAccountId, 'existing');
+for (const value of [null, '2026-08-31', 123, true]) {
+  const payload = serializeAllianceObservationForPersistence(prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], lastActiveValue: value }] }, new Set()));
+  assert.equal(payload.p_roster[0].last_active_value, value);
+}
+assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.leader_identity, '125500337');
+assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.source, 'test-source');
+assert.equal(serializeAllianceObservationForPersistence(prepared).p_roster[0].provider_internal_uid, 'u-1');
+assert.equal('providerTag' in serializeAllianceObservationForPersistence(prepared).p_observation, false);
+assert.throws(() => prepareAllianceObservation({ ...base, leaderIdentity: ' bad' }, new Set()), /leader identity/);
+assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], lastActiveValue: {} }] }, new Set()), /last-active/);
 
 const sql = await (await import('node:fs/promises')).readFile(new URL('../supabase/migrations/20260831150000_mightpulse_001c_b_alliance_persistence.sql', import.meta.url), 'utf8');
 for (const required of [
@@ -51,6 +63,7 @@ for (const required of [
   'refresh_id uuid not null', 'refresh_envelope_sha256', 'alliance_intelligence_observations_refresh_idx',
   'refresh identity replay conflicts', 'alliance_intelligence_observations_content_idx',
   'No existing Alliance, membership, Player Account, authority, quota, or public',
+  'leader_identity', "case when member ? 'last_active_value'", "jsonb_typeof(member->'last_active_value') not in ('null', 'string', 'number', 'boolean')",
 ]) assert.match(sql, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
 assert.doesNotMatch(sql, /public\.alliance_memberships\s+(insert|update|delete)/i);
 assert.doesNotMatch(sql, /public\.alliance_admins\s+(insert|update|delete)/i);

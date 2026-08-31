@@ -276,6 +276,7 @@ begin
   if not found then raise exception 'Unknown Alliance provider binding.' using errcode = '23503'; end if;
 
   if jsonb_typeof(p_observation->'alliance_name') not in ('null', 'string')
+    or jsonb_typeof(p_observation->'leader_identity') not in ('null', 'string')
     or jsonb_typeof(p_observation->'leader_name') not in ('null', 'string')
     or jsonb_typeof(p_observation->'flag_reference') not in ('null', 'string')
     or jsonb_typeof(p_observation->'alliance_power') not in ('null', 'number')
@@ -284,18 +285,21 @@ begin
     or jsonb_typeof(p_observation->'freshness_shape') <> 'string' then
     raise exception 'Invalid Alliance observation primitive.' using errcode = '22023';
   end if;
+  if p_observation->>'leader_identity' is not null and (char_length(p_observation->>'leader_identity') not between 1 and 120 or p_observation->>'leader_identity' <> btrim(p_observation->>'leader_identity') or p_observation->>'leader_identity' ~ '[[:cntrl:]]') then
+    raise exception 'Invalid Alliance leader identity.' using errcode = '22023';
+  end if;
 
   insert into public.alliance_intelligence_observations (
     binding_id, alliance_id, provider, provider_kingdom_number, provider_tag,
     provider_alliance_id, refresh_id, refresh_envelope_sha256, alliance_name, alliance_power, member_count,
-    leader_name, flag_reference, power_rank, source, freshness_shape,
+    leader_identity, leader_name, flag_reference, power_rank, source, freshness_shape,
     info_fresh, roster_fresh, provider_fresh, provider_cached_at,
     provider_age_seconds, provider_fetched_at, observed_at, content_sha256
   ) values (
     binding.id, binding.alliance_id, binding.provider, binding.provider_kingdom_number,
     binding.provider_tag, binding.provider_alliance_id, p_refresh_id, p_refresh_envelope_sha256,
     p_observation->>'alliance_name', (p_observation->>'alliance_power')::bigint,
-    (p_observation->>'member_count')::integer, p_observation->>'leader_name',
+    (p_observation->>'member_count')::integer, p_observation->>'leader_identity', p_observation->>'leader_name',
     p_observation->>'flag_reference', (p_observation->>'power_rank')::integer,
     p_observation->>'source', p_observation->>'freshness_shape',
     (p_observation->>'info_fresh')::boolean, (p_observation->>'roster_fresh')::boolean,
@@ -325,7 +329,8 @@ begin
       or jsonb_typeof(member->'town_center_level') not in ('null', 'number')
       or jsonb_typeof(member->'kills') not in ('null', 'number')
       or jsonb_typeof(member->'alliance_rank') not in ('null', 'number')
-      or jsonb_typeof(member->'alliance_rank_label') not in ('null', 'string') then
+      or jsonb_typeof(member->'alliance_rank_label') not in ('null', 'string')
+      or (member ? 'last_active_value' and jsonb_typeof(member->'last_active_value') not in ('null', 'string', 'number', 'boolean')) then
       raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
     end if;
     governor_id := member->>'governor_id';
@@ -340,7 +345,7 @@ begin
       member->>'nickname', (member->>'power')::bigint, (member->>'town_center_level')::integer,
       (member->>'kills')::bigint, (member->>'alliance_rank')::integer,
       member->>'alliance_rank_label', (member->>'kingdom_number')::integer,
-      member->>'avatar_reference', member->'last_active_value', (member->>'online')::boolean,
+      member->>'avatar_reference', case when member ? 'last_active_value' and jsonb_typeof(member->'last_active_value') <> 'null' then member->'last_active_value' else null end, (member->>'online')::boolean,
       p_observation->>'source', (p_observation->>'provider_fresh')::boolean,
       (p_observation->>'provider_cached_at')::timestamptz, (p_observation->>'provider_age_seconds')::integer,
       (p_observation->>'provider_fetched_at')::timestamptz, (p_observation->>'observed_at')::timestamptz,
