@@ -613,6 +613,19 @@ type PlayerIntelligenceValidationStage =
   | 'include'
   | 'identity'
   | 'base'
+  | 'base.power'
+  | 'base.vip'
+  | 'base.x'
+  | 'base.y'
+  | 'base.kills'
+  | 'base.office'
+  | 'base.online'
+  | 'base.last_active_at'
+  | 'base.last_login'
+  | 'base.language'
+  | 'base.shield_endtime'
+  | 'base.burn_endtime'
+  | 'base.alliance'
   | 'heroes'
   | 'ranks'
   | 'gov_gear'
@@ -664,21 +677,60 @@ function normalizeMightPulsePlayerIntelligence(
     'identity',
     () => normalizeMightPulsePlayer(value, request, providerFetchedAt),
   )
-  const base = withPlayerIntelligenceValidationStage('base', () => ({
-    power: optionalNumber(player.power),
-    vip: optionalInteger(player.vip, { min: 0 }),
-    x: optionalNumber(player.x, false),
-    y: optionalNumber(player.y, false),
-    kills: optionalNumber(player.kills),
-    office: optionalString(player.office, 120),
-    online: optionalBoolean(player.online),
-    lastActiveAt: optionalTemporal(player.last_active_at),
-    lastLoginAt: optionalTemporal(player.last_login),
-    language: optionalString(player.language, 80),
-    shieldEndsAt: optionalTemporal(player.shield_endtime),
-    burnEndsAt: optionalTemporal(player.burn_endtime),
-    alliance: normalizeAllianceIntelligence(player.alliance),
-  }))
+  const base = {
+    power: withPlayerIntelligenceValidationStage(
+      'base.power',
+      () => optionalNumber(player.power),
+    ),
+    vip: withPlayerIntelligenceValidationStage(
+      'base.vip',
+      () => optionalInteger(player.vip, { min: 0 }),
+    ),
+    x: withPlayerIntelligenceValidationStage(
+      'base.x',
+      () => optionalNumber(player.x, false),
+    ),
+    y: withPlayerIntelligenceValidationStage(
+      'base.y',
+      () => optionalNumber(player.y, false),
+    ),
+    kills: withPlayerIntelligenceValidationStage(
+      'base.kills',
+      () => optionalNumber(player.kills),
+    ),
+    office: withPlayerIntelligenceValidationStage(
+      'base.office',
+      () => optionalString(player.office, 120),
+    ),
+    online: withPlayerIntelligenceValidationStage(
+      'base.online',
+      () => optionalBoolean(player.online),
+    ),
+    lastActiveAt: withPlayerIntelligenceValidationStage(
+      'base.last_active_at',
+      () => optionalTemporal(player.last_active_at),
+    ),
+    lastLoginAt: withPlayerIntelligenceValidationStage(
+      'base.last_login',
+      () => optionalTemporal(player.last_login),
+    ),
+    language: withPlayerIntelligenceValidationStage(
+      'base.language',
+      () => optionalString(player.language, 80),
+    ),
+    shieldEndsAt: withPlayerIntelligenceValidationStage(
+      'base.shield_endtime',
+      () => optionalTemporal(player.shield_endtime),
+    ),
+    burnEndsAt: withPlayerIntelligenceValidationStage(
+      'base.burn_endtime',
+      () => optionalTemporal(player.burn_endtime),
+    ),
+    alliance: withPlayerIntelligenceValidationStage(
+      'base.alliance',
+      () => normalizeAllianceIntelligence(player.alliance),
+    ),
+  }
   const heroes = withPlayerIntelligenceValidationStage('heroes', () =>
     Array.isArray(wrapper.heroes)
       ? wrapper.heroes.map(normalizeHero)
