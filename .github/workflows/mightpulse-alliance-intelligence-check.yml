@@ -1,0 +1,55 @@
+name: MIGHTPULSE-001C Alliance Intelligence validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'server/mightpulse/**'
+      - 'server/alliance-intelligence/**'
+      - 'server/player-identity/providers/mightPulsePlayerProvider.ts'
+      - 'scripts/test-mightpulse-alliance-provider.mjs'
+      - 'scripts/test-mightpulse-player-provider.mjs'
+      - 'docs/releases/MIGHTPULSE-001C-ALLIANCE-INTELLIGENCE.md'
+      - 'package.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mightpulse-001c-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Alliance provider contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Test Alliance provider
+        run: npm run test:mightpulse-alliance-provider
+
+      - name: Test Player provider regression
+        run: node --import tsx scripts/test-mightpulse-player-provider.mjs
+
+      - name: Validate NodeNext imports
+        run: npm run validate:nodenext
+
+      - name: Build candidate
+        run: npm run build
