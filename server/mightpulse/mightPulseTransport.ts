@@ -34,7 +34,7 @@ export type MightPulseTestTransportOptions =
 
 export type MightPulseJsonRequest = Readonly<{
   pathSegments: readonly string[]
-  query?: Readonly<Record<string, string>>
+  searchParams?: Readonly<Record<string, string>>
 }>
 
 export interface MightPulseTransport {
@@ -168,7 +168,7 @@ function createConfiguredMightPulseTransport(
 
       for (
         const [key, value]
-        of Object.entries(request.query ?? {})
+        of Object.entries(request.searchParams ?? {})
       ) {
         if (
           !key
