@@ -269,6 +269,38 @@ No application source, Supabase schema, provider runtime, environment flag,
 production deployment or live Alliance data has been changed by MIGHTPULSE-001C
 foundation preparation.
 
+## MIGHTPULSE-001C-B — Alliance persistence foundation
+
+001C-B is a review-only persistence foundation from production `main`
+`9836657f7da3f147944119bc5c235f1db2326589`. It adds no runtime call, route,
+quota reservation, roster polling, membership mutation, authority mutation,
+ownership/verification change, public projection, or environment flag.
+
+The unapplied migration adds separate server-only tables for exact-case
+MightPulse bindings, immutable Alliance observations, and immutable whole-roster
+member observations. A binding preserves provider Kingdom, raw case-sensitive
+tag, returned `aid`, status, source, and confirmation timestamps. A globally
+unique provider/aid index prevents silent aid collisions across Forge Alliances;
+historical identity changes use a new binding rather than overwriting identity.
+
+The observation fingerprint is unique per binding for deterministic idempotency.
+Roster rows are attached to one parent observation, reject duplicate Governor,
+provider UID, and provider FID identities within that snapshot, and can only
+reference an existing `player_accounts` row. Missing matches remain unmatched;
+no account creation path exists, and provider fields do not write Player
+profile, membership, rank, admin, authority, verification, or ownership data.
+
+Freshness records sectioned `info` and `roster` evidence, scalar provider
+freshness, or explicit unknown. Missing evidence remains nullable; timestamps
+and ages are stored only when supplied. No public Alliance view or authenticated
+read policy is created. Browser roles are revoked, writes are service-only, and
+observation tables use forced RLS plus mutation-rejecting triggers.
+
+**MIGHTPULSE-001C-B migration created but NOT applied to production.** The
+rollback strategy is documented in the migration as an owner-gated reverse
+dependency drop and has not been executed. 001C-C and runtime activation remain
+separately owner-gated.
+
 
 ## 001C-A — shared transport and Alliance provider contract
 
