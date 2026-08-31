@@ -233,6 +233,17 @@ await expectAllianceError(
   'ALLIANCE_PROVIDER_IDENTITY_MISMATCH',
 )
 
+for (const returnedTag of [' SyN', 'SyN ']) {
+  await expectAllianceError(
+    providerFor(Response.json(validPayload(
+      {},
+      { abbr: returnedTag },
+    ))),
+    409,
+    'ALLIANCE_PROVIDER_IDENTITY_MISMATCH',
+  )
+}
+
 await expectAllianceError(
   providerFor(Response.json(validPayload(
     {},
@@ -500,7 +511,7 @@ assert.match(
 )
 assert.match(
   allianceProviderSource,
-  /returnedTag !== request\.tag/u,
+  /rawReturnedTag !== request\.tag/u,
 )
 assert.doesNotMatch(
   allianceProviderSource,

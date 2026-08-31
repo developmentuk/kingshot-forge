@@ -459,11 +459,24 @@ function normalizeAlliancePayload(
     alliance.kid,
     { min: 1, max: 9_999 },
   )
-  const returnedTag = requiredString(alliance.abbr, 12)
+  const rawReturnedTag = alliance.abbr
+  if (typeof rawReturnedTag !== 'string') invalidResponse()
+  if (
+    !rawReturnedTag
+    || rawReturnedTag.length > 12
+    || /[\u0000-\u001f\u007f]/u.test(rawReturnedTag)
+  ) {
+    invalidResponse()
+  }
+
+  if (rawReturnedTag !== request.tag) {
+    identityMismatch()
+  }
+
+  const returnedTag = requiredString(rawReturnedTag, 12)
 
   if (
     returnedKingdomId !== request.kingdomId
-    || returnedTag !== request.tag
   ) {
     identityMismatch()
   }
