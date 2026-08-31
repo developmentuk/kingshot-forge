@@ -380,6 +380,7 @@ assert.equal(intelligence.base.power, 987654321)
 assert.equal(intelligence.base.vip, 11)
 assert.equal(intelligence.base.x, 123)
 assert.equal(intelligence.base.y, 456)
+assert.equal(intelligence.base.office, 'Minister')
 assert.equal(intelligence.base.online, true)
 assert.equal(intelligence.base.alliance.tag, 'SYN')
 assert.equal(intelligence.base.alliance.rank, 4)
@@ -402,6 +403,14 @@ assert.equal(
 assert.equal(intelligence.providerCachedAt, '2026-08-29T11:50:00.000Z')
 assert.equal(intelligence.providerAgeSeconds, 600)
 assert.equal(intelligence.providerFresh, true)
+
+const numericOfficeIntelligence = await providerFor(Response.json(
+  validIntelligencePayload({}, { office: 7 }),
+)).lookupPlayerIntelligence({
+  playerId: '125500338',
+  expectedKingdomId: 850,
+})
+assert.equal(numericOfficeIntelligence.base.office, 7)
 
 const sectionFreshIntelligence = await providerFor(Response.json(
   validIntelligencePayload({
@@ -531,10 +540,26 @@ try {
       return true
     },
   )
+  await assert.rejects(
+    () => providerFor(Response.json(
+      validIntelligencePayload({}, { office: { id: 7 } }),
+    )).lookupPlayerIntelligence({
+      playerId: '125500338',
+      expectedKingdomId: 850,
+    }),
+    (error) => {
+      assert.equal(error.statusCode, 502)
+      assert.equal(error.code, 'PLAYER_PROVIDER_INVALID_RESPONSE')
+      return true
+    },
+  )
 } finally {
   console.info = originalBaseFieldConsoleInfo
 }
-assert.deepEqual(baseFieldDiagnostics, [{ stage: 'base.online' }])
+assert.deepEqual(baseFieldDiagnostics, [
+  { stage: 'base.online' },
+  { stage: 'base.office' },
+])
 assert.equal(
   JSON.stringify(baseFieldDiagnostics).includes('yes'),
   false,

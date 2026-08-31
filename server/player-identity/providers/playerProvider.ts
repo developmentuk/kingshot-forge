@@ -53,7 +53,7 @@ export type PlayerBaseIntelligence = Readonly<{
   x: number | null
   y: number | null
   kills: number | null
-  office: string | null
+  office: string | number | null
   online: boolean | null
   lastActiveAt: string | number | null
   lastLoginAt: string | number | null
