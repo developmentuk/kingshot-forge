@@ -6,23 +6,26 @@ import {
   type PlayerLookupRequest,
 } from './playerProvider.js'
 import { isTownCenterRawLevel } from '../../../shared/domains/player-identity/townCenterLevel.js'
+import {
+  createMightPulseTransport,
+  createMightPulseTransportForTest,
+  MightPulseTransportError,
+  type MightPulseTestTransportOptions,
+  type MightPulseTransport,
+  type MightPulseTransportOptions,
+} from '../../mightpulse/mightPulseTransport.js'
 
-const DEFAULT_BASE_URL = 'https://api.mightpulse.com/v1'
 const TRUSTED_MIGHTPULSE_AVATAR_ORIGIN = 'https://mightpulse.com'
-export const DEFAULT_MIGHTPULSE_TIMEOUT_MS = 45_000
-const MAX_CONFIGURED_TIMEOUT_MS = 55_000
 
 type JsonRecord = Readonly<Record<string, unknown>>
-type FetchImplementation = typeof fetch
 
-type MightPulseProviderOptions = Readonly<{
-  apiKey?: string
-  baseUrl?: string
-  timeoutMs?: number
-  fetchImplementation?: FetchImplementation
-  now?: () => Date
-}>
-type MightPulseRuntimeOptions = Omit<MightPulseProviderOptions, 'baseUrl'>
+type MightPulseProviderOptions =
+  MightPulseTestTransportOptions
+  & Readonly<{ now?: () => Date }>
+
+type MightPulseRuntimeOptions =
+  MightPulseTransportOptions
+  & Readonly<{ now?: () => Date }>
 
 const PLAYER_INTELLIGENCE_FRESHNESS_SECTIONS = [
   'base',
@@ -768,39 +771,13 @@ function normalizeMightPulsePlayerIntelligence(
   }
 }
 
-function configuredTimeout(value: string | undefined): number {
-  if (value === undefined || value.trim() === '') return DEFAULT_MIGHTPULSE_TIMEOUT_MS
-  const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed < 1_000 || parsed > MAX_CONFIGURED_TIMEOUT_MS) {
-    throw new PlayerProviderError(
-      503,
-      'PLAYER_PROVIDER_UNAVAILABLE',
-      'The player provider is not configured.',
-      true,
-    )
-  }
-  return parsed
-}
-
-function configuredBaseUrl(value: string | undefined): string {
-  const candidate = value?.trim() || DEFAULT_BASE_URL
-  try {
-    const url = new URL(candidate)
-    if (url.protocol !== 'https:' || url.username || url.password) throw new Error('invalid')
-    return url.toString().replace(/\/$/u, '')
-  } catch {
-    throw new PlayerProviderError(
-      503,
-      'PLAYER_PROVIDER_UNAVAILABLE',
-      'The player provider is not configured.',
-      true,
-    )
-  }
-}
-
 function mapHttpFailure(status: number): never {
   if (status === 404) {
-    throw new PlayerProviderError(404, 'PLAYER_NOT_FOUND', 'Player not found.')
+    throw new PlayerProviderError(
+      404,
+      'PLAYER_NOT_FOUND',
+      'Player not found.',
+    )
   }
   if (status === 429) {
     throw new PlayerProviderError(
@@ -841,77 +818,107 @@ function mapHttpFailure(status: number): never {
   )
 }
 
+function mapTransportFailure(error: unknown): never {
+  if (!(error instanceof MightPulseTransportError)) {
+    throw error
+  }
+
+  if (error.kind === 'timeout') {
+    throw new PlayerProviderError(
+      504,
+      'PLAYER_PROVIDER_TIMEOUT',
+      'The player lookup timed out. Try again later.',
+      true,
+    )
+  }
+
+  if (error.kind === 'unreachable') {
+    throw new PlayerProviderError(
+      502,
+      'PLAYER_PROVIDER_UNREACHABLE',
+      'The player lookup service could not be reached.',
+      true,
+    )
+  }
+
+  if (error.kind === 'unconfigured') {
+    throw new PlayerProviderError(
+      503,
+      'PLAYER_PROVIDER_UNAVAILABLE',
+      'The player provider is not configured.',
+      true,
+    )
+  }
+
+  if (error.kind === 'invalid-request') {
+    throw new PlayerProviderError(
+      502,
+      'PLAYER_PROVIDER_INVALID_REQUEST',
+      'The player provider rejected the lookup request.',
+    )
+  }
+
+  if (error.kind === 'invalid-response') {
+    invalidResponse()
+  }
+
+  if (error.httpStatus === null) {
+    invalidResponse()
+  }
+
+  return mapHttpFailure(error.httpStatus)
+}
+
 function createConfiguredMightPulsePlayerProvider(
-  options: MightPulseProviderOptions,
-  baseUrl: string,
+  transport: MightPulseTransport,
+  now: () => Date,
 ): PlayerIntelligenceProvider {
-  const apiKey = options.apiKey ?? process.env.MIGHTPULSE_API_KEY?.trim()
-  const timeoutMs = options.timeoutMs ?? configuredTimeout(process.env.MIGHTPULSE_TIMEOUT_MS)
-  const fetchImplementation = options.fetchImplementation ?? fetch
-  const now = options.now ?? (() => new Date())
-
-
   async function fetchPlayerPayload(
     request: PlayerLookupRequest,
     include: string,
   ): Promise<unknown> {
-    if (!apiKey) {
-      throw new PlayerProviderError(
-        503,
-        'PLAYER_PROVIDER_UNAVAILABLE',
-        'The player provider is not configured.',
-        true,
-      )
-    }
-
-    const url = new URL(baseUrl + '/players/' + encodeURIComponent(request.playerId))
-    url.searchParams.set('include', include)
-    let response: Response
     try {
-      response = await fetchImplementation(url, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: 'Bearer ' + apiKey,
+      return await transport.getJson({
+        pathSegments: [
+          'players',
+          request.playerId,
+        ],
+        query: {
+          include,
         },
-        signal: AbortSignal.timeout(timeoutMs),
       })
     } catch (error) {
-      if (
-        (error instanceof DOMException && error.name === 'TimeoutError')
-        || (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError'))
-      ) {
-        throw new PlayerProviderError(
-          504,
-          'PLAYER_PROVIDER_TIMEOUT',
-          'The player lookup timed out. Try again later.',
-          true,
-        )
-      }
-      throw new PlayerProviderError(
-        502,
-        'PLAYER_PROVIDER_UNREACHABLE',
-        'The player lookup service could not be reached.',
-        true,
-      )
+      mapTransportFailure(error)
     }
-
-    if (!response.ok) mapHttpFailure(response.status)
-    if (!(response.headers.get('content-type') ?? '').toLowerCase().includes('application/json')) {
-      invalidResponse()
-    }
-    return response.json().catch(() => invalidResponse())
   }
 
   return {
-    async lookupPlayer(request): Promise<NormalizedPlayer> {
-      const payload = await fetchPlayerPayload(request, 'base')
-      return normalizeMightPulsePlayer(payload, request, now().toISOString())
+    async lookupPlayer(
+      request,
+    ): Promise<NormalizedPlayer> {
+      const payload =
+        await fetchPlayerPayload(request, 'base')
+
+      return normalizeMightPulsePlayer(
+        payload,
+        request,
+        now().toISOString(),
+      )
     },
 
-    async lookupPlayerIntelligence(request): Promise<NormalizedPlayerIntelligence> {
-      const payload = await fetchPlayerPayload(request, 'base,heroes,ranks,gov_gear')
-      return normalizeMightPulsePlayerIntelligence(payload, request, now().toISOString())
+    async lookupPlayerIntelligence(
+      request,
+    ): Promise<NormalizedPlayerIntelligence> {
+      const payload = await fetchPlayerPayload(
+        request,
+        'base,heroes,ranks,gov_gear',
+      )
+
+      return normalizeMightPulsePlayerIntelligence(
+        payload,
+        request,
+        now().toISOString(),
+      )
     },
   }
 }
@@ -919,13 +926,19 @@ function createConfiguredMightPulsePlayerProvider(
 export function createMightPulsePlayerProvider(
   options: MightPulseRuntimeOptions = {},
 ): PlayerIntelligenceProvider {
-  return createConfiguredMightPulsePlayerProvider(options, DEFAULT_BASE_URL)
+  return createConfiguredMightPulsePlayerProvider(
+    createMightPulseTransport(options),
+    options.now ?? (() => new Date()),
+  )
 }
 
 export function createMightPulsePlayerProviderForTest(
   options: MightPulseProviderOptions,
 ): PlayerIntelligenceProvider {
-  return createConfiguredMightPulsePlayerProvider(options, configuredBaseUrl(options.baseUrl))
+  return createConfiguredMightPulsePlayerProvider(
+    createMightPulseTransportForTest(options),
+    options.now ?? (() => new Date()),
+  )
 }
 
 export {
