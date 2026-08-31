@@ -1,10 +1,10 @@
 # MIGHTPULSE-001C — Alliance Intelligence & Roster Sync
 
-**Issue:** #111  
-**Parent:** #109  
-**Baseline:** production `main` at `ab0140ce755e78714b541d2b50fcfe282a86a73d`  
-**Branch:** `feature/mightpulse-001c-alliance-intelligence`  
-**Status:** 001C-A provider-contract implementation complete on feature branch; persistence/runtime not started  
+**Issue:** #111
+**Parent:** #109
+**Baseline:** production `main` at `ab0140ce755e78714b541d2b50fcfe282a86a73d`
+**Branch:** `feature/mightpulse-001c-alliance-intelligence`
+**Status:** 001C-A provider-contract implementation complete on feature branch; persistence/runtime not started
 **Production changes authorised by this foundation:** none
 
 ## Objective
