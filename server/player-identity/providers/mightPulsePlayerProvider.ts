@@ -700,7 +700,7 @@ function normalizeMightPulsePlayerIntelligence(
     ),
     office: withPlayerIntelligenceValidationStage(
       'base.office',
-      () => optionalString(player.office, 120),
+      () => optionalScalar(player.office),
     ),
     online: withPlayerIntelligenceValidationStage(
       'base.online',
