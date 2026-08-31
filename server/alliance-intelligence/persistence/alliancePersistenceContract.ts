@@ -13,6 +13,7 @@ export type AllianceRosterMember = {
 
 export type AllianceObservationInput = {
   bindingId: string;
+  refreshId: string;
   provider: 'mightpulse';
   providerKingdomNumber: number;
   providerTag: string;
@@ -55,8 +56,8 @@ export function validateProviderBindingIdentity(input: {
 }
 
 const LOCAL_FINGERPRINT_FIELDS = new Set([
-  'bindingId', 'observedAt', 'providerFetchedAt', 'providerCachedAt',
-  'providerAgeSeconds', 'contentSha256',
+  'bindingId', 'refreshId', 'observedAt', 'providerFetchedAt', 'providerCachedAt',
+  'providerAgeSeconds', 'contentSha256', 'refreshEnvelopeSha256',
 ]);
 
 function canonicalize(value: unknown): unknown {
@@ -75,6 +76,20 @@ export function observationFingerprint(input: AllianceObservationInput): string 
     .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
   const stable = JSON.stringify(canonicalize({ ...providerFacts, roster }));
   return createHash('sha256').update(stable, 'utf8').digest('hex');
+}
+
+export function refreshEnvelopeFingerprint(input: AllianceObservationInput): string {
+  const envelope = {
+    contentSha256: observationFingerprint(input),
+    providerFresh: input.providerFresh,
+    infoFresh: input.infoFresh,
+    rosterFresh: input.rosterFresh,
+    providerCachedAt: input.providerCachedAt ?? null,
+    providerAgeSeconds: input.providerAgeSeconds ?? null,
+    providerFetchedAt: input.providerFetchedAt,
+    observedAt: input.observedAt,
+  };
+  return createHash('sha256').update(JSON.stringify(canonicalize(envelope)), 'utf8').digest('hex');
 }
 
 export function validateWholeRoster(input: AllianceObservationInput, existingPlayerAccountIds: ReadonlySet<string>): void {
@@ -112,9 +127,11 @@ export function prepareAllianceObservation(input: AllianceObservationInput, exis
     providerAllianceId: input.providerAllianceId,
   });
   validateWholeRoster(input, existingPlayerAccountIds);
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(input.refreshId)) throw new Error('invalid refresh id');
   return Object.freeze({
     ...input,
     roster: Object.freeze(input.roster.map((member) => Object.freeze({ ...member }))),
     contentSha256: observationFingerprint(input),
+    refreshEnvelopeSha256: refreshEnvelopeFingerprint(input),
   });
 }

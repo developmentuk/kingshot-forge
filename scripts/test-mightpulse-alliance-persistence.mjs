@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { observationFingerprint, prepareAllianceObservation } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
+import { observationFingerprint, prepareAllianceObservation, refreshEnvelopeFingerprint } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
 
 const base = {
-  bindingId: 'binding-1', provider: 'mightpulse', providerKingdomNumber: 123,
+  bindingId: 'binding-1', refreshId: '11111111-1111-4111-8111-111111111111', provider: 'mightpulse', providerKingdomNumber: 123,
   providerTag: 'MiXeD', providerAllianceId: 'aid-1', freshnessShape: 'sectioned',
   infoFresh: true, rosterFresh: true, providerFresh: true,
   providerCachedAt: null, providerAgeSeconds: null, providerFetchedAt: '2026-08-31T12:00:00Z',
@@ -17,6 +17,8 @@ assert.equal(prepared.contentSha256, prepareAllianceObservation({ ...base }, new
 assert.equal(observationFingerprint({ ...base, observedAt: '2026-08-31T13:00:00Z', providerFetchedAt: '2026-08-31T13:01:00Z' }), observationFingerprint(base));
 assert.equal(observationFingerprint({ ...base, roster: [...base.roster].reverse() }), observationFingerprint(base));
 assert.equal(observationFingerprint({ ...base, extra: { b: 2, a: 1 } }), observationFingerprint({ ...base, extra: { a: 1, b: 2 } }));
+assert.equal(observationFingerprint({ ...base, refreshId: '22222222-2222-4222-8222-222222222222' }), observationFingerprint(base));
+assert.notEqual(refreshEnvelopeFingerprint({ ...base, observedAt: '2026-08-31T13:00:00Z' }), refreshEnvelopeFingerprint(base));
 assert.notEqual(observationFingerprint({ ...base, allianceName: 'Changed Alliance' }), observationFingerprint(base));
 assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], power: 999 }] }), observationFingerprint(base));
 assert.notEqual(observationFingerprint({ ...base, providerTag: 'MIXED' }), observationFingerprint(base));
@@ -45,6 +47,9 @@ for (const required of [
   'between 1 and 84', 'alliance_rank integer', 'between 1 and 5',
   'alliance_provider_bindings_identity_guard', 'persist_mightpulse_alliance_observation',
   'provider_alliance_id_collision', 'historical provider identity records',
+  'pg_advisory_xact_lock', 'hashtextextended', 'lower(provider_tag)',
+  'refresh_id uuid not null', 'refresh_envelope_sha256', 'alliance_intelligence_observations_refresh_idx',
+  'refresh identity replay conflicts', 'alliance_intelligence_observations_content_idx',
   'No existing Alliance, membership, Player Account, authority, quota, or public',
 ]) assert.match(sql, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
 assert.doesNotMatch(sql, /public\.alliance_memberships\s+(insert|update|delete)/i);
@@ -55,6 +60,8 @@ const bindingGuard = sql.slice(sql.indexOf('reject_alliance_provider_binding_ide
 for (const field of ['alliance_id', 'provider', 'provider_kingdom_number', 'provider_tag', 'provider_alliance_id', 'source', 'first_seen_at', 'created_at']) {
   assert.match(bindingGuard, new RegExp(`new\\.${field}\\s*<>\\s*old\\.${field}`));
 }
-assert.match(sql, /on conflict \(binding_id, content_sha256\) do nothing returning id/i);
+assert.match(sql, /on conflict \(binding_id, refresh_id\) do nothing returning id/i);
+assert.match(sql, /where binding_id = p_binding_id and refresh_id = p_refresh_id[\s\S]*content_sha256 = p_content_sha256[\s\S]*refresh_envelope_sha256 = p_refresh_envelope_sha256/i);
+assert.match(sql, /Refresh identity replay conflicts with its persisted envelope/i);
 assert.match(sql, /for member in select value from jsonb_array_elements\(p_roster\)/i);
 console.log('MIGHTPULSE-001C-B alliance persistence contract tests passed');

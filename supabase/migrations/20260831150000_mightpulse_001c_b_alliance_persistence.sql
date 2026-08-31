@@ -39,7 +39,8 @@ create unique index alliance_provider_bindings_active_alliance_idx
   on public.alliance_provider_bindings (alliance_id, provider)
   where binding_status = 'active';
 -- The same aid may have multiple exact-case historical provider identity records,
--- but never a provider_alliance_id_collision across Forge Alliances.
+-- but never a provider_alliance_id_collision across Forge Alliances. The
+-- insert/update trigger takes a transaction-scoped advisory lock first.
 -- Historical provider identity records
 --
 -- The same aid may have multiple exact-case historical bindings, but never
@@ -48,6 +49,8 @@ create index alliance_provider_bindings_provider_aid_idx
   on public.alliance_provider_bindings (provider, provider_alliance_id);
 create unique index alliance_provider_bindings_exact_lookup_idx
   on public.alliance_provider_bindings (provider, provider_kingdom_number, provider_tag);
+create index alliance_provider_bindings_normalized_lookup_idx
+  on public.alliance_provider_bindings (provider, provider_kingdom_number, lower(provider_tag));
 
 create table public.alliance_intelligence_observations (
   id uuid primary key default gen_random_uuid(),
@@ -57,6 +60,8 @@ create table public.alliance_intelligence_observations (
   provider_kingdom_number integer not null check (provider_kingdom_number between 1 and 9999),
   provider_tag text not null check (provider_tag = btrim(provider_tag) and provider_tag !~ '[[:cntrl:]]'),
   provider_alliance_id text not null check (provider_alliance_id = btrim(provider_alliance_id) and provider_alliance_id !~ '[[:cntrl:]]'),
+  refresh_id uuid not null,
+  refresh_envelope_sha256 text not null check (refresh_envelope_sha256 ~ '^[0-9a-f]{64}$'),
   alliance_name text null,
   alliance_power bigint null check (alliance_power is null or alliance_power >= 0),
   member_count integer null check (member_count is null or member_count >= 0),
@@ -83,9 +88,11 @@ comment on table public.alliance_intelligence_observations is
 comment on column public.alliance_intelligence_observations.provider_fresh is
   'Nullable provider freshness. Null is unknown; it is never inferred from a missing timestamp or age.';
 comment on column public.alliance_intelligence_observations.content_sha256 is
-  'Fingerprint of the governed normalized observation; the same binding/fingerprint is idempotent.';
+  'Fingerprint of governed provider facts; refresh_id, not content, defines retry idempotency.';
 
-create unique index alliance_intelligence_observations_idempotency_idx
+create unique index alliance_intelligence_observations_refresh_idx
+  on public.alliance_intelligence_observations (binding_id, refresh_id);
+create index alliance_intelligence_observations_content_idx
   on public.alliance_intelligence_observations (binding_id, content_sha256);
 create index alliance_intelligence_observations_latest_idx
   on public.alliance_intelligence_observations (binding_id, provider_fetched_at desc, observed_at desc);
@@ -119,7 +126,21 @@ returns trigger
 language plpgsql
 set search_path = public, pg_temp
 as $$
+declare
+  aid_lock_key text := 'mightpulse:aid:' || new.provider || ':' || new.provider_alliance_id;
+  tag_lock_key text := 'mightpulse:tag:' || new.provider || ':' || new.provider_kingdom_number::text || ':' || lower(new.provider_tag);
 begin
+  -- Serialize both logical identities before checking existing history. Hash
+  -- collisions only over-serialize and cannot weaken correctness.
+  -- A stable lexical order also prevents lock-order deadlocks when a refresh
+  -- changes both identity dimensions.
+  if aid_lock_key < tag_lock_key then
+    perform pg_advisory_xact_lock(hashtextextended(aid_lock_key, 0));
+    perform pg_advisory_xact_lock(hashtextextended(tag_lock_key, 0));
+  else
+    perform pg_advisory_xact_lock(hashtextextended(tag_lock_key, 0));
+    perform pg_advisory_xact_lock(hashtextextended(aid_lock_key, 0));
+  end if;
   if exists (
     select 1 from public.alliance_provider_bindings b
     where b.provider = new.provider
@@ -128,6 +149,16 @@ begin
       and b.id <> new.id
   ) then
     raise exception 'MightPulse aid is already bound to a different Forge Alliance.' using errcode = '23505';
+  end if;
+  if exists (
+    select 1 from public.alliance_provider_bindings b
+    where b.provider = new.provider
+      and b.provider_kingdom_number = new.provider_kingdom_number
+      and lower(b.provider_tag) = lower(new.provider_tag)
+      and b.alliance_id <> new.alliance_id
+      and b.id <> new.id
+  ) then
+    raise exception 'MightPulse case-normalized tag is already bound to a different Forge Alliance.' using errcode = '23505';
   end if;
   return new;
 end;
@@ -219,7 +250,9 @@ create or replace function private.persist_mightpulse_alliance_observation(
   p_binding_id uuid,
   p_observation jsonb,
   p_roster jsonb,
-  p_content_sha256 text
+  p_refresh_id uuid,
+  p_content_sha256 text,
+  p_refresh_envelope_sha256 text
 )
 returns uuid
 language plpgsql
@@ -233,7 +266,9 @@ declare
   governor_id text;
 begin
   if jsonb_typeof(p_observation) <> 'object' or jsonb_typeof(p_roster) <> 'array'
-    or p_content_sha256 is null or p_content_sha256 !~ '^[0-9a-f]{64}$' then
+    or p_refresh_id is null
+    or p_content_sha256 is null or p_content_sha256 !~ '^[0-9a-f]{64}$'
+    or p_refresh_envelope_sha256 is null or p_refresh_envelope_sha256 !~ '^[0-9a-f]{64}$' then
     raise exception 'Invalid governed Alliance observation envelope.' using errcode = '22023';
   end if;
 
@@ -252,13 +287,13 @@ begin
 
   insert into public.alliance_intelligence_observations (
     binding_id, alliance_id, provider, provider_kingdom_number, provider_tag,
-    provider_alliance_id, alliance_name, alliance_power, member_count,
+    provider_alliance_id, refresh_id, refresh_envelope_sha256, alliance_name, alliance_power, member_count,
     leader_name, flag_reference, power_rank, source, freshness_shape,
     info_fresh, roster_fresh, provider_fresh, provider_cached_at,
     provider_age_seconds, provider_fetched_at, observed_at, content_sha256
   ) values (
     binding.id, binding.alliance_id, binding.provider, binding.provider_kingdom_number,
-    binding.provider_tag, binding.provider_alliance_id,
+    binding.provider_tag, binding.provider_alliance_id, p_refresh_id, p_refresh_envelope_sha256,
     p_observation->>'alliance_name', (p_observation->>'alliance_power')::bigint,
     (p_observation->>'member_count')::integer, p_observation->>'leader_name',
     p_observation->>'flag_reference', (p_observation->>'power_rank')::integer,
@@ -267,11 +302,16 @@ begin
     (p_observation->>'provider_fresh')::boolean, (p_observation->>'provider_cached_at')::timestamptz,
     (p_observation->>'provider_age_seconds')::integer, (p_observation->>'provider_fetched_at')::timestamptz,
     (p_observation->>'observed_at')::timestamptz, p_content_sha256
-  ) on conflict (binding_id, content_sha256) do nothing returning id into observation_id;
+  ) on conflict (binding_id, refresh_id) do nothing returning id into observation_id;
 
   if observation_id is null then
     select id into observation_id from public.alliance_intelligence_observations
-      where binding_id = p_binding_id and content_sha256 = p_content_sha256;
+      where binding_id = p_binding_id and refresh_id = p_refresh_id
+        and content_sha256 = p_content_sha256
+        and refresh_envelope_sha256 = p_refresh_envelope_sha256;
+    if observation_id is null then
+      raise exception 'Refresh identity replay conflicts with its persisted envelope.' using errcode = '23505';
+    end if;
     return observation_id;
   end if;
 
@@ -345,8 +385,8 @@ revoke all on function public.reject_alliance_observation_mutation() from public
 revoke all on function public.validate_alliance_observation_binding() from public, anon, authenticated;
 revoke all on function public.reject_alliance_provider_binding_identity_change() from public, anon, authenticated;
 revoke all on function public.reject_alliance_provider_aid_collision() from public, anon, authenticated;
-revoke all on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, text) from public, anon, authenticated;
-grant execute on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, text) to service_role;
+revoke all on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, uuid, text, text) from public, anon, authenticated;
+grant execute on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, uuid, text, text) to service_role;
 
 -- Rollback strategy (owner-gated, never run implicitly): drop dependent indexes,
 -- triggers, function, and the three new tables in reverse dependency order.
