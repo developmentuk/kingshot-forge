@@ -1761,6 +1761,22 @@ await expectProviderError(
   'PLAYER_PROVIDER_UNAVAILABLE',
 )
 
+const previousTimeout = process.env.MIGHTPULSE_TIMEOUT_MS
+process.env.MIGHTPULSE_TIMEOUT_MS = 'invalid-timeout'
+assert.throws(
+  () => createMightPulsePlayerProvider({ apiKey: secret }),
+  (error) =>
+    error?.statusCode === 503
+    && error?.code === 'PLAYER_PROVIDER_UNAVAILABLE'
+    && error?.retryable === true
+    && !String(error).includes(secret),
+)
+if (previousTimeout === undefined) {
+  delete process.env.MIGHTPULSE_TIMEOUT_MS
+} else {
+  process.env.MIGHTPULSE_TIMEOUT_MS = previousTimeout
+}
+
 await expectProviderError(
   createMightPulsePlayerProviderForTest({
     apiKey: secret,
