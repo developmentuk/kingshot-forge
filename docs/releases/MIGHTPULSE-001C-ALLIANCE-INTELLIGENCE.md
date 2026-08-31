@@ -4,7 +4,7 @@
 **Parent:** #109  
 **Baseline:** production `main` at `ab0140ce755e78714b541d2b50fcfe282a86a73d`  
 **Branch:** `feature/mightpulse-001c-alliance-intelligence`  
-**Status:** Foundation prepared; implementation not started  
+**Status:** 001C-A provider-contract implementation complete on feature branch; persistence/runtime not started  
 **Production changes authorised by this foundation:** none
 
 ## Objective
@@ -37,26 +37,43 @@ system or Alliance source of truth.
 
 ## Gate 0 — canonical Alliance identity contract
 
-Implementation is blocked until the Alliance identity rule is made internally
-consistent.
+Gate 0 is resolved for the provider boundary.
 
-Current production 001B canonicalises provider Alliance tags to uppercase
-before Alliance lookup, creation and provider-state storage. Issue #111
-currently says the Forge Alliance should bind to a case-sensitive tag.
+MightPulse documents Alliance lookup as
+`GET /v1/alliances/{kid}/{tag}?include=info,roster`, where `kid` is
+required because the same tag may exist in multiple Kingdoms and `tag` is
+case-sensitive.
 
-001C must preserve exactly one logical Alliance identity per governed
-`kingdom_number + canonical_tag`. Tag case variants must not create duplicate
-Alliance records.
+001B's Player-derived Alliance synchronisation currently uppercases the
+observed tag before resolving the Forge Alliance row. That behaviour remains
+an accepted 001B compatibility contract and is not rewritten by 001C-A.
 
-The default foundation position is therefore:
+001C therefore separates two identities:
 
-- Kingdom number remains part of the Alliance identity boundary;
-- provider tags are normalised through the existing 001B canonicalisation
-  contract before lookup/match;
-- display casing, if required later, is presentation metadata rather than an
-  identity key;
-- changing this behaviour requires explicit owner approval because it would
-  alter an already accepted production identity contract.
+- the **Forge canonical Alliance identity**, which remains the existing Forge
+  Alliance record and must remain unique for the logical Alliance; and
+- the **MightPulse provider binding**, which must preserve the exact provider
+  `kid + tag` spelling used for Alliance API requests and should additionally
+  retain the returned provider `aid` once persistence is designed.
+
+Rules:
+
+- outbound MightPulse Alliance requests preserve tag case exactly;
+- returned `kid` and `abbr` must match the requested provider binding
+  exactly before the response is accepted;
+- a provider tag is never uppercased merely to construct the provider URL;
+- provider tag case is presentation/provider identity, not permission;
+- later persistence must prevent case variants from creating duplicate logical
+  Forge Alliances;
+- any migration that introduces the provider binding remains separately
+  owner-gated.
+
+Read-only production inspection on 31 August 2026 found zero existing
+case-insensitive Alliance collision groups, so no production identity repair is
+required before 001C-A.
+
+Provider contract source verified 31 August 2026:
+`https://api.mightpulse.com/`.
 
 ## Scope
 
@@ -251,3 +268,49 @@ This document, the 001B closure record and the new branch are foundation-only.
 No application source, Supabase schema, provider runtime, environment flag,
 production deployment or live Alliance data has been changed by MIGHTPULSE-001C
 foundation preparation.
+
+
+## 001C-A — shared transport and Alliance provider contract
+
+001C-A is implemented on the feature branch only.
+
+Delivered:
+
+- extracted the fixed-origin MightPulse HTTP transport into
+  `server/mightpulse/mightPulseTransport.ts`;
+- retained the production origin at exactly
+  `https://api.mightpulse.com/v1`;
+- retained Bearer authentication, timeout handling, JSON content validation
+  and safe HTTP failure isolation in the server-only transport;
+- refactored the existing Player provider to consume that shared transport
+  without changing its domain error contract;
+- added a provider-neutral Alliance Intelligence contract;
+- added a strict MightPulse Alliance `info,roster` provider;
+- outbound Alliance lookup preserves the exact case-sensitive tag;
+- response acceptance proves exact requested Kingdom and tag;
+- roster validation rejects malformed ranks, wrong-Kingdom members and
+  duplicate Governor/internal identifiers;
+- operational roster fields are normalised but are not exposed to any browser
+  or public projection;
+- unsafe provider avatar/flag URLs are dropped rather than trusted;
+- synthetic tests cover success, case mismatch, wrong Kingdom, malformed and
+  duplicate members, provider HTTP failures, timeout, unreachable provider,
+  fixed production origin and absence of Supabase/quota writes;
+- a dedicated pull-request CI gate is authored for the 001C provider slice.
+
+### Explicit 001C-A non-effects
+
+001C-A does not:
+
+- create or alter a Supabase table, view, function, RLS policy or migration;
+- reserve provider quota;
+- call the Alliance provider from any production route;
+- add a runtime feature flag;
+- expose Alliance roster intelligence in the UI;
+- mutate Alliance membership, rank or authority;
+- connect Castle Command;
+- deploy anything.
+
+The Alliance provider is therefore inert production code until a later,
+separately reviewed and owner-approved slice wires it behind quota,
+authentication, persistence and access control.
