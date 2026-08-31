@@ -290,6 +290,12 @@ begin
     raise exception 'Invalid Alliance leader identity.' using errcode = '22023';
   end if;
 
+  if p_observation->>'member_count' is not null
+    and (p_observation->>'member_count' !~ '^[0-9]+$'
+      or (p_observation->>'member_count')::integer <> jsonb_array_length(p_roster)) then
+    raise exception 'Invalid Alliance member count.' using errcode = '22023';
+  end if;
+
   insert into public.alliance_intelligence_observations (
     binding_id, alliance_id, provider, provider_kingdom_number, provider_tag,
     provider_alliance_id, refresh_id, refresh_envelope_sha256, alliance_name, alliance_power, member_count,

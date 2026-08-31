@@ -279,11 +279,21 @@ ownership/verification change, public projection, or environment flag.
 The unapplied migration adds separate server-only tables for exact-case
 MightPulse bindings, immutable Alliance observations, and immutable whole-roster
 member observations. A binding preserves provider Kingdom, raw case-sensitive
-tag, returned `aid`, status, source, and confirmation timestamps. A globally
-unique provider/aid index prevents silent aid collisions across Forge Alliances;
-historical identity changes use a new binding rather than overwriting identity.
+tag, returned `aid`, status, source, and confirmation timestamps. A provider/aid
+lookup index supports efficient lookup but is not itself the collision
+constraint: transaction-scoped advisory locking serializes the same logical
+provider identity, and collision validation prevents the same MightPulse aid
+from binding different Forge Alliances. Same-aid historical bindings are
+allowed when they belong to the same Forge Alliance; exact-case provider tag
+history remains immutable, and active lookup uniqueness is enforced separately.
+Historical identity changes use a new binding rather than overwriting identity.
 
-The observation fingerprint is unique per binding for deterministic idempotency.
+`content_sha256` records canonical provider-fact equivalence and is not the
+retry-idempotency key. `(binding_id, refresh_id)` provides retry idempotency,
+while `refresh_envelope_sha256` detects conflicting replay under the same
+refresh identity. Later refreshes with unchanged provider facts therefore
+remain distinct immutable observations even when they have the same
+`content_sha256`.
 Roster rows are attached to one parent observation, reject duplicate Governor,
 provider UID, and provider FID identities within that snapshot, and can only
 reference an existing `player_accounts` row. Missing matches remain unmatched;

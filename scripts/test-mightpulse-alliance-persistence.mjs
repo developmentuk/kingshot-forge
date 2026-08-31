@@ -42,6 +42,13 @@ assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: 0, 
 assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: null }, new Set()));
 assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster: [] }, new Set()), /member count/);
 assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 0, roster: [{ ...base.roster[0] }] }, new Set()), /member count/);
+for (const [memberCount, rosterLength] of [[2, 2], [0, 0]]) {
+  assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount, roster: Array.from({ length: rosterLength }, (_, index) => ({ ...base.roster[0], governorId: `g-${index + 1}`, providerInternalUid: `u-${index + 1}`, providerFid: `f-${index + 1}` })) }, new Set()));
+}
+assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: null, roster: [{ ...base.roster[0] }, { ...base.roster[0], governorId: 'g-2', providerInternalUid: 'u-2', providerFid: 'f-2' }] }, new Set()));
+for (const [memberCount, rosterLength] of [[2, 1], [1, 2]]) {
+  assert.throws(() => prepareAllianceObservation({ ...base, memberCount, roster: Array.from({ length: rosterLength }, (_, index) => ({ ...base.roster[0], governorId: `g-${index + 1}`, providerInternalUid: `u-${index + 1}`, providerFid: `f-${index + 1}` })) }, new Set()), /member count/);
+}
 const unicodeRoster = [
   { ...base.roster[0], governorId: 'Å' },
   { ...base.roster[0], governorId: 'Ä', providerInternalUid: 'u-2', providerFid: 'f-2' },
@@ -104,4 +111,11 @@ assert.match(sql, /on conflict \(binding_id, refresh_id\) do nothing returning i
 assert.match(sql, /where binding_id = p_binding_id and refresh_id = p_refresh_id[\s\S]*content_sha256 = p_content_sha256[\s\S]*refresh_envelope_sha256 = p_refresh_envelope_sha256/i);
 assert.match(sql, /Refresh identity replay conflicts with its persisted envelope/i);
 assert.match(sql, /for member in select value from jsonb_array_elements\(p_roster\)/i);
+const rpc = sql.slice(sql.indexOf('create or replace function private.persist_mightpulse_alliance_observation'), sql.indexOf('create or replace function public.reject_alliance_observation_mutation'));
+assert.match(rpc, /jsonb_typeof\(p_observation\) <> 'object'[\s\S]*jsonb_typeof\(p_roster\) <> 'array'/i);
+assert.match(rpc, /jsonb_typeof\(p_observation->'member_count'\) not in \('null', 'number'\)/i);
+assert.match(rpc, /p_observation->>'member_count' is not null[\s\S]*p_observation->>'member_count' !~ '\^\[0-9\]\+\$'[\s\S]*jsonb_array_length\(p_roster\)/i);
+const cardinalityGuard = rpc.indexOf("Invalid Alliance member count.");
+assert.ok(cardinalityGuard < rpc.indexOf('insert into public.alliance_intelligence_observations'), 'cardinality guard should run before parent persistence');
+assert.ok(rpc.includes('jsonb_array_elements(p_roster)'), 'direct RPC path must persist the supplied roster');
 console.log('MIGHTPULSE-001C-B alliance persistence contract tests passed');
