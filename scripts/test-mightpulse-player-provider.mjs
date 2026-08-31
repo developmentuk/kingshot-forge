@@ -477,13 +477,13 @@ assert.equal(incompleteSectionFreshness.providerAgeSeconds, null)
 assert.equal(incompleteSectionFreshness.providerFresh, null)
 
 const intelligenceDiagnostics = []
-const originalConsoleInfo = console.info
+const originalIntelligenceConsoleInfo = console.info
 console.info = (...args) => {
   if (args[0] === '[mightpulse-player-intelligence-invalid]') {
     intelligenceDiagnostics.push(args[1])
     return
   }
-  originalConsoleInfo(...args)
+  originalIntelligenceConsoleInfo(...args)
 }
 try {
   await assert.rejects(
@@ -500,7 +500,7 @@ try {
     },
   )
 } finally {
-  console.info = originalConsoleInfo
+  console.info = originalIntelligenceConsoleInfo
 }
 assert.deepEqual(intelligenceDiagnostics, [{ stage: 'ranks' }])
 assert.equal(
