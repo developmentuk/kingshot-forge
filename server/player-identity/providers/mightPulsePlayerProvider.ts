@@ -926,8 +926,15 @@ function createConfiguredMightPulsePlayerProvider(
 export function createMightPulsePlayerProvider(
   options: MightPulseRuntimeOptions = {},
 ): PlayerIntelligenceProvider {
+  let transport: MightPulseTransport
+  try {
+    transport = createMightPulseTransport(options)
+  } catch (error) {
+    mapTransportFailure(error)
+  }
+
   return createConfiguredMightPulsePlayerProvider(
-    createMightPulseTransport(options),
+    transport,
     options.now ?? (() => new Date()),
   )
 }
@@ -935,8 +942,15 @@ export function createMightPulsePlayerProvider(
 export function createMightPulsePlayerProviderForTest(
   options: MightPulseProviderOptions,
 ): PlayerIntelligenceProvider {
+  let transport: MightPulseTransport
+  try {
+    transport = createMightPulseTransportForTest(options)
+  } catch (error) {
+    mapTransportFailure(error)
+  }
+
   return createConfiguredMightPulsePlayerProvider(
-    createMightPulseTransportForTest(options),
+    transport,
     options.now ?? (() => new Date()),
   )
 }

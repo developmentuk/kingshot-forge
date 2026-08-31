@@ -178,6 +178,42 @@ const staleSection = await providerFor(
 ).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
 assert.equal(staleSection.providerFresh, false)
 
+for (const freshness of [
+  { info: true },
+  { roster: true },
+]) {
+  const missingSectionFreshness = await providerFor(
+    Response.json(validPayload({
+      fresh: freshness,
+      cached_at: freshness.info
+        ? { info: '2026-08-31T14:55:00.000Z' }
+        : { roster: '2026-08-31T14:54:00.000Z' },
+      age_seconds: freshness.info
+        ? { info: 300 }
+        : { roster: 360 },
+    })),
+  ).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+  assert.equal(missingSectionFreshness.providerFresh, null)
+  assert.equal(missingSectionFreshness.providerCachedAt, null)
+  assert.equal(missingSectionFreshness.providerAgeSeconds, null)
+}
+
+const explicitlyFresh = await providerFor(
+  Response.json(validPayload()),
+).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+assert.equal(explicitlyFresh.providerFresh, true)
+
+const scalarFreshness = await providerFor(
+  Response.json(validPayload({
+    fresh: true,
+    cached_at: '2026-08-31T14:55:00.000Z',
+    age_seconds: 300,
+  })),
+).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+assert.equal(scalarFreshness.providerFresh, true)
+assert.equal(scalarFreshness.providerCachedAt, '2026-08-31T14:55:00.000Z')
+assert.equal(scalarFreshness.providerAgeSeconds, 300)
+
 const unsafeAssets = await providerFor(
   Response.json(validPayload(
     {},

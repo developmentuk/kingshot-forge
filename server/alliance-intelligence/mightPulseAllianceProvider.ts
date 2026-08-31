@@ -317,14 +317,17 @@ function optionalInclude(value: unknown): void {
 
 function freshnessValues(
   value: unknown,
-): readonly unknown[] {
+): readonly unknown[] | null {
   if (value === undefined || value === null) return []
 
   const bySection = plainRecord(value)
   if (!bySection) return [value]
 
+  if (!('info' in bySection) || !('roster' in bySection)) {
+    return null
+  }
+
   return ['info', 'roster']
-    .filter((section) => section in bySection)
     .map((section) => bySection[section])
 }
 
@@ -332,7 +335,7 @@ function normalizedFreshnessTimestamp(
   value: unknown,
 ): string | null {
   const values = freshnessValues(value)
-  if (values.length === 0) return null
+  if (values === null || values.length === 0) return null
 
   const timestamps = values.map((entry) => {
     if (typeof entry !== 'string') invalidResponse()
@@ -357,7 +360,7 @@ function normalizedFreshnessAge(
   value: unknown,
 ): number | null {
   const values = freshnessValues(value)
-  if (values.length === 0) return null
+  if (values === null || values.length === 0) return null
 
   return Math.max(...values.map((entry) => {
     if (
@@ -375,7 +378,7 @@ function normalizedFreshnessFlag(
   value: unknown,
 ): boolean | null {
   const values = freshnessValues(value)
-  if (values.length === 0) return null
+  if (values === null || values.length === 0) return null
 
   const flags = values.map((entry) => {
     if (typeof entry !== 'boolean') invalidResponse()
