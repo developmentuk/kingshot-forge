@@ -5,7 +5,7 @@
 - **Approved direction:** 30 August 2026
 - **Provider:** MightPulse
 - **Runtime base URL:** `https://api.mightpulse.com/v1`
-- **Status:** Active architecture authority for MIGHTPULSE-001B through 001F
+- **Status:** Active architecture authority; MIGHTPULSE-001B closed in production, MIGHTPULSE-001C active foundation
 - **Supersedes:** the “historical, no implementation authority” posture of `FRKS-PLAYER-INTEL-001.md` for the specific approved MightPulse implementation only
 
 ## Decision
@@ -210,8 +210,8 @@ separate verified game rule supports that calculation.
 
 ## Workstreams
 
-- #110 — MIGHTPULSE-001B Player Intelligence Foundation
-- #111 — MIGHTPULSE-001C Alliance Intelligence & Roster Sync
+- #110 — MIGHTPULSE-001B Player Intelligence Foundation — **closed / production accepted 31 August 2026**
+- #111 — MIGHTPULSE-001C Alliance Intelligence & Roster Sync — **active foundation**
 - #112 — MIGHTPULSE-001D Kingdom Intelligence & Leaderboards
 - #113 — MIGHTPULSE-001E Transfer Intelligence
 - #114 — MIGHTPULSE-001F KvK Intelligence Command Centre
@@ -226,3 +226,44 @@ activation remain owner-controlled.
 
 Significant verified provider contracts, field mappings, quota observations and
 acceptance results must be preserved back into FRKS.
+
+
+## MIGHTPULSE-001B production closure — 31 August 2026
+
+MIGHTPULSE-001B completed its owner-controlled production acceptance at main
+`ab0140ce755e78714b541d2b50fcfe282a86a73d`, deployed as
+`dpl_5XTaZRBpXo7QimMeb4szk9uSRzaW` with production state `READY`.
+
+At closure, provider quota governance and Player Intelligence are both enabled.
+The final controlled genuine sign-in recorded one `player_sign_in` reservation,
+one provider attempt, one sign-in Player Intelligence observation and one
+Alliance provider-state update, with no authority-override mutation. The
+sign-in acceptance therefore satisfies the one-genuine-login / one-provider-
+request requirement introduced by PR #121.
+
+The production implementation preserves the programme authority model:
+MightPulse may synchronise current in-game Alliance membership/rank and
+Alliance-scoped R4/R5 management authority, but it never grants Forge-global
+admin/owner and never upgrades Player ownership/verification.
+
+Issue #110 is closed as completed.
+
+## MIGHTPULSE-001C foundation handoff
+
+MIGHTPULSE-001C begins from the exact accepted production baseline
+`ab0140ce755e78714b541d2b50fcfe282a86a73d` on
+`feature/mightpulse-001c-alliance-intelligence`.
+
+001C must build on the existing 001B provider/quota/freshness/authority
+foundation rather than create a parallel Alliance source of truth.
+
+A Gate-0 identity-contract reconciliation is mandatory before implementation:
+the current 001B production path canonicalises provider Alliance tags to
+uppercase before lookup/state storage, while issue #111 still describes an
+exact case-sensitive tag binding. 001C must preserve one canonical Alliance
+identity and must not create duplicate logical Alliances from tag case
+variants. Any deliberate change to the canonicalisation contract requires a
+separate explicit owner decision.
+
+No merge, migration application, deployment or runtime change is authorised by
+this handoff.
