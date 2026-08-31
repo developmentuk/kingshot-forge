@@ -883,7 +883,7 @@ function createConfiguredMightPulsePlayerProvider(
           'players',
           request.playerId,
         ],
-        query: {
+        searchParams: {
           include,
         },
       })
