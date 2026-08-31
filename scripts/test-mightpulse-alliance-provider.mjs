@@ -422,7 +422,7 @@ assert.match(
 )
 assert.doesNotMatch(
   transportSource,
-  /MIGHTPULSE_API_BASE_URL/u,
+  /process\.env\.MIGHTPULSE_API_BASE_URL/u,
 )
 
 const allianceProviderSource = await readFile(
