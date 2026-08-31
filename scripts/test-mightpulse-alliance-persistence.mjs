@@ -44,7 +44,15 @@ for (const value of [null, '2026-08-31', 123, true]) {
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.leader_identity, '125500337');
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.source, 'test-source');
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_roster[0].provider_internal_uid, 'u-1');
-assert.equal('providerTag' in serializeAllianceObservationForPersistence(prepared).p_observation, false);
+const serialized = serializeAllianceObservationForPersistence(prepared);
+assert.deepEqual(Object.keys(serialized).sort(), ['p_binding_id', 'p_content_sha256', 'p_observation', 'p_refresh_envelope_sha256', 'p_refresh_id', 'p_roster']);
+assert.equal(serialized.p_binding_id, prepared.bindingId);
+assert.equal('bindingId' in serialized, false);
+assert.equal('providerTag' in serialized.p_observation, false);
+assert.equal(serialized.p_refresh_id, prepared.refreshId);
+assert.equal(serialized.p_content_sha256, prepared.contentSha256);
+assert.equal(serialized.p_refresh_envelope_sha256, prepared.refreshEnvelopeSha256);
+assert.equal('extra' in serialized.p_observation, false);
 assert.throws(() => prepareAllianceObservation({ ...base, leaderIdentity: ' bad' }, new Set()), /leader identity/);
 assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], lastActiveValue: {} }] }, new Set()), /last-active/);
 
@@ -65,6 +73,11 @@ for (const required of [
   'No existing Alliance, membership, Player Account, authority, quota, or public',
   'leader_identity', "case when member ? 'last_active_value'", "jsonb_typeof(member->'last_active_value') not in ('null', 'string', 'number', 'boolean')",
 ]) assert.match(sql, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+assert.match(sql, /create unique index alliance_provider_bindings_exact_lookup_idx[\s\S]*?where binding_status = 'active'/i);
+assert.doesNotMatch(sql, /create unique index alliance_provider_bindings_exact_lookup_idx\s+on public\.alliance_provider_bindings\s*\([^;]+\);/i);
+assert.match(sql, /alliance_provider_bindings_active_alliance_idx[\s\S]*?where binding_status = 'active'/i);
+assert.match(sql, /alliance_provider_bindings_provider_aid_idx[\s\S]*?pg_advisory_xact_lock[\s\S]*?provider_alliance_id = new\.provider_alliance_id/i);
+assert.match(sql, /lower\(b\.provider_tag\) = lower\(new\.provider_tag\)/i);
 assert.doesNotMatch(sql, /public\.alliance_memberships\s+(insert|update|delete)/i);
 assert.doesNotMatch(sql, /public\.alliance_admins\s+(insert|update|delete)/i);
 assert.doesNotMatch(sql, /create\s+(or replace\s+)?function[^;]+reserve_provider_request/i);

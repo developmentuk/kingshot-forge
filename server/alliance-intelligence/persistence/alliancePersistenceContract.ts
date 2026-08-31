@@ -150,6 +150,7 @@ export function prepareAllianceObservation(input: AllianceObservationInput, exis
 
 export function serializeAllianceObservationForPersistence(prepared: ReturnType<typeof prepareAllianceObservation>) {
   return Object.freeze({
+    p_binding_id: prepared.bindingId,
     p_observation: Object.freeze({
       alliance_name: prepared.allianceName ?? null,
       alliance_power: prepared.alliancePower ?? null,

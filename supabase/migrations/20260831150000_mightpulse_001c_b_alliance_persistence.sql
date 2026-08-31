@@ -48,7 +48,8 @@ create unique index alliance_provider_bindings_active_alliance_idx
 create index alliance_provider_bindings_provider_aid_idx
   on public.alliance_provider_bindings (provider, provider_alliance_id);
 create unique index alliance_provider_bindings_exact_lookup_idx
-  on public.alliance_provider_bindings (provider, provider_kingdom_number, provider_tag);
+  on public.alliance_provider_bindings (provider, provider_kingdom_number, provider_tag)
+  where binding_status = 'active';
 create index alliance_provider_bindings_normalized_lookup_idx
   on public.alliance_provider_bindings (provider, provider_kingdom_number, lower(provider_tag));
 
