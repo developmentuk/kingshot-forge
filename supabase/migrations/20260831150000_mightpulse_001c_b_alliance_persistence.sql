@@ -38,7 +38,13 @@ comment on column public.alliance_provider_bindings.provider_alliance_id is
 create unique index alliance_provider_bindings_active_alliance_idx
   on public.alliance_provider_bindings (alliance_id, provider)
   where binding_status = 'active';
-create unique index alliance_provider_bindings_provider_aid_idx
+-- The same aid may have multiple exact-case historical provider identity records,
+-- but never a provider_alliance_id_collision across Forge Alliances.
+-- Historical provider identity records
+--
+-- The same aid may have multiple exact-case historical bindings, but never
+-- across Forge Alliances. The trigger below enforces that collision boundary.
+create index alliance_provider_bindings_provider_aid_idx
   on public.alliance_provider_bindings (provider, provider_alliance_id);
 create unique index alliance_provider_bindings_exact_lookup_idx
   on public.alliance_provider_bindings (provider, provider_kingdom_number, provider_tag);
@@ -57,7 +63,7 @@ create table public.alliance_intelligence_observations (
   leader_identity text null,
   leader_name text null,
   flag_reference text null,
-  power_rank integer null check (power_rank is null or power_rank >= 0),
+  power_rank integer null check (power_rank is null or power_rank >= 1),
   source text not null check (char_length(source) between 1 and 120),
   freshness_shape text not null check (freshness_shape = any (array['sectioned'::text, 'scalar'::text, 'unknown'::text])),
   info_fresh boolean null,
@@ -83,6 +89,53 @@ create unique index alliance_intelligence_observations_idempotency_idx
   on public.alliance_intelligence_observations (binding_id, content_sha256);
 create index alliance_intelligence_observations_latest_idx
   on public.alliance_intelligence_observations (binding_id, provider_fetched_at desc, observed_at desc);
+
+create or replace function public.reject_alliance_provider_binding_identity_change()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  if new.alliance_id <> old.alliance_id
+    or new.provider <> old.provider
+    or new.provider_kingdom_number <> old.provider_kingdom_number
+    or new.provider_tag <> old.provider_tag
+    or new.provider_alliance_id <> old.provider_alliance_id
+    or new.source <> old.source
+    or new.first_seen_at <> old.first_seen_at
+    or new.created_at <> old.created_at then
+    raise exception 'MightPulse provider binding identity is immutable; create a new historical binding.' using errcode = '55000';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger alliance_provider_bindings_identity_guard
+before update on public.alliance_provider_bindings
+for each row execute function public.reject_alliance_provider_binding_identity_change();
+
+create or replace function public.reject_alliance_provider_aid_collision()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  if exists (
+    select 1 from public.alliance_provider_bindings b
+    where b.provider = new.provider
+      and b.provider_alliance_id = new.provider_alliance_id
+      and b.alliance_id <> new.alliance_id
+      and b.id <> new.id
+  ) then
+    raise exception 'MightPulse aid is already bound to a different Forge Alliance.' using errcode = '23505';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger alliance_provider_bindings_aid_collision_guard
+before insert or update on public.alliance_provider_bindings
+for each row execute function public.reject_alliance_provider_aid_collision();
 
 create or replace function public.validate_alliance_observation_binding()
 returns trigger
@@ -119,9 +172,9 @@ create table public.alliance_roster_observations (
   provider_fid text null check (provider_fid is null or (char_length(provider_fid) between 1 and 120 and provider_fid = btrim(provider_fid))),
   nickname text null,
   power bigint null check (power is null or power >= 0),
-  town_center_level integer null check (town_center_level is null or town_center_level between 1 and 30),
+  town_center_level integer null check (town_center_level is null or town_center_level between 1 and 84),
   kills bigint null check (kills is null or kills >= 0),
-  alliance_rank text null,
+  alliance_rank integer null check (alliance_rank is null or alliance_rank between 1 and 5),
   alliance_rank_label text null,
   kingdom_number integer null check (kingdom_number is null or kingdom_number between 1 and 9999),
   avatar_reference text null,
@@ -156,6 +209,108 @@ create index alliance_roster_observations_player_idx
   on public.alliance_roster_observations (player_account_id)
   where player_account_id is not null;
 
+-- The only write boundary for a complete observation. The function is
+-- SECURITY DEFINER so the tables need not grant INSERT to service_role.
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+grant usage on schema private to service_role;
+
+create or replace function private.persist_mightpulse_alliance_observation(
+  p_binding_id uuid,
+  p_observation jsonb,
+  p_roster jsonb,
+  p_content_sha256 text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  binding public.alliance_provider_bindings;
+  observation_id uuid;
+  member jsonb;
+  governor_id text;
+begin
+  if jsonb_typeof(p_observation) <> 'object' or jsonb_typeof(p_roster) <> 'array'
+    or p_content_sha256 is null or p_content_sha256 !~ '^[0-9a-f]{64}$' then
+    raise exception 'Invalid governed Alliance observation envelope.' using errcode = '22023';
+  end if;
+
+  select * into binding from public.alliance_provider_bindings where id = p_binding_id;
+  if not found then raise exception 'Unknown Alliance provider binding.' using errcode = '23503'; end if;
+
+  if jsonb_typeof(p_observation->'alliance_name') not in ('null', 'string')
+    or jsonb_typeof(p_observation->'leader_name') not in ('null', 'string')
+    or jsonb_typeof(p_observation->'flag_reference') not in ('null', 'string')
+    or jsonb_typeof(p_observation->'alliance_power') not in ('null', 'number')
+    or jsonb_typeof(p_observation->'member_count') not in ('null', 'number')
+    or jsonb_typeof(p_observation->'power_rank') not in ('null', 'number')
+    or jsonb_typeof(p_observation->'freshness_shape') <> 'string' then
+    raise exception 'Invalid Alliance observation primitive.' using errcode = '22023';
+  end if;
+
+  insert into public.alliance_intelligence_observations (
+    binding_id, alliance_id, provider, provider_kingdom_number, provider_tag,
+    provider_alliance_id, alliance_name, alliance_power, member_count,
+    leader_name, flag_reference, power_rank, source, freshness_shape,
+    info_fresh, roster_fresh, provider_fresh, provider_cached_at,
+    provider_age_seconds, provider_fetched_at, observed_at, content_sha256
+  ) values (
+    binding.id, binding.alliance_id, binding.provider, binding.provider_kingdom_number,
+    binding.provider_tag, binding.provider_alliance_id,
+    p_observation->>'alliance_name', (p_observation->>'alliance_power')::bigint,
+    (p_observation->>'member_count')::integer, p_observation->>'leader_name',
+    p_observation->>'flag_reference', (p_observation->>'power_rank')::integer,
+    p_observation->>'source', p_observation->>'freshness_shape',
+    (p_observation->>'info_fresh')::boolean, (p_observation->>'roster_fresh')::boolean,
+    (p_observation->>'provider_fresh')::boolean, (p_observation->>'provider_cached_at')::timestamptz,
+    (p_observation->>'provider_age_seconds')::integer, (p_observation->>'provider_fetched_at')::timestamptz,
+    (p_observation->>'observed_at')::timestamptz, p_content_sha256
+  ) on conflict (binding_id, content_sha256) do nothing returning id into observation_id;
+
+  if observation_id is null then
+    select id into observation_id from public.alliance_intelligence_observations
+      where binding_id = p_binding_id and content_sha256 = p_content_sha256;
+    return observation_id;
+  end if;
+
+  for member in select value from jsonb_array_elements(p_roster) loop
+    if jsonb_typeof(member) <> 'object' or jsonb_typeof(member->'governor_id') <> 'string'
+      or nullif(member->>'governor_id', '') is null
+      or jsonb_typeof(member->'provider_internal_uid') not in ('null', 'string')
+      or jsonb_typeof(member->'provider_fid') not in ('null', 'string')
+      or jsonb_typeof(member->'nickname') not in ('null', 'string')
+      or jsonb_typeof(member->'power') not in ('null', 'number')
+      or jsonb_typeof(member->'town_center_level') not in ('null', 'number')
+      or jsonb_typeof(member->'kills') not in ('null', 'number')
+      or jsonb_typeof(member->'alliance_rank') not in ('null', 'number')
+      or jsonb_typeof(member->'alliance_rank_label') not in ('null', 'string') then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    governor_id := member->>'governor_id';
+    insert into public.alliance_roster_observations (
+      alliance_observation_id, governor_id, provider_internal_uid, provider_fid,
+      nickname, power, town_center_level, kills, alliance_rank, alliance_rank_label,
+      kingdom_number, avatar_reference, last_active_value, online, source,
+      provider_fresh, provider_cached_at, provider_age_seconds, provider_fetched_at,
+      observed_at, player_account_id, match_status
+    ) values (
+      observation_id, governor_id, member->>'provider_internal_uid', member->>'provider_fid',
+      member->>'nickname', (member->>'power')::bigint, (member->>'town_center_level')::integer,
+      (member->>'kills')::bigint, (member->>'alliance_rank')::integer,
+      member->>'alliance_rank_label', (member->>'kingdom_number')::integer,
+      member->>'avatar_reference', member->'last_active_value', (member->>'online')::boolean,
+      p_observation->>'source', (p_observation->>'provider_fresh')::boolean,
+      (p_observation->>'provider_cached_at')::timestamptz, (p_observation->>'provider_age_seconds')::integer,
+      (p_observation->>'provider_fetched_at')::timestamptz, (p_observation->>'observed_at')::timestamptz,
+      (member->>'player_account_id')::uuid, coalesce(member->>'match_status', 'unmatched')
+    );
+  end loop;
+  return observation_id;
+end;
+$$;
+
 create or replace function public.reject_alliance_observation_mutation()
 returns trigger
 language plpgsql
@@ -183,11 +338,15 @@ alter table public.alliance_roster_observations force row level security;
 revoke all on table public.alliance_provider_bindings from public, anon, authenticated;
 revoke all on table public.alliance_intelligence_observations from public, anon, authenticated;
 revoke all on table public.alliance_roster_observations from public, anon, authenticated;
-grant select, insert, update on table public.alliance_provider_bindings to service_role;
-grant select, insert on table public.alliance_intelligence_observations to service_role;
-grant select, insert on table public.alliance_roster_observations to service_role;
+revoke all on table public.alliance_provider_bindings from service_role;
+revoke all on table public.alliance_intelligence_observations from service_role;
+revoke all on table public.alliance_roster_observations from service_role;
 revoke all on function public.reject_alliance_observation_mutation() from public, anon, authenticated;
 revoke all on function public.validate_alliance_observation_binding() from public, anon, authenticated;
+revoke all on function public.reject_alliance_provider_binding_identity_change() from public, anon, authenticated;
+revoke all on function public.reject_alliance_provider_aid_collision() from public, anon, authenticated;
+revoke all on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, text) from public, anon, authenticated;
+grant execute on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, text) to service_role;
 
 -- Rollback strategy (owner-gated, never run implicitly): drop dependent indexes,
 -- triggers, function, and the three new tables in reverse dependency order.

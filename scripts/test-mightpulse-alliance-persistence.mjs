@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { prepareAllianceObservation } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
+import { observationFingerprint, prepareAllianceObservation } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
 
 const base = {
   bindingId: 'binding-1', provider: 'mightpulse', providerKingdomNumber: 123,
@@ -14,6 +14,16 @@ const prepared = prepareAllianceObservation(base, new Set());
 assert.equal(prepared.providerTag, 'MiXeD');
 assert.equal(prepared.providerFresh, true);
 assert.equal(prepared.contentSha256, prepareAllianceObservation({ ...base }, new Set()).contentSha256);
+assert.equal(observationFingerprint({ ...base, observedAt: '2026-08-31T13:00:00Z', providerFetchedAt: '2026-08-31T13:01:00Z' }), observationFingerprint(base));
+assert.equal(observationFingerprint({ ...base, roster: [...base.roster].reverse() }), observationFingerprint(base));
+assert.equal(observationFingerprint({ ...base, extra: { b: 2, a: 1 } }), observationFingerprint({ ...base, extra: { a: 1, b: 2 } }));
+assert.notEqual(observationFingerprint({ ...base, allianceName: 'Changed Alliance' }), observationFingerprint(base));
+assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], power: 999 }] }), observationFingerprint(base));
+assert.notEqual(observationFingerprint({ ...base, providerTag: 'MIXED' }), observationFingerprint(base));
+for (const level of [1, 30, 31, 35, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Set()));
+for (const level of [0, 85]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Set()), /town center/);
+for (const rank of [1, 2, 3, 4, 5]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], allianceRank: rank }] }, new Set()));
+for (const rank of [0, 6, 'R4']) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], allianceRank: rank }] }, new Set()), /alliance rank/);
 assert.throws(() => prepareAllianceObservation({ ...base, providerTag: ' MiXeD' }, new Set()), /raw and untrimmed/);
 assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1' }, { governorId: 'g-1' }] }, new Set()), /duplicate/);
 assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', providerInternalUid: 'u-1' }, { governorId: 'g-2', providerInternalUid: 'u-1' }] }, new Set()), /provider uid/);
@@ -32,9 +42,19 @@ for (const required of [
   'validate_alliance_observation_binding', 'alliance_intelligence_observations_binding_guard',
   'force row level security', 'revoke all on table public.alliance_roster_observations from public, anon, authenticated',
   'references public.player_accounts(id)', 'match_status', 'freshness_shape', 'content_sha256',
+  'between 1 and 84', 'alliance_rank integer', 'between 1 and 5',
+  'alliance_provider_bindings_identity_guard', 'persist_mightpulse_alliance_observation',
+  'provider_alliance_id_collision', 'historical provider identity records',
   'No existing Alliance, membership, Player Account, authority, quota, or public',
 ]) assert.match(sql, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
 assert.doesNotMatch(sql, /public\.alliance_memberships\s+(insert|update|delete)/i);
 assert.doesNotMatch(sql, /public\.alliance_admins\s+(insert|update|delete)/i);
 assert.doesNotMatch(sql, /create\s+(or replace\s+)?function[^;]+reserve_provider_request/i);
+assert.doesNotMatch(sql, /grant select, insert, update on table public\.alliance_provider_bindings to service_role/i);
+const bindingGuard = sql.slice(sql.indexOf('reject_alliance_provider_binding_identity_change'), sql.indexOf('create or replace function public.validate_alliance_observation_binding'));
+for (const field of ['alliance_id', 'provider', 'provider_kingdom_number', 'provider_tag', 'provider_alliance_id', 'source', 'first_seen_at', 'created_at']) {
+  assert.match(bindingGuard, new RegExp(`new\\.${field}\\s*<>\\s*old\\.${field}`));
+}
+assert.match(sql, /on conflict \(binding_id, content_sha256\) do nothing returning id/i);
+assert.match(sql, /for member in select value from jsonb_array_elements\(p_roster\)/i);
 console.log('MIGHTPULSE-001C-B alliance persistence contract tests passed');

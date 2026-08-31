@@ -29,29 +29,51 @@ export type AllianceObservationInput = {
   [key: string]: unknown;
 };
 
+function containsControlCharacter(value: string): boolean {
+  return [...value].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 0x1f || code === 0x7f;
+  });
+}
+
 export function validateProviderBindingIdentity(input: {
   provider: string;
   kingdomNumber: number;
   providerTag: string;
   providerAllianceId: string;
 }): void {
-  if (input.provider !== 'mightpulse') throw new Error('unsupported provider');
+  if (typeof input.provider !== 'string' || input.provider !== 'mightpulse') throw new Error('unsupported provider');
   if (!Number.isInteger(input.kingdomNumber) || input.kingdomNumber < 1 || input.kingdomNumber > 9999) {
     throw new Error('invalid provider kingdom');
   }
-  if (input.providerTag.trim() !== input.providerTag || input.providerTag.length < 2 || input.providerTag.length > 12) {
+  if (typeof input.providerTag !== 'string' || input.providerTag.trim() !== input.providerTag || input.providerTag.length < 2 || input.providerTag.length > 12 || containsControlCharacter(input.providerTag)) {
     throw new Error('provider tag must remain raw and untrimmed');
   }
-  if (!input.providerAllianceId || input.providerAllianceId.trim() !== input.providerAllianceId) {
+  if (typeof input.providerAllianceId !== 'string' || !input.providerAllianceId || input.providerAllianceId.trim() !== input.providerAllianceId || containsControlCharacter(input.providerAllianceId)) {
     throw new Error('invalid provider aid');
   }
 }
 
+const LOCAL_FINGERPRINT_FIELDS = new Set([
+  'bindingId', 'observedAt', 'providerFetchedAt', 'providerCachedAt',
+  'providerAgeSeconds', 'contentSha256',
+]);
+
+function canonicalize(value: unknown): unknown {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') return value;
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (typeof value === 'object') return Object.fromEntries(Object.keys(value as Record<string, unknown>).sort().map((key) => [key, canonicalize((value as Record<string, unknown>)[key])]));
+  return null;
+}
+
 export function observationFingerprint(input: AllianceObservationInput): string {
-  const stable = JSON.stringify({
-    ...input,
-    roster: [...input.roster].sort((a, b) => a.governorId.localeCompare(b.governorId)),
-  });
+  const providerFacts = Object.fromEntries(Object.entries(input)
+    .filter(([key]) => !LOCAL_FINGERPRINT_FIELDS.has(key) && key !== 'roster')
+    .map(([key, value]) => [key, canonicalize(value)]));
+  const roster = [...input.roster]
+    .map((member) => canonicalize(member) as AllianceRosterMember)
+    .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  const stable = JSON.stringify(canonicalize({ ...providerFacts, roster }));
   return createHash('sha256').update(stable, 'utf8').digest('hex');
 }
 
@@ -63,12 +85,19 @@ export function validateWholeRoster(input: AllianceObservationInput, existingPla
   const providerUids = new Set<string>();
   const providerFids = new Set<string>();
   for (const member of input.roster) {
+    if (typeof member.governorId !== 'string' || !member.governorId || member.governorId.trim() !== member.governorId) throw new Error('invalid governor id');
     if (!member.governorId || governorIds.has(member.governorId)) throw new Error('duplicate or missing governor id');
     governorIds.add(member.governorId);
+    if (member.providerInternalUid !== undefined && member.providerInternalUid !== null && (typeof member.providerInternalUid !== 'string' || !member.providerInternalUid || member.providerInternalUid.trim() !== member.providerInternalUid)) throw new Error('invalid provider uid');
+    if (member.providerFid !== undefined && member.providerFid !== null && (typeof member.providerFid !== 'string' || !member.providerFid || member.providerFid.trim() !== member.providerFid)) throw new Error('invalid provider fid');
     if (member.providerInternalUid && providerUids.has(member.providerInternalUid)) throw new Error('duplicate provider uid');
     if (member.providerFid && providerFids.has(member.providerFid)) throw new Error('duplicate provider fid');
     if (member.providerInternalUid) providerUids.add(member.providerInternalUid);
     if (member.providerFid) providerFids.add(member.providerFid);
+    const townCenterLevel = member.townCenterLevel;
+    if (townCenterLevel !== undefined && townCenterLevel !== null && (typeof townCenterLevel !== 'number' || !Number.isInteger(townCenterLevel) || townCenterLevel < 1 || townCenterLevel > 84)) throw new Error('invalid town center level');
+    const allianceRank = member.allianceRank;
+    if (allianceRank !== undefined && allianceRank !== null && (typeof allianceRank !== 'number' || !Number.isInteger(allianceRank) || allianceRank < 1 || allianceRank > 5)) throw new Error('invalid alliance rank');
     if (member.playerAccountId && !existingPlayerAccountIds.has(member.playerAccountId)) throw new Error('player account must already exist');
     if (member.matchStatus === 'matched' && !member.playerAccountId) throw new Error('matched roster member requires a reference');
     if (member.playerAccountId && member.matchStatus !== 'matched') throw new Error('only matched roster members may carry a reference');

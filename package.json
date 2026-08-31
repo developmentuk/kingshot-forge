@@ -87,7 +87,8 @@
     "test:observability": "node scripts/test-sentry-observability.mjs",
     "test:auth-exp-001": "node --import tsx scripts/test-auth-exp-001.mjs",
     "test:release-control": "node scripts/test-release-control.mjs",
-    "test:mightpulse-alliance-provider": "node --import tsx scripts/test-mightpulse-alliance-provider.mjs"
+    "test:mightpulse-alliance-provider": "node --import tsx scripts/test-mightpulse-alliance-provider.mjs",
+    "test:mightpulse-alliance-persistence": "node --import tsx scripts/test-mightpulse-alliance-persistence.mjs"
   },
   "dependencies": {
     "@sentry/node": "10.68.0",
