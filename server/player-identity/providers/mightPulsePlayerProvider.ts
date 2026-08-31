@@ -271,13 +271,6 @@ function optionalTemporal(value: unknown): string | number | null {
   return text
 }
 
-function optionalTimestamp(value: unknown): string | null {
-  const text = optionalString(value, 80)
-  if (text === null) return null
-  if (!Number.isFinite(Date.parse(text))) invalidResponse()
-  return text
-}
-
 function freshnessSectionCandidate(
   value: unknown,
   section: string,
