@@ -331,6 +331,32 @@ function freshnessValues(
     .map((section) => bySection[section])
 }
 
+type NormalizedFreshness = Readonly<{
+  freshnessShape: 'sectioned' | 'scalar' | 'unknown'
+  infoFresh: boolean | null
+  rosterFresh: boolean | null
+  providerFresh: boolean | null
+}>
+
+function normalizeFreshness(value: unknown): NormalizedFreshness {
+  if (value === undefined || value === null) {
+    return { freshnessShape: 'unknown', infoFresh: null, rosterFresh: null, providerFresh: null }
+  }
+  if (typeof value === 'boolean') {
+    return { freshnessShape: 'scalar', infoFresh: null, rosterFresh: null, providerFresh: value }
+  }
+  const bySection = plainRecord(value)
+  if (!bySection || typeof bySection.info !== 'boolean' || typeof bySection.roster !== 'boolean') {
+    invalidResponse()
+  }
+  return {
+    freshnessShape: 'sectioned',
+    infoFresh: bySection.info,
+    rosterFresh: bySection.roster,
+    providerFresh: bySection.info && bySection.roster,
+  }
+}
+
 function normalizedFreshnessTimestamp(
   value: unknown,
 ): string | null {
@@ -372,22 +398,6 @@ function normalizedFreshnessAge(
     }
     return entry
   }))
-}
-
-function normalizedFreshnessFlag(
-  value: unknown,
-): boolean | null {
-  const values = freshnessValues(value)
-  if (values === null || values.length === 0) return null
-
-  const flags = values.map((entry) => {
-    if (typeof entry !== 'boolean') invalidResponse()
-    return entry
-  })
-
-  return flags.some((entry) => entry === false)
-    ? false
-    : true
 }
 
 function normalizeMember(
@@ -506,6 +516,10 @@ function normalizeAlliancePayload(
     alliance.count,
     { integer: true, min: 0 },
   )
+  if (memberCount !== null && memberCount !== members.length) {
+    invalidResponse()
+  }
+  const freshness = normalizeFreshness(wrapper.fresh)
 
   return Object.freeze({
     provider: 'mightpulse' as const,
@@ -516,7 +530,7 @@ function normalizeAlliancePayload(
     providerAgeSeconds: normalizedFreshnessAge(
       wrapper.age_seconds,
     ),
-    providerFresh: normalizedFreshnessFlag(wrapper.fresh),
+    ...freshness,
     alliance: Object.freeze({
       providerAllianceId: requiredIdentifier(alliance.aid),
       kingdomId: returnedKingdomId,

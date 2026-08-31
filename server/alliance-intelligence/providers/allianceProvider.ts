@@ -41,6 +41,9 @@ export type NormalizedAllianceIntelligence = Readonly<{
   providerCachedAt: string | null
   providerAgeSeconds: number | null
   providerFresh: boolean | null
+  freshnessShape: 'sectioned' | 'scalar' | 'unknown'
+  infoFresh: boolean | null
+  rosterFresh: boolean | null
   alliance: NormalizedAllianceInfo
   members: ReadonlyArray<NormalizedAllianceRosterMember>
 }>

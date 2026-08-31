@@ -138,6 +138,9 @@ assert.equal(normalized.providerFetchedAt, fetchedAt)
 assert.equal(normalized.providerCachedAt, '2026-08-31T14:54:00.000Z')
 assert.equal(normalized.providerAgeSeconds, 360)
 assert.equal(normalized.providerFresh, true)
+assert.equal(normalized.freshnessShape, 'sectioned')
+assert.equal(normalized.infoFresh, true)
+assert.equal(normalized.rosterFresh, true)
 assert.deepEqual(normalized.alliance, {
   providerAllianceId: '4242',
   kingdomId: 850,
@@ -168,22 +171,23 @@ assert.deepEqual(normalized.members[0], {
   online: true,
 })
 
-const staleSection = await providerFor(
-  Response.json(validPayload({
-    fresh: {
-      info: true,
-      roster: false,
-    },
-  })),
-).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
-assert.equal(staleSection.providerFresh, false)
+for (const [fresh, infoFresh, rosterFresh, providerFresh] of [
+  [{ info: true, roster: false }, true, false, false],
+  [{ info: false, roster: true }, false, true, false],
+  [{ info: false, roster: false }, false, false, false],
+]) {
+  const section = await providerFor(Response.json(validPayload({ fresh }))).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+  assert.equal(section.freshnessShape, 'sectioned')
+  assert.equal(section.infoFresh, infoFresh)
+  assert.equal(section.rosterFresh, rosterFresh)
+  assert.equal(section.providerFresh, providerFresh)
+}
 
 for (const freshness of [
   { info: true },
   { roster: true },
 ]) {
-  const missingSectionFreshness = await providerFor(
-    Response.json(validPayload({
+  const malformedFreshnessPayload = validPayload({
       fresh: freshness,
       cached_at: freshness.info
         ? { info: '2026-08-31T14:55:00.000Z' }
@@ -191,11 +195,8 @@ for (const freshness of [
       age_seconds: freshness.info
         ? { info: 300 }
         : { roster: 360 },
-    })),
-  ).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
-  assert.equal(missingSectionFreshness.providerFresh, null)
-  assert.equal(missingSectionFreshness.providerCachedAt, null)
-  assert.equal(missingSectionFreshness.providerAgeSeconds, null)
+  })
+  await expectAllianceError(providerFor(Response.json(malformedFreshnessPayload)), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
 }
 
 const explicitlyFresh = await providerFor(
@@ -211,8 +212,32 @@ const scalarFreshness = await providerFor(
   })),
 ).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
 assert.equal(scalarFreshness.providerFresh, true)
+assert.equal(scalarFreshness.freshnessShape, 'scalar')
+assert.equal(scalarFreshness.infoFresh, null)
+assert.equal(scalarFreshness.rosterFresh, null)
 assert.equal(scalarFreshness.providerCachedAt, '2026-08-31T14:55:00.000Z')
 assert.equal(scalarFreshness.providerAgeSeconds, 300)
+
+for (const fresh of [null, undefined]) {
+  const unknown = await providerFor(Response.json(validPayload({ fresh }))).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+  assert.equal(unknown.freshnessShape, 'unknown')
+  assert.equal(unknown.infoFresh, null)
+  assert.equal(unknown.rosterFresh, null)
+  assert.equal(unknown.providerFresh, null)
+}
+for (const fresh of [{ info: true }, { roster: true }, { info: 'true', roster: false }]) {
+  await expectAllianceError(providerFor(Response.json(validPayload({ fresh }))), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
+}
+for (const [count, length] of [[2, 1], [1, 2]]) {
+  const mismatchedCountPayload = validPayload(
+    { members: Array.from({ length }, (_, index) => validMember({ governor_id: String(125500338 + index), fid: String(125500338 + index), uid: 900001 + index })) },
+    { count },
+  )
+  await expectAllianceError(providerFor(Response.json(mismatchedCountPayload)), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
+}
+const emptyAlliance = await providerFor(Response.json(validPayload({ members: [] }, { count: 0 }))).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+assert.equal(emptyAlliance.alliance.memberCount, 0)
+assert.equal(emptyAlliance.members.length, 0)
 
 const unsafeAssets = await providerFor(
   Response.json(validPayload(

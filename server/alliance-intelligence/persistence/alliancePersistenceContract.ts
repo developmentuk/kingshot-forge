@@ -77,13 +77,19 @@ function canonicalize(value: unknown): unknown {
   return null;
 }
 
+function compareCanonicalJson(left: AllianceRosterMember, right: AllianceRosterMember): number {
+  const leftJson = JSON.stringify(left);
+  const rightJson = JSON.stringify(right);
+  return leftJson < rightJson ? -1 : leftJson > rightJson ? 1 : 0;
+}
+
 export function observationFingerprint(input: AllianceObservationInput): string {
   const providerFacts = Object.fromEntries(Object.entries(input)
     .filter(([key]) => !LOCAL_FINGERPRINT_FIELDS.has(key) && key !== 'roster')
     .map(([key, value]) => [key, canonicalize(value)]));
   const roster = [...input.roster]
     .map((member) => canonicalize(member) as AllianceRosterMember)
-    .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+    .sort(compareCanonicalJson);
   const stable = JSON.stringify(canonicalize({ ...providerFacts, roster }));
   return createHash('sha256').update(stable, 'utf8').digest('hex');
 }
@@ -103,6 +109,7 @@ export function refreshEnvelopeFingerprint(input: AllianceObservationInput): str
 }
 
 export function validateWholeRoster(input: AllianceObservationInput, existingPlayerAccountIds: ReadonlySet<string>): void {
+  if (input.memberCount !== undefined && input.memberCount !== null && input.memberCount !== input.roster.length) throw new Error('member count does not match roster');
   if (input.providerFresh === true && input.freshnessShape === 'sectioned' && (input.infoFresh !== true || input.rosterFresh !== true)) {
     throw new Error('sectioned freshness cannot be fresh without both sections');
   }
