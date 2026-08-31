@@ -628,7 +628,7 @@ function createConfiguredMightPulseAllianceProvider(
             String(request.kingdomId),
             request.tag,
           ],
-          query: {
+          searchParams: {
             include: 'info,roster',
           },
         })
