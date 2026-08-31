@@ -339,6 +339,28 @@ await expectAllianceError(
   'ALLIANCE_PROVIDER_UNAVAILABLE',
 )
 
+let constructionFetchCalls = 0
+assert.throws(
+  () => createMightPulseAllianceProviderForTest({
+    apiKey: secret,
+    baseUrl: 'https://api.mightpulse.test/v1',
+    timeoutMs: 56_000,
+    fetchImplementation: async () => {
+      constructionFetchCalls += 1
+      return Response.json(validPayload())
+    },
+  }),
+  (error) => {
+    assert.equal(error.name, 'AllianceProviderError')
+    assert.equal(error.statusCode, 503)
+    assert.equal(error.code, 'ALLIANCE_PROVIDER_UNAVAILABLE')
+    assert.equal(error.retryable, true)
+    assert.doesNotMatch(error.message, /56_000|timeout|configuration/iu)
+    return true
+  },
+)
+assert.equal(constructionFetchCalls, 0)
+
 await expectAllianceError(
   createMightPulseAllianceProviderForTest({
     apiKey: secret,

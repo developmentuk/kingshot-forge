@@ -651,8 +651,15 @@ function createConfiguredMightPulseAllianceProvider(
 export function createMightPulseAllianceProvider(
   options: MightPulseAllianceRuntimeOptions = {},
 ): AllianceIntelligenceProvider {
+  let transport: MightPulseTransport
+  try {
+    transport = createMightPulseTransport(options)
+  } catch (error) {
+    mapTransportFailure(error)
+  }
+
   return createConfiguredMightPulseAllianceProvider(
-    createMightPulseTransport(options),
+    transport,
     options.now ?? (() => new Date()),
   )
 }
@@ -660,8 +667,15 @@ export function createMightPulseAllianceProvider(
 export function createMightPulseAllianceProviderForTest(
   options: MightPulseAllianceProviderOptions,
 ): AllianceIntelligenceProvider {
+  let transport: MightPulseTransport
+  try {
+    transport = createMightPulseTransportForTest(options)
+  } catch (error) {
+    mapTransportFailure(error)
+  }
+
   return createConfiguredMightPulseAllianceProvider(
-    createMightPulseTransportForTest(options),
+    transport,
     options.now ?? (() => new Date()),
   )
 }
