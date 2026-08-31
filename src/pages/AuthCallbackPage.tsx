@@ -31,8 +31,9 @@ export default function AuthCallbackPage() {
           search: callbackSearch,
           existingSession: current.data.session,
           exchangeCode: exchangeForgeCallbackCode,
-          onSessionResolved: (session) => {
-            // Prime the idempotent sign-in sync before navigation mounts
+          onExchangedSession: (session) => {
+            // Only a successfully exchanged OAuth session is a genuine
+            // sign-in signal. Prime the idempotent sync before navigation mounts
             // PlayerIdentityContext on an auto-refresh route. The request is
             // intentionally not awaited so provider availability cannot block
             // authentication success.

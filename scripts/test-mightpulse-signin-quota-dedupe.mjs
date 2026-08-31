@@ -48,7 +48,7 @@ const callbackResult = await completeAuthCallback({
   search: '?code=fixture-code&returnTo=%2Fmy-forge',
   existingSession: null,
   exchangeCode: async () => session,
-  onSessionResolved: (resolvedSession) => {
+  onExchangedSession: (resolvedSession) => {
     primedSync = syncLinkedPlayerAfterSignIn(
       resolvedSession,
       fetchImplementation,
@@ -88,6 +88,59 @@ assert.equal(await primedSync, 'updated')
 assert.equal(await duplicateSync, 'updated')
 assert.equal(fetchCalls, 1)
 
+
+const existingSession = {
+  ...session,
+  user: {
+    ...session.user,
+    id: 'fixture-existing-session-user',
+    last_sign_in_at: '2026-08-31T12:00:00.000Z',
+  },
+}
+let existingSessionHookCalls = 0
+let existingSessionExchangeCalls = 0
+const existingSessionResult = await completeAuthCallback({
+  search: '?code=ignored-code&returnTo=%2Fmy-forge',
+  existingSession,
+  exchangeCode: async () => {
+    existingSessionExchangeCalls += 1
+    return session
+  },
+  onExchangedSession: () => {
+    existingSessionHookCalls += 1
+  },
+})
+assert.equal(existingSessionResult.session, existingSession)
+assert.equal(existingSessionExchangeCalls, 0)
+assert.equal(
+  existingSessionHookCalls,
+  0,
+  'a pre-existing callback session must not be treated as a genuine sign-in',
+)
+assert.equal(
+  hasPostSignInPlayerSyncAttempted(existingSession),
+  false,
+  'pre-existing callback sessions must not consume Player Intelligence quota',
+)
+
+let deniedExistingSessionHookCalls = 0
+const deniedExistingSessionResult = await completeAuthCallback({
+  search: '?error=access_denied&returnTo=%2Fmy-forge',
+  existingSession,
+  exchangeCode: async () => {
+    throw new Error('must not exchange when an existing session is present')
+  },
+  onExchangedSession: () => {
+    deniedExistingSessionHookCalls += 1
+  },
+})
+assert.equal(deniedExistingSessionResult.session, existingSession)
+assert.equal(
+  deniedExistingSessionHookCalls,
+  0,
+  'access_denied with an old persisted session must not prime a sign-in refresh',
+)
+
 const nonBlockingSession = {
   ...session,
   user: {
@@ -99,7 +152,7 @@ const nonBlockingResult = await completeAuthCallback({
   search: '?code=fixture-code-2&returnTo=%2Fmy-forge',
   existingSession: null,
   exchangeCode: async () => nonBlockingSession,
-  onSessionResolved: () => {
+  onExchangedSession: () => {
     throw new Error('synthetic post-auth failure')
   },
 })
