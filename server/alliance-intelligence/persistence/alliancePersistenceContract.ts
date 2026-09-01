@@ -36,7 +36,7 @@ export type AllianceObservationInput = {
   leaderName?: string | null;
   flagReference?: string | null;
   powerRank?: number | null;
-  roster: AllianceRosterMember[];
+  roster: readonly AllianceRosterMember[];
   [key: string]: unknown;
 };
 
@@ -65,11 +65,6 @@ export function validateProviderBindingIdentity(input: {
   }
 }
 
-const LOCAL_FINGERPRINT_FIELDS = new Set([
-  'bindingId', 'refreshId', 'observedAt', 'providerFetchedAt', 'providerCachedAt',
-  'providerAgeSeconds', 'contentSha256', 'refreshEnvelopeSha256',
-]);
-
 function canonicalize(value: unknown): unknown {
   if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') return value;
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -84,14 +79,48 @@ function compareCanonicalJson(left: AllianceRosterMember, right: AllianceRosterM
 }
 
 export function observationFingerprint(input: AllianceObservationInput): string {
-  const providerFacts = Object.fromEntries(Object.entries(input)
-    .filter(([key]) => !LOCAL_FINGERPRINT_FIELDS.has(key) && key !== 'roster')
-    .map(([key, value]) => [key, canonicalize(value)]));
-  const roster = [...input.roster]
-    .map((member) => canonicalize(member) as AllianceRosterMember)
-    .sort(compareCanonicalJson);
-  const stable = JSON.stringify(canonicalize({ ...providerFacts, roster }));
+  const stable = JSON.stringify(canonicalize(governedObservationFacts(input)));
   return createHash('sha256').update(stable, 'utf8').digest('hex');
+}
+
+function governedObservationFacts(input: AllianceObservationInput) {
+  return {
+    provider: input.provider,
+    providerKingdomNumber: input.providerKingdomNumber,
+    providerTag: input.providerTag,
+    providerAllianceId: input.providerAllianceId,
+    allianceName: input.allianceName ?? null,
+    alliancePower: input.alliancePower ?? null,
+    memberCount: input.memberCount ?? null,
+    leaderIdentity: input.leaderIdentity ?? null,
+    leaderName: input.leaderName ?? null,
+    flagReference: input.flagReference ?? null,
+    powerRank: input.powerRank ?? null,
+    source: input.source ?? 'mightpulse-alliance-provider',
+    freshnessShape: input.freshnessShape,
+    infoFresh: input.infoFresh,
+    rosterFresh: input.rosterFresh,
+    providerFresh: input.providerFresh,
+    roster: [...input.roster]
+      .map((member) => ({
+        governorId: member.governorId,
+        providerInternalUid: member.providerInternalUid ?? null,
+        providerFid: member.providerFid ?? null,
+        nickname: typeof member.nickname === 'string' ? member.nickname : null,
+        power: typeof member.power === 'number' ? member.power : null,
+        townCenterLevel: typeof member.townCenterLevel === 'number' ? member.townCenterLevel : null,
+        kills: typeof member.kills === 'number' ? member.kills : null,
+        allianceRank: typeof member.allianceRank === 'number' ? member.allianceRank : null,
+        allianceRankLabel: typeof member.allianceRankLabel === 'string' ? member.allianceRankLabel : null,
+        kingdomNumber: typeof member.kingdomNumber === 'number' ? member.kingdomNumber : null,
+        avatarReference: typeof member.avatarReference === 'string' ? member.avatarReference : null,
+        lastActiveValue: member.lastActiveValue ?? null,
+        online: typeof member.online === 'boolean' ? member.online : null,
+        playerAccountId: member.playerAccountId ?? null,
+        matchStatus: member.matchStatus ?? 'unmatched',
+      }))
+      .sort(compareCanonicalJson),
+  };
 }
 
 export function refreshEnvelopeFingerprint(input: AllianceObservationInput): string {
@@ -156,42 +185,47 @@ export function prepareAllianceObservation(input: AllianceObservationInput, exis
 }
 
 export function serializeAllianceObservationForPersistence(prepared: ReturnType<typeof prepareAllianceObservation>) {
+  const facts = governedObservationFacts(prepared);
   return Object.freeze({
     p_binding_id: prepared.bindingId,
     p_observation: Object.freeze({
-      alliance_name: prepared.allianceName ?? null,
-      alliance_power: prepared.alliancePower ?? null,
-      member_count: prepared.memberCount ?? null,
-      leader_identity: prepared.leaderIdentity ?? null,
-      leader_name: prepared.leaderName ?? null,
-      flag_reference: prepared.flagReference ?? null,
-      power_rank: prepared.powerRank ?? null,
-      source: prepared.source ?? 'mightpulse-alliance-provider',
-      freshness_shape: prepared.freshnessShape,
-      info_fresh: prepared.infoFresh,
-      roster_fresh: prepared.rosterFresh,
-      provider_fresh: prepared.providerFresh,
+      provider: facts.provider,
+      provider_kingdom_number: facts.providerKingdomNumber,
+      provider_tag: facts.providerTag,
+      provider_alliance_id: facts.providerAllianceId,
+      alliance_name: facts.allianceName,
+      alliance_power: facts.alliancePower,
+      member_count: facts.memberCount,
+      leader_identity: facts.leaderIdentity,
+      leader_name: facts.leaderName,
+      flag_reference: facts.flagReference,
+      power_rank: facts.powerRank,
+      source: facts.source,
+      freshness_shape: facts.freshnessShape,
+      info_fresh: facts.infoFresh,
+      roster_fresh: facts.rosterFresh,
+      provider_fresh: facts.providerFresh,
       provider_cached_at: prepared.providerCachedAt ?? null,
       provider_age_seconds: prepared.providerAgeSeconds ?? null,
       provider_fetched_at: prepared.providerFetchedAt,
       observed_at: prepared.observedAt,
     }),
-    p_roster: Object.freeze(prepared.roster.map((member) => Object.freeze({
+    p_roster: Object.freeze(facts.roster.map((member) => Object.freeze({
       governor_id: member.governorId,
-      provider_internal_uid: member.providerInternalUid ?? null,
-      provider_fid: member.providerFid ?? null,
-      nickname: typeof member.nickname === 'string' ? member.nickname : null,
-      power: typeof member.power === 'number' ? member.power : null,
-      town_center_level: typeof member.townCenterLevel === 'number' ? member.townCenterLevel : null,
-      kills: typeof member.kills === 'number' ? member.kills : null,
-      alliance_rank: typeof member.allianceRank === 'number' ? member.allianceRank : null,
-      alliance_rank_label: typeof member.allianceRankLabel === 'string' ? member.allianceRankLabel : null,
-      kingdom_number: typeof member.kingdomNumber === 'number' ? member.kingdomNumber : null,
-      avatar_reference: typeof member.avatarReference === 'string' ? member.avatarReference : null,
-      last_active_value: member.lastActiveValue ?? null,
-      online: typeof member.online === 'boolean' ? member.online : null,
-      player_account_id: member.playerAccountId ?? null,
-      match_status: member.matchStatus ?? 'unmatched',
+      provider_internal_uid: member.providerInternalUid,
+      provider_fid: member.providerFid,
+      nickname: member.nickname,
+      power: member.power,
+      town_center_level: member.townCenterLevel,
+      kills: member.kills,
+      alliance_rank: member.allianceRank,
+      alliance_rank_label: member.allianceRankLabel,
+      kingdom_number: member.kingdomNumber,
+      avatar_reference: member.avatarReference,
+      last_active_value: member.lastActiveValue,
+      online: member.online,
+      player_account_id: member.playerAccountId,
+      match_status: member.matchStatus,
     }))),
     p_refresh_id: prepared.refreshId,
     p_content_sha256: prepared.contentSha256,

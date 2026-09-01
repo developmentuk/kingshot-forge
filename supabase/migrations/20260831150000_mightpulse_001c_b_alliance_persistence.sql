@@ -276,7 +276,12 @@ begin
   select * into binding from public.alliance_provider_bindings where id = p_binding_id;
   if not found then raise exception 'Unknown Alliance provider binding.' using errcode = '23503'; end if;
 
-  if jsonb_typeof(p_observation->'alliance_name') not in ('null', 'string')
+  if jsonb_typeof(p_observation->'provider') <> 'string'
+    or jsonb_typeof(p_observation->'provider_kingdom_number') <> 'number'
+    or p_observation->>'provider_kingdom_number' !~ '^[0-9]+$'
+    or jsonb_typeof(p_observation->'provider_tag') <> 'string'
+    or jsonb_typeof(p_observation->'provider_alliance_id') <> 'string'
+    or jsonb_typeof(p_observation->'alliance_name') not in ('null', 'string')
     or jsonb_typeof(p_observation->'leader_identity') not in ('null', 'string')
     or jsonb_typeof(p_observation->'leader_name') not in ('null', 'string')
     or jsonb_typeof(p_observation->'flag_reference') not in ('null', 'string')
@@ -288,6 +293,13 @@ begin
   end if;
   if p_observation->>'leader_identity' is not null and (char_length(p_observation->>'leader_identity') not between 1 and 120 or p_observation->>'leader_identity' <> btrim(p_observation->>'leader_identity') or p_observation->>'leader_identity' ~ '[[:cntrl:]]') then
     raise exception 'Invalid Alliance leader identity.' using errcode = '22023';
+  end if;
+
+  if p_observation->>'provider' <> binding.provider
+    or (p_observation->>'provider_kingdom_number')::integer <> binding.provider_kingdom_number
+    or p_observation->>'provider_tag' <> binding.provider_tag
+    or p_observation->>'provider_alliance_id' <> binding.provider_alliance_id then
+    raise exception 'Alliance observation provider identity does not match its selected binding.' using errcode = '22023';
   end if;
 
   if p_observation->>'member_count' is not null

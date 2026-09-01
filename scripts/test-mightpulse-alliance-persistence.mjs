@@ -16,14 +16,28 @@ const prepared = prepareAllianceObservation(base, new Set());
 assert.equal(prepared.providerTag, 'MiXeD');
 assert.equal(prepared.providerFresh, true);
 assert.equal(prepared.contentSha256, prepareAllianceObservation({ ...base }, new Set()).contentSha256);
+assert.deepEqual(serializeAllianceObservationForPersistence(prepared).p_observation, {
+  provider: 'mightpulse', provider_kingdom_number: 123, provider_tag: 'MiXeD', provider_alliance_id: 'aid-1',
+  alliance_name: 'Alliance', alliance_power: 42, member_count: 1, leader_identity: '125500337', leader_name: 'Leader',
+  flag_reference: 'flag-1', power_rank: 1, source: 'test-source', freshness_shape: 'sectioned', info_fresh: true,
+  roster_fresh: true, provider_fresh: true, provider_cached_at: null, provider_age_seconds: null,
+  provider_fetched_at: '2026-08-31T12:00:00Z', observed_at: '2026-08-31T12:00:00Z',
+});
 assert.equal(observationFingerprint({ ...base, observedAt: '2026-08-31T13:00:00Z', providerFetchedAt: '2026-08-31T13:01:00Z' }), observationFingerprint(base));
 assert.equal(observationFingerprint({ ...base, roster: [...base.roster].reverse() }), observationFingerprint(base));
-assert.equal(observationFingerprint({ ...base, extra: { b: 2, a: 1 } }), observationFingerprint({ ...base, extra: { a: 1, b: 2 } }));
+assert.equal(observationFingerprint({ ...base, traceId: 'trace-a', debugMetadata: { attempt: 1 } }), observationFingerprint({ ...base, traceId: 'trace-b', debugMetadata: { attempt: 2 } }));
+assert.equal(observationFingerprint({ ...base, roster: [{ ...base.roster[0], requestDiagnostic: 'a' }] }), observationFingerprint({ ...base, roster: [{ ...base.roster[0], requestDiagnostic: 'b' }] }));
+assert.equal(observationFingerprint({ ...base, source: undefined }), observationFingerprint({ ...base, source: 'mightpulse-alliance-provider' }));
+assert.equal(observationFingerprint({ ...base, roster: [{ ...base.roster[0], matchStatus: undefined }] }), observationFingerprint({ ...base, roster: [{ ...base.roster[0], matchStatus: 'unmatched' }] }));
 assert.equal(observationFingerprint({ ...base, refreshId: '22222222-2222-4222-8222-222222222222' }), observationFingerprint(base));
 assert.notEqual(refreshEnvelopeFingerprint({ ...base, observedAt: '2026-08-31T13:00:00Z' }), refreshEnvelopeFingerprint(base));
 assert.notEqual(observationFingerprint({ ...base, allianceName: 'Changed Alliance' }), observationFingerprint(base));
 assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], power: 999 }] }), observationFingerprint(base));
 assert.notEqual(observationFingerprint({ ...base, providerTag: 'MIXED' }), observationFingerprint(base));
+assert.notEqual(observationFingerprint({ ...base, provider: 'other' }), observationFingerprint(base));
+assert.notEqual(observationFingerprint({ ...base, providerKingdomNumber: 124 }), observationFingerprint(base));
+assert.notEqual(observationFingerprint({ ...base, providerAllianceId: 'aid-2' }), observationFingerprint(base));
+assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], playerAccountId: '11111111-1111-4111-8111-111111111111', matchStatus: 'matched' }] }), observationFingerprint(base));
 for (const level of [1, 30, 31, 35, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Set()));
 for (const level of [0, 85]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Set()), /town center/);
 for (const rank of [1, 2, 3, 4, 5]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], allianceRank: rank }] }, new Set()));
@@ -74,6 +88,7 @@ assert.equal(serialized.p_refresh_id, prepared.refreshId);
 assert.equal(serialized.p_content_sha256, prepared.contentSha256);
 assert.equal(serialized.p_refresh_envelope_sha256, prepared.refreshEnvelopeSha256);
 assert.equal('extra' in serialized.p_observation, false);
+assert.equal('traceId' in serialized.p_observation, false);
 assert.throws(() => prepareAllianceObservation({ ...base, leaderIdentity: ' bad' }, new Set()), /leader identity/);
 assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], lastActiveValue: {} }] }, new Set()), /last-active/);
 
@@ -113,6 +128,16 @@ assert.match(sql, /Refresh identity replay conflicts with its persisted envelope
 assert.match(sql, /for member in select value from jsonb_array_elements\(p_roster\)/i);
 const rpc = sql.slice(sql.indexOf('create or replace function private.persist_mightpulse_alliance_observation'), sql.indexOf('create or replace function public.reject_alliance_observation_mutation'));
 assert.match(rpc, /jsonb_typeof\(p_observation\) <> 'object'[\s\S]*jsonb_typeof\(p_roster\) <> 'array'/i);
+for (const field of ['provider', 'provider_kingdom_number', 'provider_tag', 'provider_alliance_id']) {
+  assert.match(rpc, new RegExp(`jsonb_typeof\\(p_observation->'${field}'\\)`), `RPC validates ${field} primitive`);
+}
+assert.match(rpc, /p_observation->>'provider' <> binding\.provider/);
+assert.match(rpc, /p_observation->>'provider_kingdom_number'\)::integer <> binding\.provider_kingdom_number/);
+assert.match(rpc, /p_observation->>'provider_tag' <> binding\.provider_tag/);
+assert.match(rpc, /p_observation->>'provider_alliance_id' <> binding\.provider_alliance_id/);
+const identityGuard = rpc.indexOf('Alliance observation provider identity does not match its selected binding.');
+assert.ok(identityGuard < rpc.indexOf('insert into public.alliance_intelligence_observations'), 'binding identity mismatch must fail before parent persistence');
+assert.ok(identityGuard < rpc.indexOf('for member in select value from jsonb_array_elements(p_roster)'), 'binding identity mismatch must fail before roster persistence');
 assert.match(rpc, /jsonb_typeof\(p_observation->'member_count'\) not in \('null', 'number'\)/i);
 assert.match(rpc, /p_observation->>'member_count' is not null[\s\S]*p_observation->>'member_count' !~ '\^\[0-9\]\+\$'[\s\S]*jsonb_array_length\(p_roster\)/i);
 const cardinalityGuard = rpc.indexOf("Invalid Alliance member count.");
