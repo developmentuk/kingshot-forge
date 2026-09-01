@@ -89,6 +89,16 @@ for (const age of [undefined, null, 0, 300, 2147483647]) assert.doesNotThrow(() 
 for (const age of [0.5, 300.25, -1, 2147483648, Number.NaN, Number.POSITIVE_INFINITY, '300', true, {}]) assert.throws(() => validateProviderAgeSeconds(age), /provider age/);
 assert.notEqual(refreshEnvelopeFingerprint({ ...base, providerAgeSeconds: 300 }), refreshEnvelopeFingerprint({ ...base, providerAgeSeconds: 301 }));
 assert.equal(observationFingerprint({ ...base, providerAgeSeconds: 300 }), observationFingerprint({ ...base, providerAgeSeconds: 301 }));
+for (const value of [null, 0, 9007199254740991]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, alliancePower: value }, new Set()));
+for (const value of [1.5, -1, Number.MAX_SAFE_INTEGER + 2]) assert.throws(() => prepareAllianceObservation({ ...base, alliancePower: value }, new Set()), /alliance power/);
+for (const value of [1, 2147483647]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, powerRank: value }, new Set()));
+for (const value of [0, 2147483648, 1.5]) assert.throws(() => prepareAllianceObservation({ ...base, powerRank: value }, new Set()), /power rank/);
+for (const field of ['power', 'kills']) {
+  for (const value of [null, 0, 9007199254740991]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], [field]: value }] }, new Set()));
+  for (const value of [1.5, -1, Number.MAX_SAFE_INTEGER + 2]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], [field]: value }] }, new Set()), new RegExp(`roster ${field}`));
+}
+for (const value of [1, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: value }] }, new Set()));
+for (const value of [0, 85, 30.5]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: value }] }, new Set()), /town center/);
 const serialized = serializeAllianceObservationForPersistence(prepared);
 assert.deepEqual(Object.keys(serialized).sort(), ['p_binding_id', 'p_content_sha256', 'p_observation', 'p_refresh_envelope_sha256', 'p_refresh_id', 'p_roster']);
 assert.equal(serialized.p_binding_id, prepared.bindingId);
@@ -169,6 +179,9 @@ assert.match(rpc, /p_observation->>'provider_age_seconds'\)::integer/i);
 const ageValidation = rpc.indexOf('Invalid Alliance provider age.');
 assert.ok(ageValidation < rpc.indexOf('insert into public.alliance_roster_observations'), 'provider age validation must precede roster persistence');
 assert.equal((rpc.match(/\(p_observation->>'provider_age_seconds'\)::integer/g) ?? []).length, 2, 'parent and roster rows reuse the validated integer age');
+for (const field of ['alliance_power', 'member_count', 'power_rank', 'power', 'kills', 'town_center_level', 'alliance_rank']) assert.match(rpc, new RegExp(`${field}[\\s\\S]*!~ '\\^\\[0-9\\]\\+\\$'`), `SQL integer guard for ${field}`);
+for (const limit of ['9007199254740991', '2147483647']) assert.match(rpc, new RegExp(limit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+for (const message of ['Invalid Alliance power.', 'Invalid Alliance power rank.', 'Invalid Alliance roster member power.', 'Invalid Alliance roster member kills.', 'Invalid Alliance roster member town center level.', 'Invalid Alliance roster member alliance rank.']) assert.ok(rpc.indexOf(message) < rpc.indexOf('insert into public.alliance_roster_observations'));
 for (const field of ['kingdom_number', 'avatar_reference', 'online', 'player_account_id', 'match_status']) {
   assert.match(rpc, new RegExp(`member \\? '${field}'`), `RPC checks ${field} presence`);
   assert.match(rpc, new RegExp(`jsonb_typeof\\(member->'${field}'\\)`), `RPC checks ${field} primitive type`);

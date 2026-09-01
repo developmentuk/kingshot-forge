@@ -431,11 +431,11 @@ function normalizeMember(
     providerFid: requiredIdentifier(member.fid),
     name: requiredString(member.nick_name, 160),
     kingdomId,
-    power: nullableNumber(member.power, { min: 0 }),
+    power: nullableNumber(member.power, { integer: true, min: 0, max: Number.MAX_SAFE_INTEGER }),
     townCenterLevel: nullableTownCenterLevel(
       member.town_center_level,
     ),
-    kills: nullableNumber(member.kills, { min: 0 }),
+    kills: nullableNumber(member.kills, { integer: true, min: 0, max: Number.MAX_SAFE_INTEGER }),
     allianceRank,
     allianceRankLabel: nullableString(
       member.alliance_rank_label,
@@ -538,7 +538,11 @@ function normalizeAlliancePayload(
       kingdomId: returnedKingdomId,
       tag: returnedTag,
       name: requiredString(alliance.name, 160),
-      power: nullableNumber(alliance.power, { min: 0 }),
+      power: nullableNumber(alliance.power, {
+        integer: true,
+        min: 0,
+        max: Number.MAX_SAFE_INTEGER,
+      }),
       memberCount,
       leaderName: nullableString(alliance.leader_name, 160),
       leaderInternalUid: nullableIdentifier(alliance.leader_uid),
@@ -548,7 +552,7 @@ function normalizeAlliancePayload(
       flagUrl: normalizedAssetUrl(alliance.flag_url),
       powerRank: nullableNumber(
         alliance.power_rank,
-        { integer: true, min: 1 },
+        { integer: true, min: 1, max: 2147483647 },
       ),
     }),
     members: Object.freeze(members),

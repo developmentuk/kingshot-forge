@@ -64,12 +64,12 @@ create table public.alliance_intelligence_observations (
   refresh_id uuid not null,
   refresh_envelope_sha256 text not null check (refresh_envelope_sha256 ~ '^[0-9a-f]{64}$'),
   alliance_name text null,
-  alliance_power bigint null check (alliance_power is null or alliance_power >= 0),
+  alliance_power bigint null check (alliance_power is null or alliance_power between 0 and 9007199254740991),
   member_count integer null check (member_count is null or member_count >= 0),
   leader_identity text null,
   leader_name text null,
   flag_reference text null,
-  power_rank integer null check (power_rank is null or power_rank >= 1),
+  power_rank integer null check (power_rank is null or power_rank between 1 and 2147483647),
   source text not null check (char_length(source) between 1 and 120),
   freshness_shape text not null check (freshness_shape = any (array['sectioned'::text, 'scalar'::text, 'unknown'::text])),
   info_fresh boolean null,
@@ -206,9 +206,9 @@ create table public.alliance_roster_observations (
   provider_internal_uid text null check (provider_internal_uid is null or (char_length(provider_internal_uid) between 1 and 120 and provider_internal_uid = btrim(provider_internal_uid))),
   provider_fid text null check (provider_fid is null or (char_length(provider_fid) between 1 and 120 and provider_fid = btrim(provider_fid))),
   nickname text null,
-  power bigint null check (power is null or power >= 0),
+  power bigint null check (power is null or power between 0 and 9007199254740991),
   town_center_level integer null check (town_center_level is null or town_center_level between 1 and 84),
-  kills bigint null check (kills is null or kills >= 0),
+  kills bigint null check (kills is null or kills between 0 and 9007199254740991),
   alliance_rank integer null check (alliance_rank is null or alliance_rank between 1 and 5),
   alliance_rank_label text null,
   kingdom_number integer null check (kingdom_number is null or kingdom_number between 1 and 9999),
@@ -299,6 +299,19 @@ begin
   end if;
   if p_observation->>'leader_identity' is not null and (char_length(p_observation->>'leader_identity') not between 1 and 120 or p_observation->>'leader_identity' <> btrim(p_observation->>'leader_identity') or p_observation->>'leader_identity' ~ '[[:cntrl:]]') then
     raise exception 'Invalid Alliance leader identity.' using errcode = '22023';
+  end if;
+
+  if jsonb_typeof(p_observation->'alliance_power') = 'number'
+    and (p_observation->>'alliance_power' !~ '^[0-9]+$' or (p_observation->>'alliance_power')::numeric > 9007199254740991) then
+    raise exception 'Invalid Alliance power.' using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_observation->'member_count') = 'number'
+    and (p_observation->>'member_count' !~ '^[0-9]+$' or (p_observation->>'member_count')::numeric > 2147483647) then
+    raise exception 'Invalid Alliance member count.' using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_observation->'power_rank') = 'number'
+    and (p_observation->>'power_rank' !~ '^[0-9]+$' or (p_observation->>'power_rank')::numeric < 1 or (p_observation->>'power_rank')::numeric > 2147483647) then
+    raise exception 'Invalid Alliance power rank.' using errcode = '22023';
   end if;
 
   if p_observation->>'provider' is distinct from binding.provider
@@ -400,6 +413,22 @@ begin
       and (((member->>'kingdom_number')::numeric <> trunc((member->>'kingdom_number')::numeric))
         or (member->>'kingdom_number')::numeric < 1 or (member->>'kingdom_number')::numeric > 9999) then
       raise exception 'Invalid Alliance roster member kingdom.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'power') = 'number'
+      and (member->>'power' !~ '^[0-9]+$' or (member->>'power')::numeric > 9007199254740991) then
+      raise exception 'Invalid Alliance roster member power.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'kills') = 'number'
+      and (member->>'kills' !~ '^[0-9]+$' or (member->>'kills')::numeric > 9007199254740991) then
+      raise exception 'Invalid Alliance roster member kills.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'town_center_level') = 'number'
+      and (member->>'town_center_level' !~ '^[0-9]+$' or (member->>'town_center_level')::numeric < 1 or (member->>'town_center_level')::numeric > 84) then
+      raise exception 'Invalid Alliance roster member town center level.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'alliance_rank') = 'number'
+      and (member->>'alliance_rank' !~ '^[0-9]+$' or (member->>'alliance_rank')::numeric < 1 or (member->>'alliance_rank')::numeric > 5) then
+      raise exception 'Invalid Alliance roster member alliance rank.' using errcode = '22023';
     end if;
     if member ? 'avatar_reference' and jsonb_typeof(member->'avatar_reference') is distinct from 'null' and jsonb_typeof(member->'avatar_reference') is distinct from 'string' then
       raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';

@@ -228,6 +228,16 @@ for (const age of [0.5, -1, 2147483648]) {
 for (const age_seconds of [{ info: 0.5, roster: 360 }, { info: 300, roster: 360.25 }, { info: -1, roster: 360 }, { info: 300, roster: 2147483648 }]) {
   await expectAllianceError(providerFor(Response.json(validPayload({ age_seconds }))), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
 }
+const maxSafeFacts = await providerFor(Response.json(validPayload({}, { power: Number.MAX_SAFE_INTEGER, power_rank: 2147483647 }, { power: Number.MAX_SAFE_INTEGER, kills: Number.MAX_SAFE_INTEGER }))).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+assert.equal(maxSafeFacts.alliance.power, Number.MAX_SAFE_INTEGER)
+assert.equal(maxSafeFacts.alliance.powerRank, 2147483647)
+assert.equal(maxSafeFacts.members[0].power, Number.MAX_SAFE_INTEGER)
+assert.equal(maxSafeFacts.members[0].kills, Number.MAX_SAFE_INTEGER)
+for (const payload of [
+  validPayload({}, { power: 1.5 }), validPayload({}, {}, { power: 1.5 }),
+  validPayload({}, {}, { kills: 1.5 }), validPayload({}, { power_rank: 1.5 }),
+  validPayload({}, { power_rank: 2147483648 }),
+]) await expectAllianceError(providerFor(Response.json(payload)), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
 
 for (const fresh of [null, undefined]) {
   const unknown = await providerFor(Response.json(validPayload({ fresh }))).lookupAlliance({ kingdomId: 850, tag: 'SyN' })

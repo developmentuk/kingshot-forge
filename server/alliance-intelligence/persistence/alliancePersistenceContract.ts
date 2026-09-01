@@ -70,6 +70,14 @@ export function validateProviderAgeSeconds(value: unknown): void {
   if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value) || value < 0 || value > 2147483647) throw new Error('invalid provider age seconds');
 }
 
+function validateOptionalSafeInteger(value: unknown, label: string): void {
+  if (value !== undefined && value !== null && (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0)) throw new Error(`invalid ${label}`);
+}
+
+function validateOptionalIntegerRange(value: unknown, label: string, min: number, max: number): void {
+  if (value !== undefined && value !== null && (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max)) throw new Error(`invalid ${label}`);
+}
+
 function canonicalize(value: unknown): unknown {
   if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') return value;
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -160,6 +168,9 @@ export function validateFreshnessTuple(input: Pick<AllianceObservationInput, 'fr
 
 export function validateWholeRoster(input: AllianceObservationInput, existingPlayerAccountIds: ReadonlySet<string>): void {
   validateFreshnessTuple(input);
+  validateOptionalIntegerRange(input.memberCount, 'member count', 0, 2147483647);
+  validateOptionalSafeInteger(input.alliancePower, 'alliance power');
+  validateOptionalIntegerRange(input.powerRank, 'power rank', 1, 2147483647);
   if (input.memberCount !== undefined && input.memberCount !== null && input.memberCount !== input.roster.length) throw new Error('member count does not match roster');
   const governorIds = new Set<string>();
   const providerUids = new Set<string>();
@@ -178,6 +189,9 @@ export function validateWholeRoster(input: AllianceObservationInput, existingPla
     if (townCenterLevel !== undefined && townCenterLevel !== null && (typeof townCenterLevel !== 'number' || !Number.isInteger(townCenterLevel) || townCenterLevel < 1 || townCenterLevel > 84)) throw new Error('invalid town center level');
     const allianceRank = member.allianceRank;
     if (allianceRank !== undefined && allianceRank !== null && (typeof allianceRank !== 'number' || !Number.isInteger(allianceRank) || allianceRank < 1 || allianceRank > 5)) throw new Error('invalid alliance rank');
+    validateOptionalSafeInteger(member.power, 'roster power');
+    validateOptionalSafeInteger(member.kills, 'roster kills');
+    validateOptionalIntegerRange(member.kingdomNumber, 'roster kingdom', 1, 9999);
     if (member.lastActiveValue !== undefined && member.lastActiveValue !== null && ((typeof member.lastActiveValue !== 'string' && typeof member.lastActiveValue !== 'number' && typeof member.lastActiveValue !== 'boolean') || (typeof member.lastActiveValue === 'number' && !Number.isFinite(member.lastActiveValue)))) throw new Error('invalid last-active value');
     if (member.playerAccountId && !existingPlayerAccountIds.has(member.playerAccountId)) throw new Error('player account must already exist');
     if (member.matchStatus === 'matched' && !member.playerAccountId) throw new Error('matched roster member requires a reference');
