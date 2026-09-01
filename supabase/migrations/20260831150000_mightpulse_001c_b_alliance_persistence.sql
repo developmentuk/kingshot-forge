@@ -80,8 +80,11 @@ create table public.alliance_intelligence_observations (
   provider_fetched_at timestamptz not null,
   observed_at timestamptz not null,
   content_sha256 text not null check (content_sha256 ~ '^[0-9a-f]{64}$'),
-  check (provider_fresh is distinct from true or freshness_shape = 'scalar' or (info_fresh is true and roster_fresh is true)),
-  check (freshness_shape <> 'sectioned' or provider_fresh is distinct from true or (info_fresh is true and roster_fresh is true))
+  check (
+    (freshness_shape = 'sectioned' and info_fresh is not null and roster_fresh is not null and provider_fresh is not null and provider_fresh is not distinct from (info_fresh and roster_fresh))
+    or (freshness_shape = 'scalar' and info_fresh is null and roster_fresh is null and provider_fresh is not null)
+    or (freshness_shape = 'unknown' and info_fresh is null and roster_fresh is null and provider_fresh is null)
+  )
 );
 
 comment on table public.alliance_intelligence_observations is
@@ -266,15 +269,18 @@ declare
   member jsonb;
   governor_id text;
 begin
-  if jsonb_typeof(p_observation) <> 'object' or jsonb_typeof(p_roster) <> 'array'
+  if jsonb_typeof(p_observation) is distinct from 'object' or jsonb_typeof(p_roster) is distinct from 'array'
     or p_refresh_id is null
     or p_content_sha256 is null or p_content_sha256 !~ '^[0-9a-f]{64}$'
     or p_refresh_envelope_sha256 is null or p_refresh_envelope_sha256 !~ '^[0-9a-f]{64}$' then
     raise exception 'Invalid governed Alliance observation envelope.' using errcode = '22023';
   end if;
 
-  select * into binding from public.alliance_provider_bindings where id = p_binding_id;
+  select * into binding from public.alliance_provider_bindings where id = p_binding_id for update;
   if not found then raise exception 'Unknown Alliance provider binding.' using errcode = '23503'; end if;
+  if binding.binding_status is distinct from 'active' then
+    raise exception 'Inactive Alliance provider binding.' using errcode = '55000';
+  end if;
 
   if jsonb_typeof(p_observation->'provider') is distinct from 'string'
     or jsonb_typeof(p_observation->'provider_kingdom_number') is distinct from 'number'
@@ -288,7 +294,7 @@ begin
     or jsonb_typeof(p_observation->'alliance_power') not in ('null', 'number')
     or jsonb_typeof(p_observation->'member_count') not in ('null', 'number')
     or jsonb_typeof(p_observation->'power_rank') not in ('null', 'number')
-    or jsonb_typeof(p_observation->'freshness_shape') <> 'string' then
+    or jsonb_typeof(p_observation->'freshness_shape') is distinct from 'string' then
     raise exception 'Invalid Alliance observation primitive.' using errcode = '22023';
   end if;
   if p_observation->>'leader_identity' is not null and (char_length(p_observation->>'leader_identity') not between 1 and 120 or p_observation->>'leader_identity' <> btrim(p_observation->>'leader_identity') or p_observation->>'leader_identity' ~ '[[:cntrl:]]') then
@@ -300,6 +306,29 @@ begin
     or p_observation->>'provider_tag' is distinct from binding.provider_tag
     or p_observation->>'provider_alliance_id' is distinct from binding.provider_alliance_id then
     raise exception 'Alliance observation provider identity does not match its selected binding.' using errcode = '22023';
+  end if;
+
+  if p_observation->>'freshness_shape' = 'sectioned' then
+    if jsonb_typeof(p_observation->'info_fresh') is distinct from 'boolean'
+      or jsonb_typeof(p_observation->'roster_fresh') is distinct from 'boolean'
+      or jsonb_typeof(p_observation->'provider_fresh') is distinct from 'boolean'
+      or (p_observation->>'provider_fresh')::boolean is distinct from ((p_observation->>'info_fresh')::boolean and (p_observation->>'roster_fresh')::boolean) then
+      raise exception 'Invalid Alliance freshness tuple.' using errcode = '22023';
+    end if;
+  elsif p_observation->>'freshness_shape' = 'scalar' then
+    if jsonb_typeof(p_observation->'info_fresh') is distinct from 'null'
+      or jsonb_typeof(p_observation->'roster_fresh') is distinct from 'null'
+      or jsonb_typeof(p_observation->'provider_fresh') is distinct from 'boolean' then
+      raise exception 'Invalid Alliance freshness tuple.' using errcode = '22023';
+    end if;
+  elsif p_observation->>'freshness_shape' = 'unknown' then
+    if jsonb_typeof(p_observation->'info_fresh') is distinct from 'null'
+      or jsonb_typeof(p_observation->'roster_fresh') is distinct from 'null'
+      or jsonb_typeof(p_observation->'provider_fresh') is distinct from 'null' then
+      raise exception 'Invalid Alliance freshness tuple.' using errcode = '22023';
+    end if;
+  else
+    raise exception 'Invalid Alliance freshness tuple.' using errcode = '22023';
   end if;
 
   if p_observation->>'member_count' is not null

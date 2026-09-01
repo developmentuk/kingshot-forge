@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { observationFingerprint, prepareAllianceObservation, refreshEnvelopeFingerprint, serializeAllianceObservationForPersistence } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
+import { observationFingerprint, prepareAllianceObservation, refreshEnvelopeFingerprint, serializeAllianceObservationForPersistence, validateFreshnessTuple } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
 
 const base = {
   bindingId: 'binding-1', refreshId: '11111111-1111-4111-8111-111111111111', provider: 'mightpulse', providerKingdomNumber: 123,
@@ -47,9 +47,15 @@ assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster
 assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster: [{ governorId: 'g-1', providerInternalUid: 'u-1' }, { governorId: 'g-2', providerInternalUid: 'u-1' }] }, new Set()), /provider uid/);
 assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'missing', matchStatus: 'matched' }] }, new Set()), /already exist/);
 assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'existing', matchStatus: 'unmatched' }] }, new Set(['existing'])), /only matched/);
-assert.throws(() => prepareAllianceObservation({ ...base, providerFresh: true, rosterFresh: null }, new Set()), /both sections/);
-assert.equal(prepareAllianceObservation({ ...base, providerFresh: null, infoFresh: null, rosterFresh: null }, new Set()).providerFresh, null);
-assert.equal(prepareAllianceObservation({ ...base, providerFresh: false, infoFresh: false, rosterFresh: true }, new Set()).providerFresh, false);
+for (const [infoFresh, rosterFresh, providerFresh] of [[false, false, false], [false, true, false], [true, false, false], [true, true, true]]) {
+  assert.doesNotThrow(() => validateFreshnessTuple({ freshnessShape: 'sectioned', infoFresh, rosterFresh, providerFresh }));
+  assert.doesNotThrow(() => prepareAllianceObservation({ ...base, infoFresh, rosterFresh, providerFresh }, new Set()));
+}
+for (const tuple of [[false, false, true], [true, true, false], [true, null, true], [null, null, true]]) assert.throws(() => validateFreshnessTuple({ freshnessShape: 'sectioned', infoFresh: tuple[0], rosterFresh: tuple[1], providerFresh: tuple[2] }), /sectioned freshness/);
+for (const providerFresh of [false, true]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, freshnessShape: 'scalar', infoFresh: null, rosterFresh: null, providerFresh }, new Set()));
+for (const tuple of [[true, null, true], [null, false, true], [null, null, null]]) assert.throws(() => validateFreshnessTuple({ freshnessShape: 'scalar', infoFresh: tuple[0], rosterFresh: tuple[1], providerFresh: tuple[2] }), /scalar freshness/);
+assert.doesNotThrow(() => prepareAllianceObservation({ ...base, freshnessShape: 'unknown', infoFresh: null, rosterFresh: null, providerFresh: null }, new Set()));
+for (const tuple of [[null, null, false], [false, null, null], [null, true, null]]) assert.throws(() => validateFreshnessTuple({ freshnessShape: 'unknown', infoFresh: tuple[0], rosterFresh: tuple[1], providerFresh: tuple[2] }), /unknown freshness/);
 assert.equal(prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'existing', matchStatus: 'matched' }] }, new Set(['existing'])).roster[0].playerAccountId, 'existing');
 assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: 1 }, new Set()));
 assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: 0, roster: [] }, new Set()));
@@ -127,7 +133,14 @@ assert.match(sql, /where binding_id = p_binding_id and refresh_id = p_refresh_id
 assert.match(sql, /Refresh identity replay conflicts with its persisted envelope/i);
 assert.match(sql, /for member in select value from jsonb_array_elements\(p_roster\)/i);
 const rpc = sql.slice(sql.indexOf('create or replace function private.persist_mightpulse_alliance_observation'), sql.indexOf('create or replace function public.reject_alliance_observation_mutation'));
-assert.match(rpc, /jsonb_typeof\(p_observation\) <> 'object'[\s\S]*jsonb_typeof\(p_roster\) <> 'array'/i);
+assert.match(rpc, /jsonb_typeof\(p_observation\) is distinct from 'object'[\s\S]*jsonb_typeof\(p_roster\) is distinct from 'array'/i);
+assert.doesNotMatch(rpc, /jsonb_typeof\(p_observation\) <> 'object'|jsonb_typeof\(p_roster\) <> 'array'/i);
+assert.match(rpc, /select \* into binding[\s\S]*where id = p_binding_id for update/i);
+assert.match(rpc, /binding\.binding_status is distinct from 'active'/i);
+assert.ok(rpc.indexOf('Inactive Alliance provider binding.') < rpc.indexOf('insert into public.alliance_intelligence_observations'));
+assert.match(rpc, /Invalid Alliance freshness tuple\./i);
+for (const shape of ['sectioned', 'scalar', 'unknown']) assert.match(rpc, new RegExp(`p_observation->>'freshness_shape'\\s*=\\s*'${shape}'`));
+assert.match(sql, /freshness_shape = 'sectioned'[\s\S]*provider_fresh is not distinct from \(info_fresh and roster_fresh\)[\s\S]*freshness_shape = 'scalar'[\s\S]*info_fresh is null[\s\S]*roster_fresh is null[\s\S]*freshness_shape = 'unknown'/i);
 for (const field of ['provider', 'provider_kingdom_number', 'provider_tag', 'provider_alliance_id']) {
   assert.match(rpc, new RegExp(`jsonb_typeof\\(p_observation->'${field}'\\)`), `RPC validates ${field} primitive`);
 }

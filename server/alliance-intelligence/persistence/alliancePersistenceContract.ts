@@ -137,11 +137,25 @@ export function refreshEnvelopeFingerprint(input: AllianceObservationInput): str
   return createHash('sha256').update(JSON.stringify(canonicalize(envelope)), 'utf8').digest('hex');
 }
 
-export function validateWholeRoster(input: AllianceObservationInput, existingPlayerAccountIds: ReadonlySet<string>): void {
-  if (input.memberCount !== undefined && input.memberCount !== null && input.memberCount !== input.roster.length) throw new Error('member count does not match roster');
-  if (input.providerFresh === true && input.freshnessShape === 'sectioned' && (input.infoFresh !== true || input.rosterFresh !== true)) {
-    throw new Error('sectioned freshness cannot be fresh without both sections');
+export function validateFreshnessTuple(input: Pick<AllianceObservationInput, 'freshnessShape' | 'infoFresh' | 'rosterFresh' | 'providerFresh'>): void {
+  if (input.freshnessShape === 'sectioned') {
+    if (typeof input.infoFresh !== 'boolean' || typeof input.rosterFresh !== 'boolean' || typeof input.providerFresh !== 'boolean' || input.providerFresh !== (input.infoFresh && input.rosterFresh)) throw new Error('invalid sectioned freshness tuple');
+    return;
   }
+  if (input.freshnessShape === 'scalar') {
+    if (input.infoFresh !== null || input.rosterFresh !== null || typeof input.providerFresh !== 'boolean') throw new Error('invalid scalar freshness tuple');
+    return;
+  }
+  if (input.freshnessShape === 'unknown') {
+    if (input.infoFresh !== null || input.rosterFresh !== null || input.providerFresh !== null) throw new Error('invalid unknown freshness tuple');
+    return;
+  }
+  throw new Error('invalid freshness shape');
+}
+
+export function validateWholeRoster(input: AllianceObservationInput, existingPlayerAccountIds: ReadonlySet<string>): void {
+  validateFreshnessTuple(input);
+  if (input.memberCount !== undefined && input.memberCount !== null && input.memberCount !== input.roster.length) throw new Error('member count does not match roster');
   const governorIds = new Set<string>();
   const providerUids = new Set<string>();
   const providerFids = new Set<string>();
