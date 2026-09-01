@@ -159,4 +159,21 @@ assert.match(rpc, /p_observation->>'member_count' is not null[\s\S]*p_observatio
 const cardinalityGuard = rpc.indexOf("Invalid Alliance member count.");
 assert.ok(cardinalityGuard < rpc.indexOf('insert into public.alliance_intelligence_observations'), 'cardinality guard should run before parent persistence');
 assert.ok(rpc.includes('jsonb_array_elements(p_roster)'), 'direct RPC path must persist the supplied roster');
+for (const field of ['kingdom_number', 'avatar_reference', 'online', 'player_account_id', 'match_status']) {
+  assert.match(rpc, new RegExp(`member \\? '${field}'`), `RPC checks ${field} presence`);
+  assert.match(rpc, new RegExp(`jsonb_typeof\\(member->'${field}'\\)`), `RPC checks ${field} primitive type`);
+}
+assert.match(rpc, /kingdom_number[\s\S]*trunc\([\s\S]*< 1[\s\S]*> 9999/i);
+assert.match(rpc, /player_account_id[\s\S]*!~\*/i);
+assert.match(rpc, /match_status[\s\S]*not in \('unmatched', 'matched', 'ambiguous', 'invalid'\)/i);
+assert.match(rpc, /coalesce\(member->>'match_status', 'unmatched'\)/i);
+const rosterPrimitiveGuard = rpc.indexOf('Invalid Alliance roster member primitive.');
+const rosterInsert = rpc.indexOf('insert into public.alliance_roster_observations');
+assert.ok(rosterPrimitiveGuard >= 0 && rosterPrimitiveGuard < rosterInsert, 'roster primitive checks must precede roster INSERT');
+assert.ok(rpc.indexOf('Invalid Alliance roster member kingdom.') < rosterInsert, 'Kingdom range check must precede roster INSERT');
+assert.ok(rpc.indexOf('Invalid Alliance roster member Player Account UUID.') < rosterInsert, 'Player Account UUID check must precede roster INSERT');
+assert.ok(rpc.indexOf('Invalid Alliance roster member match status.') < rosterInsert, 'match status check must precede roster INSERT');
+assert.doesNotMatch(rpc, /member->>'avatar_reference'\s*::/i, 'avatar_reference must not be cast from text');
+assert.match(rpc, /jsonb_typeof\(member\) is distinct from 'object'/i, 'roster member object shape is fail-closed');
+assert.match(rpc, /jsonb_typeof\(member->'governor_id'\) is distinct from 'string'/i, 'governor ID type is fail-closed');
 console.log('MIGHTPULSE-001C-B alliance persistence contract tests passed');

@@ -368,7 +368,7 @@ begin
   end if;
 
   for member in select value from jsonb_array_elements(p_roster) loop
-    if jsonb_typeof(member) <> 'object' or jsonb_typeof(member->'governor_id') <> 'string'
+    if jsonb_typeof(member) is distinct from 'object' or jsonb_typeof(member->'governor_id') is distinct from 'string'
       or nullif(member->>'governor_id', '') is null
       or jsonb_typeof(member->'provider_internal_uid') not in ('null', 'string')
       or jsonb_typeof(member->'provider_fid') not in ('null', 'string')
@@ -380,6 +380,32 @@ begin
       or jsonb_typeof(member->'alliance_rank_label') not in ('null', 'string')
       or (member ? 'last_active_value' and jsonb_typeof(member->'last_active_value') not in ('null', 'string', 'number', 'boolean')) then
       raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if member ? 'kingdom_number' and jsonb_typeof(member->'kingdom_number') is distinct from 'null' and jsonb_typeof(member->'kingdom_number') is distinct from 'number' then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if member ? 'kingdom_number' and jsonb_typeof(member->'kingdom_number') = 'number'
+      and (((member->>'kingdom_number')::numeric <> trunc((member->>'kingdom_number')::numeric))
+        or (member->>'kingdom_number')::numeric < 1 or (member->>'kingdom_number')::numeric > 9999) then
+      raise exception 'Invalid Alliance roster member kingdom.' using errcode = '22023';
+    end if;
+    if member ? 'avatar_reference' and jsonb_typeof(member->'avatar_reference') is distinct from 'null' and jsonb_typeof(member->'avatar_reference') is distinct from 'string' then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if member ? 'online' and jsonb_typeof(member->'online') is distinct from 'null' and jsonb_typeof(member->'online') is distinct from 'boolean' then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if member ? 'player_account_id' and jsonb_typeof(member->'player_account_id') is distinct from 'null' and jsonb_typeof(member->'player_account_id') is distinct from 'string' then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'player_account_id') = 'string'
+      and member->>'player_account_id' !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' then
+      raise exception 'Invalid Alliance roster member Player Account UUID.' using errcode = '22023';
+    end if;
+    if member ? 'match_status'
+      and (jsonb_typeof(member->'match_status') is distinct from 'string'
+        or member->>'match_status' not in ('unmatched', 'matched', 'ambiguous', 'invalid')) then
+      raise exception 'Invalid Alliance roster member match status.' using errcode = '22023';
     end if;
     governor_id := member->>'governor_id';
     insert into public.alliance_roster_observations (
