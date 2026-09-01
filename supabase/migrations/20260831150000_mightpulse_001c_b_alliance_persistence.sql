@@ -337,6 +337,18 @@ begin
     raise exception 'Invalid Alliance member count.' using errcode = '22023';
   end if;
 
+  if p_observation ? 'provider_age_seconds' and jsonb_typeof(p_observation->'provider_age_seconds') is distinct from 'null' then
+    if jsonb_typeof(p_observation->'provider_age_seconds') is distinct from 'number' then
+      raise exception 'Invalid Alliance provider age.' using errcode = '22023';
+    end if;
+    if p_observation->>'provider_age_seconds' !~ '^[0-9]+$' then
+      raise exception 'Invalid Alliance provider age.' using errcode = '22023';
+    end if;
+    if (p_observation->>'provider_age_seconds')::numeric > 2147483647 then
+      raise exception 'Invalid Alliance provider age.' using errcode = '22023';
+    end if;
+  end if;
+
   insert into public.alliance_intelligence_observations (
     binding_id, alliance_id, provider, provider_kingdom_number, provider_tag,
     provider_alliance_id, refresh_id, refresh_envelope_sha256, alliance_name, alliance_power, member_count,

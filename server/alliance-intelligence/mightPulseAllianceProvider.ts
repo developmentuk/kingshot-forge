@@ -392,7 +392,9 @@ function normalizedFreshnessAge(
     if (
       typeof entry !== 'number'
       || !Number.isFinite(entry)
+      || !Number.isInteger(entry)
       || entry < 0
+      || entry > 2147483647
     ) {
       invalidResponse()
     }

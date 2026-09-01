@@ -65,6 +65,11 @@ export function validateProviderBindingIdentity(input: {
   }
 }
 
+export function validateProviderAgeSeconds(value: unknown): void {
+  if (value === undefined || value === null) return;
+  if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value) || value < 0 || value > 2147483647) throw new Error('invalid provider age seconds');
+}
+
 function canonicalize(value: unknown): unknown {
   if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') return value;
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -181,6 +186,7 @@ export function validateWholeRoster(input: AllianceObservationInput, existingPla
 }
 
 export function prepareAllianceObservation(input: AllianceObservationInput, existingPlayerAccountIds: ReadonlySet<string>) {
+  validateProviderAgeSeconds(input.providerAgeSeconds);
   validateProviderBindingIdentity({
     provider: input.provider,
     kingdomNumber: input.providerKingdomNumber,

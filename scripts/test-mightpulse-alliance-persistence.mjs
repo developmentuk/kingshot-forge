@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { observationFingerprint, prepareAllianceObservation, refreshEnvelopeFingerprint, serializeAllianceObservationForPersistence, validateFreshnessTuple } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
+import { observationFingerprint, prepareAllianceObservation, refreshEnvelopeFingerprint, serializeAllianceObservationForPersistence, validateFreshnessTuple, validateProviderAgeSeconds } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
 
 const base = {
   bindingId: 'binding-1', refreshId: '11111111-1111-4111-8111-111111111111', provider: 'mightpulse', providerKingdomNumber: 123,
@@ -85,6 +85,10 @@ for (const value of [null, '2026-08-31', 123, true]) {
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.leader_identity, '125500337');
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.source, 'test-source');
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_roster[0].provider_internal_uid, 'u-1');
+for (const age of [undefined, null, 0, 300, 2147483647]) assert.doesNotThrow(() => validateProviderAgeSeconds(age));
+for (const age of [0.5, 300.25, -1, 2147483648, Number.NaN, Number.POSITIVE_INFINITY, '300', true, {}]) assert.throws(() => validateProviderAgeSeconds(age), /provider age/);
+assert.notEqual(refreshEnvelopeFingerprint({ ...base, providerAgeSeconds: 300 }), refreshEnvelopeFingerprint({ ...base, providerAgeSeconds: 301 }));
+assert.equal(observationFingerprint({ ...base, providerAgeSeconds: 300 }), observationFingerprint({ ...base, providerAgeSeconds: 301 }));
 const serialized = serializeAllianceObservationForPersistence(prepared);
 assert.deepEqual(Object.keys(serialized).sort(), ['p_binding_id', 'p_content_sha256', 'p_observation', 'p_refresh_envelope_sha256', 'p_refresh_id', 'p_roster']);
 assert.equal(serialized.p_binding_id, prepared.bindingId);
@@ -159,6 +163,12 @@ assert.match(rpc, /p_observation->>'member_count' is not null[\s\S]*p_observatio
 const cardinalityGuard = rpc.indexOf("Invalid Alliance member count.");
 assert.ok(cardinalityGuard < rpc.indexOf('insert into public.alliance_intelligence_observations'), 'cardinality guard should run before parent persistence');
 assert.ok(rpc.includes('jsonb_array_elements(p_roster)'), 'direct RPC path must persist the supplied roster');
+assert.match(rpc, /provider_age_seconds[\s\S]*jsonb_typeof\(p_observation->'provider_age_seconds'\) is distinct from 'number'[\s\S]*!~ '\^\[0-9\]\+\$'[\s\S]*2147483647/i);
+assert.ok(rpc.indexOf('Invalid Alliance provider age.') < rpc.indexOf('insert into public.alliance_intelligence_observations'), 'provider age validation must precede parent persistence');
+assert.match(rpc, /p_observation->>'provider_age_seconds'\)::integer/i);
+const ageValidation = rpc.indexOf('Invalid Alliance provider age.');
+assert.ok(ageValidation < rpc.indexOf('insert into public.alliance_roster_observations'), 'provider age validation must precede roster persistence');
+assert.equal((rpc.match(/\(p_observation->>'provider_age_seconds'\)::integer/g) ?? []).length, 2, 'parent and roster rows reuse the validated integer age');
 for (const field of ['kingdom_number', 'avatar_reference', 'online', 'player_account_id', 'match_status']) {
   assert.match(rpc, new RegExp(`member \\? '${field}'`), `RPC checks ${field} presence`);
   assert.match(rpc, new RegExp(`jsonb_typeof\\(member->'${field}'\\)`), `RPC checks ${field} primitive type`);

@@ -218,6 +218,17 @@ assert.equal(scalarFreshness.rosterFresh, null)
 assert.equal(scalarFreshness.providerCachedAt, '2026-08-31T14:55:00.000Z')
 assert.equal(scalarFreshness.providerAgeSeconds, 300)
 
+for (const age of [0, 2147483647]) {
+  const validAge = await providerFor(Response.json(validPayload({ fresh: true, cached_at: '2026-08-31T14:55:00.000Z', age_seconds: age }))).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+  assert.equal(validAge.providerAgeSeconds, age)
+}
+for (const age of [0.5, -1, 2147483648]) {
+  await expectAllianceError(providerFor(Response.json(validPayload({ fresh: true, cached_at: '2026-08-31T14:55:00.000Z', age_seconds: age }))), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
+}
+for (const age_seconds of [{ info: 0.5, roster: 360 }, { info: 300, roster: 360.25 }, { info: -1, roster: 360 }, { info: 300, roster: 2147483648 }]) {
+  await expectAllianceError(providerFor(Response.json(validPayload({ age_seconds }))), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
+}
+
 for (const fresh of [null, undefined]) {
   const unknown = await providerFor(Response.json(validPayload({ fresh }))).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
   assert.equal(unknown.freshnessShape, 'unknown')
