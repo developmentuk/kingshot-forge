@@ -268,6 +268,7 @@ declare
   observation_id uuid;
   member jsonb;
   governor_id text;
+  matched_player_id text;
 begin
   if jsonb_typeof(p_observation) is distinct from 'object' or jsonb_typeof(p_roster) is distinct from 'array'
     or p_refresh_id is null
@@ -449,6 +450,20 @@ begin
       raise exception 'Invalid Alliance roster member match status.' using errcode = '22023';
     end if;
     governor_id := member->>'governor_id';
+    if coalesce(member->>'match_status', 'unmatched') = 'matched' then
+      if member->>'player_account_id' is null then
+        raise exception 'Matched Alliance roster member requires a Player Account.' using errcode = '22023';
+      end if;
+      select account.player_id into matched_player_id
+        from public.player_accounts account
+        where account.id = (member->>'player_account_id')::uuid
+        for share;
+      if not found or matched_player_id is distinct from governor_id then
+        raise exception 'Matched Alliance roster member Player Account does not belong to its Governor.' using errcode = '22023';
+      end if;
+    elsif member->>'player_account_id' is not null then
+      raise exception 'Only matched Alliance roster members may carry a Player Account.' using errcode = '22023';
+    end if;
     insert into public.alliance_roster_observations (
       alliance_observation_id, governor_id, provider_internal_uid, provider_fid,
       nickname, power, town_center_level, kills, alliance_rank, alliance_rank_label,

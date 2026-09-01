@@ -12,10 +12,10 @@ const base = {
   roster: [{ governorId: 'g-1', providerInternalUid: 'u-1', providerFid: 'f-1', matchStatus: 'unmatched' }],
 };
 
-const prepared = prepareAllianceObservation(base, new Set());
+const prepared = prepareAllianceObservation(base, new Map());
 assert.equal(prepared.providerTag, 'MiXeD');
 assert.equal(prepared.providerFresh, true);
-assert.equal(prepared.contentSha256, prepareAllianceObservation({ ...base }, new Set()).contentSha256);
+assert.equal(prepared.contentSha256, prepareAllianceObservation({ ...base }, new Map()).contentSha256);
 assert.deepEqual(serializeAllianceObservationForPersistence(prepared).p_observation, {
   provider: 'mightpulse', provider_kingdom_number: 123, provider_tag: 'MiXeD', provider_alliance_id: 'aid-1',
   alliance_name: 'Alliance', alliance_power: 42, member_count: 1, leader_identity: '125500337', leader_name: 'Leader',
@@ -38,36 +38,41 @@ assert.notEqual(observationFingerprint({ ...base, provider: 'other' }), observat
 assert.notEqual(observationFingerprint({ ...base, providerKingdomNumber: 124 }), observationFingerprint(base));
 assert.notEqual(observationFingerprint({ ...base, providerAllianceId: 'aid-2' }), observationFingerprint(base));
 assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], playerAccountId: '11111111-1111-4111-8111-111111111111', matchStatus: 'matched' }] }), observationFingerprint(base));
-for (const level of [1, 30, 31, 35, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Set()));
-for (const level of [0, 85]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Set()), /town center/);
-for (const rank of [1, 2, 3, 4, 5]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], allianceRank: rank }] }, new Set()));
-for (const rank of [0, 6, 'R4']) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], allianceRank: rank }] }, new Set()), /alliance rank/);
-assert.throws(() => prepareAllianceObservation({ ...base, providerTag: ' MiXeD' }, new Set()), /raw and untrimmed/);
-assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster: [{ governorId: 'g-1' }, { governorId: 'g-1' }] }, new Set()), /duplicate/);
-assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster: [{ governorId: 'g-1', providerInternalUid: 'u-1' }, { governorId: 'g-2', providerInternalUid: 'u-1' }] }, new Set()), /provider uid/);
-assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'missing', matchStatus: 'matched' }] }, new Set()), /already exist/);
-assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'existing', matchStatus: 'unmatched' }] }, new Set(['existing'])), /only matched/);
+for (const level of [1, 30, 31, 35, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Map()));
+for (const level of [0, 85]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Map()), /town center/);
+for (const rank of [1, 2, 3, 4, 5]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], allianceRank: rank }] }, new Map()));
+for (const rank of [0, 6, 'R4']) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], allianceRank: rank }] }, new Map()), /alliance rank/);
+assert.throws(() => prepareAllianceObservation({ ...base, providerTag: ' MiXeD' }, new Map()), /raw and untrimmed/);
+assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster: [{ governorId: 'g-1' }, { governorId: 'g-1' }] }, new Map()), /duplicate/);
+assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster: [{ governorId: 'g-1', providerInternalUid: 'u-1' }, { governorId: 'g-2', providerInternalUid: 'u-1' }] }, new Map()), /provider uid/);
+assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'missing', matchStatus: 'matched' }] }, new Map()), /matched Player Account/);
+assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'existing', matchStatus: 'unmatched' }] }, new Map([['g-1', 'existing']])), /only matched/);
+assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-A', matchStatus: 'matched' }] }, new Map([['g-1', 'account-A']])));
+assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-B', matchStatus: 'matched' }] }, new Map([['g-1', 'account-A']])), /does not belong/);
+assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-A', matchStatus: 'matched' }] }, new Map()), /does not belong/);
+for (const matchStatus of ['unmatched', 'ambiguous', 'invalid']) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-A', matchStatus }] }, new Map([['g-1', 'account-A']])), /only matched/);
+assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-A', matchStatus: 'matched' }] }), observationFingerprint({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-B', matchStatus: 'matched' }] }));
 for (const [infoFresh, rosterFresh, providerFresh] of [[false, false, false], [false, true, false], [true, false, false], [true, true, true]]) {
   assert.doesNotThrow(() => validateFreshnessTuple({ freshnessShape: 'sectioned', infoFresh, rosterFresh, providerFresh }));
-  assert.doesNotThrow(() => prepareAllianceObservation({ ...base, infoFresh, rosterFresh, providerFresh }, new Set()));
+  assert.doesNotThrow(() => prepareAllianceObservation({ ...base, infoFresh, rosterFresh, providerFresh }, new Map()));
 }
 for (const tuple of [[false, false, true], [true, true, false], [true, null, true], [null, null, true]]) assert.throws(() => validateFreshnessTuple({ freshnessShape: 'sectioned', infoFresh: tuple[0], rosterFresh: tuple[1], providerFresh: tuple[2] }), /sectioned freshness/);
-for (const providerFresh of [false, true]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, freshnessShape: 'scalar', infoFresh: null, rosterFresh: null, providerFresh }, new Set()));
+for (const providerFresh of [false, true]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, freshnessShape: 'scalar', infoFresh: null, rosterFresh: null, providerFresh }, new Map()));
 for (const tuple of [[true, null, true], [null, false, true], [null, null, null]]) assert.throws(() => validateFreshnessTuple({ freshnessShape: 'scalar', infoFresh: tuple[0], rosterFresh: tuple[1], providerFresh: tuple[2] }), /scalar freshness/);
-assert.doesNotThrow(() => prepareAllianceObservation({ ...base, freshnessShape: 'unknown', infoFresh: null, rosterFresh: null, providerFresh: null }, new Set()));
+assert.doesNotThrow(() => prepareAllianceObservation({ ...base, freshnessShape: 'unknown', infoFresh: null, rosterFresh: null, providerFresh: null }, new Map()));
 for (const tuple of [[null, null, false], [false, null, null], [null, true, null]]) assert.throws(() => validateFreshnessTuple({ freshnessShape: 'unknown', infoFresh: tuple[0], rosterFresh: tuple[1], providerFresh: tuple[2] }), /unknown freshness/);
-assert.equal(prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'existing', matchStatus: 'matched' }] }, new Set(['existing'])).roster[0].playerAccountId, 'existing');
-assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: 1 }, new Set()));
-assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: 0, roster: [] }, new Set()));
-assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: null }, new Set()));
-assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster: [] }, new Set()), /member count/);
-assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 0, roster: [{ ...base.roster[0] }] }, new Set()), /member count/);
+assert.equal(prepareAllianceObservation({ ...base, roster: [{ governorId: 'g-1', playerAccountId: 'existing', matchStatus: 'matched' }] }, new Map([['g-1', 'existing']])).roster[0].playerAccountId, 'existing');
+assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: 1 }, new Map()));
+assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: 0, roster: [] }, new Map()));
+assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: null }, new Map()));
+assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 2, roster: [] }, new Map()), /member count/);
+assert.throws(() => prepareAllianceObservation({ ...base, memberCount: 0, roster: [{ ...base.roster[0] }] }, new Map()), /member count/);
 for (const [memberCount, rosterLength] of [[2, 2], [0, 0]]) {
-  assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount, roster: Array.from({ length: rosterLength }, (_, index) => ({ ...base.roster[0], governorId: `g-${index + 1}`, providerInternalUid: `u-${index + 1}`, providerFid: `f-${index + 1}` })) }, new Set()));
+  assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount, roster: Array.from({ length: rosterLength }, (_, index) => ({ ...base.roster[0], governorId: `g-${index + 1}`, providerInternalUid: `u-${index + 1}`, providerFid: `f-${index + 1}` })) }, new Map()));
 }
-assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: null, roster: [{ ...base.roster[0] }, { ...base.roster[0], governorId: 'g-2', providerInternalUid: 'u-2', providerFid: 'f-2' }] }, new Set()));
+assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: null, roster: [{ ...base.roster[0] }, { ...base.roster[0], governorId: 'g-2', providerInternalUid: 'u-2', providerFid: 'f-2' }] }, new Map()));
 for (const [memberCount, rosterLength] of [[2, 1], [1, 2]]) {
-  assert.throws(() => prepareAllianceObservation({ ...base, memberCount, roster: Array.from({ length: rosterLength }, (_, index) => ({ ...base.roster[0], governorId: `g-${index + 1}`, providerInternalUid: `u-${index + 1}`, providerFid: `f-${index + 1}` })) }, new Set()), /member count/);
+  assert.throws(() => prepareAllianceObservation({ ...base, memberCount, roster: Array.from({ length: rosterLength }, (_, index) => ({ ...base.roster[0], governorId: `g-${index + 1}`, providerInternalUid: `u-${index + 1}`, providerFid: `f-${index + 1}` })) }, new Map()), /member count/);
 }
 const unicodeRoster = [
   { ...base.roster[0], governorId: 'Å' },
@@ -79,7 +84,7 @@ assert.equal(refreshEnvelopeFingerprint({ ...base, roster: unicodeRoster }), ref
 const persistenceSource = await (await import('node:fs/promises')).readFile(new URL('../server/alliance-intelligence/persistence/alliancePersistenceContract.ts', import.meta.url), 'utf8');
 assert.doesNotMatch(persistenceSource, /localeCompare/iu);
 for (const value of [null, '2026-08-31', 123, true]) {
-  const payload = serializeAllianceObservationForPersistence(prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], lastActiveValue: value }] }, new Set()));
+  const payload = serializeAllianceObservationForPersistence(prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], lastActiveValue: value }] }, new Map()));
   assert.equal(payload.p_roster[0].last_active_value, value);
 }
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.leader_identity, '125500337');
@@ -89,16 +94,16 @@ for (const age of [undefined, null, 0, 300, 2147483647]) assert.doesNotThrow(() 
 for (const age of [0.5, 300.25, -1, 2147483648, Number.NaN, Number.POSITIVE_INFINITY, '300', true, {}]) assert.throws(() => validateProviderAgeSeconds(age), /provider age/);
 assert.notEqual(refreshEnvelopeFingerprint({ ...base, providerAgeSeconds: 300 }), refreshEnvelopeFingerprint({ ...base, providerAgeSeconds: 301 }));
 assert.equal(observationFingerprint({ ...base, providerAgeSeconds: 300 }), observationFingerprint({ ...base, providerAgeSeconds: 301 }));
-for (const value of [null, 0, 9007199254740991]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, alliancePower: value }, new Set()));
-for (const value of [1.5, -1, Number.MAX_SAFE_INTEGER + 2]) assert.throws(() => prepareAllianceObservation({ ...base, alliancePower: value }, new Set()), /alliance power/);
-for (const value of [1, 2147483647]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, powerRank: value }, new Set()));
-for (const value of [0, 2147483648, 1.5]) assert.throws(() => prepareAllianceObservation({ ...base, powerRank: value }, new Set()), /power rank/);
+for (const value of [null, 0, 9007199254740991]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, alliancePower: value }, new Map()));
+for (const value of [1.5, -1, Number.MAX_SAFE_INTEGER + 2]) assert.throws(() => prepareAllianceObservation({ ...base, alliancePower: value }, new Map()), /alliance power/);
+for (const value of [1, 2147483647]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, powerRank: value }, new Map()));
+for (const value of [0, 2147483648, 1.5]) assert.throws(() => prepareAllianceObservation({ ...base, powerRank: value }, new Map()), /power rank/);
 for (const field of ['power', 'kills']) {
-  for (const value of [null, 0, 9007199254740991]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], [field]: value }] }, new Set()));
-  for (const value of [1.5, -1, Number.MAX_SAFE_INTEGER + 2]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], [field]: value }] }, new Set()), new RegExp(`roster ${field}`));
+  for (const value of [null, 0, 9007199254740991]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], [field]: value }] }, new Map()));
+  for (const value of [1.5, -1, Number.MAX_SAFE_INTEGER + 2]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], [field]: value }] }, new Map()), new RegExp(`roster ${field}`));
 }
-for (const value of [1, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: value }] }, new Set()));
-for (const value of [0, 85, 30.5]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: value }] }, new Set()), /town center/);
+for (const value of [1, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: value }] }, new Map()));
+for (const value of [0, 85, 30.5]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: value }] }, new Map()), /town center/);
 const serialized = serializeAllianceObservationForPersistence(prepared);
 assert.deepEqual(Object.keys(serialized).sort(), ['p_binding_id', 'p_content_sha256', 'p_observation', 'p_refresh_envelope_sha256', 'p_refresh_id', 'p_roster']);
 assert.equal(serialized.p_binding_id, prepared.bindingId);
@@ -109,8 +114,8 @@ assert.equal(serialized.p_content_sha256, prepared.contentSha256);
 assert.equal(serialized.p_refresh_envelope_sha256, prepared.refreshEnvelopeSha256);
 assert.equal('extra' in serialized.p_observation, false);
 assert.equal('traceId' in serialized.p_observation, false);
-assert.throws(() => prepareAllianceObservation({ ...base, leaderIdentity: ' bad' }, new Set()), /leader identity/);
-assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], lastActiveValue: {} }] }, new Set()), /last-active/);
+assert.throws(() => prepareAllianceObservation({ ...base, leaderIdentity: ' bad' }, new Map()), /leader identity/);
+assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], lastActiveValue: {} }] }, new Map()), /last-active/);
 
 const sql = await (await import('node:fs/promises')).readFile(new URL('../supabase/migrations/20260831150000_mightpulse_001c_b_alliance_persistence.sql', import.meta.url), 'utf8');
 for (const required of [
@@ -190,6 +195,12 @@ assert.match(rpc, /kingdom_number[\s\S]*trunc\([\s\S]*< 1[\s\S]*> 9999/i);
 assert.match(rpc, /player_account_id[\s\S]*!~\*/i);
 assert.match(rpc, /match_status[\s\S]*not in \('unmatched', 'matched', 'ambiguous', 'invalid'\)/i);
 assert.match(rpc, /coalesce\(member->>'match_status', 'unmatched'\)/i);
+assert.match(rpc, /from public\.player_accounts account[\s\S]*where account\.id = \(member->>'player_account_id'\)\:\:uuid[\s\S]*for share/i);
+assert.match(rpc, /matched_player_id is distinct from governor_id/i);
+assert.match(rpc, /Matched Alliance roster member Player Account does not belong to its Governor/i);
+assert.ok(rpc.indexOf('Matched Alliance roster member Player Account does not belong') < rpc.indexOf('insert into public.alliance_roster_observations'), 'Player Account identity mismatch must fail before roster persistence');
+assert.doesNotMatch(rpc, /public\.player_accounts\s+(insert|update|delete)/i, 'Player Accounts remain read-only');
+assert.match(sql, /references public\.player_accounts\(id\)/i);
 const rosterPrimitiveGuard = rpc.indexOf('Invalid Alliance roster member primitive.');
 const rosterInsert = rpc.indexOf('insert into public.alliance_roster_observations');
 assert.ok(rosterPrimitiveGuard >= 0 && rosterPrimitiveGuard < rosterInsert, 'roster primitive checks must precede roster INSERT');

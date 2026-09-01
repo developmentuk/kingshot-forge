@@ -166,7 +166,7 @@ export function validateFreshnessTuple(input: Pick<AllianceObservationInput, 'fr
   throw new Error('invalid freshness shape');
 }
 
-export function validateWholeRoster(input: AllianceObservationInput, existingPlayerAccountIds: ReadonlySet<string>): void {
+export function validateWholeRoster(input: AllianceObservationInput, existingPlayerAccountIdByGovernorId: ReadonlyMap<string, string>): void {
   validateFreshnessTuple(input);
   validateOptionalIntegerRange(input.memberCount, 'member count', 0, 2147483647);
   validateOptionalSafeInteger(input.alliancePower, 'alliance power');
@@ -193,13 +193,12 @@ export function validateWholeRoster(input: AllianceObservationInput, existingPla
     validateOptionalSafeInteger(member.kills, 'roster kills');
     validateOptionalIntegerRange(member.kingdomNumber, 'roster kingdom', 1, 9999);
     if (member.lastActiveValue !== undefined && member.lastActiveValue !== null && ((typeof member.lastActiveValue !== 'string' && typeof member.lastActiveValue !== 'number' && typeof member.lastActiveValue !== 'boolean') || (typeof member.lastActiveValue === 'number' && !Number.isFinite(member.lastActiveValue)))) throw new Error('invalid last-active value');
-    if (member.playerAccountId && !existingPlayerAccountIds.has(member.playerAccountId)) throw new Error('player account must already exist');
-    if (member.matchStatus === 'matched' && !member.playerAccountId) throw new Error('matched roster member requires a reference');
+    if (member.matchStatus === 'matched' && (!member.playerAccountId || existingPlayerAccountIdByGovernorId.get(member.governorId) !== member.playerAccountId)) throw new Error('matched Player Account does not belong to roster governor');
     if (member.playerAccountId && member.matchStatus !== 'matched') throw new Error('only matched roster members may carry a reference');
   }
 }
 
-export function prepareAllianceObservation(input: AllianceObservationInput, existingPlayerAccountIds: ReadonlySet<string>) {
+export function prepareAllianceObservation(input: AllianceObservationInput, existingPlayerAccountIdByGovernorId: ReadonlyMap<string, string>) {
   validateProviderAgeSeconds(input.providerAgeSeconds);
   validateProviderBindingIdentity({
     provider: input.provider,
@@ -207,7 +206,7 @@ export function prepareAllianceObservation(input: AllianceObservationInput, exis
     providerTag: input.providerTag,
     providerAllianceId: input.providerAllianceId,
   });
-  validateWholeRoster(input, existingPlayerAccountIds);
+  validateWholeRoster(input, existingPlayerAccountIdByGovernorId);
   if (input.leaderIdentity !== undefined && input.leaderIdentity !== null && (typeof input.leaderIdentity !== 'string' || input.leaderIdentity.length < 1 || input.leaderIdentity.length > 120 || input.leaderIdentity.trim() !== input.leaderIdentity || containsControlCharacter(input.leaderIdentity))) throw new Error('invalid leader identity');
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(input.refreshId)) throw new Error('invalid refresh id');
   return Object.freeze({
