@@ -131,10 +131,13 @@ assert.match(rpc, /jsonb_typeof\(p_observation\) <> 'object'[\s\S]*jsonb_typeof\
 for (const field of ['provider', 'provider_kingdom_number', 'provider_tag', 'provider_alliance_id']) {
   assert.match(rpc, new RegExp(`jsonb_typeof\\(p_observation->'${field}'\\)`), `RPC validates ${field} primitive`);
 }
-assert.match(rpc, /p_observation->>'provider' <> binding\.provider/);
-assert.match(rpc, /p_observation->>'provider_kingdom_number'\)::integer <> binding\.provider_kingdom_number/);
-assert.match(rpc, /p_observation->>'provider_tag' <> binding\.provider_tag/);
-assert.match(rpc, /p_observation->>'provider_alliance_id' <> binding\.provider_alliance_id/);
+assert.match(rpc, /jsonb_typeof\(p_observation->'provider'\) is distinct from 'string'/i);
+assert.match(rpc, /jsonb_typeof\(p_observation->'provider_kingdom_number'\) is distinct from 'number'/i);
+assert.match(rpc, /p_observation->>'provider' is distinct from binding\.provider/i);
+assert.match(rpc, /p_observation->>'provider_kingdom_number'\)::integer is distinct from binding\.provider_kingdom_number/i);
+assert.match(rpc, /p_observation->>'provider_tag' is distinct from binding\.provider_tag/i);
+assert.match(rpc, /p_observation->>'provider_alliance_id' is distinct from binding\.provider_alliance_id/i);
+assert.doesNotMatch(rpc, /p_observation->>'provider(?:_kingdom_number|_tag|_alliance_id)'\s*<>/i, 'provider identity comparisons must not use nullable <> semantics');
 const identityGuard = rpc.indexOf('Alliance observation provider identity does not match its selected binding.');
 assert.ok(identityGuard < rpc.indexOf('insert into public.alliance_intelligence_observations'), 'binding identity mismatch must fail before parent persistence');
 assert.ok(identityGuard < rpc.indexOf('for member in select value from jsonb_array_elements(p_roster)'), 'binding identity mismatch must fail before roster persistence');
