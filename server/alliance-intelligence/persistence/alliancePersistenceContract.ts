@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-
 export type Freshness = boolean | null;
 
 export type AllianceRosterMember = {
@@ -78,24 +76,6 @@ function validateOptionalIntegerRange(value: unknown, label: string, min: number
   if (value !== undefined && value !== null && (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max)) throw new Error(`invalid ${label}`);
 }
 
-function canonicalize(value: unknown): unknown {
-  if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number') return value;
-  if (Array.isArray(value)) return value.map(canonicalize);
-  if (typeof value === 'object') return Object.fromEntries(Object.keys(value as Record<string, unknown>).sort().map((key) => [key, canonicalize((value as Record<string, unknown>)[key])]));
-  return null;
-}
-
-function compareCanonicalJson(left: AllianceRosterMember, right: AllianceRosterMember): number {
-  const leftJson = JSON.stringify(left);
-  const rightJson = JSON.stringify(right);
-  return leftJson < rightJson ? -1 : leftJson > rightJson ? 1 : 0;
-}
-
-export function observationFingerprint(input: AllianceObservationInput): string {
-  const stable = JSON.stringify(canonicalize(governedObservationFacts(input)));
-  return createHash('sha256').update(stable, 'utf8').digest('hex');
-}
-
 function governedObservationFacts(input: AllianceObservationInput) {
   return {
     provider: input.provider,
@@ -132,22 +112,8 @@ function governedObservationFacts(input: AllianceObservationInput) {
         playerAccountId: member.playerAccountId ?? null,
         matchStatus: member.matchStatus ?? 'unmatched',
       }))
-      .sort(compareCanonicalJson),
+      .sort((left, right) => left.governorId < right.governorId ? -1 : left.governorId > right.governorId ? 1 : 0),
   };
-}
-
-export function refreshEnvelopeFingerprint(input: AllianceObservationInput): string {
-  const envelope = {
-    contentSha256: observationFingerprint(input),
-    providerFresh: input.providerFresh,
-    infoFresh: input.infoFresh,
-    rosterFresh: input.rosterFresh,
-    providerCachedAt: input.providerCachedAt ?? null,
-    providerAgeSeconds: input.providerAgeSeconds ?? null,
-    providerFetchedAt: input.providerFetchedAt,
-    observedAt: input.observedAt,
-  };
-  return createHash('sha256').update(JSON.stringify(canonicalize(envelope)), 'utf8').digest('hex');
 }
 
 export function validateFreshnessTuple(input: Pick<AllianceObservationInput, 'freshnessShape' | 'infoFresh' | 'rosterFresh' | 'providerFresh'>): void {
@@ -212,8 +178,6 @@ export function prepareAllianceObservation(input: AllianceObservationInput, exis
   return Object.freeze({
     ...input,
     roster: Object.freeze(input.roster.map((member) => Object.freeze({ ...member }))),
-    contentSha256: observationFingerprint(input),
-    refreshEnvelopeSha256: refreshEnvelopeFingerprint(input),
   });
 }
 
@@ -261,7 +225,5 @@ export function serializeAllianceObservationForPersistence(prepared: ReturnType<
       match_status: member.matchStatus,
     }))),
     p_refresh_id: prepared.refreshId,
-    p_content_sha256: prepared.contentSha256,
-    p_refresh_envelope_sha256: prepared.refreshEnvelopeSha256,
   });
 }

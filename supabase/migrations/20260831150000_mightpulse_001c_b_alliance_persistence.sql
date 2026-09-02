@@ -1,5 +1,10 @@
 begin;
 
+-- Persistence fingerprints are database-owned. The JSONB v1 representation is
+-- deliberately independent from the TypeScript provider fingerprint contract.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+
 -- MIGHTPULSE-001C-B foundation only. This file is intentionally unapplied to
 -- production. No provider/runtime, membership, authority, or public-view path
 -- is introduced here.
@@ -254,9 +259,7 @@ create or replace function private.persist_mightpulse_alliance_observation(
   p_binding_id uuid,
   p_observation jsonb,
   p_roster jsonb,
-  p_refresh_id uuid,
-  p_content_sha256 text,
-  p_refresh_envelope_sha256 text
+  p_refresh_id uuid
 )
 returns uuid
 language plpgsql
@@ -269,11 +272,14 @@ declare
   member jsonb;
   governor_id text;
   matched_player_id text;
+  governed_roster jsonb;
+  governed_content jsonb;
+  db_content_sha256 text;
+  refresh_envelope jsonb;
+  db_refresh_envelope_sha256 text;
 begin
   if jsonb_typeof(p_observation) is distinct from 'object' or jsonb_typeof(p_roster) is distinct from 'array'
-    or p_refresh_id is null
-    or p_content_sha256 is null or p_content_sha256 !~ '^[0-9a-f]{64}$'
-    or p_refresh_envelope_sha256 is null or p_refresh_envelope_sha256 !~ '^[0-9a-f]{64}$' then
+    or p_refresh_id is null then
     raise exception 'Invalid governed Alliance observation envelope.' using errcode = '22023';
   end if;
 
@@ -295,6 +301,10 @@ begin
     or jsonb_typeof(p_observation->'alliance_power') not in ('null', 'number')
     or jsonb_typeof(p_observation->'member_count') not in ('null', 'number')
     or jsonb_typeof(p_observation->'power_rank') not in ('null', 'number')
+    or jsonb_typeof(p_observation->'source') is distinct from 'string'
+    or char_length(p_observation->>'source') not between 1 and 120
+    or p_observation->>'source' <> btrim(p_observation->>'source')
+    or p_observation->>'source' ~ '[[:cntrl:]]'
     or jsonb_typeof(p_observation->'freshness_shape') is distinct from 'string' then
     raise exception 'Invalid Alliance observation primitive.' using errcode = '22023';
   end if;
@@ -363,6 +373,59 @@ begin
     end if;
   end if;
 
+  select jsonb_agg(jsonb_build_object(
+      'governorId', member->'governor_id',
+      'providerInternalUid', member->'provider_internal_uid',
+      'providerFid', member->'provider_fid',
+      'nickname', member->'nickname',
+      'power', member->'power',
+      'townCenterLevel', member->'town_center_level',
+      'kills', member->'kills',
+      'allianceRank', member->'alliance_rank',
+      'allianceRankLabel', member->'alliance_rank_label',
+      'kingdomNumber', member->'kingdom_number',
+      'avatarReference', member->'avatar_reference',
+      'lastActiveValue', member->'last_active_value',
+      'online', member->'online',
+      'playerAccountId', member->'player_account_id',
+      'matchStatus', coalesce(member->'match_status', '"unmatched"'::jsonb)
+    ) order by member->>'governor_id' collate "C")
+    into governed_roster
+    from jsonb_array_elements(p_roster) as roster_member(member);
+  governed_content := jsonb_build_object(
+    'fingerprintVersion', 'mightpulse-alliance-content-db-jsonb-v1',
+    'provider', p_observation->'provider',
+    'providerKingdomNumber', p_observation->'provider_kingdom_number',
+    'providerTag', p_observation->'provider_tag',
+    'providerAllianceId', p_observation->'provider_alliance_id',
+    'allianceName', p_observation->'alliance_name',
+    'alliancePower', p_observation->'alliance_power',
+    'memberCount', p_observation->'member_count',
+    'leaderIdentity', p_observation->'leader_identity',
+    'leaderName', p_observation->'leader_name',
+    'flagReference', p_observation->'flag_reference',
+    'powerRank', p_observation->'power_rank',
+    'source', p_observation->'source',
+    'freshnessShape', p_observation->'freshness_shape',
+    'infoFresh', p_observation->'info_fresh',
+    'rosterFresh', p_observation->'roster_fresh',
+    'providerFresh', p_observation->'provider_fresh',
+    'roster', coalesce(governed_roster, '[]'::jsonb)
+  );
+  db_content_sha256 := encode(extensions.digest(convert_to(governed_content::text, 'UTF8'), 'sha256'), 'hex');
+  refresh_envelope := jsonb_build_object(
+    'fingerprintVersion', 'mightpulse-alliance-refresh-db-jsonb-v1',
+    'contentSha256', db_content_sha256,
+    'providerFresh', p_observation->'provider_fresh',
+    'infoFresh', p_observation->'info_fresh',
+    'rosterFresh', p_observation->'roster_fresh',
+    'providerCachedAt', p_observation->'provider_cached_at',
+    'providerAgeSeconds', p_observation->'provider_age_seconds',
+    'providerFetchedAt', p_observation->'provider_fetched_at',
+    'observedAt', p_observation->'observed_at'
+  );
+  db_refresh_envelope_sha256 := encode(extensions.digest(convert_to(refresh_envelope::text, 'UTF8'), 'sha256'), 'hex');
+
   insert into public.alliance_intelligence_observations (
     binding_id, alliance_id, provider, provider_kingdom_number, provider_tag,
     provider_alliance_id, refresh_id, refresh_envelope_sha256, alliance_name, alliance_power, member_count,
@@ -371,7 +434,7 @@ begin
     provider_age_seconds, provider_fetched_at, observed_at, content_sha256
   ) values (
     binding.id, binding.alliance_id, binding.provider, binding.provider_kingdom_number,
-    binding.provider_tag, binding.provider_alliance_id, p_refresh_id, p_refresh_envelope_sha256,
+    binding.provider_tag, binding.provider_alliance_id, p_refresh_id, db_refresh_envelope_sha256,
     p_observation->>'alliance_name', (p_observation->>'alliance_power')::bigint,
     (p_observation->>'member_count')::integer, p_observation->>'leader_identity', p_observation->>'leader_name',
     p_observation->>'flag_reference', (p_observation->>'power_rank')::integer,
@@ -379,14 +442,14 @@ begin
     (p_observation->>'info_fresh')::boolean, (p_observation->>'roster_fresh')::boolean,
     (p_observation->>'provider_fresh')::boolean, (p_observation->>'provider_cached_at')::timestamptz,
     (p_observation->>'provider_age_seconds')::integer, (p_observation->>'provider_fetched_at')::timestamptz,
-    (p_observation->>'observed_at')::timestamptz, p_content_sha256
+    (p_observation->>'observed_at')::timestamptz, db_content_sha256
   ) on conflict (binding_id, refresh_id) do nothing returning id into observation_id;
 
   if observation_id is null then
-    select id into observation_id from public.alliance_intelligence_observations
-      where binding_id = p_binding_id and refresh_id = p_refresh_id
-        and content_sha256 = p_content_sha256
-        and refresh_envelope_sha256 = p_refresh_envelope_sha256;
+    select o.id into observation_id from public.alliance_intelligence_observations o
+      where o.binding_id = p_binding_id and o.refresh_id = p_refresh_id
+        and o.content_sha256 = db_content_sha256
+        and o.refresh_envelope_sha256 = db_refresh_envelope_sha256;
     if observation_id is null then
       raise exception 'Refresh identity replay conflicts with its persisted envelope.' using errcode = '23505';
     end if;
@@ -520,8 +583,8 @@ revoke all on function public.reject_alliance_observation_mutation() from public
 revoke all on function public.validate_alliance_observation_binding() from public, anon, authenticated;
 revoke all on function public.reject_alliance_provider_binding_identity_change() from public, anon, authenticated;
 revoke all on function public.reject_alliance_provider_aid_collision() from public, anon, authenticated;
-revoke all on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, uuid, text, text) from public, anon, authenticated;
-grant execute on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, uuid, text, text) to service_role;
+revoke all on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, uuid) from public, anon, authenticated;
+grant execute on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, uuid) to service_role;
 
 -- Rollback strategy (owner-gated, never run implicitly): drop dependent indexes,
 -- triggers, function, and the three new tables in reverse dependency order.

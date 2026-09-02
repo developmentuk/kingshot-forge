@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { observationFingerprint, prepareAllianceObservation, refreshEnvelopeFingerprint, serializeAllianceObservationForPersistence, validateFreshnessTuple, validateProviderAgeSeconds } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
+import { prepareAllianceObservation, serializeAllianceObservationForPersistence, validateFreshnessTuple, validateProviderAgeSeconds } from '../server/alliance-intelligence/persistence/alliancePersistenceContract.ts';
 
 const base = {
   bindingId: 'binding-1', refreshId: '11111111-1111-4111-8111-111111111111', provider: 'mightpulse', providerKingdomNumber: 123,
@@ -15,7 +15,6 @@ const base = {
 const prepared = prepareAllianceObservation(base, new Map());
 assert.equal(prepared.providerTag, 'MiXeD');
 assert.equal(prepared.providerFresh, true);
-assert.equal(prepared.contentSha256, prepareAllianceObservation({ ...base }, new Map()).contentSha256);
 assert.deepEqual(serializeAllianceObservationForPersistence(prepared).p_observation, {
   provider: 'mightpulse', provider_kingdom_number: 123, provider_tag: 'MiXeD', provider_alliance_id: 'aid-1',
   alliance_name: 'Alliance', alliance_power: 42, member_count: 1, leader_identity: '125500337', leader_name: 'Leader',
@@ -23,21 +22,6 @@ assert.deepEqual(serializeAllianceObservationForPersistence(prepared).p_observat
   roster_fresh: true, provider_fresh: true, provider_cached_at: null, provider_age_seconds: null,
   provider_fetched_at: '2026-08-31T12:00:00Z', observed_at: '2026-08-31T12:00:00Z',
 });
-assert.equal(observationFingerprint({ ...base, observedAt: '2026-08-31T13:00:00Z', providerFetchedAt: '2026-08-31T13:01:00Z' }), observationFingerprint(base));
-assert.equal(observationFingerprint({ ...base, roster: [...base.roster].reverse() }), observationFingerprint(base));
-assert.equal(observationFingerprint({ ...base, traceId: 'trace-a', debugMetadata: { attempt: 1 } }), observationFingerprint({ ...base, traceId: 'trace-b', debugMetadata: { attempt: 2 } }));
-assert.equal(observationFingerprint({ ...base, roster: [{ ...base.roster[0], requestDiagnostic: 'a' }] }), observationFingerprint({ ...base, roster: [{ ...base.roster[0], requestDiagnostic: 'b' }] }));
-assert.equal(observationFingerprint({ ...base, source: undefined }), observationFingerprint({ ...base, source: 'mightpulse-alliance-provider' }));
-assert.equal(observationFingerprint({ ...base, roster: [{ ...base.roster[0], matchStatus: undefined }] }), observationFingerprint({ ...base, roster: [{ ...base.roster[0], matchStatus: 'unmatched' }] }));
-assert.equal(observationFingerprint({ ...base, refreshId: '22222222-2222-4222-8222-222222222222' }), observationFingerprint(base));
-assert.notEqual(refreshEnvelopeFingerprint({ ...base, observedAt: '2026-08-31T13:00:00Z' }), refreshEnvelopeFingerprint(base));
-assert.notEqual(observationFingerprint({ ...base, allianceName: 'Changed Alliance' }), observationFingerprint(base));
-assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], power: 999 }] }), observationFingerprint(base));
-assert.notEqual(observationFingerprint({ ...base, providerTag: 'MIXED' }), observationFingerprint(base));
-assert.notEqual(observationFingerprint({ ...base, provider: 'other' }), observationFingerprint(base));
-assert.notEqual(observationFingerprint({ ...base, providerKingdomNumber: 124 }), observationFingerprint(base));
-assert.notEqual(observationFingerprint({ ...base, providerAllianceId: 'aid-2' }), observationFingerprint(base));
-assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], playerAccountId: '11111111-1111-4111-8111-111111111111', matchStatus: 'matched' }] }), observationFingerprint(base));
 for (const level of [1, 30, 31, 35, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Map()));
 for (const level of [0, 85]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: level }] }, new Map()), /town center/);
 for (const rank of [1, 2, 3, 4, 5]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], allianceRank: rank }] }, new Map()));
@@ -51,7 +35,6 @@ assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...ba
 assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-B', matchStatus: 'matched' }] }, new Map([['g-1', 'account-A']])), /does not belong/);
 assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-A', matchStatus: 'matched' }] }, new Map()), /does not belong/);
 for (const matchStatus of ['unmatched', 'ambiguous', 'invalid']) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-A', matchStatus }] }, new Map([['g-1', 'account-A']])), /only matched/);
-assert.notEqual(observationFingerprint({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-A', matchStatus: 'matched' }] }), observationFingerprint({ ...base, roster: [{ ...base.roster[0], governorId: 'g-1', playerAccountId: 'account-B', matchStatus: 'matched' }] }));
 for (const [infoFresh, rosterFresh, providerFresh] of [[false, false, false], [false, true, false], [true, false, false], [true, true, true]]) {
   assert.doesNotThrow(() => validateFreshnessTuple({ freshnessShape: 'sectioned', infoFresh, rosterFresh, providerFresh }));
   assert.doesNotThrow(() => prepareAllianceObservation({ ...base, infoFresh, rosterFresh, providerFresh }, new Map()));
@@ -74,13 +57,6 @@ assert.doesNotThrow(() => prepareAllianceObservation({ ...base, memberCount: nul
 for (const [memberCount, rosterLength] of [[2, 1], [1, 2]]) {
   assert.throws(() => prepareAllianceObservation({ ...base, memberCount, roster: Array.from({ length: rosterLength }, (_, index) => ({ ...base.roster[0], governorId: `g-${index + 1}`, providerInternalUid: `u-${index + 1}`, providerFid: `f-${index + 1}` })) }, new Map()), /member count/);
 }
-const unicodeRoster = [
-  { ...base.roster[0], governorId: 'Å' },
-  { ...base.roster[0], governorId: 'Ä', providerInternalUid: 'u-2', providerFid: 'f-2' },
-  { ...base.roster[0], governorId: 'é', providerInternalUid: 'u-3', providerFid: 'f-3' },
-];
-assert.equal(observationFingerprint({ ...base, roster: unicodeRoster }), observationFingerprint({ ...base, roster: [...unicodeRoster].reverse() }));
-assert.equal(refreshEnvelopeFingerprint({ ...base, roster: unicodeRoster }), refreshEnvelopeFingerprint({ ...base, roster: [...unicodeRoster].reverse() }));
 const persistenceSource = await (await import('node:fs/promises')).readFile(new URL('../server/alliance-intelligence/persistence/alliancePersistenceContract.ts', import.meta.url), 'utf8');
 assert.doesNotMatch(persistenceSource, /localeCompare/iu);
 for (const value of [null, '2026-08-31', 123, true]) {
@@ -89,11 +65,11 @@ for (const value of [null, '2026-08-31', 123, true]) {
 }
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.leader_identity, '125500337');
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_observation.source, 'test-source');
+assert.equal(serializeAllianceObservationForPersistence(prepareAllianceObservation({ ...base, source: undefined }, new Map())).p_observation.source, 'mightpulse-alliance-provider');
+assert.notEqual(serializeAllianceObservationForPersistence(prepareAllianceObservation({ ...base, source: 'other-source' }, new Map())).p_observation.source, serializeAllianceObservationForPersistence(prepared).p_observation.source);
 assert.equal(serializeAllianceObservationForPersistence(prepared).p_roster[0].provider_internal_uid, 'u-1');
 for (const age of [undefined, null, 0, 300, 2147483647]) assert.doesNotThrow(() => validateProviderAgeSeconds(age));
 for (const age of [0.5, 300.25, -1, 2147483648, Number.NaN, Number.POSITIVE_INFINITY, '300', true, {}]) assert.throws(() => validateProviderAgeSeconds(age), /provider age/);
-assert.notEqual(refreshEnvelopeFingerprint({ ...base, providerAgeSeconds: 300 }), refreshEnvelopeFingerprint({ ...base, providerAgeSeconds: 301 }));
-assert.equal(observationFingerprint({ ...base, providerAgeSeconds: 300 }), observationFingerprint({ ...base, providerAgeSeconds: 301 }));
 for (const value of [null, 0, 9007199254740991]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, alliancePower: value }, new Map()));
 for (const value of [1.5, -1, Number.MAX_SAFE_INTEGER + 2]) assert.throws(() => prepareAllianceObservation({ ...base, alliancePower: value }, new Map()), /alliance power/);
 for (const value of [1, 2147483647]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, powerRank: value }, new Map()));
@@ -105,13 +81,13 @@ for (const field of ['power', 'kills']) {
 for (const value of [1, 84]) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: value }] }, new Map()));
 for (const value of [0, 85, 30.5]) assert.throws(() => prepareAllianceObservation({ ...base, roster: [{ ...base.roster[0], townCenterLevel: value }] }, new Map()), /town center/);
 const serialized = serializeAllianceObservationForPersistence(prepared);
-assert.deepEqual(Object.keys(serialized).sort(), ['p_binding_id', 'p_content_sha256', 'p_observation', 'p_refresh_envelope_sha256', 'p_refresh_id', 'p_roster']);
+assert.deepEqual(Object.keys(serialized).sort(), ['p_binding_id', 'p_observation', 'p_refresh_id', 'p_roster']);
 assert.equal(serialized.p_binding_id, prepared.bindingId);
 assert.equal('bindingId' in serialized, false);
 assert.equal('providerTag' in serialized.p_observation, false);
 assert.equal(serialized.p_refresh_id, prepared.refreshId);
-assert.equal(serialized.p_content_sha256, prepared.contentSha256);
-assert.equal(serialized.p_refresh_envelope_sha256, prepared.refreshEnvelopeSha256);
+assert.equal('p_content_sha256' in serialized, false);
+assert.equal('p_refresh_envelope_sha256' in serialized, false);
 assert.equal('extra' in serialized.p_observation, false);
 assert.equal('traceId' in serialized.p_observation, false);
 assert.throws(() => prepareAllianceObservation({ ...base, leaderIdentity: ' bad' }, new Map()), /leader identity/);
@@ -148,7 +124,7 @@ for (const field of ['alliance_id', 'provider', 'provider_kingdom_number', 'prov
   assert.match(bindingGuard, new RegExp(`new\\.${field}\\s*<>\\s*old\\.${field}`));
 }
 assert.match(sql, /on conflict \(binding_id, refresh_id\) do nothing returning id/i);
-assert.match(sql, /where binding_id = p_binding_id and refresh_id = p_refresh_id[\s\S]*content_sha256 = p_content_sha256[\s\S]*refresh_envelope_sha256 = p_refresh_envelope_sha256/i);
+assert.match(sql, /where o\.binding_id = p_binding_id and o\.refresh_id = p_refresh_id[\s\S]*o\.content_sha256 = db_content_sha256[\s\S]*o\.refresh_envelope_sha256 = db_refresh_envelope_sha256/i);
 assert.match(sql, /Refresh identity replay conflicts with its persisted envelope/i);
 assert.match(sql, /for member in select value from jsonb_array_elements\(p_roster\)/i);
 const rpc = sql.slice(sql.indexOf('create or replace function private.persist_mightpulse_alliance_observation'), sql.indexOf('create or replace function public.reject_alliance_observation_mutation'));
@@ -164,6 +140,9 @@ for (const field of ['provider', 'provider_kingdom_number', 'provider_tag', 'pro
   assert.match(rpc, new RegExp(`jsonb_typeof\\(p_observation->'${field}'\\)`), `RPC validates ${field} primitive`);
 }
 assert.match(rpc, /jsonb_typeof\(p_observation->'provider'\) is distinct from 'string'/i);
+assert.match(rpc, /jsonb_typeof\(p_observation->'source'\) is distinct from 'string'/i);
+assert.match(rpc, /char_length\(p_observation->>'source'\) not between 1 and 120/i);
+assert.match(rpc, /p_observation->>'source' <> btrim\(p_observation->>'source'\)/i);
 assert.match(rpc, /jsonb_typeof\(p_observation->'provider_kingdom_number'\) is distinct from 'number'/i);
 assert.match(rpc, /p_observation->>'provider' is distinct from binding\.provider/i);
 assert.match(rpc, /p_observation->>'provider_kingdom_number'\)::integer is distinct from binding\.provider_kingdom_number/i);
@@ -197,6 +176,12 @@ assert.match(rpc, /match_status[\s\S]*not in \('unmatched', 'matched', 'ambiguou
 assert.match(rpc, /coalesce\(member->>'match_status', 'unmatched'\)/i);
 assert.match(rpc, /from public\.player_accounts account[\s\S]*where account\.id = \(member->>'player_account_id'\)\:\:uuid[\s\S]*for share/i);
 assert.match(rpc, /matched_player_id is distinct from governor_id/i);
+assert.match(rpc, /mightpulse-alliance-content-db-jsonb-v1/i);
+assert.match(rpc, /mightpulse-alliance-refresh-db-jsonb-v1/i);
+assert.match(rpc, /extensions\.digest\(convert_to\(governed_content::text, 'UTF8'\), 'sha256'\)/i);
+assert.match(rpc, /jsonb_agg\([\s\S]*order by member->>'governor_id' collate "C"/i);
+assert.doesNotMatch(rpc, /p_content_sha256|p_refresh_envelope_sha256/i);
+assert.ok(sql.indexOf('db_content_sha256 :=') < sql.indexOf('insert into public.alliance_intelligence_observations'), 'content hash is database computed before parent insert');
 assert.match(rpc, /Matched Alliance roster member Player Account does not belong to its Governor/i);
 assert.ok(rpc.indexOf('Matched Alliance roster member Player Account does not belong') < rpc.indexOf('insert into public.alliance_roster_observations'), 'Player Account identity mismatch must fail before roster persistence');
 assert.doesNotMatch(rpc, /public\.player_accounts\s+(insert|update|delete)/i, 'Player Accounts remain read-only');

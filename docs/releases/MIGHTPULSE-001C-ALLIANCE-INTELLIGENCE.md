@@ -294,6 +294,12 @@ while `refresh_envelope_sha256` detects conflicting replay under the same
 refresh identity. Later refreshes with unchanged provider facts therefore
 remain distinct immutable observations even when they have the same
 `content_sha256`.
+Both persistence fingerprints are database-owned: the private RPC accepts no
+caller hash candidates. It hashes explicit governed JSONB v1 objects, orders
+roster members by Governor ID using deterministic `C` collation, and keeps
+refresh-local timestamps and ages out of content identity. The refresh envelope
+uses a separate database-owned JSONB v1 object containing the computed content
+hash and governed freshness/timing evidence.
 Roster rows are attached to one parent observation, reject duplicate Governor,
 provider UID, and provider FID identities within that snapshot, and can only
 reference an existing `player_accounts` row. Missing matches remain unmatched;
