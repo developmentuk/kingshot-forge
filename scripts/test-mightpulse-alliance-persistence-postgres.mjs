@@ -22,6 +22,49 @@ insert into public.alliance_provider_bindings
 values
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'mightpulse', 123, 'MiXeD', 'aid-1', 'fixture', now());
 
+create or replace function public.assert_invalid_alliance_timestamp(p_field text, p_bad_value jsonb, p_refresh_id uuid)
+returns void language plpgsql as $$
+declare
+  before_observations integer;
+  before_roster integer;
+  rejected boolean := false;
+  observation jsonb := jsonb_build_object('provider','mightpulse','provider_kingdom_number',123,'provider_tag','MiXeD','provider_alliance_id','aid-1','source','mightpulse-alliance-provider','freshness_shape','scalar','info_fresh',null,'roster_fresh',null,'provider_fresh',true,'member_count',2,'provider_cached_at',null,'provider_age_seconds',null,'provider_fetched_at','2026-08-31T12:00:00Z','observed_at','2026-08-31T12:00:00Z');
+  roster jsonb := jsonb_build_array(jsonb_build_object('governor_id','Å','nickname','É','power',4,'kills',5,'online',true), jsonb_build_object('governor_id','Ä','last_active_value',false,'online',false));
+begin
+  observation := jsonb_set(observation, array[p_field], p_bad_value, true);
+  select count(*) into before_observations from public.alliance_intelligence_observations;
+  select count(*) into before_roster from public.alliance_roster_observations;
+  begin
+    perform private.persist_mightpulse_alliance_observation('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', observation, roster, p_refresh_id);
+  exception when sqlstate '22023' then
+    if sqlerrm <> 'Invalid Alliance observation timestamp.' then raise; end if;
+    rejected := true;
+  end;
+  if not rejected then raise exception 'invalid timestamp was accepted'; end if;
+  if (select count(*) from public.alliance_intelligence_observations) <> before_observations
+    or (select count(*) from public.alliance_roster_observations) <> before_roster then
+    raise exception 'invalid timestamp partially persisted';
+  end if;
+end $$;
+
+select private.persist_mightpulse_alliance_observation(
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  jsonb_build_object('provider','mightpulse','provider_kingdom_number',123,'provider_tag','MiXeD','provider_alliance_id','aid-1','source','mightpulse-alliance-provider','freshness_shape','scalar','info_fresh',null,'roster_fresh',null,'provider_fresh',true,'member_count',2,'provider_cached_at','2026-08-31T11:59:00Z','provider_age_seconds',60,'provider_fetched_at','2026-08-31T12:00:00Z','observed_at','2026-08-31T12:00:00Z'),
+  jsonb_build_array(jsonb_build_object('governor_id','Å','nickname','É','power',4,'kills',5,'online',true), jsonb_build_object('governor_id','Ä','last_active_value',false,'online',false)),
+  '33333333-3333-4333-8333-333333333333');
+
+select provider_cached_at from public.alliance_intelligence_observations
+where refresh_id = '33333333-3333-4333-8333-333333333333' and isfinite(provider_cached_at);
+
+select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"infinity"'::jsonb, '44444444-4444-4444-8444-444444444444');
+select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"-infinity"'::jsonb, '55555555-5555-4555-8555-555555555555');
+select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"not-a-timestamp"'::jsonb, '66666666-6666-4666-8666-666666666666');
+select public.assert_invalid_alliance_timestamp('provider_fetched_at', '123'::jsonb, '77777777-7777-4777-8777-777777777777');
+select public.assert_invalid_alliance_timestamp('observed_at', 'true'::jsonb, '88888888-8888-4888-8888-888888888888');
+select public.assert_invalid_alliance_timestamp('provider_cached_at', '"infinity"'::jsonb, '99999999-9999-4999-8999-999999999999');
+select public.assert_invalid_alliance_timestamp('provider_cached_at', '"not-a-timestamp"'::jsonb, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab');
+select public.assert_invalid_alliance_timestamp('provider_cached_at', '123'::jsonb, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbc');
+
 do $$
 declare first_id uuid; second_id uuid; first_hash text; second_hash text; first_envelope text; second_envelope text; source_rejected boolean := false;
 begin

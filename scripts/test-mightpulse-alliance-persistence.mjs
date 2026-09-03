@@ -13,6 +13,16 @@ const base = {
 };
 
 const prepared = prepareAllianceObservation(base, new Map());
+for (const value of ['2026-08-31T12:00:00Z', 'infinity', '-infinity', 'not-a-timestamp', 123, true, {}]) {
+  if (value === '2026-08-31T12:00:00Z') assert.doesNotThrow(() => prepareAllianceObservation({ ...base, providerCachedAt: value }, new Map()));
+  else assert.throws(() => prepareAllianceObservation({ ...base, providerCachedAt: value }, new Map()), /provider cached timestamp/);
+}
+for (const field of ['providerFetchedAt', 'observedAt']) {
+  assert.doesNotThrow(() => prepareAllianceObservation({ ...base, [field]: '2026-08-31T12:00:00Z' }, new Map()));
+  for (const value of ['infinity', '-infinity', 'not-a-timestamp', 123, true, {}]) {
+    assert.throws(() => prepareAllianceObservation({ ...base, [field]: value }, new Map()), new RegExp(field === 'providerFetchedAt' ? 'provider fetched timestamp' : 'observed timestamp'));
+  }
+}
 assert.equal(prepared.providerTag, 'MiXeD');
 assert.equal(prepared.providerFresh, true);
 assert.deepEqual(serializeAllianceObservationForPersistence(prepared).p_observation, {
@@ -141,6 +151,27 @@ for (const field of ['provider', 'provider_kingdom_number', 'provider_tag', 'pro
 }
 assert.match(rpc, /jsonb_typeof\(p_observation->'provider'\) is distinct from 'string'/i);
 assert.match(rpc, /jsonb_typeof\(p_observation->'source'\) is distinct from 'string'/i);
+for (const field of ['provider_fetched_at', 'observed_at']) assert.match(rpc, new RegExp(`jsonb_typeof\\(p_observation->'${field}'\\) is distinct from 'string'`));
+assert.match(rpc, /provider_cached_at[\s\S]*jsonb_typeof\(p_observation->'provider_cached_at'\) not in \('null', 'string'\)/i);
+assert.match(rpc, /Invalid Alliance observation timestamp\./i);
+assert.match(rpc, /validated_provider_cached_at timestamptz/);
+assert.match(rpc, /validated_provider_fetched_at timestamptz/);
+assert.match(rpc, /validated_observed_at timestamptz/);
+assert.match(rpc, /when invalid_datetime_format or datetime_field_overflow/);
+assert.match(rpc, /isfinite\(validated_provider_fetched_at\)[\s\S]*isfinite\(validated_observed_at\)/i);
+assert.ok(rpc.indexOf('Invalid Alliance observation timestamp.') < rpc.indexOf('db_content_sha256 :='), 'timestamp validation must precede fingerprint calculation');
+const parentInsert = rpc.slice(rpc.indexOf('insert into public.alliance_intelligence_observations'), rpc.indexOf('if observation_id is null'));
+const rosterInsertSection = rpc.slice(rpc.indexOf('insert into public.alliance_roster_observations'));
+for (const insertSection of [parentInsert, rosterInsertSection]) {
+  assert.doesNotMatch(insertSection, /p_observation->>'provider_(cached_at|fetched_at)'\)::timestamptz|p_observation->>'observed_at'\)::timestamptz/i);
+  assert.match(insertSection, /validated_provider_cached_at[\s\S]*validated_provider_fetched_at[\s\S]*validated_observed_at/i);
+}
+for (const table of ['alliance_intelligence_observations', 'alliance_roster_observations']) {
+  const tableSql = sql.slice(sql.indexOf(`create table public.${table}`), sql.indexOf(`create table public.${table}`) + 2600);
+  assert.match(tableSql, /provider_cached_at is null or isfinite\(provider_cached_at\)/i);
+  assert.match(tableSql, /isfinite\(provider_fetched_at\)/i);
+  assert.match(tableSql, /isfinite\(observed_at\)/i);
+}
 assert.match(rpc, /char_length\(p_observation->>'source'\) not between 1 and 120/i);
 assert.match(rpc, /p_observation->>'source' <> btrim\(p_observation->>'source'\)/i);
 assert.match(rpc, /jsonb_typeof\(p_observation->'provider_kingdom_number'\) is distinct from 'number'/i);
@@ -174,7 +205,7 @@ assert.match(rpc, /kingdom_number[\s\S]*trunc\([\s\S]*< 1[\s\S]*> 9999/i);
 assert.match(rpc, /player_account_id[\s\S]*!~\*/i);
 assert.match(rpc, /match_status[\s\S]*not in \('unmatched', 'matched', 'ambiguous', 'invalid'\)/i);
 assert.match(rpc, /coalesce\(member->>'match_status', 'unmatched'\)/i);
-assert.match(rpc, /from public\.player_accounts account[\s\S]*where account\.id = \(member->>'player_account_id'\)\:\:uuid[\s\S]*for share/i);
+assert.match(rpc, /from public\.player_accounts account[\s\S]*where account\.id = \(member->>'player_account_id'\)::uuid[\s\S]*for share/i);
 assert.match(rpc, /matched_player_id is distinct from governor_id/i);
 assert.match(rpc, /mightpulse-alliance-content-db-jsonb-v1/i);
 assert.match(rpc, /mightpulse-alliance-refresh-db-jsonb-v1/i);

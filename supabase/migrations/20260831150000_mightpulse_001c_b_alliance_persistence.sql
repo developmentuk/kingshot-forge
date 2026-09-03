@@ -85,6 +85,9 @@ create table public.alliance_intelligence_observations (
   provider_fetched_at timestamptz not null,
   observed_at timestamptz not null,
   content_sha256 text not null check (content_sha256 ~ '^[0-9a-f]{64}$'),
+  check (provider_cached_at is null or isfinite(provider_cached_at)),
+  check (isfinite(provider_fetched_at)),
+  check (isfinite(observed_at)),
   check (
     (freshness_shape = 'sectioned' and info_fresh is not null and roster_fresh is not null and provider_fresh is not null and provider_fresh is not distinct from (info_fresh and roster_fresh))
     or (freshness_shape = 'scalar' and info_fresh is null and roster_fresh is null and provider_fresh is not null)
@@ -229,7 +232,10 @@ create table public.alliance_roster_observations (
   player_account_id uuid null references public.player_accounts(id),
   match_status text not null default 'unmatched'
     check (match_status = any (array['unmatched'::text, 'matched'::text, 'ambiguous'::text, 'invalid'::text])),
-  check ((match_status = 'matched') = (player_account_id is not null))
+  check ((match_status = 'matched') = (player_account_id is not null)),
+  check (provider_cached_at is null or isfinite(provider_cached_at)),
+  check (isfinite(provider_fetched_at)),
+  check (isfinite(observed_at))
 );
 
 comment on table public.alliance_roster_observations is
@@ -277,6 +283,9 @@ declare
   db_content_sha256 text;
   refresh_envelope jsonb;
   db_refresh_envelope_sha256 text;
+  validated_provider_cached_at timestamptz;
+  validated_provider_fetched_at timestamptz;
+  validated_observed_at timestamptz;
 begin
   if jsonb_typeof(p_observation) is distinct from 'object' or jsonb_typeof(p_roster) is distinct from 'array'
     or p_refresh_id is null then
@@ -375,6 +384,30 @@ begin
     end if;
   end if;
 
+  if jsonb_typeof(p_observation->'provider_fetched_at') is distinct from 'string'
+    or jsonb_typeof(p_observation->'observed_at') is distinct from 'string'
+    or (p_observation ? 'provider_cached_at'
+      and jsonb_typeof(p_observation->'provider_cached_at') not in ('null', 'string')) then
+    raise exception 'Invalid Alliance observation timestamp.' using errcode = '22023';
+  end if;
+  begin
+    validated_provider_fetched_at := (p_observation->>'provider_fetched_at')::timestamptz;
+    validated_observed_at := (p_observation->>'observed_at')::timestamptz;
+    if p_observation ? 'provider_cached_at' and jsonb_typeof(p_observation->'provider_cached_at') = 'string' then
+      validated_provider_cached_at := (p_observation->>'provider_cached_at')::timestamptz;
+    else
+      validated_provider_cached_at := null;
+    end if;
+  exception
+    when invalid_datetime_format or datetime_field_overflow then
+      raise exception 'Invalid Alliance observation timestamp.' using errcode = '22023';
+  end;
+  if not isfinite(validated_provider_fetched_at)
+    or not isfinite(validated_observed_at)
+    or (validated_provider_cached_at is not null and not isfinite(validated_provider_cached_at)) then
+    raise exception 'Invalid Alliance observation timestamp.' using errcode = '22023';
+  end if;
+
   select jsonb_agg(jsonb_build_object(
       'governorId', roster_value->'governor_id',
       'providerInternalUid', roster_value->'provider_internal_uid',
@@ -442,9 +475,9 @@ begin
     p_observation->>'flag_reference', (p_observation->>'power_rank')::integer,
     p_observation->>'source', p_observation->>'freshness_shape',
     (p_observation->>'info_fresh')::boolean, (p_observation->>'roster_fresh')::boolean,
-    (p_observation->>'provider_fresh')::boolean, (p_observation->>'provider_cached_at')::timestamptz,
-    (p_observation->>'provider_age_seconds')::integer, (p_observation->>'provider_fetched_at')::timestamptz,
-    (p_observation->>'observed_at')::timestamptz, db_content_sha256
+    (p_observation->>'provider_fresh')::boolean, validated_provider_cached_at,
+    (p_observation->>'provider_age_seconds')::integer, validated_provider_fetched_at,
+    validated_observed_at, db_content_sha256
   ) on conflict (binding_id, refresh_id) do nothing returning id into observation_id;
 
   if observation_id is null then
@@ -542,8 +575,8 @@ begin
       member->>'alliance_rank_label', (member->>'kingdom_number')::integer,
       member->>'avatar_reference', case when member ? 'last_active_value' and jsonb_typeof(member->'last_active_value') <> 'null' then member->'last_active_value' else null end, (member->>'online')::boolean,
       p_observation->>'source', (p_observation->>'provider_fresh')::boolean,
-      (p_observation->>'provider_cached_at')::timestamptz, (p_observation->>'provider_age_seconds')::integer,
-      (p_observation->>'provider_fetched_at')::timestamptz, (p_observation->>'observed_at')::timestamptz,
+      validated_provider_cached_at, (p_observation->>'provider_age_seconds')::integer,
+      validated_provider_fetched_at, validated_observed_at,
       (member->>'player_account_id')::uuid, coalesce(member->>'match_status', 'unmatched')
     );
   end loop;
