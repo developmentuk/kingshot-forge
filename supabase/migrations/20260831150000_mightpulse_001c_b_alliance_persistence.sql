@@ -1,0 +1,634 @@
+begin;
+
+-- Persistence fingerprints are database-owned. The JSONB v1 representation is
+-- deliberately independent from the TypeScript provider fingerprint contract.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+
+-- MIGHTPULSE-001C-B foundation only. This file is intentionally unapplied to
+-- production. No provider/runtime, membership, authority, or public-view path
+-- is introduced here.
+
+create table public.alliance_provider_bindings (
+  id uuid primary key default gen_random_uuid(),
+  alliance_id uuid not null references public.alliances(id),
+  provider text not null check (provider = 'mightpulse'),
+  provider_kingdom_number integer not null check (provider_kingdom_number between 1 and 9999),
+  provider_tag text not null check (
+    char_length(provider_tag) between 2 and 12
+    and provider_tag = btrim(provider_tag)
+    and provider_tag !~ '[[:cntrl:]]'
+  ),
+  provider_alliance_id text not null check (
+    char_length(provider_alliance_id) between 1 and 120
+    and provider_alliance_id = btrim(provider_alliance_id)
+    and provider_alliance_id !~ '[[:cntrl:]]'
+  ),
+  binding_status text not null default 'active'
+    check (binding_status = any (array['active'::text, 'superseded'::text, 'suspended'::text])),
+  source text not null check (char_length(source) between 1 and 120),
+  first_seen_at timestamptz not null,
+  last_confirmed_at timestamptz null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+comment on table public.alliance_provider_bindings is
+  'Server-only exact-case MightPulse identity bindings. Provider identity is separate from the Forge Alliance tag and is never an ownership or authority claim.';
+comment on column public.alliance_provider_bindings.provider_tag is
+  'The exact case-sensitive provider tag used for lookup. Never lower- or upper-case this value.';
+comment on column public.alliance_provider_bindings.provider_alliance_id is
+  'MightPulse aid. Globally unique for this provider so one aid cannot silently bind to multiple Forge Alliances.';
+
+create unique index alliance_provider_bindings_active_alliance_idx
+  on public.alliance_provider_bindings (alliance_id, provider)
+  where binding_status = 'active';
+-- The same aid may have multiple exact-case historical provider identity records,
+-- but never a provider_alliance_id_collision across Forge Alliances. The
+-- insert/update trigger takes a transaction-scoped advisory lock first.
+-- Historical provider identity records
+--
+-- The same aid may have multiple exact-case historical bindings, but never
+-- across Forge Alliances. The trigger below enforces that collision boundary.
+create index alliance_provider_bindings_provider_aid_idx
+  on public.alliance_provider_bindings (provider, provider_alliance_id);
+create unique index alliance_provider_bindings_exact_lookup_idx
+  on public.alliance_provider_bindings (provider, provider_kingdom_number, provider_tag)
+  where binding_status = 'active';
+create index alliance_provider_bindings_normalized_lookup_idx
+  on public.alliance_provider_bindings (provider, provider_kingdom_number, lower(provider_tag));
+
+create table public.alliance_intelligence_observations (
+  id uuid primary key default gen_random_uuid(),
+  binding_id uuid not null references public.alliance_provider_bindings(id),
+  alliance_id uuid not null references public.alliances(id),
+  provider text not null check (provider = 'mightpulse'),
+  provider_kingdom_number integer not null check (provider_kingdom_number between 1 and 9999),
+  provider_tag text not null check (provider_tag = btrim(provider_tag) and provider_tag !~ '[[:cntrl:]]'),
+  provider_alliance_id text not null check (provider_alliance_id = btrim(provider_alliance_id) and provider_alliance_id !~ '[[:cntrl:]]'),
+  refresh_id uuid not null,
+  refresh_envelope_sha256 text not null check (refresh_envelope_sha256 ~ '^[0-9a-f]{64}$'),
+  alliance_name text null,
+  alliance_power bigint null check (alliance_power is null or alliance_power between 0 and 9007199254740991),
+  member_count integer null check (member_count is null or member_count >= 0),
+  leader_identity text null,
+  leader_name text null,
+  flag_reference text null,
+  power_rank integer null check (power_rank is null or power_rank between 1 and 2147483647),
+  source text not null check (char_length(source) between 1 and 120),
+  freshness_shape text not null check (freshness_shape = any (array['sectioned'::text, 'scalar'::text, 'unknown'::text])),
+  info_fresh boolean null,
+  roster_fresh boolean null,
+  provider_fresh boolean null,
+  provider_cached_at timestamptz null,
+  provider_age_seconds integer null check (provider_age_seconds is null or provider_age_seconds >= 0),
+  provider_fetched_at timestamptz not null,
+  observed_at timestamptz not null,
+  content_sha256 text not null check (content_sha256 ~ '^[0-9a-f]{64}$'),
+  check (provider_cached_at is null or isfinite(provider_cached_at)),
+  check (isfinite(provider_fetched_at)),
+  check (isfinite(observed_at)),
+  check (
+    (freshness_shape = 'sectioned' and info_fresh is not null and roster_fresh is not null and provider_fresh is not null and provider_fresh is not distinct from (info_fresh and roster_fresh))
+    or (freshness_shape = 'scalar' and info_fresh is null and roster_fresh is null and provider_fresh is not null)
+    or (freshness_shape = 'unknown' and info_fresh is null and roster_fresh is null and provider_fresh is null)
+  )
+);
+
+comment on table public.alliance_intelligence_observations is
+  'Immutable, server-only allowlisted Alliance info+roster observations. Raw provider payloads are not stored.';
+comment on column public.alliance_intelligence_observations.provider_fresh is
+  'Nullable provider freshness. Null is unknown; it is never inferred from a missing timestamp or age.';
+comment on column public.alliance_intelligence_observations.content_sha256 is
+  'Fingerprint of governed provider facts; refresh_id, not content, defines retry idempotency.';
+
+create unique index alliance_intelligence_observations_refresh_idx
+  on public.alliance_intelligence_observations (binding_id, refresh_id);
+create index alliance_intelligence_observations_content_idx
+  on public.alliance_intelligence_observations (binding_id, content_sha256);
+create index alliance_intelligence_observations_latest_idx
+  on public.alliance_intelligence_observations (binding_id, provider_fetched_at desc, observed_at desc);
+
+create or replace function public.reject_alliance_provider_binding_identity_change()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  if new.alliance_id <> old.alliance_id
+    or new.provider <> old.provider
+    or new.provider_kingdom_number <> old.provider_kingdom_number
+    or new.provider_tag <> old.provider_tag
+    or new.provider_alliance_id <> old.provider_alliance_id
+    or new.source <> old.source
+    or new.first_seen_at <> old.first_seen_at
+    or new.created_at <> old.created_at then
+    raise exception 'MightPulse provider binding identity is immutable; create a new historical binding.' using errcode = '55000';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger alliance_provider_bindings_identity_guard
+before update on public.alliance_provider_bindings
+for each row execute function public.reject_alliance_provider_binding_identity_change();
+
+create or replace function public.reject_alliance_provider_aid_collision()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+declare
+  aid_lock_key text := 'mightpulse:aid:' || new.provider || ':' || new.provider_alliance_id;
+  tag_lock_key text := 'mightpulse:tag:' || new.provider || ':' || new.provider_kingdom_number::text || ':' || lower(new.provider_tag);
+begin
+  -- Serialize both logical identities before checking existing history. Hash
+  -- collisions only over-serialize and cannot weaken correctness.
+  -- A stable lexical order also prevents lock-order deadlocks when a refresh
+  -- changes both identity dimensions.
+  if aid_lock_key < tag_lock_key then
+    perform pg_advisory_xact_lock(hashtextextended(aid_lock_key, 0));
+    perform pg_advisory_xact_lock(hashtextextended(tag_lock_key, 0));
+  else
+    perform pg_advisory_xact_lock(hashtextextended(tag_lock_key, 0));
+    perform pg_advisory_xact_lock(hashtextextended(aid_lock_key, 0));
+  end if;
+  if exists (
+    select 1 from public.alliance_provider_bindings b
+    where b.provider = new.provider
+      and b.provider_alliance_id = new.provider_alliance_id
+      and b.alliance_id <> new.alliance_id
+      and b.id <> new.id
+  ) then
+    raise exception 'MightPulse aid is already bound to a different Forge Alliance.' using errcode = '23505';
+  end if;
+  if exists (
+    select 1 from public.alliance_provider_bindings b
+    where b.provider = new.provider
+      and b.provider_kingdom_number = new.provider_kingdom_number
+      and lower(b.provider_tag) = lower(new.provider_tag)
+      and b.alliance_id <> new.alliance_id
+      and b.id <> new.id
+  ) then
+    raise exception 'MightPulse case-normalized tag is already bound to a different Forge Alliance.' using errcode = '23505';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger alliance_provider_bindings_aid_collision_guard
+before insert or update on public.alliance_provider_bindings
+for each row execute function public.reject_alliance_provider_aid_collision();
+
+create or replace function public.validate_alliance_observation_binding()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+declare
+  binding public.alliance_provider_bindings;
+begin
+  select * into binding
+  from public.alliance_provider_bindings
+  where id = new.binding_id;
+  if binding.alliance_id is null
+    or new.alliance_id <> binding.alliance_id
+    or new.provider <> binding.provider
+    or new.provider_kingdom_number <> binding.provider_kingdom_number
+    or new.provider_tag <> binding.provider_tag
+    or new.provider_alliance_id <> binding.provider_alliance_id then
+    raise exception 'Alliance observation does not match its provider binding.' using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger alliance_intelligence_observations_binding_guard
+before insert on public.alliance_intelligence_observations
+for each row execute function public.validate_alliance_observation_binding();
+
+create table public.alliance_roster_observations (
+  id uuid primary key default gen_random_uuid(),
+  alliance_observation_id uuid not null references public.alliance_intelligence_observations(id),
+  governor_id text not null check (char_length(governor_id) between 1 and 120 and governor_id = btrim(governor_id)),
+  provider_internal_uid text null check (provider_internal_uid is null or (char_length(provider_internal_uid) between 1 and 120 and provider_internal_uid = btrim(provider_internal_uid))),
+  provider_fid text null check (provider_fid is null or (char_length(provider_fid) between 1 and 120 and provider_fid = btrim(provider_fid))),
+  nickname text null,
+  power bigint null check (power is null or power between 0 and 9007199254740991),
+  town_center_level integer null check (town_center_level is null or town_center_level between 1 and 84),
+  kills bigint null check (kills is null or kills between 0 and 9007199254740991),
+  alliance_rank integer null check (alliance_rank is null or alliance_rank between 1 and 5),
+  alliance_rank_label text null,
+  kingdom_number integer null check (kingdom_number is null or kingdom_number between 1 and 9999),
+  avatar_reference text null,
+  last_active_value jsonb null check (last_active_value is null or jsonb_typeof(last_active_value) = any (array['string'::text, 'number'::text, 'boolean'::text])),
+  online boolean null,
+  source text not null check (char_length(source) between 1 and 120),
+  roster_fresh boolean null,
+  provider_fresh boolean null,
+  provider_cached_at timestamptz null,
+  provider_age_seconds integer null check (provider_age_seconds is null or provider_age_seconds >= 0),
+  provider_fetched_at timestamptz not null,
+  observed_at timestamptz not null,
+  player_account_id uuid null references public.player_accounts(id),
+  match_status text not null default 'unmatched'
+    check (match_status = any (array['unmatched'::text, 'matched'::text, 'ambiguous'::text, 'invalid'::text])),
+  check ((match_status = 'matched') = (player_account_id is not null)),
+  check (provider_cached_at is null or isfinite(provider_cached_at)),
+  check (isfinite(provider_fetched_at)),
+  check (isfinite(observed_at))
+);
+
+comment on table public.alliance_roster_observations is
+  'Immutable server-only whole-roster member facts. player_account_id is a reference to an existing Forge Player Account only; provider fields never overwrite it.';
+comment on column public.alliance_roster_observations.last_active_value is
+  'Allowlisted provider value preserved as supplied; no fabricated timestamp or age is created.';
+comment on column public.alliance_roster_observations.roster_fresh is
+  'Section-specific roster freshness evidence. Null means no roster-specific evidence was supplied.';
+comment on column public.alliance_roster_observations.provider_fresh is
+  'Aggregate/scalar provider freshness. For sectioned evidence, use roster_fresh for roster facts.';
+
+create unique index alliance_roster_observations_governor_idx
+  on public.alliance_roster_observations (alliance_observation_id, governor_id);
+create unique index alliance_roster_observations_uid_idx
+  on public.alliance_roster_observations (alliance_observation_id, provider_internal_uid)
+  where provider_internal_uid is not null;
+create unique index alliance_roster_observations_fid_idx
+  on public.alliance_roster_observations (alliance_observation_id, provider_fid)
+  where provider_fid is not null;
+create index alliance_roster_observations_player_idx
+  on public.alliance_roster_observations (player_account_id)
+  where player_account_id is not null;
+
+-- The only write boundary for a complete observation. The function is
+-- SECURITY DEFINER so the tables need not grant INSERT to service_role.
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+grant usage on schema private to service_role;
+
+create or replace function private.persist_mightpulse_alliance_observation(
+  p_binding_id uuid,
+  p_observation jsonb,
+  p_roster jsonb,
+  p_refresh_id uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  binding public.alliance_provider_bindings;
+  observation_id uuid;
+  member jsonb;
+  governor_id text;
+  matched_player_id text;
+  governed_roster jsonb;
+  governed_content jsonb;
+  db_content_sha256 text;
+  refresh_envelope jsonb;
+  db_refresh_envelope_sha256 text;
+  validated_provider_cached_at timestamptz;
+  validated_provider_fetched_at timestamptz;
+  validated_observed_at timestamptz;
+begin
+  if jsonb_typeof(p_observation) is distinct from 'object' or jsonb_typeof(p_roster) is distinct from 'array'
+    or p_refresh_id is null then
+    raise exception 'Invalid governed Alliance observation envelope.' using errcode = '22023';
+  end if;
+
+  select * into binding from public.alliance_provider_bindings where id = p_binding_id for update;
+  if not found then raise exception 'Unknown Alliance provider binding.' using errcode = '23503'; end if;
+  if binding.binding_status is distinct from 'active' then
+    raise exception 'Inactive Alliance provider binding.' using errcode = '55000';
+  end if;
+
+  if jsonb_typeof(p_observation->'provider') is distinct from 'string'
+    or jsonb_typeof(p_observation->'provider_kingdom_number') is distinct from 'number'
+    or p_observation->>'provider_kingdom_number' !~ '^[0-9]+$'
+    or jsonb_typeof(p_observation->'provider_tag') is distinct from 'string'
+    or jsonb_typeof(p_observation->'provider_alliance_id') is distinct from 'string'
+    or jsonb_typeof(p_observation->'alliance_name') not in ('null', 'string')
+    or jsonb_typeof(p_observation->'leader_identity') not in ('null', 'string')
+    or jsonb_typeof(p_observation->'leader_name') not in ('null', 'string')
+    or jsonb_typeof(p_observation->'flag_reference') not in ('null', 'string')
+    or jsonb_typeof(p_observation->'alliance_power') not in ('null', 'number')
+    or jsonb_typeof(p_observation->'member_count') not in ('null', 'number')
+    or jsonb_typeof(p_observation->'power_rank') not in ('null', 'number')
+    or jsonb_typeof(p_observation->'freshness_shape') is distinct from 'string' then
+    raise exception 'Invalid Alliance observation primitive.' using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_observation->'source') is distinct from 'string'
+    or char_length(p_observation->>'source') not between 1 and 120
+    or p_observation->>'source' <> btrim(p_observation->>'source')
+    or p_observation->>'source' ~ '[[:cntrl:]]' then
+    raise exception 'Invalid Alliance observation source.' using errcode = '22023';
+  end if;
+  if p_observation->>'leader_identity' is not null and (char_length(p_observation->>'leader_identity') not between 1 and 120 or p_observation->>'leader_identity' <> btrim(p_observation->>'leader_identity') or p_observation->>'leader_identity' ~ '[[:cntrl:]]') then
+    raise exception 'Invalid Alliance leader identity.' using errcode = '22023';
+  end if;
+
+  if jsonb_typeof(p_observation->'alliance_power') = 'number'
+    and (p_observation->>'alliance_power' !~ '^[0-9]+$' or (p_observation->>'alliance_power')::numeric > 9007199254740991) then
+    raise exception 'Invalid Alliance power.' using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_observation->'member_count') = 'number'
+    and (p_observation->>'member_count' !~ '^[0-9]+$' or (p_observation->>'member_count')::numeric > 2147483647) then
+    raise exception 'Invalid Alliance member count.' using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_observation->'power_rank') = 'number'
+    and (p_observation->>'power_rank' !~ '^[0-9]+$' or (p_observation->>'power_rank')::numeric < 1 or (p_observation->>'power_rank')::numeric > 2147483647) then
+    raise exception 'Invalid Alliance power rank.' using errcode = '22023';
+  end if;
+
+  if p_observation->>'provider' is distinct from binding.provider
+    or (p_observation->>'provider_kingdom_number')::integer is distinct from binding.provider_kingdom_number
+    or p_observation->>'provider_tag' is distinct from binding.provider_tag
+    or p_observation->>'provider_alliance_id' is distinct from binding.provider_alliance_id then
+    raise exception 'Alliance observation provider identity does not match its selected binding.' using errcode = '22023';
+  end if;
+
+  if p_observation->>'freshness_shape' = 'sectioned' then
+    if jsonb_typeof(p_observation->'info_fresh') is distinct from 'boolean'
+      or jsonb_typeof(p_observation->'roster_fresh') is distinct from 'boolean'
+      or jsonb_typeof(p_observation->'provider_fresh') is distinct from 'boolean'
+      or (p_observation->>'provider_fresh')::boolean is distinct from ((p_observation->>'info_fresh')::boolean and (p_observation->>'roster_fresh')::boolean) then
+      raise exception 'Invalid Alliance freshness tuple.' using errcode = '22023';
+    end if;
+  elsif p_observation->>'freshness_shape' = 'scalar' then
+    if jsonb_typeof(p_observation->'info_fresh') is distinct from 'null'
+      or jsonb_typeof(p_observation->'roster_fresh') is distinct from 'null'
+      or jsonb_typeof(p_observation->'provider_fresh') is distinct from 'boolean' then
+      raise exception 'Invalid Alliance freshness tuple.' using errcode = '22023';
+    end if;
+  elsif p_observation->>'freshness_shape' = 'unknown' then
+    if jsonb_typeof(p_observation->'info_fresh') is distinct from 'null'
+      or jsonb_typeof(p_observation->'roster_fresh') is distinct from 'null'
+      or jsonb_typeof(p_observation->'provider_fresh') is distinct from 'null' then
+      raise exception 'Invalid Alliance freshness tuple.' using errcode = '22023';
+    end if;
+  else
+    raise exception 'Invalid Alliance freshness tuple.' using errcode = '22023';
+  end if;
+
+  if p_observation->>'member_count' is not null
+    and (p_observation->>'member_count' !~ '^[0-9]+$'
+      or (p_observation->>'member_count')::integer <> jsonb_array_length(p_roster)) then
+    raise exception 'Invalid Alliance member count.' using errcode = '22023';
+  end if;
+
+  if p_observation ? 'provider_age_seconds' and jsonb_typeof(p_observation->'provider_age_seconds') is distinct from 'null' then
+    if jsonb_typeof(p_observation->'provider_age_seconds') is distinct from 'number' then
+      raise exception 'Invalid Alliance provider age.' using errcode = '22023';
+    end if;
+    if p_observation->>'provider_age_seconds' !~ '^[0-9]+$' then
+      raise exception 'Invalid Alliance provider age.' using errcode = '22023';
+    end if;
+    if (p_observation->>'provider_age_seconds')::numeric > 2147483647 then
+      raise exception 'Invalid Alliance provider age.' using errcode = '22023';
+    end if;
+  end if;
+
+  if jsonb_typeof(p_observation->'provider_fetched_at') is distinct from 'string'
+    or jsonb_typeof(p_observation->'observed_at') is distinct from 'string'
+    or (p_observation ? 'provider_cached_at'
+      and jsonb_typeof(p_observation->'provider_cached_at') not in ('null', 'string')) then
+    raise exception 'Invalid Alliance observation timestamp.' using errcode = '22023';
+  end if;
+  begin
+    validated_provider_fetched_at := (p_observation->>'provider_fetched_at')::timestamptz;
+    validated_observed_at := (p_observation->>'observed_at')::timestamptz;
+    if p_observation ? 'provider_cached_at' and jsonb_typeof(p_observation->'provider_cached_at') = 'string' then
+      validated_provider_cached_at := (p_observation->>'provider_cached_at')::timestamptz;
+    else
+      validated_provider_cached_at := null;
+    end if;
+  exception
+    when invalid_datetime_format or datetime_field_overflow or invalid_time_zone_displacement then
+      raise exception 'Invalid Alliance observation timestamp.' using errcode = '22023';
+  end;
+  if not isfinite(validated_provider_fetched_at)
+    or not isfinite(validated_observed_at)
+    or (validated_provider_cached_at is not null and not isfinite(validated_provider_cached_at)) then
+    raise exception 'Invalid Alliance observation timestamp.' using errcode = '22023';
+  end if;
+
+  select jsonb_agg(jsonb_build_object(
+      'governorId', roster_value->'governor_id',
+      'providerInternalUid', roster_value->'provider_internal_uid',
+      'providerFid', roster_value->'provider_fid',
+      'nickname', roster_value->'nickname',
+      'power', roster_value->'power',
+      'townCenterLevel', roster_value->'town_center_level',
+      'kills', roster_value->'kills',
+      'allianceRank', roster_value->'alliance_rank',
+      'allianceRankLabel', roster_value->'alliance_rank_label',
+      'kingdomNumber', roster_value->'kingdom_number',
+      'avatarReference', roster_value->'avatar_reference',
+      'lastActiveValue', roster_value->'last_active_value',
+      'online', roster_value->'online',
+      'playerAccountId', roster_value->'player_account_id',
+      'matchStatus', coalesce(roster_value->'match_status', '"unmatched"'::jsonb)
+    ) order by roster_value->>'governor_id' collate "C")
+    into governed_roster
+    from jsonb_array_elements(p_roster) as roster_member(roster_value);
+  governed_content := jsonb_build_object(
+    'fingerprintVersion', 'mightpulse-alliance-content-db-jsonb-v1',
+    'provider', p_observation->'provider',
+    'providerKingdomNumber', p_observation->'provider_kingdom_number',
+    'providerTag', p_observation->'provider_tag',
+    'providerAllianceId', p_observation->'provider_alliance_id',
+    'allianceName', p_observation->'alliance_name',
+    'alliancePower', p_observation->'alliance_power',
+    'memberCount', p_observation->'member_count',
+    'leaderIdentity', p_observation->'leader_identity',
+    'leaderName', p_observation->'leader_name',
+    'flagReference', p_observation->'flag_reference',
+    'powerRank', p_observation->'power_rank',
+    'source', p_observation->'source',
+    'freshnessShape', p_observation->'freshness_shape',
+    'infoFresh', p_observation->'info_fresh',
+    'rosterFresh', p_observation->'roster_fresh',
+    'providerFresh', p_observation->'provider_fresh',
+    'roster', coalesce(governed_roster, '[]'::jsonb)
+  );
+  db_content_sha256 := encode(extensions.digest(convert_to(governed_content::text, 'UTF8'), 'sha256'), 'hex');
+  refresh_envelope := jsonb_build_object(
+    'fingerprintVersion', 'mightpulse-alliance-refresh-db-jsonb-v1',
+    'contentSha256', db_content_sha256,
+    'providerFresh', p_observation->'provider_fresh',
+    'infoFresh', p_observation->'info_fresh',
+    'rosterFresh', p_observation->'roster_fresh',
+    'providerCachedAt', p_observation->'provider_cached_at',
+    'providerAgeSeconds', p_observation->'provider_age_seconds',
+    'providerFetchedAt', p_observation->'provider_fetched_at',
+    'observedAt', p_observation->'observed_at'
+  );
+  db_refresh_envelope_sha256 := encode(extensions.digest(convert_to(refresh_envelope::text, 'UTF8'), 'sha256'), 'hex');
+
+  insert into public.alliance_intelligence_observations (
+    binding_id, alliance_id, provider, provider_kingdom_number, provider_tag,
+    provider_alliance_id, refresh_id, refresh_envelope_sha256, alliance_name, alliance_power, member_count,
+    leader_identity, leader_name, flag_reference, power_rank, source, freshness_shape,
+    info_fresh, roster_fresh, provider_fresh, provider_cached_at,
+    provider_age_seconds, provider_fetched_at, observed_at, content_sha256
+  ) values (
+    binding.id, binding.alliance_id, binding.provider, binding.provider_kingdom_number,
+    binding.provider_tag, binding.provider_alliance_id, p_refresh_id, db_refresh_envelope_sha256,
+    p_observation->>'alliance_name', (p_observation->>'alliance_power')::bigint,
+    (p_observation->>'member_count')::integer, p_observation->>'leader_identity', p_observation->>'leader_name',
+    p_observation->>'flag_reference', (p_observation->>'power_rank')::integer,
+    p_observation->>'source', p_observation->>'freshness_shape',
+    (p_observation->>'info_fresh')::boolean, (p_observation->>'roster_fresh')::boolean,
+    (p_observation->>'provider_fresh')::boolean, validated_provider_cached_at,
+    (p_observation->>'provider_age_seconds')::integer, validated_provider_fetched_at,
+    validated_observed_at, db_content_sha256
+  ) on conflict (binding_id, refresh_id) do nothing returning id into observation_id;
+
+  if observation_id is null then
+    select o.id into observation_id from public.alliance_intelligence_observations o
+      where o.binding_id = p_binding_id and o.refresh_id = p_refresh_id
+        and o.content_sha256 = db_content_sha256
+        and o.refresh_envelope_sha256 = db_refresh_envelope_sha256;
+    if observation_id is null then
+      raise exception 'Refresh identity replay conflicts with its persisted envelope.' using errcode = '23505';
+    end if;
+    return observation_id;
+  end if;
+
+  for member in select value from jsonb_array_elements(p_roster) loop
+    if jsonb_typeof(member) is distinct from 'object' or jsonb_typeof(member->'governor_id') is distinct from 'string'
+      or nullif(member->>'governor_id', '') is null
+      or jsonb_typeof(member->'provider_internal_uid') not in ('null', 'string')
+      or jsonb_typeof(member->'provider_fid') not in ('null', 'string')
+      or jsonb_typeof(member->'nickname') not in ('null', 'string')
+      or jsonb_typeof(member->'power') not in ('null', 'number')
+      or jsonb_typeof(member->'town_center_level') not in ('null', 'number')
+      or jsonb_typeof(member->'kills') not in ('null', 'number')
+      or jsonb_typeof(member->'alliance_rank') not in ('null', 'number')
+      or jsonb_typeof(member->'alliance_rank_label') not in ('null', 'string')
+      or (member ? 'last_active_value' and jsonb_typeof(member->'last_active_value') not in ('null', 'string', 'number', 'boolean')) then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if member ? 'kingdom_number' and jsonb_typeof(member->'kingdom_number') is distinct from 'null' and jsonb_typeof(member->'kingdom_number') is distinct from 'number' then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if member ? 'kingdom_number' and jsonb_typeof(member->'kingdom_number') = 'number'
+      and (((member->>'kingdom_number')::numeric <> trunc((member->>'kingdom_number')::numeric))
+        or (member->>'kingdom_number')::numeric < 1 or (member->>'kingdom_number')::numeric > 9999) then
+      raise exception 'Invalid Alliance roster member kingdom.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'power') = 'number'
+      and (member->>'power' !~ '^[0-9]+$' or (member->>'power')::numeric > 9007199254740991) then
+      raise exception 'Invalid Alliance roster member power.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'kills') = 'number'
+      and (member->>'kills' !~ '^[0-9]+$' or (member->>'kills')::numeric > 9007199254740991) then
+      raise exception 'Invalid Alliance roster member kills.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'town_center_level') = 'number'
+      and (member->>'town_center_level' !~ '^[0-9]+$' or (member->>'town_center_level')::numeric < 1 or (member->>'town_center_level')::numeric > 84) then
+      raise exception 'Invalid Alliance roster member town center level.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'alliance_rank') = 'number'
+      and (member->>'alliance_rank' !~ '^[0-9]+$' or (member->>'alliance_rank')::numeric < 1 or (member->>'alliance_rank')::numeric > 5) then
+      raise exception 'Invalid Alliance roster member alliance rank.' using errcode = '22023';
+    end if;
+    if member ? 'avatar_reference' and jsonb_typeof(member->'avatar_reference') is distinct from 'null' and jsonb_typeof(member->'avatar_reference') is distinct from 'string' then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if member ? 'online' and jsonb_typeof(member->'online') is distinct from 'null' and jsonb_typeof(member->'online') is distinct from 'boolean' then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if member ? 'player_account_id' and jsonb_typeof(member->'player_account_id') is distinct from 'null' and jsonb_typeof(member->'player_account_id') is distinct from 'string' then
+      raise exception 'Invalid Alliance roster member primitive.' using errcode = '22023';
+    end if;
+    if jsonb_typeof(member->'player_account_id') = 'string'
+      and member->>'player_account_id' !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' then
+      raise exception 'Invalid Alliance roster member Player Account UUID.' using errcode = '22023';
+    end if;
+    if member ? 'match_status'
+      and (jsonb_typeof(member->'match_status') is distinct from 'string'
+        or member->>'match_status' not in ('unmatched', 'matched', 'ambiguous', 'invalid')) then
+      raise exception 'Invalid Alliance roster member match status.' using errcode = '22023';
+    end if;
+    governor_id := member->>'governor_id';
+    if coalesce(member->>'match_status', 'unmatched') = 'matched' then
+      if member->>'player_account_id' is null then
+        raise exception 'Matched Alliance roster member requires a Player Account.' using errcode = '22023';
+      end if;
+      select account.player_id into matched_player_id
+        from public.player_accounts account
+        where account.id = (member->>'player_account_id')::uuid
+        for share;
+      if not found or matched_player_id is distinct from governor_id then
+        raise exception 'Matched Alliance roster member Player Account does not belong to its Governor.' using errcode = '22023';
+      end if;
+    elsif member->>'player_account_id' is not null then
+      raise exception 'Only matched Alliance roster members may carry a Player Account.' using errcode = '22023';
+    end if;
+    insert into public.alliance_roster_observations (
+      alliance_observation_id, governor_id, provider_internal_uid, provider_fid,
+      nickname, power, town_center_level, kills, alliance_rank, alliance_rank_label,
+      kingdom_number, avatar_reference, last_active_value, online, source,
+      roster_fresh, provider_fresh, provider_cached_at, provider_age_seconds, provider_fetched_at,
+      observed_at, player_account_id, match_status
+    ) values (
+      observation_id, governor_id, member->>'provider_internal_uid', member->>'provider_fid',
+      member->>'nickname', (member->>'power')::bigint, (member->>'town_center_level')::integer,
+      (member->>'kills')::bigint, (member->>'alliance_rank')::integer,
+      member->>'alliance_rank_label', (member->>'kingdom_number')::integer,
+      member->>'avatar_reference', case when member ? 'last_active_value' and jsonb_typeof(member->'last_active_value') <> 'null' then member->'last_active_value' else null end, (member->>'online')::boolean,
+      p_observation->>'source', (p_observation->>'roster_fresh')::boolean, (p_observation->>'provider_fresh')::boolean,
+      validated_provider_cached_at, (p_observation->>'provider_age_seconds')::integer,
+      validated_provider_fetched_at, validated_observed_at,
+      (member->>'player_account_id')::uuid, coalesce(member->>'match_status', 'unmatched')
+    );
+  end loop;
+  return observation_id;
+end;
+$$;
+
+create or replace function public.reject_alliance_observation_mutation()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  raise exception 'MightPulse Alliance observations are immutable.' using errcode = '55000';
+end;
+$$;
+
+create trigger alliance_intelligence_observations_immutable
+before update or delete on public.alliance_intelligence_observations
+for each row execute function public.reject_alliance_observation_mutation();
+create trigger alliance_roster_observations_immutable
+before update or delete on public.alliance_roster_observations
+for each row execute function public.reject_alliance_observation_mutation();
+
+alter table public.alliance_provider_bindings enable row level security;
+alter table public.alliance_provider_bindings force row level security;
+alter table public.alliance_intelligence_observations enable row level security;
+alter table public.alliance_intelligence_observations force row level security;
+alter table public.alliance_roster_observations enable row level security;
+alter table public.alliance_roster_observations force row level security;
+
+revoke all on table public.alliance_provider_bindings from public, anon, authenticated;
+revoke all on table public.alliance_intelligence_observations from public, anon, authenticated;
+revoke all on table public.alliance_roster_observations from public, anon, authenticated;
+revoke all on table public.alliance_provider_bindings from service_role;
+revoke all on table public.alliance_intelligence_observations from service_role;
+revoke all on table public.alliance_roster_observations from service_role;
+revoke all on function public.reject_alliance_observation_mutation() from public, anon, authenticated;
+revoke all on function public.validate_alliance_observation_binding() from public, anon, authenticated;
+revoke all on function public.reject_alliance_provider_binding_identity_change() from public, anon, authenticated;
+revoke all on function public.reject_alliance_provider_aid_collision() from public, anon, authenticated;
+revoke all on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, uuid) from public, anon, authenticated;
+grant execute on function private.persist_mightpulse_alliance_observation(uuid, jsonb, jsonb, uuid) to service_role;
+
+-- Rollback strategy (owner-gated, never run implicitly): drop dependent indexes,
+-- triggers, function, and the three new tables in reverse dependency order.
+-- No existing Alliance, membership, Player Account, authority, quota, or public
+-- projection object is altered by this migration.
+
+commit;

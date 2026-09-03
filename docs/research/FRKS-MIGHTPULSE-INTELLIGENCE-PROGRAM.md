@@ -273,3 +273,25 @@ Command.
 
 No merge, migration application, deployment or runtime change is authorised by
 this handoff.
+
+## MIGHTPULSE-001C-B persistence foundation — 31 August 2026
+
+The 001C-B foundation is authored on feature branch
+`feature/mightpulse-001c-b-alliance-persistence` from production main
+`9836657f7da3f147944119bc5c235f1db2326589`. It preserves the separation between
+Forge Alliance identity and MightPulse lookup identity (`kid` + exact-case
+provider tag + returned `aid`).
+
+The migration file is intentionally reviewable and unapplied. It introduces
+server-only binding, immutable Alliance observation, and immutable whole-roster
+observation contracts with fingerprint idempotency, duplicate-member guards,
+source/freshness metadata, and references to existing Player Accounts only.
+It does not introduce a public projection, runtime provider invocation, quota
+reservation, roster polling, account creation, membership mutation, authority
+mutation or ownership/verification change. Scalar freshness remains compatible;
+sectioned freshness cannot be marked fresh unless both info and roster evidence
+are explicitly fresh, and missing evidence remains unknown.
+
+**Migration created but NOT applied to production.** Any later application,
+read projection, provider wiring, or Alliance reconciliation requires separate
+owner approval and a new review gate; this foundation does not begin 001C-C.

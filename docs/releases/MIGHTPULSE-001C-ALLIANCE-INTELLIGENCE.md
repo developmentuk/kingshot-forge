@@ -269,6 +269,60 @@ No application source, Supabase schema, provider runtime, environment flag,
 production deployment or live Alliance data has been changed by MIGHTPULSE-001C
 foundation preparation.
 
+## MIGHTPULSE-001C-B — Alliance persistence foundation
+
+001C-B is a review-only persistence foundation from production `main`
+`9836657f7da3f147944119bc5c235f1db2326589`. It adds no runtime call, route,
+quota reservation, roster polling, membership mutation, authority mutation,
+ownership/verification change, public projection, or environment flag.
+
+The unapplied migration adds separate server-only tables for exact-case
+MightPulse bindings, immutable Alliance observations, and immutable whole-roster
+member observations. A binding preserves provider Kingdom, raw case-sensitive
+tag, returned `aid`, status, source, and confirmation timestamps. A provider/aid
+lookup index supports efficient lookup but is not itself the collision
+constraint: transaction-scoped advisory locking serializes the same logical
+provider identity, and collision validation prevents the same MightPulse aid
+from binding different Forge Alliances. Same-aid historical bindings are
+allowed when they belong to the same Forge Alliance; exact-case provider tag
+history remains immutable, and active lookup uniqueness is enforced separately.
+Historical identity changes use a new binding rather than overwriting identity.
+
+`content_sha256` records canonical provider-fact equivalence and is not the
+retry-idempotency key. `(binding_id, refresh_id)` provides retry idempotency,
+while `refresh_envelope_sha256` detects conflicting replay under the same
+refresh identity. Later refreshes with unchanged provider facts therefore
+remain distinct immutable observations even when they have the same
+`content_sha256`.
+Both persistence fingerprints are database-owned: the private RPC accepts no
+caller hash candidates. It hashes explicit governed JSONB v1 objects, orders
+roster members by Governor ID using deterministic `C` collation, and keeps
+refresh-local timestamps and ages out of content identity. The refresh envelope
+uses a separate database-owned JSONB v1 object containing the computed content
+hash and governed freshness/timing evidence.
+Roster rows are attached to one parent observation, reject duplicate Governor,
+provider UID, and provider FID identities within that snapshot, and can only
+reference an existing `player_accounts` row. Missing matches remain unmatched;
+no account creation path exists, and provider fields do not write Player
+profile, membership, rank, admin, authority, verification, or ownership data.
+
+Immutable roster rows retain `roster_fresh` as the section-specific freshness
+evidence and `provider_fresh` separately as aggregate/scalar provider evidence.
+Sectioned roster consumers use `roster_fresh`; scalar responses retain null
+roster-specific freshness rather than fabricating it. No public exposure is
+created by this persistence shape.
+
+Freshness records sectioned `info` and `roster` evidence, scalar provider
+freshness, or explicit unknown. Missing evidence remains nullable; timestamps
+and ages are stored only when supplied. No public Alliance view or authenticated
+read policy is created. Browser roles are revoked, writes are service-only, and
+observation tables use forced RLS plus mutation-rejecting triggers.
+
+**MIGHTPULSE-001C-B migration created but NOT applied to production.** The
+rollback strategy is documented in the migration as an owner-gated reverse
+dependency drop and has not been executed. 001C-C and runtime activation remain
+separately owner-gated.
+
 
 ## 001C-A — shared transport and Alliance provider contract
 

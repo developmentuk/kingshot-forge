@@ -10,6 +10,9 @@ on:
       - 'server/alliance-intelligence/**'
       - 'server/player-identity/providers/mightPulsePlayerProvider.ts'
       - 'scripts/test-mightpulse-alliance-provider.mjs'
+      - 'scripts/test-mightpulse-alliance-persistence.mjs'
+      - 'scripts/test-mightpulse-alliance-persistence-postgres.mjs'
+      - 'supabase/migrations/20260831150000_mightpulse_001c_b_alliance_persistence.sql'
       - 'scripts/test-mightpulse-player-provider.mjs'
       - 'docs/releases/MIGHTPULSE-001C-ALLIANCE-INTELLIGENCE.md'
       - 'package.json'
@@ -26,6 +29,18 @@ jobs:
     name: Alliance provider contract
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout candidate
@@ -44,6 +59,21 @@ jobs:
 
       - name: Test Alliance provider
         run: npm run test:mightpulse-alliance-provider
+
+      - name: Test Alliance persistence
+        run: npm run test:mightpulse-alliance-persistence
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Test Alliance persistence against disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: postgres
+        run: node scripts/test-mightpulse-alliance-persistence-postgres.mjs
 
       - name: Test Player provider regression
         run: node --import tsx scripts/test-mightpulse-player-provider.mjs

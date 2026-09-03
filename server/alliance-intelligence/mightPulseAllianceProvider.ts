@@ -1,4 +1,5 @@
 import { isTownCenterRawLevel } from '../../shared/domains/player-identity/townCenterLevel.js'
+import { isPersistableAllianceTimestamp } from './persistableTimestamp.js'
 import {
   createMightPulseTransport,
   createMightPulseTransportForTest,
@@ -331,6 +332,32 @@ function freshnessValues(
     .map((section) => bySection[section])
 }
 
+type NormalizedFreshness = Readonly<{
+  freshnessShape: 'sectioned' | 'scalar' | 'unknown'
+  infoFresh: boolean | null
+  rosterFresh: boolean | null
+  providerFresh: boolean | null
+}>
+
+function normalizeFreshness(value: unknown): NormalizedFreshness {
+  if (value === undefined || value === null) {
+    return { freshnessShape: 'unknown', infoFresh: null, rosterFresh: null, providerFresh: null }
+  }
+  if (typeof value === 'boolean') {
+    return { freshnessShape: 'scalar', infoFresh: null, rosterFresh: null, providerFresh: value }
+  }
+  const bySection = plainRecord(value)
+  if (!bySection || typeof bySection.info !== 'boolean' || typeof bySection.roster !== 'boolean') {
+    invalidResponse()
+  }
+  return {
+    freshnessShape: 'sectioned',
+    infoFresh: bySection.info,
+    rosterFresh: bySection.roster,
+    providerFresh: bySection.info && bySection.roster,
+  }
+}
+
 function normalizedFreshnessTimestamp(
   value: unknown,
 ): string | null {
@@ -339,12 +366,8 @@ function normalizedFreshnessTimestamp(
 
   const timestamps = values.map((entry) => {
     if (typeof entry !== 'string') invalidResponse()
-    const candidate = entry.trim()
-    if (
-      !candidate
-      || candidate.length > 80
-      || !Number.isFinite(Date.parse(candidate))
-    ) {
+    const candidate = entry
+    if (!isPersistableAllianceTimestamp(candidate) || candidate.length > 80) {
       invalidResponse()
     }
     return candidate
@@ -366,28 +389,14 @@ function normalizedFreshnessAge(
     if (
       typeof entry !== 'number'
       || !Number.isFinite(entry)
+      || !Number.isInteger(entry)
       || entry < 0
+      || entry > 2147483647
     ) {
       invalidResponse()
     }
     return entry
   }))
-}
-
-function normalizedFreshnessFlag(
-  value: unknown,
-): boolean | null {
-  const values = freshnessValues(value)
-  if (values === null || values.length === 0) return null
-
-  const flags = values.map((entry) => {
-    if (typeof entry !== 'boolean') invalidResponse()
-    return entry
-  })
-
-  return flags.some((entry) => entry === false)
-    ? false
-    : true
 }
 
 function normalizeMember(
@@ -419,11 +428,11 @@ function normalizeMember(
     providerFid: requiredIdentifier(member.fid),
     name: requiredString(member.nick_name, 160),
     kingdomId,
-    power: nullableNumber(member.power, { min: 0 }),
+    power: nullableNumber(member.power, { integer: true, min: 0, max: Number.MAX_SAFE_INTEGER }),
     townCenterLevel: nullableTownCenterLevel(
       member.town_center_level,
     ),
-    kills: nullableNumber(member.kills, { min: 0 }),
+    kills: nullableNumber(member.kills, { integer: true, min: 0, max: Number.MAX_SAFE_INTEGER }),
     allianceRank,
     allianceRankLabel: nullableString(
       member.alliance_rank_label,
@@ -506,6 +515,10 @@ function normalizeAlliancePayload(
     alliance.count,
     { integer: true, min: 0 },
   )
+  if (memberCount !== null && memberCount !== members.length) {
+    invalidResponse()
+  }
+  const freshness = normalizeFreshness(wrapper.fresh)
 
   return Object.freeze({
     provider: 'mightpulse' as const,
@@ -516,13 +529,17 @@ function normalizeAlliancePayload(
     providerAgeSeconds: normalizedFreshnessAge(
       wrapper.age_seconds,
     ),
-    providerFresh: normalizedFreshnessFlag(wrapper.fresh),
+    ...freshness,
     alliance: Object.freeze({
       providerAllianceId: requiredIdentifier(alliance.aid),
       kingdomId: returnedKingdomId,
       tag: returnedTag,
       name: requiredString(alliance.name, 160),
-      power: nullableNumber(alliance.power, { min: 0 }),
+      power: nullableNumber(alliance.power, {
+        integer: true,
+        min: 0,
+        max: Number.MAX_SAFE_INTEGER,
+      }),
       memberCount,
       leaderName: nullableString(alliance.leader_name, 160),
       leaderInternalUid: nullableIdentifier(alliance.leader_uid),
@@ -532,7 +549,7 @@ function normalizeAlliancePayload(
       flagUrl: normalizedAssetUrl(alliance.flag_url),
       powerRank: nullableNumber(
         alliance.power_rank,
-        { integer: true, min: 1 },
+        { integer: true, min: 1, max: 2147483647 },
       ),
     }),
     members: Object.freeze(members),
