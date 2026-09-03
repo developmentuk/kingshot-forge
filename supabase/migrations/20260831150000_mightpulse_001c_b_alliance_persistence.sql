@@ -224,6 +224,7 @@ create table public.alliance_roster_observations (
   last_active_value jsonb null check (last_active_value is null or jsonb_typeof(last_active_value) = any (array['string'::text, 'number'::text, 'boolean'::text])),
   online boolean null,
   source text not null check (char_length(source) between 1 and 120),
+  roster_fresh boolean null,
   provider_fresh boolean null,
   provider_cached_at timestamptz null,
   provider_age_seconds integer null check (provider_age_seconds is null or provider_age_seconds >= 0),
@@ -242,6 +243,10 @@ comment on table public.alliance_roster_observations is
   'Immutable server-only whole-roster member facts. player_account_id is a reference to an existing Forge Player Account only; provider fields never overwrite it.';
 comment on column public.alliance_roster_observations.last_active_value is
   'Allowlisted provider value preserved as supplied; no fabricated timestamp or age is created.';
+comment on column public.alliance_roster_observations.roster_fresh is
+  'Section-specific roster freshness evidence. Null means no roster-specific evidence was supplied.';
+comment on column public.alliance_roster_observations.provider_fresh is
+  'Aggregate/scalar provider freshness. For sectioned evidence, use roster_fresh for roster facts.';
 
 create unique index alliance_roster_observations_governor_idx
   on public.alliance_roster_observations (alliance_observation_id, governor_id);
@@ -566,7 +571,7 @@ begin
       alliance_observation_id, governor_id, provider_internal_uid, provider_fid,
       nickname, power, town_center_level, kills, alliance_rank, alliance_rank_label,
       kingdom_number, avatar_reference, last_active_value, online, source,
-      provider_fresh, provider_cached_at, provider_age_seconds, provider_fetched_at,
+      roster_fresh, provider_fresh, provider_cached_at, provider_age_seconds, provider_fetched_at,
       observed_at, player_account_id, match_status
     ) values (
       observation_id, governor_id, member->>'provider_internal_uid', member->>'provider_fid',
@@ -574,7 +579,7 @@ begin
       (member->>'kills')::bigint, (member->>'alliance_rank')::integer,
       member->>'alliance_rank_label', (member->>'kingdom_number')::integer,
       member->>'avatar_reference', case when member ? 'last_active_value' and jsonb_typeof(member->'last_active_value') <> 'null' then member->'last_active_value' else null end, (member->>'online')::boolean,
-      p_observation->>'source', (p_observation->>'provider_fresh')::boolean,
+      p_observation->>'source', (p_observation->>'roster_fresh')::boolean, (p_observation->>'provider_fresh')::boolean,
       validated_provider_cached_at, (p_observation->>'provider_age_seconds')::integer,
       validated_provider_fetched_at, validated_observed_at,
       (member->>'player_account_id')::uuid, coalesce(member->>'match_status', 'unmatched')

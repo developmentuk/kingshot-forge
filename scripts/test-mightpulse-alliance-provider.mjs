@@ -161,6 +161,9 @@ assert.equal(offsetNormalized.providerCachedAt, offsetTimestamp)
 for (const cachedAt of ['2026-02-30T12:00:00Z', '2026-04-31T12:00:00Z', '2025-02-29T12:00:00Z', '2100-02-29T12:00:00Z', '2026-13-01T12:00:00Z', '2026-01-01T12:00:00', '2026-01-01', ' 2026-01-01T12:00:00Z', '2026-01-01T12:00:00Z ', 'infinity', '-infinity', 123, true, {}]) {
   await expectAllianceError(providerFor(Response.json(validPayload({ cached_at: { info: cachedAt, roster: '2026-08-31T14:54:00.000Z' } }))), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
 }
+for (const offset of ['+16:00', '-16:00', '+23:59', '-23:59']) {
+  await expectAllianceError(providerFor(Response.json(validPayload({ cached_at: { info: `2026-01-01T12:00:00${offset}`, roster: '2026-08-31T14:54:00.000Z' } }))), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
+}
 assert.deepEqual(normalized.members[0], {
   providerInternalUid: '900001',
   playerId: '125500338',

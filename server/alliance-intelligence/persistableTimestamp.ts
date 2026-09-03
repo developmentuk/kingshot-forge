@@ -22,7 +22,7 @@ export function isPersistableAllianceTimestamp(value: unknown): value is string 
   const second = Number(match[6]);
   if (year < 1 || year > 9999 || month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)) return false;
   if (hour > 23 || minute > 59 || second > 59) return false;
-  if (match[8] !== 'Z' && (Number(match[8].slice(1, 3)) > 23 || Number(match[8].slice(4, 6)) > 59)) return false;
+  if (match[8] !== 'Z' && (Number(match[8].slice(1, 3)) > 15 || Number(match[8].slice(4, 6)) > 59)) return false;
 
   return Number.isFinite(Date.parse(value));
 }

@@ -56,12 +56,35 @@ select private.persist_mightpulse_alliance_observation(
 select provider_cached_at from public.alliance_intelligence_observations
 where refresh_id = '33333333-3333-4333-8333-333333333333' and isfinite(provider_cached_at);
 
+select private.persist_mightpulse_alliance_observation(
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  jsonb_build_object('provider','mightpulse','provider_kingdom_number',123,'provider_tag','MiXeD','provider_alliance_id','aid-1','source','mightpulse-alliance-provider','freshness_shape','sectioned','info_fresh',false,'roster_fresh',true,'provider_fresh',false,'member_count',2,'provider_cached_at','2026-01-01T12:00:00+15:59','provider_age_seconds',60,'provider_fetched_at','2026-01-01T12:00:00-15:59','observed_at','2026-01-01T12:00:00Z'),
+  jsonb_build_array(jsonb_build_object('governor_id','Å','nickname','É','power',4,'kills',5,'online',true), jsonb_build_object('governor_id','Ä','last_active_value',false,'online',false)),
+  '33333333-3333-4333-8333-333333333334');
+
+do $$
+declare roster_true integer; provider_false integer; scalar_null integer; scalar_true integer;
+begin
+  select count(*) filter (where roster_fresh is true), count(*) filter (where provider_fresh is false)
+    into roster_true, provider_false
+    from public.alliance_roster_observations r join public.alliance_intelligence_observations o on o.id = r.alliance_observation_id
+    where o.refresh_id = '33333333-3333-4333-8333-333333333334';
+  if roster_true <> 2 or provider_false <> 2 then raise exception 'sectioned roster freshness was not preserved'; end if;
+  select count(*) filter (where roster_fresh is null), count(*) filter (where provider_fresh is true)
+    into scalar_null, scalar_true
+    from public.alliance_roster_observations r join public.alliance_intelligence_observations o on o.id = r.alliance_observation_id
+    where o.refresh_id = '33333333-3333-4333-8333-333333333333';
+  if scalar_null <> 2 or scalar_true <> 2 then raise exception 'scalar roster freshness was fabricated'; end if;
+end $$;
+
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"infinity"'::jsonb, '44444444-4444-4444-8444-444444444444');
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"-infinity"'::jsonb, '55555555-5555-4555-8555-555555555555');
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"not-a-timestamp"'::jsonb, '66666666-6666-4666-8666-666666666666');
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"2026-02-30T12:00:00Z"'::jsonb, '66666666-6666-4666-8666-666666666667');
 select public.assert_invalid_alliance_timestamp('observed_at', '"2026-04-31T12:00:00Z"'::jsonb, '66666666-6666-4666-8666-666666666668');
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"2025-02-29T12:00:00Z"'::jsonb, '66666666-6666-4666-8666-666666666669');
+select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"2026-01-01T12:00:00+16:00"'::jsonb, '66666666-6666-4666-8666-666666666670');
+select public.assert_invalid_alliance_timestamp('observed_at', '"2026-01-01T12:00:00-16:00"'::jsonb, '66666666-6666-4666-8666-666666666671');
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '123'::jsonb, '77777777-7777-4777-8777-777777777777');
 select public.assert_invalid_alliance_timestamp('observed_at', 'true'::jsonb, '88888888-8888-4888-8888-888888888888');
 select public.assert_invalid_alliance_timestamp('provider_cached_at', '"infinity"'::jsonb, '99999999-9999-4999-8999-999999999999');

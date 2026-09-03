@@ -306,6 +306,12 @@ reference an existing `player_accounts` row. Missing matches remain unmatched;
 no account creation path exists, and provider fields do not write Player
 profile, membership, rank, admin, authority, verification, or ownership data.
 
+Immutable roster rows retain `roster_fresh` as the section-specific freshness
+evidence and `provider_fresh` separately as aggregate/scalar provider evidence.
+Sectioned roster consumers use `roster_fresh`; scalar responses retain null
+roster-specific freshness rather than fabricating it. No public exposure is
+created by this persistence shape.
+
 Freshness records sectioned `info` and `roster` evidence, scalar provider
 freshness, or explicit unknown. Missing evidence remains nullable; timestamps
 and ages are stored only when supplied. No public Alliance view or authenticated
