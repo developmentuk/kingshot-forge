@@ -179,7 +179,7 @@ assert.match(rpc, /matched_player_id is distinct from governor_id/i);
 assert.match(rpc, /mightpulse-alliance-content-db-jsonb-v1/i);
 assert.match(rpc, /mightpulse-alliance-refresh-db-jsonb-v1/i);
 assert.match(rpc, /extensions\.digest\(convert_to\(governed_content::text, 'UTF8'\), 'sha256'\)/i);
-assert.match(rpc, /jsonb_agg\([\s\S]*order by member->>'governor_id' collate "C"/i);
+assert.match(rpc, /jsonb_agg\([\s\S]*order by roster_value->>'governor_id' collate "C"/i);
 assert.doesNotMatch(rpc, /p_content_sha256|p_refresh_envelope_sha256/i);
 assert.ok(sql.indexOf('db_content_sha256 :=') < sql.indexOf('insert into public.alliance_intelligence_observations'), 'content hash is database computed before parent insert');
 assert.match(rpc, /Matched Alliance roster member Player Account does not belong to its Governor/i);

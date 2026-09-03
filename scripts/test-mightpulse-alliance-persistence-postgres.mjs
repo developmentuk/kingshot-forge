@@ -23,7 +23,7 @@ values
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'mightpulse', 123, 'MiXeD', 'aid-1', 'fixture', now());
 
 do $$
-declare first_id uuid; second_id uuid; first_hash text; second_hash text; first_envelope text; second_envelope text;
+declare first_id uuid; second_id uuid; first_hash text; second_hash text; first_envelope text; second_envelope text; source_rejected boolean := false;
 begin
   select private.persist_mightpulse_alliance_observation(
     'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
@@ -40,12 +40,17 @@ begin
     '11111111-1111-4111-8111-111111111111') into second_id;
   if second_id is distinct from first_id then raise exception 'reordered roster was not idempotent'; end if;
   begin
-    perform private.persist_mightpulse_alliance_observation(
-      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-      jsonb_build_object('provider','mightpulse','provider_kingdom_number',123,'provider_tag','MiXeD','provider_alliance_id','aid-1','source','object-source','freshness_shape','scalar','info_fresh',null,'roster_fresh',null,'provider_fresh',true,'member_count',2,'provider_fetched_at','2026-08-31T12:00:00Z','observed_at','2026-08-31T12:00:00Z'),
-      '[]'::jsonb, '22222222-2222-4222-8222-222222222222');
-    raise exception 'invalid source was accepted';
-  exception when others then null;
+    begin
+      perform private.persist_mightpulse_alliance_observation(
+        'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        jsonb_build_object('provider','mightpulse','provider_kingdom_number',123,'provider_tag','MiXeD','provider_alliance_id','aid-1','source',jsonb_build_object('unexpected',true),'freshness_shape','scalar','info_fresh',null,'roster_fresh',null,'provider_fresh',true,'member_count',2,'provider_fetched_at','2026-08-31T12:00:00Z','observed_at','2026-08-31T12:00:00Z'),
+        jsonb_build_array(jsonb_build_object('governor_id','Å','nickname','É','power',4,'kills',5,'online',true), jsonb_build_object('governor_id','Ä','last_active_value',false,'online',false)),
+        '22222222-2222-4222-8222-222222222222');
+    exception when sqlstate '22023' then
+      if sqlerrm <> 'Invalid Alliance observation source.' then raise; end if;
+      source_rejected := true;
+    end;
+    if not source_rejected then raise exception 'invalid source was accepted'; end if;
   end;
 end $$;
 `;

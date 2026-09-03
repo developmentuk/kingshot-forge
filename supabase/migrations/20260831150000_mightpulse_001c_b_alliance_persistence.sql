@@ -301,12 +301,14 @@ begin
     or jsonb_typeof(p_observation->'alliance_power') not in ('null', 'number')
     or jsonb_typeof(p_observation->'member_count') not in ('null', 'number')
     or jsonb_typeof(p_observation->'power_rank') not in ('null', 'number')
-    or jsonb_typeof(p_observation->'source') is distinct from 'string'
-    or char_length(p_observation->>'source') not between 1 and 120
-    or p_observation->>'source' <> btrim(p_observation->>'source')
-    or p_observation->>'source' ~ '[[:cntrl:]]'
     or jsonb_typeof(p_observation->'freshness_shape') is distinct from 'string' then
     raise exception 'Invalid Alliance observation primitive.' using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_observation->'source') is distinct from 'string'
+    or char_length(p_observation->>'source') not between 1 and 120
+    or p_observation->>'source' <> btrim(p_observation->>'source')
+    or p_observation->>'source' ~ '[[:cntrl:]]' then
+    raise exception 'Invalid Alliance observation source.' using errcode = '22023';
   end if;
   if p_observation->>'leader_identity' is not null and (char_length(p_observation->>'leader_identity') not between 1 and 120 or p_observation->>'leader_identity' <> btrim(p_observation->>'leader_identity') or p_observation->>'leader_identity' ~ '[[:cntrl:]]') then
     raise exception 'Invalid Alliance leader identity.' using errcode = '22023';
@@ -374,24 +376,24 @@ begin
   end if;
 
   select jsonb_agg(jsonb_build_object(
-      'governorId', member->'governor_id',
-      'providerInternalUid', member->'provider_internal_uid',
-      'providerFid', member->'provider_fid',
-      'nickname', member->'nickname',
-      'power', member->'power',
-      'townCenterLevel', member->'town_center_level',
-      'kills', member->'kills',
-      'allianceRank', member->'alliance_rank',
-      'allianceRankLabel', member->'alliance_rank_label',
-      'kingdomNumber', member->'kingdom_number',
-      'avatarReference', member->'avatar_reference',
-      'lastActiveValue', member->'last_active_value',
-      'online', member->'online',
-      'playerAccountId', member->'player_account_id',
-      'matchStatus', coalesce(member->'match_status', '"unmatched"'::jsonb)
-    ) order by member->>'governor_id' collate "C")
+      'governorId', roster_value->'governor_id',
+      'providerInternalUid', roster_value->'provider_internal_uid',
+      'providerFid', roster_value->'provider_fid',
+      'nickname', roster_value->'nickname',
+      'power', roster_value->'power',
+      'townCenterLevel', roster_value->'town_center_level',
+      'kills', roster_value->'kills',
+      'allianceRank', roster_value->'alliance_rank',
+      'allianceRankLabel', roster_value->'alliance_rank_label',
+      'kingdomNumber', roster_value->'kingdom_number',
+      'avatarReference', roster_value->'avatar_reference',
+      'lastActiveValue', roster_value->'last_active_value',
+      'online', roster_value->'online',
+      'playerAccountId', roster_value->'player_account_id',
+      'matchStatus', coalesce(roster_value->'match_status', '"unmatched"'::jsonb)
+    ) order by roster_value->>'governor_id' collate "C")
     into governed_roster
-    from jsonb_array_elements(p_roster) as roster_member(member);
+    from jsonb_array_elements(p_roster) as roster_member(roster_value);
   governed_content := jsonb_build_object(
     'fingerprintVersion', 'mightpulse-alliance-content-db-jsonb-v1',
     'provider', p_observation->'provider',
