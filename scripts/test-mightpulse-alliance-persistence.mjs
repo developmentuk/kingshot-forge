@@ -13,13 +13,15 @@ const base = {
 };
 
 const prepared = prepareAllianceObservation(base, new Map());
-for (const value of ['2026-08-31T12:00:00Z', 'infinity', '-infinity', 'not-a-timestamp', 123, true, {}]) {
+for (const value of ['2026-08-31T12:00:00Z', '2026-01-31T12:00:00Z', '2026-04-30T12:00:00Z', '2024-02-29T12:00:00Z', '2026-08-31T12:00:00.123Z', '2026-08-31T14:00:00+02:00', 'infinity', '-infinity', 'not-a-timestamp', 123, true, {}]) {
   if (value === '2026-08-31T12:00:00Z') assert.doesNotThrow(() => prepareAllianceObservation({ ...base, providerCachedAt: value }, new Map()));
+  else if (['2026-01-31T12:00:00Z', '2026-04-30T12:00:00Z', '2024-02-29T12:00:00Z', '2026-08-31T12:00:00.123Z', '2026-08-31T14:00:00+02:00'].includes(value)) assert.doesNotThrow(() => prepareAllianceObservation({ ...base, providerCachedAt: value }, new Map()));
   else assert.throws(() => prepareAllianceObservation({ ...base, providerCachedAt: value }, new Map()), /provider cached timestamp/);
 }
+for (const value of ['2026-02-30T12:00:00Z', '2026-04-31T12:00:00Z', '2025-02-29T12:00:00Z', '2100-02-29T12:00:00Z', '2026-13-01T12:00:00Z', '2026-00-01T12:00:00Z', '2026-01-00T12:00:00Z', '2026-01-01T24:00:00Z', '2026-01-01T12:60:00Z', '2026-01-01T12:00:60Z', '2026-01-01T12:00:00', '2026-01-01', ' 2026-01-01T12:00:00Z', '2026-01-01T12:00:00Z ']) assert.throws(() => prepareAllianceObservation({ ...base, providerCachedAt: value }, new Map()), /provider cached timestamp/);
 for (const field of ['providerFetchedAt', 'observedAt']) {
   assert.doesNotThrow(() => prepareAllianceObservation({ ...base, [field]: '2026-08-31T12:00:00Z' }, new Map()));
-  for (const value of ['infinity', '-infinity', 'not-a-timestamp', 123, true, {}]) {
+  for (const value of ['2026-02-30T12:00:00Z', '2026-04-31T12:00:00Z', '2025-02-29T12:00:00Z', 'infinity', '-infinity', 'not-a-timestamp', 123, true, {}]) {
     assert.throws(() => prepareAllianceObservation({ ...base, [field]: value }, new Map()), new RegExp(field === 'providerFetchedAt' ? 'provider fetched timestamp' : 'observed timestamp'));
   }
 }

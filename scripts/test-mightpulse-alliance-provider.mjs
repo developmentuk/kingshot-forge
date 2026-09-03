@@ -155,6 +155,12 @@ assert.deepEqual(normalized.alliance, {
   powerRank: 3,
 })
 assert.equal(normalized.members.length, 2)
+const offsetTimestamp = '2026-08-31T16:54:00+02:00'
+const offsetNormalized = await providerFor(Response.json(validPayload({ cached_at: { info: offsetTimestamp, roster: offsetTimestamp } }))).lookupAlliance({ kingdomId: 850, tag: 'SyN' })
+assert.equal(offsetNormalized.providerCachedAt, offsetTimestamp)
+for (const cachedAt of ['2026-02-30T12:00:00Z', '2026-04-31T12:00:00Z', '2025-02-29T12:00:00Z', '2100-02-29T12:00:00Z', '2026-13-01T12:00:00Z', '2026-01-01T12:00:00', '2026-01-01', ' 2026-01-01T12:00:00Z', '2026-01-01T12:00:00Z ', 'infinity', '-infinity', 123, true, {}]) {
+  await expectAllianceError(providerFor(Response.json(validPayload({ cached_at: { info: cachedAt, roster: '2026-08-31T14:54:00.000Z' } }))), 502, 'ALLIANCE_PROVIDER_INVALID_RESPONSE')
+}
 assert.deepEqual(normalized.members[0], {
   providerInternalUid: '900001',
   playerId: '125500338',

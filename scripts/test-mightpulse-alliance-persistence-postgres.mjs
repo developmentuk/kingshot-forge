@@ -59,6 +59,9 @@ where refresh_id = '33333333-3333-4333-8333-333333333333' and isfinite(provider_
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"infinity"'::jsonb, '44444444-4444-4444-8444-444444444444');
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"-infinity"'::jsonb, '55555555-5555-4555-8555-555555555555');
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"not-a-timestamp"'::jsonb, '66666666-6666-4666-8666-666666666666');
+select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"2026-02-30T12:00:00Z"'::jsonb, '66666666-6666-4666-8666-666666666667');
+select public.assert_invalid_alliance_timestamp('observed_at', '"2026-04-31T12:00:00Z"'::jsonb, '66666666-6666-4666-8666-666666666668');
+select public.assert_invalid_alliance_timestamp('provider_fetched_at', '"2025-02-29T12:00:00Z"'::jsonb, '66666666-6666-4666-8666-666666666669');
 select public.assert_invalid_alliance_timestamp('provider_fetched_at', '123'::jsonb, '77777777-7777-4777-8777-777777777777');
 select public.assert_invalid_alliance_timestamp('observed_at', 'true'::jsonb, '88888888-8888-4888-8888-888888888888');
 select public.assert_invalid_alliance_timestamp('provider_cached_at', '"infinity"'::jsonb, '99999999-9999-4999-8999-999999999999');

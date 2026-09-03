@@ -1,4 +1,5 @@
 import { isTownCenterRawLevel } from '../../shared/domains/player-identity/townCenterLevel.js'
+import { isPersistableAllianceTimestamp } from './persistableTimestamp.js'
 import {
   createMightPulseTransport,
   createMightPulseTransportForTest,
@@ -365,12 +366,8 @@ function normalizedFreshnessTimestamp(
 
   const timestamps = values.map((entry) => {
     if (typeof entry !== 'string') invalidResponse()
-    const candidate = entry.trim()
-    if (
-      !candidate
-      || candidate.length > 80
-      || !Number.isFinite(Date.parse(candidate))
-    ) {
+    const candidate = entry
+    if (!isPersistableAllianceTimestamp(candidate) || candidate.length > 80) {
       invalidResponse()
     }
     return candidate

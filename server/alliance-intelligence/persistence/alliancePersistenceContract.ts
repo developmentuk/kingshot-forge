@@ -1,3 +1,5 @@
+import { isPersistableAllianceTimestamp } from '../persistableTimestamp.js';
+
 export type Freshness = boolean | null;
 
 export type AllianceRosterMember = {
@@ -68,12 +70,12 @@ export function validateProviderAgeSeconds(value: unknown): void {
   if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value) || value < 0 || value > 2147483647) throw new Error('invalid provider age seconds');
 }
 
-function validateFiniteTimestamp(value: unknown, label: string, optional: boolean): void {
+function validatePersistableTimestamp(value: unknown, label: string, optional: boolean): void {
   if (value === undefined || value === null) {
     if (optional) return;
     throw new Error(`invalid ${label}`);
   }
-  if (typeof value !== 'string' || !Number.isFinite(Date.parse(value))) throw new Error(`invalid ${label}`);
+  if (!isPersistableAllianceTimestamp(value)) throw new Error(`invalid ${label}`);
 }
 
 function validateOptionalSafeInteger(value: unknown, label: string): void {
@@ -173,9 +175,9 @@ export function validateWholeRoster(input: AllianceObservationInput, existingPla
 }
 
 export function prepareAllianceObservation(input: AllianceObservationInput, existingPlayerAccountIdByGovernorId: ReadonlyMap<string, string>) {
-  validateFiniteTimestamp(input.providerFetchedAt, 'provider fetched timestamp', false);
-  validateFiniteTimestamp(input.observedAt, 'observed timestamp', false);
-  validateFiniteTimestamp(input.providerCachedAt, 'provider cached timestamp', true);
+  validatePersistableTimestamp(input.providerFetchedAt, 'provider fetched timestamp', false);
+  validatePersistableTimestamp(input.observedAt, 'observed timestamp', false);
+  validatePersistableTimestamp(input.providerCachedAt, 'provider cached timestamp', true);
   validateProviderAgeSeconds(input.providerAgeSeconds);
   validateProviderBindingIdentity({
     provider: input.provider,
