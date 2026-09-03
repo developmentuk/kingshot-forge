@@ -404,7 +404,7 @@ begin
       validated_provider_cached_at := null;
     end if;
   exception
-    when invalid_datetime_format or datetime_field_overflow then
+    when invalid_datetime_format or datetime_field_overflow or invalid_time_zone_displacement then
       raise exception 'Invalid Alliance observation timestamp.' using errcode = '22023';
   end;
   if not isfinite(validated_provider_fetched_at)

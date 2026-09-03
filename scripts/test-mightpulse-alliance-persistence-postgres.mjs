@@ -65,12 +65,12 @@ select private.persist_mightpulse_alliance_observation(
 do $$
 declare roster_true integer; provider_false integer; scalar_null integer; scalar_true integer;
 begin
-  select count(*) filter (where roster_fresh is true), count(*) filter (where provider_fresh is false)
+  select count(*) filter (where r.roster_fresh is true), count(*) filter (where r.provider_fresh is false)
     into roster_true, provider_false
     from public.alliance_roster_observations r join public.alliance_intelligence_observations o on o.id = r.alliance_observation_id
     where o.refresh_id = '33333333-3333-4333-8333-333333333334';
   if roster_true <> 2 or provider_false <> 2 then raise exception 'sectioned roster freshness was not preserved'; end if;
-  select count(*) filter (where roster_fresh is null), count(*) filter (where provider_fresh is true)
+  select count(*) filter (where r.roster_fresh is null), count(*) filter (where r.provider_fresh is true)
     into scalar_null, scalar_true
     from public.alliance_roster_observations r join public.alliance_intelligence_observations o on o.id = r.alliance_observation_id
     where o.refresh_id = '33333333-3333-4333-8333-333333333333';
