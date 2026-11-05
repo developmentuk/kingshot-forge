@@ -1,0 +1,242 @@
+.castle-command {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.castle-command__hero,
+.castle-command__panel,
+.castle-command__notice {
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+  border-radius: 18px;
+  background: var(--panel-bg, rgba(13, 23, 37, 0.9));
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+}
+
+.castle-command__hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: flex-start;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.castle-command__hero h1,
+.castle-command__panel h2,
+.castle-command__notice h1 {
+  margin: 0.2rem 0 0.65rem;
+}
+
+.castle-command__player {
+  min-width: 210px;
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.castle-command__player span {
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+.castle-command__panel,
+.castle-command__notice {
+  padding: 1.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.castle-command__time-grid {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.castle-command__time-head,
+.castle-command__time-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) repeat(2, minmax(120px, 1fr));
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.castle-command__time-head {
+  padding: 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.castle-command__time-row button,
+.castle-command input,
+.castle-command select {
+  min-height: 44px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.14));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.055);
+  color: inherit;
+  padding: 0.65rem 0.8rem;
+}
+
+.castle-command__time-row button {
+  text-align: left;
+  cursor: pointer;
+}
+
+.castle-command__time-row button.is-active {
+  border-color: currentColor;
+  background: rgba(255, 255, 255, 0.12);
+  font-weight: 750;
+}
+
+.castle-command__hint {
+  margin: 0.9rem 0 0;
+  font-size: 0.88rem;
+  opacity: 0.72;
+}
+
+.castle-command__howler {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(250px, 0.8fr);
+  gap: 1.5rem;
+}
+
+.castle-command__howler > div:last-child {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.castle-command__howler label,
+.castle-command__planner label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 650;
+}
+
+.castle-command__howler label:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.castle-command__howler input[type='checkbox'] {
+  min-height: auto;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.castle-command__warning {
+  border: 1px solid rgba(245, 184, 66, 0.55);
+  border-radius: 12px;
+  background: rgba(245, 184, 66, 0.1);
+  padding: 0.9rem 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.castle-command__planner {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: end;
+}
+
+.castle-command__planner > div {
+  display: grid;
+  gap: 0.3rem;
+  min-height: 76px;
+  align-content: center;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.castle-command__planner > div span,
+.castle-command__result span {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.68;
+}
+
+.castle-command__planner > div strong {
+  font-size: 1.35rem;
+}
+
+.castle-command__result {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+}
+
+.castle-command__result > div {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.castle-command__result strong {
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.castle-command__result > div:first-child {
+  outline: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.castle-command__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.86rem;
+  opacity: 0.75;
+}
+
+@media (max-width: 760px) {
+  .castle-command {
+    width: min(100% - 1rem, 1180px);
+    padding-top: 1rem;
+  }
+
+  .castle-command__hero,
+  .castle-command__howler {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .castle-command__player {
+    min-width: 0;
+  }
+
+  .castle-command__time-head {
+    display: none;
+  }
+
+  .castle-command__time-row {
+    grid-template-columns: 1fr 1fr;
+    padding: 0.7rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .castle-command__time-row button {
+    grid-column: 1 / -1;
+  }
+
+  .castle-command__planner,
+  .castle-command__result {
+    grid-template-columns: 1fr;
+  }
+
+  .castle-command__footer {
+    flex-direction: column;
+  }
+}
